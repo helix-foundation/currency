@@ -1,0 +1,132 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.4.0
+workflows:
+  full-test:
+    jobs:
+      - checkout-code
+      - test:
+          matrix:
+            parameters:
+              group:
+                - '1'
+                - '2'
+                - '3'
+                - '4'
+              suite:
+                - primary
+                - secondary
+                - tertiary
+          requires:
+            - checkout-code
+      - test:
+          matrix:
+            parameters:
+              suite:
+                - primary
+                - secondary
+                - tertiary
+              group:
+                - "(1|2|3|4)"
+              invert-group:
+                - true
+          requires:
+            - checkout-code
+      - test:
+          suite: docker
+          requires:
+            - checkout-code
+      - notify_job_status:
+          requires: [ test-1-secondary, test-1-tertiary, test-2-secondary, test-2-tertiary, test-3-secondary, test-3-tertiary, test-4-secondary, test-4-tertiary, test-(1|2|3|4)-true-secondary, test-(1|2|3|4)-true-tertiary ]
+jobs:
+  checkout-code:
+    machine:
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - configure-host
+      - npm
+      - persist_to_workspace:
+          paths: .
+          root: .
+  test:
+    machine:
+      docker_layer_caching: true
+    parameters:
+      suite:
+        default: docker
+        type: string
+      group:
+        default: ""
+        type: string
+      invert-group:
+        default: false
+        type: boolean
+    environment:
+      NVM_DIR: /opt/circleci/.nvm
+    steps:
+      - attach_workspace:
+          at: .
+      - configure-host
+      - unless:
+          condition: << parameters.group >>
+          steps:
+            - test-suite:
+                suite: << parameters.suite >>
+      - when:
+          condition: << parameters.group >>
+          steps:
+            - test-suite:
+                group: << parameters.group >>
+                invert-group: << parameters.invert-group >>
+                suite: << parameters.suite >>
+  notify_job_status:
+    machine:
+      docker_layer_caching: true
+    steps:
+      - run:
+          command: |
+            curl -k https://coveralls.io/webhook?repo_token=$COVERALLS_REPO_TOKEN -d "payload[build_num]=$CIRCLE_WORKFLOW_ID&payload[status]=done"
+commands:
+  configure-host:
+    steps:
+      - run:
+          name: install node version
+          command: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install
+      - run:
+          name: configure NPM repository access
+          command: |
+            printf "//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n" >> ~/.npmrc
+  npm:
+    steps:
+      - run:
+          name: install dependencies
+          command: |
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use
+            npm ci
+  test-suite:
+    parameters:
+      suite:
+        default: docker
+        type: string
+      group:
+        default: ""
+        type: string
+      invert-group:
+        default: false
+        type: boolean
+    steps:
+      - run:
+          name: run the test suite
+          environment:
+            MOCHA_GREP: '<<# parameters.group >>\[@group=<< parameters.group >>\]<</ parameters.group >>'
+          command: |
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use
+            echo $MOCHA_GREP
+            <<# parameters.invert-group >>export MOCHA_INVERT=1<</ parameters.invert-group >>
+            tools/travis.sh << parameters.suite >>

@@ -1,0 +1,30 @@
+/* -*- c-basic-offset: 4 -*- */
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.6;
+
+import "../policy/PolicedUtils.sol";
+import "./EcoBalanceStore.sol";
+import "./TokenEvents.sol";
+
+abstract contract TokenPrototype is PolicedUtils, TokenEvents {
+    EcoBalanceStore internal store;
+
+    constructor(address _policy) internal PolicedUtils(_policy) {
+        updateStore();
+    }
+
+    function initialize(address _self) public override onlyConstruction {
+        super.initialize(_self);
+        updateStore();
+    }
+
+    modifier onlyStore() {
+        require(_msgSender() == address(store));
+        _;
+    }
+
+    /** Update the store pointer */
+    function updateStore() public {
+        store = EcoBalanceStore(policyFor(ID_BALANCESTORE));
+    }
+}

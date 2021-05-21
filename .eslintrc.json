@@ -1,0 +1,23 @@
+{
+  "extends": "airbnb-base",
+  "plugins": [
+    "mocha",
+    "chai-friendly"
+  ],
+  "rules": {
+    "no-unused-expressions": 0,
+    "chai-friendly/no-unused-expressions": 2,
+    "no-multiple-empty-lines": [ "error", {
+      "max": 1,
+      "maxEOF": 0,
+      "maxBOF": 0
+    }]
+  },
+  "globals": {
+    "BigInt": "readonly",
+    "web3": "readonly",
+    "artifacts": "readonly",
+    "contract": "readonly",
+    "assert": "readonly"
+  }
+}

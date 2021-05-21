@@ -1,0 +1,4 @@
+node_modules
+
+# File from https://github.com/zcoinofficial/solidity-BigNumber
+contracts/VDF/BigNumber.sol
