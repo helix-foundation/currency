@@ -60,13 +60,6 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
     /* For cleaning authorizedContracts, a list of keys */
     address[] private authorizedContractAddresses;
 
-    /* Duration of each generation in seconds.
-     *
-     * 1/12 of 365.25 days, expressed in seconds:
-     *   (365.25 * 24 * 3600) / 12 = 2629800
-     */
-    uint256 public constant GENERATION_DURATION = 2629800;
-
     mapping(uint256 => InflationRootHashProposal)
         public rootHashAddressPerGeneration;
     InflationRootHashProposal public inflationRootHashProposalImpl;

@@ -48,7 +48,7 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     );
 
     await borda.propose(10, 20, 30, 40, { from: bob });
-    await time.increase(3600 * 24 * 7.1);
+    await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [web3.utils.randomHex(32), bob, [bob]];
     await borda.commit(hash(bobvote), { from: bob });

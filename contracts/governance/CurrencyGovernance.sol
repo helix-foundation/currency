@@ -29,7 +29,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 lockupInterest;
     }
 
-    uint256 public constant PROPOSAL_TIME = 7 days;
+    uint256 public constant PROPOSAL_TIME = 10 days;
     uint256 public constant VOTING_TIME = 3 days;
     uint256 public constant REVEAL_TIME = 1 days;
 

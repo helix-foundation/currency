@@ -145,7 +145,7 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Waits another week (end of commit period)', async () => {
-    await time.increase(3600 * 24 * 7);
+    await time.increase(3600 * 24 * 10);
   });
 
   it('Executes the outcome of the votes', async () => {
