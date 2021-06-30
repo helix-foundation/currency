@@ -151,7 +151,7 @@ contract('Inflation [@group=3]', (unsortedAccounts) => {
 
     const bob = accounts[1];
     await governance.propose(inflationVote, prizeVote, 0, 0, { from: bob });
-    await time.increase(3600 * 24 * 7.1);
+    await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [web3.utils.randomHex(32), bob, [bob]];
     await governance.commit(hash(bobvote), { from: bob });

@@ -62,7 +62,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
       await borda.propose(10, 10, 10, 10, { from: dave });
       await borda.propose(20, 20, 20, 20, { from: charlie });
       await borda.propose(30, 30, 30, 30, { from: bob });
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
     });
 
     it('Doesn\'t allow non-trustee to vote', async () => {
@@ -78,7 +78,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
     const hash = (x) => web3.utils.soliditySha3({ type: 'bytes32', value: x[0] }, { type: 'address', value: x[1] }, { type: 'address', value: x[2] });
 
     it('Cannot reveal without voting', async () => {
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
       await borda.updateStage();
       await time.increase(3600 * 24 * 3);
 
@@ -87,7 +87,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
     it('Rejects empty votes', async () => {
       const seed = web3.utils.randomHex(32);
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, []]), { from: bob });
       await time.increase(3600 * 24 * 3);
       await expectRevert(borda.reveal(seed, [], { from: bob }), 'Cannot vote empty');
@@ -95,7 +95,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
     it('Rejects invalid votes', async () => {
       const seed = web3.utils.randomHex(32);
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, [alice]]), { from: bob });
       await time.increase(3600 * 24 * 3);
       await expectRevert(borda.reveal(seed, [alice], { from: bob }), 'Invalid vote');
@@ -104,7 +104,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
     it('Reject duplicate votes', async () => {
       const seed = web3.utils.randomHex(32);
       await borda.propose(30, 30, 30, 30, { from: bob });
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, [bob, bob]]), { from: bob });
       await time.increase(3600 * 24 * 3);
       await expectRevert(borda.reveal(seed, [bob, bob], { from: bob }), 'Repeated vote');
@@ -112,7 +112,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
     it('Rejects changed votes', async () => {
       const seed = web3.utils.randomHex(32);
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, [bob]]), { from: bob });
       await time.increase(3600 * 24 * 3);
       await expectRevert(borda.reveal(seed, [charlie], { from: bob }), 'Commitment mismatch');
@@ -121,7 +121,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
     it('Allows reveals of correct votes', async () => {
       const seed = web3.utils.randomHex(32);
       await borda.propose(30, 30, 30, 30, { from: bob });
-      await time.increase(3600 * 24 * 7.1);
+      await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, [bob]]), { from: bob });
       await time.increase(3600 * 24 * 3);
       await borda.reveal(seed, [bob], { from: bob });
@@ -136,7 +136,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
         await borda.propose(10, 10, 10, 10, { from: dave });
         await borda.propose(20, 20, 20, 20, { from: charlie });
         await borda.propose(30, 30, 30, 30, { from: bob });
-        await time.increase(3600 * 24 * 7.1);
+        await time.increase(3600 * 24 * 10.1);
 
         await borda.commit(hash(bobvote), { from: bob });
         await borda.commit(hash(charlievote), { from: charlie });
