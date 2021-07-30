@@ -7,6 +7,7 @@ const Lockup = artifacts.require('Lockup');
 
 const {
   BN,
+  toBN,
 } = web3.utils;
 const {
   time,
@@ -54,7 +55,7 @@ contract('CurrencyTimer [@group=3]', ([alice, bob, charlie]) => {
       );
 
       beforeEach(async () => {
-        await borda.propose(10, 20, 30, 40, { from: bob });
+        await borda.propose(10, 20, 30, 40, toBN('1000000000000000000'), { from: bob });
         await time.increase(3600 * 24 * 10.1);
 
         const bobvote = [web3.utils.randomHex(32), bob, [bob]];

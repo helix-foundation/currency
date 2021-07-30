@@ -6,7 +6,9 @@ import "../policy/PolicedUtils.sol";
 import "../currency/EcoBalanceStore.sol";
 import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";
+import "../currency/InflationRootHashProposal.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /** @title Inflation Process
  *

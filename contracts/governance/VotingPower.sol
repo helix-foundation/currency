@@ -16,12 +16,12 @@ contract VotingPower is PolicedUtils {
     constructor(address _policy) public PolicedUtils(_policy) {}
 
     function totalVotingPower(uint256 _gen) public view returns (uint256) {
-        uint256 total = getStore().historicTotalSupply(_gen);
+        uint256 total = getStore().totalSupplyAt(_gen);
 
         ECOx ecox = getX();
 
         uint256 totalx =
-            ecox.historicTotalSupply(_gen).sub(
+            ecox.totalSupplyAt(_gen).sub(
                 ecox.balanceAt(address(ecox), _gen)
             );
         if (totalx > 0) {

@@ -27,6 +27,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 randomInflationPrize;
         uint256 lockupDuration;
         uint256 lockupInterest;
+        uint256 inflationMultiplier;
     }
 
     uint256 public constant PROPOSAL_TIME = 10 days;
@@ -90,7 +91,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _randomInflationWinners,
         uint256 _randomInflationPrize,
         uint256 _lockupDuration,
-        uint256 _lockupInterest
+        uint256 _lockupInterest,
+        uint256 _inflationMultiplier
     ) external onlyClone onlyTrusted atStage(Stages.Propose) {
         Proposal storage p = proposals[msg.sender];
         p.valid = true;
@@ -98,6 +100,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         p.randomInflationPrize = _randomInflationPrize;
         p.lockupDuration = _lockupDuration;
         p.lockupInterest = _lockupInterest;
+        p.inflationMultiplier = _inflationMultiplier;
     }
 
     function unpropose() external onlyClone atStage(Stages.Propose) {
@@ -128,6 +131,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
                 commitments[msg.sender],
             "Commitment mismatch"
         );
+
+        // remove the trustee's default vote
+        score[address(0)] -= 1;
 
         for (uint256 i = 0; i < _votes.length; ++i) {
             address v = _votes[i];
@@ -172,6 +178,11 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
         Proposal storage p = proposals[address(0)];
         p.valid = true;
+        // the default values for everything are currently 0
+
+        // sets the default votes for the default proposal
+        score[address(0)] = getTrustedNodes().trustedNodesLength();
+        leader = address(0);
     }
 
     /** Get the associated balance store address.

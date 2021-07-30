@@ -8,93 +8,52 @@ const bnChai = require('bn-chai');
 const {
   expect,
 } = chai;
-const PolicyInit = artifacts.require('PolicyInit');
+
 const ForwardProxy = artifacts.require('ForwardProxy');
-const FakePolicy = artifacts.require('FakePolicy');
-const FakeInflation = artifacts.require('FakeInflation');
-const MurderousPolicy = artifacts.require('MurderousPolicy');
 const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const Token = artifacts.require('Token');
-const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
-const TimedPolicies = artifacts.require('TimedPolicies');
-const SimplePolicySetter = artifacts.require('SimplePolicySetter');
-const PolicyVotes = artifacts.require('PolicyVotes');
-const PolicyProposals = artifacts.require('PolicyProposals');
+const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
-const MAX_UINT256 = new BN(
-  '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+const MAX_ACCOUNT_BALANCE = new BN(
+  '115792089237316195423570985008687907853269984665640564039457', // 584007913129639935', removed as we use 18 digits to store inflation
 );
-const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 const {
   expectEvent,
   expectRevert,
   time,
 } = require('@openzeppelin/test-helpers');
 
+const util = require('../../tools/test/util.js');
+
 chai.use(bnChai(BN));
 
-contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
+contract('EcoBalanceStore [@group=3]', (unsortedAccounts) => {
   let balanceStore;
   let policy;
-  let murderer;
-  let attemptedMurderer;
-  let inflationPolicy;
+  let token;
+  let borda;
+  let currencyTimer;
+  let faucet;
   const accounts = Array.from(unsortedAccounts);
   accounts.sort((a, b) => Number(a - b));
   let timedPolicies;
   const [creator] = accounts;
 
   beforeEach('global setup', async () => {
-    const policyInit = await PolicyInit.new();
-    const proxy = await ForwardProxy.new(policyInit.address);
-    const rootHash = await InflationRootHashProposal.new(proxy.address);
-    balanceStore = await EcoBalanceStore.new(proxy.address, rootHash.address, {
-      from: creator,
-    });
+    ({
+      policy,
+      token,
+      timedPolicies,
+      balanceStore,
+      currencyTimer,
+      faucet,
+      authedCleanup,
+      unauthedCleanup,
+    } = await util.deployPolicy());
 
-    murderer = await MurderousPolicy.new();
-    attemptedMurderer = await MurderousPolicy.new();
-    inflationPolicy = await FakeInflation.new();
-
-    const policySetter = await SimplePolicySetter.new();
-
-    const policyVotes = await PolicyVotes.new(proxy.address);
-    const policyProposals = await PolicyProposals.new(
-      proxy.address,
-      policyVotes.address,
-      policySetter.address,
+    borda = await CurrencyGovernance.at(
+      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
     );
-
-    timedPolicies = await TimedPolicies.new(
-      proxy.address,
-      policyProposals.address,
-      policySetter.address,
-      [await balanceStore.ID_BALANCESTORE()],
-      { from: creator },
-    );
-
-    const policyIdentifiers = [
-      await balanceStore.ID_CLEANUP(),
-      UNKNOWN_POLICY_ID,
-      await balanceStore.ID_CURRENCY_GOVERNANCE(),
-      await balanceStore.ID_TIMED_POLICIES(),
-      await balanceStore.ID_BALANCESTORE(),
-    ];
-    await (await PolicyInit.at(proxy.address)).fusedInit(
-      (await FakePolicy.new()).address,
-      policyIdentifiers,
-      policyIdentifiers,
-      [
-        murderer.address,
-        attemptedMurderer.address,
-        inflationPolicy.address,
-        timedPolicies.address,
-        balanceStore.address,
-      ],
-      [],
-    );
-    policy = await FakePolicy.at(proxy.address);
-    await timedPolicies.incrementGeneration();
   });
 
   describe('Initializable', () => {
@@ -124,7 +83,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
   });
 
   describe('Mintable', () => {
-    const mintAmount = 1000;
+    const mintAmount = new BN(1000);
 
     it('should start with 0 balance', async () => {
       const balance = await balanceStore.balance(accounts[0]);
@@ -139,11 +98,10 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
     });
 
     context('for the inflation policy', () => {
-      context('below MAX_UINT256', async () => {
+      context('below MAX_ACCOUNT_BALANCE', async () => {
         it('should increase the balance when minting coins', async () => {
           const startBalance = await balanceStore.balance(accounts[0]);
-          await inflationPolicy.mint(
-            balanceStore.address,
+          await faucet.mint(
             accounts[0],
             mintAmount,
           );
@@ -156,8 +114,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
           'should increase the overall token supply when minting coins',
           async () => {
             const startSupply = await balanceStore.tokenSupply();
-            await inflationPolicy.mint(
-              balanceStore.address,
+            await faucet.mint(
               accounts[1],
               mintAmount,
             );
@@ -168,12 +125,11 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
         );
       });
 
-      context('overflowing MAX_UINT256', () => {
-        const nearMaxUint256 = MAX_UINT256.sub(new BN(500));
+      context('overflowing MAX_ACCOUNT_BALANCE', () => {
+        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(new BN(500));
 
         beforeEach(async () => {
-          await inflationPolicy.mint(
-            balanceStore.address,
+          await faucet.mint(
             accounts[1],
             nearMaxUint256,
           );
@@ -181,14 +137,14 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
 
         it('should throw when minting coins', async () => {
           await expectRevert.unspecified(
-            inflationPolicy.mint(balanceStore.address, accounts[1], 600),
+            faucet.mint(accounts[1], new BN(600)),
           );
         });
 
         it('should not increase the balance when minting coins', async () => {
           const startBalance = await balanceStore.balance(accounts[1]);
           await expectRevert.unspecified(
-            inflationPolicy.mint(balanceStore.address, accounts[1], 1000),
+            faucet.mint(accounts[1], new BN(1000)),
           );
           const endBalance = await balanceStore.balance(accounts[1]);
 
@@ -200,7 +156,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
           async () => {
             const startSupply = await balanceStore.tokenSupply();
             await expectRevert.unspecified(
-              inflationPolicy.mint(balanceStore.address, accounts[1], 600),
+              faucet.mint(accounts[1], new BN(600)),
             );
             const endSupply = await balanceStore.tokenSupply();
 
@@ -393,20 +349,18 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
         label += 'T';
         await policy.setLabel(label, account.address, meta);
         await policy.authorize(balanceStore.address, label);
-        await inflationPolicy.mint(
-          balanceStore.address,
+        await faucet.mint(
           account.address,
-          1000,
+          new BN(1000),
         );
         /* eslint-enable no-await-in-loop */
       }
 
       await Promise.all(
         unauthorizedAddresses.map(
-          (account) => inflationPolicy.mint(
-            balanceStore.address,
+          (account) => faucet.mint(
             account.address,
-            1000,
+            new BN(1000),
           ),
         ),
       );
@@ -425,8 +379,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
 
     context('when making a transfer', () => {
       let from;
-      let
-        to;
+      let to;
 
       beforeEach(async () => {
         from = unauthorizedAddresses[0].address;
@@ -521,7 +474,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
 
       /* In theory we should also test to verify that we can't cause any
        * integer overflows in account balances. However, because the total
-       * token supply is bounded above by MAX_UINT256, and this is verified to
+       * token supply is bounded above by MAX_ACCOUNT_BALANCE, and this is verified to
        * be enforced in the tests for Mintable, we know that there can never be
        * enough total tokens to cause an overflow. We can't even cause the
        * situation here in order to test it, unless we implement some sort of
@@ -545,14 +498,14 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
 
     context('when instructed by an authorized policy', () => {
       it('can be killed', async () => {
-        await murderer.destruct(balanceStore.address);
+        await authedCleanup.destruct(balanceStore.address);
       });
     });
 
     context('when instructed by an unauthorized policy', () => {
       it('cannot be killed', async () => {
         await expectRevert(
-          attemptedMurderer.destruct(balanceStore.address),
+          unauthedCleanup.destruct(balanceStore.address),
           'Only the cleanup policy contract',
         );
       });
@@ -592,7 +545,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
       let initialBalance;
 
       beforeEach(async () => {
-        await inflationPolicy.mint(balanceStore.address, testAccount, 1000);
+        await faucet.mint(testAccount, new BN(1000));
         originalGeneration = (await balanceStore.currentGeneration()).toNumber();
         initialBalance = await balanceStore.balanceAt(
           accounts[1],
@@ -642,7 +595,7 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
 
       beforeEach('set things up and let some time pass', async () => {
         originalGeneration = await balanceStore.currentGeneration();
-        await inflationPolicy.mint(balanceStore.address, testAccount, 1000);
+        await faucet.mint(testAccount, new BN(1000));
         initialBalance = await balanceStore.balanceAt(
           accounts[1],
           originalGeneration,
@@ -734,16 +687,16 @@ contract('EcoBalanceStore [@group=1]', (unsortedAccounts) => {
         for (let i = 0; i < 3; i += 1) {
           /* eslint-disable no-await-in-loop */
           if (i === 0) {
-            await inflationPolicy.mint(balanceStore.address, testAccount2, 1000);
+            await faucet.mint(testAccount2, new BN(1000));
           }
 
-          await inflationPolicy.mint(balanceStore.address, testAccount1, 1000);
+          await faucet.mint(testAccount1, new BN(1000));
           await time.increase(31557600 / 10);
           await timedPolicies.incrementGeneration();
-          await inflationPolicy.mint(balanceStore.address, testAccount1, 10);
+          await faucet.mint(testAccount1, new BN(10));
 
           if (i === 2) {
-            await inflationPolicy.mint(balanceStore.address, testAccount2, 1000);
+            await faucet.mint(testAccount2, new BN(1000));
           }
           /* eslint-enable no-await-in-loop */
         }

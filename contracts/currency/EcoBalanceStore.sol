@@ -7,6 +7,7 @@ import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "./TokenEvents.sol";
 import "./GenerationStore.sol";
+import "../governance/CurrencyGovernance.sol";
 import "./InflationRootHashProposal.sol";
 
 /** @title Eco Balance Store
@@ -59,6 +60,8 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
 
     /* For cleaning authorizedContracts, a list of keys */
     address[] private authorizedContractAddresses;
+    
+    uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1_000_000_000_000_000_000;
 
     mapping(uint256 => InflationRootHashProposal)
         public rootHashAddressPerGeneration;
@@ -70,6 +73,7 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
     ) public GenerationStore(_policy) {
         configureDefaultAuthorizedContracts();
         inflationRootHashProposalImpl = _rootHashProposalImpl;
+        historicLinearInflation[GENERATION_START] = INITIAL_INFLATION_MULTIPLIER;
     }
 
     function configureDefaultAuthorizedContracts() internal {
@@ -148,12 +152,14 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         update(_from);
         update(_to);
 
+        uint256 _uninflatedValue = _value.mul(historicLinearInflation[currentGeneration]);
+
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
-        require(bal[_from] >= _value, "Source account has insufficient tokens");
+        require(bal[_from] >= _uninflatedValue, "Source account has insufficient tokens");
 
-        bal[_from] = bal[_from].sub(_value);
-        bal[_to] = bal[_to].add(_value);
+        bal[_from] = bal[_from].sub(_uninflatedValue);
+        bal[_to] = bal[_to].add(_uninflatedValue);
     }
 
     function tokenBurn(
@@ -163,6 +169,7 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         bytes calldata _data,
         bytes calldata _operatorData
     ) external {
+        // apply inflation scalefactor here to convert _value to the uninflated store
         bool authorized = _msgSender() == policy;
         for (uint256 i = 0; i < authorizedContractAddresses.length; ++i) {
             TokenEvents token = TokenEvents(authorizedContractAddresses[i]);
@@ -179,11 +186,14 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         require(authorized, "Sender not authorized to call this function");
 
         update(_from);
+
+        uint256 _uninflatedValue = _value.mul(historicLinearInflation[currentGeneration]);
+
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
-        require(bal[_from] >= _value, "Insufficient funds to burn");
-        bal[_from] = bal[_from].sub(_value);
-        tokenSupply = tokenSupply.sub(_value);
+        require(bal[_from] >= _uninflatedValue, "Insufficient funds to burn");
+        bal[_from] = bal[_from].sub(_uninflatedValue);
+        historicTotalSupplyUninflated[currentGeneration] = historicTotalSupplyUninflated[currentGeneration].sub(_uninflatedValue);
     }
 
     function initialize(address _self) public override onlyConstruction {
@@ -203,9 +213,10 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         );
 
         update(_to);
+        uint256 _uninflatedValue = _value.mul(historicLinearInflation[currentGeneration]);
         mapping(address => uint256) storage bal = balances[currentGeneration];
-        bal[_to] = bal[_to].add(_value);
-        tokenSupply = tokenSupply.add(_value);
+        bal[_to] = bal[_to].add(_uninflatedValue);
+        historicTotalSupplyUninflated[currentGeneration] = historicTotalSupplyUninflated[currentGeneration].add(_uninflatedValue);
         for (uint256 i = 0; i < authorizedContractAddresses.length; ++i) {
             TokenEvents token = TokenEvents(authorizedContractAddresses[i]);
             token.emitMintedEvent(_msgSender(), _to, _value, "", "");
@@ -255,8 +266,35 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
     }
 
     function notifyGenerationIncrease() public virtual override {
+
         uint256 _old = currentGeneration;
         super.notifyGenerationIncrease();
+
+        CurrencyGovernance bg =
+            CurrencyGovernance(policyFor(ID_CURRENCY_GOVERNANCE));
+
+        if (address(bg) != address(0)) {
+            address winner = bg.winner();
+            if (winner != address(0)) {
+                bool _valid;
+                uint256 _randomInflationWinners;
+                uint256 _randomInflationPrize;
+                uint256 _lockupDuration;
+                uint256 _lockupInterest;
+                uint256 _inflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
+                (
+                    _valid,
+                    _randomInflationWinners,
+                    _randomInflationPrize,
+                    _lockupDuration,
+                    _lockupInterest,
+                    _inflationMultiplier
+                ) = bg.proposals(winner);
+
+                // updates the inflation value 
+                historicLinearInflation[currentGeneration] = historicLinearInflation[currentGeneration].mul(_inflationMultiplier).div(INITIAL_INFLATION_MULTIPLIER);
+            }
+        }
 
         rootHashAddressPerGeneration[_old] = InflationRootHashProposal(
             inflationRootHashProposalImpl.clone()

@@ -70,21 +70,23 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
         CurrencyGovernance bg =
             CurrencyGovernance(policyFor(ID_CURRENCY_GOVERNANCE));
 
-        uint256 randomInflationWinners = 0;
-        uint256 randomInflationPrize = 0;
-        uint256 lockupDuration = 0;
-        uint256 lockupInterest = 0;
+        uint256 _randomInflationWinners = 0;
+        uint256 _randomInflationPrize = 0;
+        uint256 _lockupDuration = 0;
+        uint256 _lockupInterest = 0;
 
         if (address(bg) != address(0)) {
             address winner = bg.winner();
             if (winner != address(0)) {
-                bool valid;
+                bool _valid;
+                uint256 _inflationMultiplier;
                 (
-                    valid,
-                    randomInflationWinners,
-                    randomInflationPrize,
-                    lockupDuration,
-                    lockupInterest
+                    _valid,
+                    _randomInflationWinners,
+                    _randomInflationPrize,
+                    _lockupDuration,
+                    _lockupInterest,
+                    _inflationMultiplier
                 ) = bg.proposals(winner);
             }
         }
@@ -102,15 +104,15 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
             sps.destruct();
         }
 
-        if (randomInflationWinners > 0 && randomInflationPrize > 0) {
+        if (_randomInflationWinners > 0 && _randomInflationPrize > 0) {
             address _clone = Inflation(inflationImpl).clone();
             getStore().mint(
                 _clone,
-                randomInflationWinners.mul(randomInflationPrize)
+                _randomInflationWinners.mul(_randomInflationPrize)
             );
             Inflation(_clone).startInflation(
-                randomInflationWinners,
-                randomInflationPrize
+                _randomInflationWinners,
+                _randomInflationPrize
             );
             emit InflationStarted(_clone);
         }
@@ -120,9 +122,9 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
             getStore().mint(address(lockup), lockup.mintNeeded());
         }
 
-        if (lockupDuration > 0 && lockupInterest > 0) {
+        if (_lockupDuration > 0 && _lockupInterest > 0) {
             lockup = Lockup(
-                Lockup(lockupImpl).clone(lockupDuration, lockupInterest)
+                Lockup(lockupImpl).clone(_lockupDuration, _lockupInterest)
             );
             emit LockupOffered(address(lockup));
             lockups[_new] = address(lockup);
