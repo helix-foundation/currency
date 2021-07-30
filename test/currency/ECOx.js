@@ -5,6 +5,7 @@ const chai = require('chai');
 
 const {
   BN,
+  toBN,
 } = web3.utils;
 const bnChai = require('bn-chai');
 
@@ -83,7 +84,7 @@ contract('ECOx', ([alice, bob, charlie]) => {
         await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
       );
 
-      await borda.propose(0, 0, 30, 40, { from: bob });
+      await borda.propose(0, 0, 30, 40, toBN('1000000000000000000'), { from: bob });
       await time.increase(3600 * 24 * 10.1);
 
       const bobvote = [web3.utils.randomHex(32), bob, [bob]];

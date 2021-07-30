@@ -33,19 +33,23 @@ abstract contract GenerationStore is
     /* Minimum number of generations to keep. */
     uint256 public constant GENERATIONS_TO_KEEP = 3;
 
-    uint256 private constant GENERATION_START = 1000;
+    /* Starting value for generation store */
+    uint256 public constant GENERATION_START = 1000;
 
-    /* Current total supply */
-    uint256 public tokenSupply;
-
-    /* Mapping for historical total supply; does not include current
-     * generation.
+    /* Mapping from generation index to historical total supply.
+     * Includes the current generation.
      */
-    mapping(uint256 => uint256) public historicTotalSupply;
+    mapping(uint256 => uint256) public historicTotalSupplyUninflated;
+
+    /* Mapping from generation index to historical inflation scale factor.
+     * Includes the current generation.
+     */
+    mapping(uint256 => uint256) public historicLinearInflation;
 
     /* A mapping to store the actual balances of tokens held by each
      * address, with monthly snapshots.
-     * The balances values are in basic unit of 10^{-18} (atto) ECO tokens
+     * The balances values are in the uninflated units which are (initially)
+     * units of 10^-36 ECO
      */
     mapping(uint256 => mapping(address => uint256)) public balances;
 
@@ -88,12 +92,33 @@ abstract contract GenerationStore is
      */
     constructor(address _policy) internal PolicedUtils(_policy) {
         currentGeneration = GENERATION_START;
+        historicLinearInflation[GENERATION_START] = 1;
     }
 
     /** Access function to determine the token balance held by some address.
+     * Function is included for interface compliance and convenience, but just
+     * backs into balanceAt
      */
     function balance(address _owner) public view returns (uint256) {
-        return balances[generationForAddress[_owner]][_owner];
+        return balanceAt(_owner, currentGeneration);
+    }
+
+    /** Returns the total (inflation corrected) token supply
+     */
+    function tokenSupply() public view returns (uint256) {
+        return historicTotalSupplyUninflated[currentGeneration].div(historicLinearInflation[currentGeneration]);
+    }
+
+    /** Setter for the total (inflation corrected) token supply
+     */
+    function setTokenSupply(uint256 _amount) internal {
+        historicTotalSupplyUninflated[currentGeneration] = _amount.mul(historicLinearInflation[currentGeneration]);
+    }
+
+    /** Returns the total (inflation corrected) token supply at a specified generation index
+     */
+    function totalSupplyAt(uint256 _generation) public view returns (uint256) {
+        return historicTotalSupplyUninflated[_generation].div(historicLinearInflation[_generation]);
     }
 
     /** Initialize a balance store based on the storage of the contract at the
@@ -217,8 +242,11 @@ abstract contract GenerationStore is
         uint256 _new = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
         require(_new != _old, "Generation has not increased");
 
+        // update currentGeneration
         currentGeneration = _new;
-        historicTotalSupply[_old] = tokenSupply;
+        // make sure the _old values for historicTotalSupplyUninflated and historicLinearInflation are pushed forward
+        historicTotalSupplyUninflated[currentGeneration] = historicTotalSupplyUninflated[_old];
+        historicLinearInflation[currentGeneration] = historicLinearInflation[_old];
     }
 
     /** Return historical balance at given generation.
@@ -231,6 +259,7 @@ abstract contract GenerationStore is
      * generations too far back from the current generation of the address. Only
      * GENERATIONS_TO_KEEP generations of history are preserved, and 0 will be
      * returned for any generation that is no longer in the historical record.
+     * This includes when there is no historical value for inflation.
      *
      * @param _owner The account to check the balance of.
      * @param _pastGeneration The generation to check the balance at the start
@@ -238,7 +267,7 @@ abstract contract GenerationStore is
      *                        generation (`currentGeneration`).
      */
     function balanceAt(address _owner, uint256 _pastGeneration)
-        external
+        public
         view
         override
         returns (uint256)
@@ -247,10 +276,17 @@ abstract contract GenerationStore is
             _pastGeneration <= currentGeneration,
             "No such generation exists yet!"
         );
+
+        uint256 _linearInflation = historicLinearInflation[_pastGeneration];
+
+        if (_linearInflation == 0) {
+            return 0;
+        }
+
         if (_pastGeneration > generationForAddress[_owner]) {
-            return balances[generationForAddress[_owner]][_owner];
+            return balances[generationForAddress[_owner]][_owner].div(_linearInflation);
         } else {
-            return balances[_pastGeneration][_owner];
+            return balances[_pastGeneration][_owner].div(_linearInflation);
         }
     }
 }

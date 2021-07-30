@@ -115,7 +115,7 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
       );
 
       // Proposal with 10% lockup
-      await borda.propose(0, 0, 30, toBN('100000000'), { from: bob });
+      await borda.propose(0, 0, 30, toBN('100000000'), toBN('1000000000000000000'), { from: bob });
       await time.increase(3600 * 24 * 10.1);
 
       const bobvote = [web3.utils.randomHex(32), bob, [bob]];

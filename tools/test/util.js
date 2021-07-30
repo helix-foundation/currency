@@ -7,7 +7,7 @@ const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const ECOx = artifacts.require('ECOx');
 const Inflation = artifacts.require('Inflation');
-const PolicyTest = artifacts.require('PolicyTest');
+const FakePolicy = artifacts.require('FakePolicy');
 const VDFVerifier = artifacts.require('VDFVerifier');
 const RootHashProposal = artifacts.require('InflationRootHashProposal');
 const TimedPolicies = artifacts.require('TimedPolicies');
@@ -19,6 +19,7 @@ const SimplePolicySetter = artifacts.require('SimplePolicySetter');
 const Lockup = artifacts.require('Lockup');
 const PolicyVotes = artifacts.require('PolicyVotes');
 const PolicyProposals = artifacts.require('PolicyProposals');
+const Cleanup = artifacts.require('MurderousPolicy');
 
 const { singletons } = require('@openzeppelin/test-helpers');
 
@@ -34,6 +35,8 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const trustedNodesHash = web3.utils.soliditySha3('TrustedNodes');
   const faucetHash = web3.utils.soliditySha3('Faucet');
   const currencyTimerHash = web3.utils.soliditySha3('CurrencyTimer');
+  const cleanupHash = web3.utils.soliditySha3('ContractCleanup');
+  const unknownPolicyIDHash = web3.utils.soliditySha3('bobingy');
 
   const init = await PolicyInit.new();
   const proxy = await ForwardProxy.new(init.address);
@@ -43,6 +46,8 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const token = await ERC20EcoToken.new(proxy.address);
   const ecox = await ECOx.new(proxy.address);
   const vdf = await VDFVerifier.new(proxy.address);
+  const authedCleanup = await Cleanup.new();
+  const unauthedCleanup = await Cleanup.new();
 
   const inflation = await Inflation.new(proxy.address, vdf.address, 2);
   const trustedNodes = await TrustedNodes.new(proxy.address, trustees);
@@ -75,12 +80,13 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   );
 
   await (await PolicyInit.at(proxy.address)).fusedInit(
-    (await PolicyTest.new()).address,
+    (await FakePolicy.new()).address,
     [
       timedPoliciesIdentifierHash,
       policyProposalsIdentifierHash,
       policyVotesIdentifierHash,
       currencyTimerHash,
+      cleanupHash,
     ],
     [
       tokenHash,
@@ -90,6 +96,8 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
       trustedNodesHash,
       faucetHash,
       currencyTimerHash,
+      cleanupHash,
+      unknownPolicyIDHash,
     ],
     [
       token.address,
@@ -99,6 +107,8 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
       trustedNodes.address,
       faucet.address,
       currencyTimer.address,
+      authedCleanup.address,
+      unauthedCleanup.address,
     ],
     [tokenHash],
   );
@@ -113,7 +123,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   };
 
   return {
-    policy: (await PolicyTest.at(proxy.address)),
+    policy: (await FakePolicy.at(proxy.address)),
     balanceStore,
     token,
     initInflation,
@@ -126,6 +136,8 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     currencyTimer,
     lockup,
     faucet,
+    authedCleanup,
+    unauthedCleanup,
   };
 };
 

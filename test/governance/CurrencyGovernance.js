@@ -8,7 +8,7 @@ const bnChai = require('bn-chai');
 
 const { expect } = chai;
 
-const { BN } = web3.utils;
+const { BN, toBN } = web3.utils;
 const {
   expectRevert, time,
 } = require('@openzeppelin/test-helpers');
@@ -33,11 +33,11 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
   describe('Propose phase', () => {
     it('Doesn\'t allow non-trustee to propose', async () => {
-      await expectRevert(borda.propose(33, 34, 35, 36), 'Only trusted nodes can call this method');
+      await expectRevert(borda.propose(33, 34, 35, 36, toBN('1000000000000000000')), 'Only trusted nodes can call this method');
     });
 
     it('Allows trustees to propose', async () => {
-      await borda.propose(33, 34, 35, 36, { from: bob });
+      await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
 
       const p = await borda.proposals(bob);
       expect(p.valid).to.be.true;
@@ -49,7 +49,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
     });
 
     it('Allows removing proposals', async () => {
-      await borda.propose(33, 34, 35, 36, { from: bob });
+      await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
       await borda.unpropose({ from: bob });
 
       const p = await borda.proposals(bob);
@@ -59,9 +59,9 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
   describe('Voting phase', () => {
     beforeEach(async () => {
-      await borda.propose(10, 10, 10, 10, { from: dave });
-      await borda.propose(20, 20, 20, 20, { from: charlie });
-      await borda.propose(30, 30, 30, 30, { from: bob });
+      await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
+      await borda.propose(20, 20, 20, 20, toBN('1000000000000000000'), { from: charlie });
+      await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
       await time.increase(3600 * 24 * 10.1);
     });
 
@@ -103,7 +103,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
     it('Reject duplicate votes', async () => {
       const seed = web3.utils.randomHex(32);
-      await borda.propose(30, 30, 30, 30, { from: bob });
+      await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
       await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, [bob, bob]]), { from: bob });
       await time.increase(3600 * 24 * 3);
@@ -120,7 +120,7 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
 
     it('Allows reveals of correct votes', async () => {
       const seed = web3.utils.randomHex(32);
-      await borda.propose(30, 30, 30, 30, { from: bob });
+      await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
       await time.increase(3600 * 24 * 10.1);
       await borda.commit(hash([seed, bob, [bob]]), { from: bob });
       await time.increase(3600 * 24 * 3);
@@ -133,9 +133,9 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
       const davevote = [web3.utils.randomHex(32), dave, [dave, charlie, bob]];
 
       beforeEach(async () => {
-        await borda.propose(10, 10, 10, 10, { from: dave });
-        await borda.propose(20, 20, 20, 20, { from: charlie });
-        await borda.propose(30, 30, 30, 30, { from: bob });
+        await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
+        await borda.propose(20, 20, 20, 20, toBN('1000000000000000000'), { from: charlie });
+        await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
         await time.increase(3600 * 24 * 10.1);
 
         await borda.commit(hash(bobvote), { from: bob });
@@ -171,6 +171,21 @@ contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
         expect(await borda.score(charlie)).to.eq.BN(5);
         expect(await borda.score(dave)).to.eq.BN(4);
         expect(await borda.leader()).to.equal(charlie);
+      });
+
+      it('Computing defaults if no one reveals', async () => {
+        await time.increase(3600 * 24 * 1);
+        await borda.updateStage();
+        await borda.compute();
+        expect(await borda.winner()).to.equal('0x0000000000000000000000000000000000000000');
+      });
+
+      it('Charlie reveal should not override the default vote', async () => {
+        await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
+        await time.increase(3600 * 24 * 1);
+        await borda.updateStage();
+        await borda.compute();
+        expect(await borda.winner()).to.equal('0x0000000000000000000000000000000000000000');
       });
 
       describe('Compute Phase', async () => {

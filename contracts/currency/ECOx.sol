@@ -40,7 +40,7 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
     mapping(uint256 => uint256) public historicMinted;
 
     function totalSupply() external view override returns (uint256) {
-        return tokenSupply;
+        return tokenSupply();
     }
 
     function balanceOf(address _address)
@@ -134,7 +134,7 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         emit Transfer(_from, address(0), _value);
 
         bal[_from] = bal[_from].sub(_value);
-        tokenSupply = tokenSupply.sub(_value);
+        setTokenSupply(tokenSupply().sub(_value));
     }
 
     function initialize(address _self) public override onlyConstruction {
@@ -145,7 +145,7 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
     function valueOf(uint256 _value) public view returns (uint256) {
         uint256 ecoSupply = getToken().totalSupply().sub(minted);
 
-        return ecoSupply.mul(_value).div(tokenSupply).mul(rate).div(BILLION);
+        return ecoSupply.mul(_value).div(tokenSupply()).mul(rate).div(BILLION);
     }
 
     function valueAt(uint256 _value, uint256 _gen)
@@ -154,9 +154,9 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         returns (uint256)
     {
         uint256 ecoSupply =
-            getStore().historicTotalSupply(_gen).sub(historicMinted[_gen]);
+            getStore().totalSupplyAt(_gen).sub(historicMinted[_gen]);
         return
-            ecoSupply.mul(_value).div(historicTotalSupply[_gen]).mul(rate).div(
+            ecoSupply.mul(_value).div(totalSupplyAt(_gen)).mul(rate).div(
                 BILLION
             );
     }
@@ -187,7 +187,7 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
         bal[_to] = bal[_to].add(_value);
-        tokenSupply = tokenSupply.add(_value);
+        setTokenSupply(tokenSupply().add(_value));
 
         emit Transfer(address(0), _to, _value);
     }

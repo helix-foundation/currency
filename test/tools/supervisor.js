@@ -216,7 +216,7 @@ contract('Production Supervisor', (accounts) => {
 
   it('Commits, then reveals votes', async () => {
     const bob = accounts[1];
-    await governance.propose(4500, 250, 0, 0, { from: bob });
+    await governance.propose(4500, 250, 0, 0, toBN('1000000000000000000'), { from: bob });
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [web3.utils.randomHex(32), bob, [bob]];
@@ -245,7 +245,7 @@ contract('Production Supervisor', (accounts) => {
   it('Lockup time!', async () => {
     governance = await CurrencyGovernance.at(await util.policyFor(policy, governanceHash));
     const bob = accounts[1];
-    await governance.propose(0, 0, 4500, 250, { from: bob });
+    await governance.propose(0, 0, 4500, 250, toBN('1000000000000000000'), { from: bob });
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [web3.utils.randomHex(32), bob, [bob]];

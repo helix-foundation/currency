@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
 
-import "./TrustedNodes.sol";
+import "../governance/TrustedNodes.sol";
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
 import "../currency/EcoBalanceStore.sol";
-import "./Inflation.sol";
+import "../governance/Inflation.sol";
 import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";
 
@@ -15,7 +15,7 @@ import "../VDF/VDFVerifier.sol";
  * nodes vote to create or lock up currency to manage the relative price of
  * Eco tokens.
  */
-contract CurrencyGovernance is PolicedUtils, TimeUtils {
+contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
     using SafeMath for uint256;
     enum Stages {Propose, Commit, Reveal, Compute, Finished}
 
@@ -27,10 +27,10 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 randomInflationPrize;
         uint256 lockupDuration;
         uint256 lockupInterest;
-        uint256 inflationMultiplier;
+        uint256 numPoodles;
     }
 
-    uint256 public constant PROPOSAL_TIME = 10 days;
+    uint256 public constant PROPOSAL_TIME = 7 days;
     uint256 public constant VOTING_TIME = 3 days;
     uint256 public constant REVEAL_TIME = 1 days;
 
@@ -64,6 +64,10 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         _;
     }
 
+    function provePoodles() public pure returns (bool) {
+      return true;
+    }
+
     function updateStage() public {
         uint256 time = getTime();
         if (stage == Stages.Propose && time >= proposalEnds) {
@@ -92,7 +96,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _randomInflationPrize,
         uint256 _lockupDuration,
         uint256 _lockupInterest,
-        uint256 _inflationMultiplier
+        uint256 _numPoodles
     ) external onlyClone onlyTrusted atStage(Stages.Propose) {
         Proposal storage p = proposals[msg.sender];
         p.valid = true;
@@ -100,7 +104,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         p.randomInflationPrize = _randomInflationPrize;
         p.lockupDuration = _lockupDuration;
         p.lockupInterest = _lockupInterest;
-        p.inflationMultiplier = _inflationMultiplier;
+        p.numPoodles = _numPoodles;
     }
 
     function unpropose() external onlyClone atStage(Stages.Propose) {
@@ -131,9 +135,6 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
                 commitments[msg.sender],
             "Commitment mismatch"
         );
-
-        // remove the trustee's default vote
-        score[address(0)] -= 1;
 
         for (uint256 i = 0; i < _votes.length; ++i) {
             address v = _votes[i];
@@ -178,11 +179,6 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
         Proposal storage p = proposals[address(0)];
         p.valid = true;
-        // the default values for everything are currently 0
-
-        // sets the default votes for the default proposal
-        score[address(0)] = getTrustedNodes().trustedNodesLength();
-        leader = address(0);
     }
 
     /** Get the associated balance store address.
