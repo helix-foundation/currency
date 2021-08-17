@@ -87,9 +87,12 @@ contract('ECOx', ([alice, bob, charlie]) => {
       await borda.propose(0, 0, 30, 40, toBN('1000000000000000000'), { from: bob });
       await time.increase(3600 * 24 * 10.1);
 
+      const alicevote = [web3.utils.randomHex(32), alice, [bob]];
+      await borda.commit(hash(alicevote), { from: alice });
       const bobvote = [web3.utils.randomHex(32), bob, [bob]];
       await borda.commit(hash(bobvote), { from: bob });
       await time.increase(3600 * 24 * 3);
+      await borda.reveal(alicevote[0], alicevote[2], { from: alice });
       await borda.reveal(bobvote[0], bobvote[2], { from: bob });
       await time.increase(3600 * 24 * 1);
       await borda.updateStage();
