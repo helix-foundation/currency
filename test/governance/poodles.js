@@ -24,8 +24,8 @@ const {
   time,
 } = require('@openzeppelin/test-helpers');
 
-const util = require('../../tools/test/util.js');
-const { isCoverage } = require('../../tools/test/coverage.js');
+const util = require('../../tools/test/util');
+const { isCoverage } = require('../../tools/test/coverage');
 
 const { toBN } = web3.utils;
 

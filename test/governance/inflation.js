@@ -16,15 +16,15 @@ const {
   time,
 } = require('@openzeppelin/test-helpers');
 
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 const {
   prove,
   bnHex,
-} = require('../../tools/vdf.js');
+} = require('../../tools/vdf');
 const {
   getTree,
   answer,
-} = require('../../tools/ticketlessInflationUtils.js');
+} = require('../../tools/ticketlessInflationUtils');
 
 contract('Inflation [@group=3]', (unsortedAccounts) => {
   let policy;

@@ -7,8 +7,8 @@ const TokenTarget = artifacts.require('TokenTarget');
 const { assert } = require('chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
-const Nick = require('../../tools/nicks.js');
-const { isCoverage } = require('../../tools/test/coverage.js');
+const Nick = require('../../tools/nicks');
+const { isCoverage } = require('../../tools/test/coverage');
 
 /*
  * Demonstrate full cycle upgrade with constant address.

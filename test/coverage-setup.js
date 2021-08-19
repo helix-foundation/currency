@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle, no-param-reassign, no-console */
 
-const { isCoverage } = require('../tools/test/coverage.js');
+const { isCoverage } = require('../tools/test/coverage');
 
 before(async () => {
   if (!await isCoverage()) {

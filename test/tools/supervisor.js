@@ -24,9 +24,9 @@ const bnChai = require('bn-chai');
 const { assert, expect } = chai;
 
 const { awaitAllVDFEnded } = require('../../tools/utils');
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
-const { Supervisor } = require('../../tools/supervisor.js');
+const { Supervisor } = require('../../tools/supervisor');
 
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));

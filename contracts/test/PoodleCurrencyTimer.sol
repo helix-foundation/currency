@@ -23,8 +23,12 @@ contract PoodleCurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
      * inherets from so as to successfully masquerade as CurrencyTimer and run setBordaImpl()
      */
     constructor(address _policy) PolicedUtils(_policy) {}
+
     function notifyGenerationIncrease() external override {}
-    function lockups(uint256) external override view returns (address) { return address(0x0); }
+
+    function lockups(uint256) external view override returns (address) {
+        return address(0x0);
+    }
 
     /** Function for changing the address of the governance contract for subsequent generations
      *
@@ -33,6 +37,6 @@ contract PoodleCurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
      * @param _newBordaImpl The address of the new governance template contract.
      */
     function setBordaImpl(address _newBordaImpl) public {
-      bordaImpl = _newBordaImpl;
+        bordaImpl = _newBordaImpl;
     }
 }

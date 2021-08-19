@@ -12,7 +12,7 @@ const {
 const ForwardProxy = artifacts.require('ForwardProxy');
 const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const Token = artifacts.require('Token');
-const CurrencyGovernance = artifacts.require('CurrencyGovernance');
+// const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
 const MAX_ACCOUNT_BALANCE = new BN(
   '115792089237316195423570985008687907853269984665640564039457', // 584007913129639935', removed as we use 18 digits to store inflation
@@ -23,17 +23,19 @@ const {
   time,
 } = require('@openzeppelin/test-helpers');
 
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
 contract('EcoBalanceStore [@group=3]', (unsortedAccounts) => {
   let balanceStore;
   let policy;
-  let token;
-  let borda;
-  let currencyTimer;
+  // let token;
+  // let borda;
+  // let currencyTimer;
   let faucet;
+  let authedCleanup;
+  let unauthedCleanup;
   const accounts = Array.from(unsortedAccounts);
   accounts.sort((a, b) => Number(a - b));
   let timedPolicies;
@@ -42,18 +44,18 @@ contract('EcoBalanceStore [@group=3]', (unsortedAccounts) => {
   beforeEach('global setup', async () => {
     ({
       policy,
-      token,
+      // token,
       timedPolicies,
       balanceStore,
-      currencyTimer,
+      // currencyTimer,
       faucet,
       authedCleanup,
       unauthedCleanup,
     } = await util.deployPolicy());
 
-    borda = await CurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
-    );
+    // borda = await CurrencyGovernance.at(
+    //   await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+    // );
   });
 
   describe('Initializable', () => {

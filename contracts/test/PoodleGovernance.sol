@@ -65,7 +65,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
     }
 
     function provePoodles() public pure returns (bool) {
-      return true;
+        return true;
     }
 
     function updateStage() public {

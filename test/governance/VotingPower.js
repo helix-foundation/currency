@@ -10,7 +10,7 @@ const {
   time,
 } = require('@openzeppelin/test-helpers');
 
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));

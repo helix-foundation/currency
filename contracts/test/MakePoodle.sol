@@ -55,8 +55,12 @@ contract MakePoodle is Policy, Proposal {
         address _currencyTimer = policyFor(_currencyTimerId);
 
         address _newGovernance = MakePoodle(_self).newGovernance();
-        address _switcherCurrencyTimer = MakePoodle(_self).switcherCurrencyTimer();
+        address _switcherCurrencyTimer =
+            MakePoodle(_self).switcherCurrencyTimer();
 
-        Policed(_currencyTimer).policyCommand(_switcherCurrencyTimer, abi.encodeWithSignature("setBordaImpl(address)", _newGovernance));
+        Policed(_currencyTimer).policyCommand(
+            _switcherCurrencyTimer,
+            abi.encodeWithSignature("setBordaImpl(address)", _newGovernance)
+        );
     }
 }

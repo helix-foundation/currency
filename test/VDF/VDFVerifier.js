@@ -11,7 +11,7 @@ const { expect } = chai;
 
 const {
   prove, n, bnHex,
-} = require('../../tools/vdf.js');
+} = require('../../tools/vdf');
 
 chai.use(bnChai(BN));
 

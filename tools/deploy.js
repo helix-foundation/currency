@@ -12,7 +12,7 @@
 // ####### Parameters ########
 
 // ## Dependencies
-const nick = require('./nicks.js');
+const nick = require('./nicks');
 
 const BLOCK_GAS_LIMIT = 6000000;
 

@@ -23,7 +23,7 @@ const {
   expectEvent, expectRevert, constants, singletons,
 } = require('@openzeppelin/test-helpers');
 
-const { isCoverage } = require('../../tools/test/coverage.js');
+const { isCoverage } = require('../../tools/test/coverage');
 
 const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 

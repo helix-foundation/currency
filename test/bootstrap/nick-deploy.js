@@ -2,8 +2,8 @@ const { assert } = require('chai');
 
 const EcoBootstrap = artifacts.require('EcoBootstrap');
 
-const Nick = require('../../tools/nicks.js');
-const { isCoverage } = require('../../tools/test/coverage.js');
+const Nick = require('../../tools/nicks');
+const { isCoverage } = require('../../tools/test/coverage');
 
 contract('Nick\'s method [@group=2]', async (accounts) => {
   it('deploys', async () => {

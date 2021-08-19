@@ -8,7 +8,7 @@ const chai = require('chai');
 
 const { BN, toBN } = web3.utils;
 const bnChai = require('bn-chai');
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 const { expect } = chai;
 

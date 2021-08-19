@@ -2,7 +2,7 @@ const SimplePolicySetter = artifacts.require('SimplePolicySetter');
 const SimplePolicyCloner = artifacts.require('SimplePolicyCloner');
 const Backdoor = artifacts.require('Backdoor');
 const { expectRevert, constants } = require('@openzeppelin/test-helpers');
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 contract('SimplePolicySetter [@group=2]', () => {
   let policy;

@@ -20,7 +20,7 @@ const GAS_PRICE_GWEI = '1';
 const Web3 = require('web3');
 const linker = require('solc/linker');
 const CLA = require('command-line-args');
-const nick = require('./tools/nick.js');
+const nick = require('./tools/nick');
 const web3 = new Web3(webrpc);
 const GAS_PRICE = web3.utils.toWei(GAS_PRICE_GWEI, 'Gwei');
 console.log('Gas price:', GAS_PRICE);

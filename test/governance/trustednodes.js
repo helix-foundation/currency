@@ -1,5 +1,5 @@
 const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 const TrustedNodes = artifacts.require('TrustedNodes');
 

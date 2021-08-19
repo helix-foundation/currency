@@ -5,7 +5,7 @@ const ImplementationUpdatingTarget = artifacts.require(
 );
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
-const { isCoverage } = require('../../tools/test/coverage.js');
+const { isCoverage } = require('../../tools/test/coverage');
 
 contract('ForwardTarget [@group=2]', () => {
   let proxy;

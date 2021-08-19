@@ -27,7 +27,7 @@ const { n, bnHex } = require('./vdf');
 const {
   getTree,
   answer,
-} = require('./ticketlessInflationUtils.js');
+} = require('./ticketlessInflationUtils');
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

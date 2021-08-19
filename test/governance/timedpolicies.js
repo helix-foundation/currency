@@ -3,7 +3,7 @@ const ForwardProxy = artifacts.require('ForwardProxy');
 const {
   expectEvent, time,
 } = require('@openzeppelin/test-helpers');
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 contract('TimedPolicies [@group=2]', () => {
   let policy;

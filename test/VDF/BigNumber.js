@@ -4,7 +4,7 @@ const BigNum = artifacts.require('BigNum');
 const chai = require('chai');
 const bnChai = require('bn-chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
-const { isCoverage } = require('../../tools/test/coverage.js');
+const { isCoverage } = require('../../tools/test/coverage');
 
 const { BN, toBN } = web3.utils;
 const { expect } = chai;

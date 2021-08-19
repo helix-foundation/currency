@@ -23,7 +23,7 @@ const Cleanup = artifacts.require('MurderousPolicy');
 
 const { singletons } = require('@openzeppelin/test-helpers');
 
-const { trace } = require('./trace.js');
+const { trace } = require('./trace');
 
 exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const timedPoliciesIdentifierHash = web3.utils.soliditySha3('TimedPolicies');

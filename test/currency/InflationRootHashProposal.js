@@ -27,9 +27,9 @@ const {
   getRandomIntInclusive,
   getRandomIntInclusiveEven,
   getRandomIntInclusiveOdd,
-} = require('../../tools/ticketlessInflationUtils.js');
+} = require('../../tools/ticketlessInflationUtils');
 
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 

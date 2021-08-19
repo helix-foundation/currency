@@ -13,8 +13,8 @@ const bip39 = require('bip39');
 const { hdkey } = require('ethereumjs-wallet');
 const express = require('express');
 const ganache = require('ganache-cli');
-const { deploy } = require('./deploy.js');
-const { Supervisor } = require('./supervisor.js');
+const { deploy } = require('./deploy');
+const { Supervisor } = require('./supervisor');
 
 const defaultRpc = 'ws://localhost:8545';
 

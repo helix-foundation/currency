@@ -13,7 +13,7 @@ const {
   expectRevert, time,
 } = require('@openzeppelin/test-helpers');
 
-const util = require('../../tools/test/util.js');
+const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
