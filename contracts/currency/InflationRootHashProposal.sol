@@ -528,8 +528,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         }
     }
 
-    /** @notice Verifies that the account specified is associated with the provided cumulative sum in the approved 
-     * Merkle tree for the current generation.
+    /** @notice Verify that account associated with cumulative sum in accepted merkle tree for the current generation.
      *
      *  @param _who    address of an account claiming win
      *  @param _proof   the “other nodes” in the merkle tree.

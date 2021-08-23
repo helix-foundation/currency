@@ -9,7 +9,7 @@ The Eco cryptocurrency and governance system are implemented here, along with
 all the custom tools, frameworks, and tests used primarily for the currency
 system.
 
-The project is organized into components:
+The project can be broken into 4 major components:
  - [The token implementation](contracts/currency)
  - [The policies framework](contracts/policy)
  - [The governance system](contracts/governance)
@@ -44,11 +44,11 @@ a policy vote of all token holders.
 
 ### Note on Solidity Optimizations
 This repository has non-default compiler optimizations turned on! This can, in
-some cases, result in unexpected behavior. Our test suites are designed to be
+some cases, result in unexpected behaviour. Our test suites are designed to be
 run with optimizations configured as they are when we deployed and will not
-detect changes in behavior caused by the optimizer.
+detect changes in behaviour caused by the optimizer.
 
-If you believe the optimizer may be changing the behavior of your code please
+If you believe the optimizer may be changing the behaviour of your code please
 test with the optimizer disabled to verify and discuss with the team.
 
 ### Reporting Vulnerabilities
@@ -60,58 +60,37 @@ able to respond promptly.
 The Eco cryptocurrency is designed to be a low-volatility cryptocurrency for
 the express purpose of making payments. The currency is designed to be spent
 first and foremost. In order to minimize volatility Eco uses a governance
-process which has in-built monetary policy levers (described below) controlled
-by a group of trustees who are incentivized to increase aggregate wealth in ECO.
+process to mint new currency (in order to counter deflation) and lock up
+currency (to counter inflation).
 
-### The ECOsystem
-The user-facing logic comprises of the `currency` and the `governance`:
+As described above, the project is composed of 4 major components:
 
-#### Tokens (/currency)
-##### The Token Implementation
-The token (ECO) implementation provides the code driving our ERC20 and ERC777 tokens,
+### The Token Implementation
+The token implementation provides the code driving our ERC20 and ERC777 tokens,
 and the shared balance tracking between them. It takes responsibility for
 storing balances for all account holders, transferring funds between accounts,
 creating and destroying tokens, and providing the interfaces that token holders
 will typically interact with.
 
-##### The Partner Token
-The partner token (ECOx) establishes a value to the future success of the ECO token.
-It is also an ERC20 token and has a deflationary total supply. It's main purpose is that
-it is convertible to an amount of ECO in a proportionally based on percentage of
-total supply of each token. It is designed to be held and most of the initial
-supply is set aside to be used as reward to trustees for governance.
-
-#### The Governance System (/governance)
-##### Currency Governance
-The currency governance aspect allows our trustees to make decisions about
-the monetary supply in the economy. It involves 3 possible actions: minting tokens
-and distributing them at random (Random Inflation), minting tokens and using them
-as rewards for lockup contracts (Lockups), and re-scaling each account balance
-equally (Linear Inflation).
-
-
-##### Policy Governance
-The policy governance component allows anyone with tokens to make decisions
-about arbitrary changes to contracts, facilitated to by the policy framework.
-This allows for the token and the governance system around it to evolve to people's
-needs and adapt to the world around it.
-
-### Infrastructure
-Additionally there are 3 major components to the infrastructure that underlies
-the system.
-
-#### The Policies Framework (/policy)
+### The Policies Framework
 The policies framework provides the core contract logic that facilitates
 upgradability, and is used to enforce access control and permissions between
 contracts.
 
-#### The VDF Implementation (/VDF)
+### The Governance System
+The governance system is composed of two parts - currency governance and
+network governance. The currency governance aspect allows our trusted nodes to
+make decisions about the monetary supply in the economy, and the network
+governance component allows stake-holders (anyone with tokens) to make decisions
+about changes to contracts (and through them, how the network is managed).
+
+### The VDF Implementation
 Eco uses VDFs as a critical component of the currency governance process, and
 the VDF implementation provides most of that functionality. It allows
 incremental proving of a Verifiable Delay Function, and the demonstration of a
 proof to the governance system.
 
-#### The Deployment Tooling (/deploy)
+### The Deployment Tooling
 The deployment tooling is used to bootstrap the other contracts when first
 deployed to an Ethereum network. It includes the functionality necessary to
 configure the system, and also provides a faucet and cleanup contracts for use
@@ -170,7 +149,7 @@ Or, aliased for convenience when running both:
 npm run coverage
 ```
 
-### Running a Testnet with Docker
+### Runnning a Testnet with Docker
 We provide a `Dockerfile` to help run a local testnet for developing clients,
 wallets, or even policy updates.
 
@@ -232,11 +211,10 @@ docker run --rm --init -p 8545:8545 -p 8548:8548 -it currency --supervise
 ```
 
 ## Components
- - [Currency Implementation](./contracts/currency)
- - [Currency and Policy Governance](./contracts/governance)
  - [Policy Framework](./contracts/policy)
- - [Deployment Tools](./contracts/deploy)
- - [The Variable Delay Function](./contracts/VDF)
+ - [Deployment Tools & Support Contracts](./contracts/deploy)
+ - [Currency Implementation](./contracts/currency)
+ - [Inflation & Governance](./contracts/governance)
 
 ## Maintainers
 Maintained by the engineering team at Eco Network

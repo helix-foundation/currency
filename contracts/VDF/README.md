@@ -20,57 +20,36 @@ VDF functionality is a part of the currency project and implements the following
 The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. See [Security Details Details](#security-details) for additional information.
 
 ## Background
-The contract holds a constant `N` which is the RSA-style modulus. 2048-bit modulus is from the RSA-2048 challenge https://en.wikipedia.org/wiki/RSA_Factoring_Challenge. Our security assumptions rely on RSA challenge rules: no attacker knows or can obtain the factorization, and factorization wasn't recorded on generation of the number.
+The VDF contract is designed to support multiple concurrent Provers that interact with the contract through the `setXY`, a series of `verifyUpdate`, and `isVerified` calls. 
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
 
 ## Usage
-The VDF contract is designed to support multiple concurrent Provers that interact with the contract through the `start`, a series of `update`, and `isVerified` calls. Each user's interactions are stored in the mapping `state` that maps the users address to a custom struct that records the delay parameter `t` the value `x` the goal value `y` and the intermediate step values `xi` and `yi` as well as the `progress` which is the value of the iterator from 1 to t-1. Verified sets of `x`, `t`, and `y` are stored in a mapping from `keccak256(t,x)` to `keccak256(y)` which only is filled when the set is verified.
 
 ## API
 
-### Events
-#### Verified
-Attributes:
-  - `x` (uint256) - the input x, at least 256 bits
-  - `t` (uint256) - the delay parameter t; it defines that the contract expects y to be the result T=2\^t squarings of x
-  - `y` (bytes) - the value x\^2\^T mod n, where T = 2\^t. n is specified as a constant. Passed as bytes because it
-    could be too large a number.
+### constructor
+Takes two arguments:
+- `_t` - the delay parameter t; it defines that the contract expects y to be the result T=2\^t squarings of x
+- `_n` - the RSA-style modulus n
 
-Emitted when `x`, `t`, and `y` are successfully verified.
+### setXY
+Takes two arguments:
+- `_x` - the input x, at least 256 bits
+- `_y` - the value x\^2\^T mod n, where T = 2\^t. t and n are specified in the constructor
 
-### start
-Arguments:
-  - `_x` (uint256) - the input x, at least 256 bits
-  - `_t` (uint256) - the delay parameter t; it defines that the contract expects y to be the result T=2\^t squarings of x
-  - `_ybytes` (bytes) - the value x\^2\^T mod n, where T = 2\^t. n is specified as a constant. Passed as bytes because it
-    could be too large a number.
-
-Initiates the store of state for the `msg.sender` and validates the inputs.
-
-#### Security Notes
- - `t` must be at least 2
- - `x` must be at least 2
- - `y` must be at least 512 bit long
- - `y` must be less than `N`
- - `x` must be probable prime
-
-### update
-Arguments:
-  - `_nextProgress` (uint256) - the index of the step, starting from 1 and ending at t-1
-  - `_ubytes` (bytes) - the corresponding proof value u[i], where i = _nextProgress
-
-The caller calls this function n-1 times. If each of these calls is successful, the `isVerified` will return true the last call. See the [VDF.js](../../test/VDF.js) for the details on the generation of each value u[i]. On the final call of `update` it checks for verification and then records and emits an event if successful, then deletes the user's state.
+### verifyUpdate
+Takes two arguments:
+- `_nextProgress` - the index of the step, starting from 1 and ending at t-1
+- `_u` - the corresponding proof value u[i], where i = _nextProgress
+The caller calls this function n-1 times. If each of these calls is successful, the `isVerified` will return true the last call. See the [VDF.js](../../test/VDF.js) for the details on the generation of each value u[i].
 
 ### isVerified
-Arguments:
-  - `_x` (uint256) - the input x, at least 256 bits
-  - `_t` (uint256) - the delay parameter t; it defines that the contract expects y to be the result T=2\^t squarings of x
-  - `_ybytes` (bytes) - the value x\^2\^T mod n, where T = 2\^t. n is specified as a constant. Passed as bytes because it
-    could be too large a number.
+Takes one argument:
+ - `_key` - the Keccak256 hash of the concatenation of t, n, x, and y, as big-endian integers, where the encoding of t and x are 32 bytes long and the remaining fields have length equal to nBytes, defined next. nBytes is the minimum number of octets that can hold the value n. There are no headers or separators in this encoding. The total length of thus formed message is always 64+2*nBytes bytes.
 
-Verifies and returns true if verified.
+## Additional Details
 
 ### Security Details
 x must be a 256-bit random uniformly-distributed number

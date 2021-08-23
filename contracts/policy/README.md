@@ -4,7 +4,8 @@
 The contracts in this directory provide the basis for the Eco Policy Framework.
 The Policy Framework ("policies") allow the management of some abstract set of
 contracts by an arbitrary oversight process. For example, the Eco Currency is
-managed by the Currency Governance and Proposals Process. The Governance Process can
+managed by the Inflation and Proposals Process (also called the Currency
+Governance Process, which also manages itself). The Governance Process can
 execute arbitrary code in the context of any contract under its management. This
 allows recovery from nearly any situation, and when combined with the proxy
 framework facilitates contract upgrades (see below for an example). In general,
@@ -133,16 +134,16 @@ appropriate.
  - Inherits: `ForwardTarget`, `ERC1820ImplementerInterface`
 
 #### policyCommand
-Arguments:
- - `_delegate` (address) - the address of contract implementing the command to execute
- - `_data` (bytes) - the parameters to pass to the command contract
+Takes two arguments:
+ - `_delegate` - the address of contract implementing the command to execute
+ - `_data` - the parameters to pass to the command contract
 
 Used by the policy hierarchy to implement governance decisions. For example, if
 the contract is an ERC20 token then this can be used to arbitrarily update
 balances as the result of a governance vote.
 
 ##### Security Notes
- - This function can only be called by the root policy in the policy hierarchy
+ - This function can only be called by the root policy in the policy hierarcy
    governing the contract.
  - Anyone able to execute this function can do anything they wish. It provides
    arbitrary code execution in the storage context of the contract. This is
@@ -157,8 +158,8 @@ as the target of the proxy.
 See the [EIP-1167](http://eips.ethereum.org/EIPS/eip-1167) and [clone-factory](https://github.com/optionality/clone-factory) for details.
 
 #### policyFor
-Arguments:
- - `_id` (bytes32) - the identifier for a policy contract to look up
+Takes one argument:
+ - `_id` - the identifier for a policy contract to look up
 
 Returns the address implementing a particular policy in the governance hierarchy
 for this contract. Generally used to write access restrictions for other
@@ -178,8 +179,8 @@ modifier onlySpecificPolicy() {
  - Inherits: `ForwardTarget`, `ERC1820Client`
 
 #### removeSelf
-Arguments:
- - `_interfaceIdentifierHash` (bytes32) - the name of the interface to deregister
+Takes one argument:
+ - `_key` - the name of the interface to deregister
 
 If the caller (`_msgSender()`) is registered in the ERC1820 registry as the
 provider of the specified interface for this contract, remove the registration.
@@ -191,14 +192,14 @@ provider of the specified interface for this contract, remove the registration.
    interface provider.
 
 #### policyFor
-Arguments:
+Takes one arument:
  - `_id` - the identifier of a policy to find the implementation of
 
 Returns the address of the requested policy implementation.
 
 #### internalCommand
-Arguments:
- - `_interfaceIdentifierHash` (bytes32) - the address of the contract expressing the command to execute
+Takes one argument:
+ - `_delegate` - the address of the contract expressing the command to execute
 
 This function is used to perform some unspecified operation in the context of
 the policy. The provided address must point to a contract providing the
@@ -218,12 +219,12 @@ allow it to act on behalf of the policy with all the associated privileges.
  - Inherits: `Policy`
 
 #### fusedInit
-Arguments:
- - `_policy` (address) - the address of the root policy contract in a policy hierarchy
- - `_setters` (bytes32[]) - the identifiers for any privileged contracts
- - `_keys` (bytes32[]) - the identifiers for any associated discoverable contracts
- - `_values` (bytes32[]) - the addresses of the discoverable contracts listed in `_keys`
- - `_tokenResolvers` (bytes32[]) - the identifiers of any discoverable contracts that should
+The `fusedInit` method takes five arguments:
+ - `_policycode` - the address of the root policy contract in a policy hierarchy
+ - `_setters` - the identifiers for any privileged contracts
+ - `_keys` - the identifiers for any associated discoverable contracts
+ - `_values` - the addressess of the discoverable contracts listed in `_keys`
+ - `_tokenResolvers` - the identifiers of any discoverable contracts that should
    be configured to allow mutual lookup on their own addresses
 
 Review the [Usage](#usage) section for details on the various definitions used
