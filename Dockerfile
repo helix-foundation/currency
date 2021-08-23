@@ -3,7 +3,7 @@ FROM node:erbium-buster AS build
 RUN mkdir -p /currency
 
 COPY package.json package-lock.json /currency/
-RUN cd /currency && npm ci
+RUN cd /currency && npm install --no-optional
 
 COPY contracts /currency/contracts
 COPY tools /currency/tools

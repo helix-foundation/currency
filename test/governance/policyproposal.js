@@ -16,7 +16,7 @@ const util = require('../../tools/test/util');
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));
 
-contract('PolicyProposals [@group=2]', ([alice, bob, charlie, dave]) => {
+contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
   let policy;
   let token;
   let balanceStore;
