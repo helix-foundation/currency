@@ -29,7 +29,7 @@ const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 
 chai.use(bnChai(BN));
 
-contract('ERC777EcoToken [@group=5]', ([owner, ...accounts]) => {
+contract('ERC777EcoToken [@group=1]', ([owner, ...accounts]) => {
   let erc1820registry;
   let balanceStore;
   let token;

@@ -7,7 +7,7 @@ const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const ECOx = artifacts.require('ECOx');
 const Inflation = artifacts.require('Inflation');
-const Policy = artifacts.require('PolicyTest');
+const FakePolicy = artifacts.require('FakePolicy');
 const VDFVerifier = artifacts.require('VDFVerifier');
 const RootHashProposal = artifacts.require('InflationRootHashProposal');
 const TimedPolicies = artifacts.require('TimedPolicies');
@@ -80,7 +80,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   );
 
   await (await PolicyInit.at(proxy.address)).fusedInit(
-    (await Policy.new()).address,
+    (await FakePolicy.new()).address,
     [
       timedPoliciesIdentifierHash,
       policyProposalsIdentifierHash,
@@ -123,7 +123,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   };
 
   return {
-    policy: (await Policy.at(proxy.address)),
+    policy: (await FakePolicy.at(proxy.address)),
     balanceStore,
     token,
     initInflation,

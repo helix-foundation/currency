@@ -21,7 +21,7 @@ const { expect } = chai;
 
 chai.use(bnChai(BN));
 
-contract('CurrencyTimer [@group=6]', ([alice, bob, charlie]) => {
+contract('CurrencyTimer [@group=3]', ([alice, bob, charlie]) => {
   let policy;
   let token;
   let timedPolicies;

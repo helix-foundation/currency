@@ -20,7 +20,7 @@ function vdfTrace(m) {
 //  console.log(m);
 }
 
-contract('VDFVerifier [@group=6]', ([account]) => {
+contract('VDFVerifier [@group=4]', ([account]) => {
   const t = 4;
   const xbn = toBN('169746944503327805396974258181262165209195894124543141625064913165013613381');
   const [ybn, Usqrt] = prove(xbn, t);

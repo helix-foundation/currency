@@ -26,7 +26,7 @@ const {
   answer,
 } = require('../../tools/ticketlessInflationUtils');
 
-contract('Inflation [@group=6]', (unsortedAccounts) => {
+contract('Inflation [@group=3]', (unsortedAccounts) => {
   let policy;
   let token;
   let balanceStore;
@@ -150,21 +150,13 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     );
 
     const bob = accounts[1];
-    const charlie = accounts[2];
-    const dave = accounts[3];
     await governance.propose(inflationVote, prizeVote, 0, 0, toBN('1000000000000000000'), { from: bob });
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [web3.utils.randomHex(32), bob, [bob]];
     await governance.commit(hash(bobvote), { from: bob });
-    const charlievote = [web3.utils.randomHex(32), charlie, [bob]];
-    await governance.commit(hash(charlievote), { from: charlie });
-    const davevote = [web3.utils.randomHex(32), dave, [bob]];
-    await governance.commit(hash(davevote), { from: dave });
     await time.increase(3600 * 24 * 3);
     await governance.reveal(bobvote[0], bobvote[2], { from: bob });
-    await governance.reveal(charlievote[0], charlievote[2], { from: charlie });
-    await governance.reveal(davevote[0], davevote[2], { from: dave });
     await time.increase(3600 * 24 * 1);
     await governance.updateStage();
     await governance.compute();

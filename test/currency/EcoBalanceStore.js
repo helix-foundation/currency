@@ -27,7 +27,7 @@ const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
-contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
+contract('EcoBalanceStore [@group=3]', (unsortedAccounts) => {
   let balanceStore;
   let policy;
   // let token;
