@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-param-reassign, no-console */
 // # Deploying the Currency Contracts
-// Currency deployment is broke into six distinct stages, each laying the
+// Currency deployment is broke into 4 distinct stages, each laying the
 // foundation for the following stages. The process depends on web3-1.0, and the
 // compiled JSON ABIs and deploy transaction bytecode for the contracts
 // involved. It also depends on a pre-generated and pre-signed transaction to
@@ -41,7 +41,6 @@ const EcoTestCleanupABI = require('../build/contracts/EcoTestCleanup.json');
 const EcoTokenInitABI = require('../build/contracts/EcoTokenInit.json');
 const VDFVerifierABI = require('../build/contracts/VDFVerifier.json');
 const ECOxABI = require('../build/contracts/ECOx.json');
-
 /* eslint-enable import/no-unresolved */
 
 // ## PrepDeploy
@@ -147,7 +146,13 @@ async function deployStage1(options) {
 // the `EcoInitializable` at the 0th reserved address to redirect the address
 // to the new `PolicyInit` instance.
 //
-// ![Step 1 of Policy Setup](https://www.lucidchart.com/publicSegments/view/ddd05c82-5b4b-4742-9f37-666ffd318261/image.png)
+// Afterwards, we deploy the `EcoBalanceStore` and bind it to a slot, and then
+// depoly and bind the currency implementation contracts (`ERC20`, `ERC777`, `ECOx`).
+// The addresses of the currency implementation contracts are stored for the
+// next stage. We also deploy `InflationRootHashProposal` which is a contract for
+// submitting a Merkel hash of all balances, used in governance.
+//
+// ![Step 2 of Policy Setup](https://www.lucidchart.com/publicSegments/view/ddd05c82-5b4b-4742-9f37-666ffd318261/image.png)
 //
 async function deployStage2(options) {
   console.log(`Bootstrap contract address: ${options.stage1.to}`);
@@ -210,7 +215,7 @@ async function deployStage2(options) {
     policyProxyAddress,
   );
 
-  // Deploy the balance store contract
+  // Deploy the root hash and balance store contract
   //
   // ![Deploy the Balance Store](https://www.lucidchart.com/publicSegments/view/51ba5fa7-24d5-4bdd-a3c5-bc580fb5369a/image.png)
   console.log('deploying balance store...');
@@ -350,15 +355,35 @@ async function deployStage2(options) {
 
 // ### Stage 3
 // Constructing the policy set is the most complicated step of the deployment
-// process. We use one policy contract to manage the policy and inflation voting
-// process (`TimedPolicies`), another for minting initial tokens and authorizing
-// the basic inteerfaces (`EcoTokenInit`), and, in test environments, a third
-// for tearing down contrats we're done with (`EcoTestCleanup`).
+// process. Many of the contracts deployed here are templates that are cloned
+// when they are needed to help keep scope.
 //
-// We also register the ERC1820 interfaces for our ERC20 token proxy and our
-// ERC777 token proxy.
+// We use two policy contracts to manage the trustee and community voting
+// process (`CurrencyTimer`, `TimedPolicies`) which are not cloned, but instead
+// run the generation timing and clone the necessary contracts each cycle.
 //
-// ![Step 2 of Policy Setup](https://www.lucidchart.com/publicSegments/view/0fb82096-b78b-4303-b575-6c424847f9fe/image.png)
+// We have a helper contract for random processes that manages a Variable Delay
+// Function (`VDFVerifier`).
+//
+// We have the template contracts for when we want to instantiate lockups or when
+// we want to randomly distribute new currency (`Lockup`, `Inflation`).
+//
+// We have the template contracts for trustee votes (`CurrencyGovernance`) and
+// the two for community votes on policy, `PolicyVotes`, `PolicyProposals`).
+//
+// We have a contract that tracks our trustee addresses (`TrustedNodes`).
+//
+// We also deploy the root policy contract (`Policy`) and the contract for
+// minting the initial distribution of tokens (`EcoTokenInit`).
+//
+// In test environments, we have two contracts, one for tearing down contrats
+// we're done with (`EcoTestCleanup`) and one for freely adding tokens to the
+// test accounts (`EcoFaucet`).
+//
+// The final part of this stage is initializing the core policy contracts and
+// register our token interfaces from the previous stage with ERC1820.
+//
+// ![Step 3 of Policy Setup](https://www.lucidchart.com/publicSegments/view/8730274f-cb64-4605-b60c-5413723befba/image.png)
 //
 async function deployStage3(options) {
   // Collect up the identifiers and addresses to be used in the policy structure
@@ -581,7 +606,7 @@ async function deployStage3(options) {
   identifiers.push(web3.utils.soliditySha3('CurrencyGovernance'));
   addresses.push(initContract.options.address);
 
-  console.log('deploying the trusted nodes policy contract...');
+  console.log('deploying the TrustedNodes policy contract...');
   console.log('trusted addresses:', options.trustednodes);
   const trustedNodesContract = await new web3.eth.Contract(TrustedNodesABI.abi)
     .deploy({
@@ -672,14 +697,14 @@ async function deployStage3(options) {
 }
 
 // ### Stage 4
-// Before wallets can interact with the token interfaces they need to be
-// authorized to perform actions on the balance store. Our initialization
-// contract deployed in [Stage 3](#stage-3) will mint some initial tokens.
-// The initialization contract self-destructs on first use to prevent any
-// possible future run. The `reAuthorize` operation will cache token
-// interface authorizations.
+// Here we authorize the token interfaces are authorized to perform actions
+// on the balance store, and then mint some initial tokens. The initialization
+// contract self-destructs on first use to prevent any possible future run.
+// The `reAuthorize` operation will make sure the token interface authorizations.
+// are cached.
 //
-// ![Authorize Token Interfaces](https://www.lucidchart.com/publicSegments/view/8730274f-cb64-4605-b60c-5413723befba/image.png)
+// Finally, now that everything is in place, we increment the first generation
+// which sends the code live to be used.
 //
 async function deployStage4(options) {
   console.log('recomputing authorized contracts list for balance store...');

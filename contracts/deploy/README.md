@@ -29,7 +29,7 @@ configuration or code changes.
 
 To achieve this we borrow Nick's Method from
 [ERC1820](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1820.md) and deploy our bootstrap
-contract to allocate a number of addresses. Because Nick's Method produces
+contract (`EcoBootstrap`) to allocate a number of addresses. Because Nick's Method produces
 identical deployment addresses across all networks and the addresses of
 contracts deployed from within a contract are deterministic the addresses
 allocated in this process will be the same on every network, or the process will
@@ -93,8 +93,8 @@ web3.eth.sendRawTransaction(txdata.raw)
  - Inherits: `ForwardTarget`
 
 #### fuseImplementation
-Takes one argument:
- - `_impl` - the address of the new proxy target contract
+Arguments:
+ - `_impl` (address) - the address of the new proxy target contract
 
 Updates the proxy contract's implementation pointer to point to the address
 specified in `_impl` and delegatecalls the `initialize` function to configure
@@ -104,12 +104,28 @@ the storage context as specified by the new proxy target.
  - Can only be called by the contract owner.
 
 #### destruct
-Takes no arguments.
+Arguments: none
 
 Self-destructs the contract to free up space on the chain.
 
 ##### Security Notes
  - Can only be called by the contract owner.
+
+### EcoTokenInit
+ - Inherits: `PolicedUtils`
+
+#### initializeAndFuse
+Arguments:
+ - `_store` (address) - the address of the balance store contract that will be
+   used when minting the initial token distribution
+
+Mints the initial token distribution for the ECO token, and then revokes its
+own permissions and self-destructs.
+
+##### Security Notes
+ - Can be called only once.
+ - Can be called by anyone. This could be a problem because of the self-destruct,
+   so make sure it gets called immediately.
 
 ## Contributing
 See the [main README](../../README.md).
