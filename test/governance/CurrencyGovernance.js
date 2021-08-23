@@ -17,7 +17,7 @@ const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
-contract('CurrencyGovernance', ([alice, bob, charlie, dave]) => {
+contract('CurrencyGovernance [@group=8]', ([alice, bob, charlie, dave]) => {
   let policy;
   let borda;
 

@@ -9,6 +9,7 @@ import "../../contracts/proxy/ForwardProxy.sol";
 import "../../contracts/deploy/EcoInitializable.sol";
 import "../../contracts/deploy/EcoBootstrap.sol";
 import "../../contracts/governance/TrustedNodes.sol";
+import "./FakePolicy.sol";
 
 /** @title Backdoor
  *
@@ -132,7 +133,7 @@ contract SampleProposal is Policy, Proposal {
 /** @title PolicyTest
  * Extension of Policy used just for testing.
  */
-contract PolicyTest is Policy {
+contract PolicyTest is FakePolicy {
     /** Test the enacting of a given proposal.
      *
      * @param _delegate The proposal to enact.

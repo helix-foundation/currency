@@ -14,7 +14,7 @@ const { expect } = chai;
 
 chai.use(bnChai(BN));
 
-contract('PolicyVotes [@group=3]', ([alice, bob, charlie, dave, frank]) => {
+contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
   let policy;
   let balanceStore;
   let token;

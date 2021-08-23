@@ -5,7 +5,7 @@ const TrustedNodes = artifacts.require('TrustedNodes');
 
 const { toBN } = web3.utils;
 
-contract('TrustedNodes [@group=2]', ([accountA, accountB]) => {
+contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
   let policy;
   let trustedNodes;
 

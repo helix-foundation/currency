@@ -29,7 +29,7 @@ const { isCoverage } = require('../../tools/test/coverage');
 
 const { toBN } = web3.utils;
 
-contract('Governance Policy Change [@group=4]', ([alice, bob, charlie, dave]) => {
+contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) => {
   let policy;
   let balanceStore;
   let token;
@@ -90,7 +90,7 @@ contract('Governance Policy Change [@group=4]', ([alice, bob, charlie, dave]) =>
       { from: alice },
     );
     const name = await makePoodle.name();
-    expect(name).to.eq('MakePoodle');
+    expect(name).to.equal('MakePoodle');
   });
 
   it('Checks that the 820 workaround for coverage is correct', async () => {
