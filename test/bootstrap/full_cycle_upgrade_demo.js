@@ -16,7 +16,7 @@ const { isCoverage } = require('../../tools/test/coverage');
  * as a demo, not a unit test.
  */
 
-contract('Full upgrade cycle [@group=2]', async (accounts) => {
+contract('Full upgrade cycle [@group=9]', async (accounts) => {
   let token;
   let target;
 

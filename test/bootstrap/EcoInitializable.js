@@ -5,7 +5,7 @@ const EcoInitializable = artifacts.require('EcoInitializable');
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
-contract('EcoInitializable [@group=2]', (accounts) => {
+contract('EcoInitializable [@group=5]', (accounts) => {
   it('fuses forward', async () => {
     const initializationContract = await EcoInitializable.new(accounts[1]);
     const proxy = await ForwardProxy.new(initializationContract.address);
