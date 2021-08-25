@@ -179,8 +179,11 @@ library BigNumber {
         Instance memory _modulus
     ) internal view returns (Instance memory) {
         Instance memory result;
-        bytes memory _result =
-            innerModExp(_base.value, _exponent.value, _modulus.value);
+        bytes memory _result = innerModExp(
+            _base.value,
+            _exponent.value,
+            _modulus.value
+        );
         result.value = _result;
         return result;
     }
@@ -304,53 +307,50 @@ library BigNumber {
                 // for(int i=max_length; i!=0; i-=0x20)
                 let max_val := mload(max_ptr) // get next word for 'max'
                 switch gt(i, sub(max_len, min_len)) // if(i>(max_length-min_length)). while 'min' words are still available.
-                    case 1 {
-                        let min_val := mload(min_ptr) //      get next word for 'min'
+                case 1 {
+                    let min_val := mload(min_ptr) //      get next word for 'min'
 
-                        mstore(result_ptr, add(add(max_val, min_val), carry)) //      result_word = max_word+min_word+carry
+                    mstore(result_ptr, add(add(max_val, min_val), carry)) //      result_word = max_word+min_word+carry
 
-                        switch gt(max_val, sub(uint_max, add(min_val, carry))) //      this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 0x1 {
-                                carry := 0x1
-                            }
-                            default {
-                                switch and(
-                                    eq(carry, 0x1),
-                                    eq(min_val, uint_max)
-                                )
-                                    case 0x1 {
-                                        carry := 0x1
-                                    }
-                                    default {
-                                        carry := 0x0
-                                    }
-                            }
-
-                        min_ptr := sub(min_ptr, 0x20) //       point to next 'min' word
+                    switch gt(max_val, sub(uint_max, add(min_val, carry))) //      this switch block finds whether or not to set the carry bit for the next iteration.
+                    case 0x1 {
+                        carry := 0x1
                     }
                     default {
-                        // else: remainder after 'min' words are complete.
-                        mstore(result_ptr, add(max_val, carry)) //       result_word = max_word+carry
-
-                        switch and(eq(uint_max, max_val), eq(carry, 1)) //       this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 0x1 {
-                                carry := 0x1
-                            }
-                            default {
-                                carry := 0x0
-                            }
+                        switch and(eq(carry, 0x1), eq(min_val, uint_max))
+                        case 0x1 {
+                            carry := 0x1
+                        }
+                        default {
+                            carry := 0x0
+                        }
                     }
+
+                    min_ptr := sub(min_ptr, 0x20) //       point to next 'min' word
+                }
+                default {
+                    // else: remainder after 'min' words are complete.
+                    mstore(result_ptr, add(max_val, carry)) //       result_word = max_word+carry
+
+                    switch and(eq(uint_max, max_val), eq(carry, 1)) //       this switch block finds whether or not to set the carry bit for the next iteration.
+                    case 0x1 {
+                        carry := 0x1
+                    }
+                    default {
+                        carry := 0x0
+                    }
+                }
                 result_ptr := sub(result_ptr, 0x20) // point to next 'result' word
                 max_ptr := sub(max_ptr, 0x20) // point to next 'max' word
             }
 
             switch iszero(carry)
-                case 0x1 {
-                    result_start := add(result_start, 0x20)
-                } // if carry is 0x0, increment result_start, ie. length word for result is now one word position ahead.
-                default {
-                    mstore(result_ptr, 0x1)
-                } // else if carry is 0x1, store 0x1; overflow has occured, so length word remains in the same position.
+            case 0x1 {
+                result_start := add(result_start, 0x20)
+            } // if carry is 0x0, increment result_start, ie. length word for result is now one word position ahead.
+            default {
+                mstore(result_ptr, 0x1)
+            } // else if carry is 0x1, store 0x1; overflow has occured, so length word remains in the same position.
 
             result := result_start // point 'result' bytes value to the correct address in memory
             mstore(result, add(max_len, mul(0x20, carry))) // store length of result. we are finished with the byte array.
@@ -420,37 +420,37 @@ library BigNumber {
                 // for(int i=max_length; i!=0x0; i-=0x20)
                 let max_val := mload(max_ptr) // get next word for 'max'
                 switch gt(i, len_diff) // if(i>(max_length-min_length)). while 'min' words are still available.
+                case 0x1 {
+                    let min_val := mload(min_ptr) //      get next word for 'min'
+
+                    mstore(result_ptr, sub(sub(max_val, min_val), carry)) //      result_word = (max_word-min_word)-carry
+
+                    switch or(
+                        lt(max_val, add(min_val, carry)),
+                        and(eq(min_val, uint_max), eq(carry, 0x1))
+                    ) //      this switch block finds whether or not to set the carry bit for the next iteration.
                     case 0x1 {
-                        let min_val := mload(min_ptr) //      get next word for 'min'
-
-                        mstore(result_ptr, sub(sub(max_val, min_val), carry)) //      result_word = (max_word-min_word)-carry
-
-                        switch or(
-                            lt(max_val, add(min_val, carry)),
-                            and(eq(min_val, uint_max), eq(carry, 0x1))
-                        ) //      this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 0x1 {
-                                carry := 0x1
-                            }
-                            default {
-                                carry := 0x0
-                            }
-
-                        min_ptr := sub(min_ptr, 0x20) //      point to next 'result' word
+                        carry := 0x1
                     }
                     default {
-                        // else: remainder after 'min' words are complete.
-
-                        mstore(result_ptr, sub(max_val, carry)) //      result_word = max_word-carry
-
-                        switch and(iszero(max_val), eq(carry, 0x1)) //      this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 0x1 {
-                                carry := 0x1
-                            }
-                            default {
-                                carry := 0x0
-                            }
+                        carry := 0x0
                     }
+
+                    min_ptr := sub(min_ptr, 0x20) //      point to next 'result' word
+                }
+                default {
+                    // else: remainder after 'min' words are complete.
+
+                    mstore(result_ptr, sub(max_val, carry)) //      result_word = max_word-carry
+
+                    switch and(iszero(max_val), eq(carry, 0x1)) //      this switch block finds whether or not to set the carry bit for the next iteration.
+                    case 0x1 {
+                        carry := 0x1
+                    }
+                    default {
+                        carry := 0x0
+                    }
+                }
                 result_ptr := sub(result_ptr, 0x20) // point to next 'result' word
                 max_ptr := sub(max_ptr, 0x20) // point to next 'max' word
             }
@@ -691,12 +691,12 @@ library BigNumber {
             assembly {
                 wordShifted := mload(resultPtr) //get next word
                 switch iszero(i) //if i==0x0:
-                    case 0x1 {
-                        precedingWord := 0x0
-                    } // handles msword: no precedingWord needed.
-                    default {
-                        precedingWord := mload(sub(resultPtr, 0x20))
-                    } // else get precedingWord.
+                case 0x1 {
+                    precedingWord := 0x0
+                } // handles msword: no precedingWord needed.
+                default {
+                    precedingWord := mload(sub(resultPtr, 0x20))
+                } // else get precedingWord.
             }
             wordShifted >>= _value; //right shift current by value
             precedingWord <<= maskShift; // left shift next significant word by maskShift

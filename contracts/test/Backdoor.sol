@@ -139,13 +139,12 @@ contract PolicyTest is FakePolicy {
      * @param _delegate The proposal to enact.
      */
     function testDirectVote(address _delegate) external {
-        (bool success, ) =
-            _delegate.delegatecall(
-                abi.encodeWithSelector(
-                    bytes4(keccak256("enacted(address)")),
-                    _delegate
-                )
-            );
+        (bool success, ) = _delegate.delegatecall(
+            abi.encodeWithSelector(
+                bytes4(keccak256("enacted(address)")),
+                _delegate
+            )
+        );
         require(success, "Call failed");
     }
 

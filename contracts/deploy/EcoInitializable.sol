@@ -47,10 +47,9 @@ contract EcoInitializable is ForwardTarget {
          * proxy's address space appropriately for the new target's runtime.
          */
         // solhint-disable-next-line avoid-low-level-calls
-        (bool _success, ) =
-            address(_impl).delegatecall(
-                abi.encodeWithSelector(this.initialize.selector, _impl)
-            );
+        (bool _success, ) = address(_impl).delegatecall(
+            abi.encodeWithSelector(this.initialize.selector, _impl)
+        );
         require(_success, "initialize call failed");
     }
 

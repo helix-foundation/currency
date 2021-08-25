@@ -67,8 +67,9 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
 
         currentGeneration = _new;
 
-        CurrencyGovernance bg =
-            CurrencyGovernance(policyFor(ID_CURRENCY_GOVERNANCE));
+        CurrencyGovernance bg = CurrencyGovernance(
+            policyFor(ID_CURRENCY_GOVERNANCE)
+        );
 
         uint256 _randomInflationWinners = 0;
         uint256 _randomInflationPrize = 0;
@@ -93,13 +94,12 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
 
         {
             address _clone = CurrencyGovernance(bordaImpl).clone();
-            SimplePolicySetter sps =
-                SimplePolicySetter(
-                    SimplePolicySetter(simplePolicyImpl).clone(
-                        ID_CURRENCY_GOVERNANCE,
-                        _clone
-                    )
-                );
+            SimplePolicySetter sps = SimplePolicySetter(
+                SimplePolicySetter(simplePolicyImpl).clone(
+                    ID_CURRENCY_GOVERNANCE,
+                    _clone
+                )
+            );
             Policy(policy).internalCommand(address(sps));
             sps.destruct();
         }

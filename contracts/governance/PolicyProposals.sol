@@ -203,8 +203,11 @@ contract PolicyProposals is VotingPower, TimeUtils {
     function support(address _prop, uint256[] calldata _lockupGenerations)
         external
     {
-        uint256 _amount =
-            votingPower(_msgSender(), generation, _lockupGenerations);
+        uint256 _amount = votingPower(
+            _msgSender(),
+            generation,
+            _lockupGenerations
+        );
         uint256 _total = totalVotingPower(generation);
 
         Props storage _p = proposals[address(_prop)];
@@ -239,13 +242,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
             PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
             pv.configure(address(_prop));
 
-            SimplePolicySetter sps =
-                SimplePolicySetter(
-                    SimplePolicySetter(simplePolicyImpl).clone(
-                        ID_POLICY_VOTES,
-                        address(pv)
-                    )
-                );
+            SimplePolicySetter sps = SimplePolicySetter(
+                SimplePolicySetter(simplePolicyImpl).clone(
+                    ID_POLICY_VOTES,
+                    address(pv)
+                )
+            );
             Policy(policy).internalCommand(address(sps));
             sps.destruct();
 

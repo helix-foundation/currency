@@ -53,8 +53,9 @@ contract MakeRich is Policy, Proposal {
      * @param _self The address of the proposal.
      */
     function enacted(address _self) public override {
-        bytes32 _inflationId =
-            keccak256(abi.encodePacked("CurrencyGovernance"));
+        bytes32 _inflationId = keccak256(
+            abi.encodePacked("CurrencyGovernance")
+        );
         bytes32 _storeId = keccak256(abi.encodePacked("BalanceStore"));
 
         address _account = MakeRich(_self).account();

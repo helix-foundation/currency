@@ -16,9 +16,17 @@ import "./IEcoBalanceStoreGenerationBalance.sol";
 contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     using SafeMath for uint256;
 
-    enum ChallengeStatus {Empty, Pending, Resolved}
+    enum ChallengeStatus {
+        Empty,
+        Pending,
+        Resolved
+    }
 
-    enum RootHashStatus {Pending, Rejected, Accepted}
+    enum RootHashStatus {
+        Pending,
+        Rejected,
+        Accepted
+    }
 
     struct ChallengeResponse {
         address account;
@@ -169,8 +177,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             proposal.amountOfAccounts >= _index,
             "The index have to be within the range of claimed amount of accounts"
         );
-        uint256 requestsByChallenger =
-            proposal.challenges[_challenger].amountOfRequests;
+        uint256 requestsByChallenger = proposal
+            .challenges[_challenger]
+            .amountOfRequests;
         if (requestsByChallenger > 2) {
             /* math explanation x - number of request, N - amount of accounts
               condition  -- x < 2 * log( N ) + 2
@@ -282,8 +291,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             "requested index already responded"
         );
 
-        InflationChallenge storage challenge =
-            proposal.challenges[_msgSender()];
+        InflationChallenge storage challenge = proposal.challenges[
+            _msgSender()
+        ];
 
         if (!challenge.initialized) {
             challenge.initialized = true;
@@ -592,8 +602,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
                     proposal.status == RootHashStatus.Rejected,
                 "challenger may claim fee on rejected proposal only"
             );
-            uint256 amount =
-                proposal.challenges[_who].amountOfRequests.mul(CHALLENGE_FEE);
+            uint256 amount = proposal.challenges[_who].amountOfRequests.mul(
+                CHALLENGE_FEE
+            );
             amount = amount.add(
                 proposal
                     .stakedAmount

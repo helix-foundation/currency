@@ -17,7 +17,13 @@ import "../VDF/VDFVerifier.sol";
  */
 contract CurrencyGovernance is PolicedUtils, TimeUtils {
     using SafeMath for uint256;
-    enum Stages {Propose, Commit, Reveal, Compute, Finished}
+    enum Stages {
+        Propose,
+        Commit,
+        Reveal,
+        Compute,
+        Finished
+    }
 
     Stages public stage;
 

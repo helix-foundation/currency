@@ -20,8 +20,9 @@ contract VotingPower is PolicedUtils {
 
         ECOx ecox = getX();
 
-        uint256 totalx =
-            ecox.totalSupplyAt(_gen).sub(ecox.balanceAt(address(ecox), _gen));
+        uint256 totalx = ecox.totalSupplyAt(_gen).sub(
+            ecox.balanceAt(address(ecox), _gen)
+        );
         if (totalx > 0) {
             total = total.add(ecox.valueAt(totalx, _gen));
         }

@@ -155,8 +155,9 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         update(_from);
         update(_to);
 
-        uint256 _uninflatedValue =
-            _value.mul(historicLinearInflation[currentGeneration]);
+        uint256 _uninflatedValue = _value.mul(
+            historicLinearInflation[currentGeneration]
+        );
 
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
@@ -194,8 +195,9 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
 
         update(_from);
 
-        uint256 _uninflatedValue =
-            _value.mul(historicLinearInflation[currentGeneration]);
+        uint256 _uninflatedValue = _value.mul(
+            historicLinearInflation[currentGeneration]
+        );
 
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
@@ -225,8 +227,9 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         );
 
         update(_to);
-        uint256 _uninflatedValue =
-            _value.mul(historicLinearInflation[currentGeneration]);
+        uint256 _uninflatedValue = _value.mul(
+            historicLinearInflation[currentGeneration]
+        );
         mapping(address => uint256) storage bal = balances[currentGeneration];
         bal[_to] = bal[_to].add(_uninflatedValue);
         historicTotalSupplyUninflated[
@@ -275,8 +278,9 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
             address _contract = policyFor(_hash);
             if (_contract != address(0)) {
                 authorizedContractAddresses.push(_contract);
-                (bool success, ) =
-                    _contract.call(abi.encodeWithSignature("updateStore()"));
+                (bool success, ) = _contract.call(
+                    abi.encodeWithSignature("updateStore()")
+                );
                 require(success, "Failed to upateStore on authorized contract");
             }
         }
@@ -286,8 +290,9 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         uint256 _old = currentGeneration;
         super.notifyGenerationIncrease();
 
-        CurrencyGovernance bg =
-            CurrencyGovernance(policyFor(ID_CURRENCY_GOVERNANCE));
+        CurrencyGovernance bg = CurrencyGovernance(
+            policyFor(ID_CURRENCY_GOVERNANCE)
+        );
 
         if (address(bg) != address(0)) {
             address winner = bg.winner();

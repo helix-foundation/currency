@@ -87,8 +87,9 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         internalGeneration++;
 
         for (uint256 i = 0; i < notificationHashes.length; ++i) {
-            ITimeNotifier notifier =
-                ITimeNotifier(Policy(policy).policyFor(notificationHashes[i]));
+            ITimeNotifier notifier = ITimeNotifier(
+                Policy(policy).policyFor(notificationHashes[i])
+            );
             require(address(notifier) != address(0), "Broken state");
             notifier.notifyGenerationIncrease();
         }
@@ -112,13 +113,12 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      */
     function startPolicyProposal() internal {
         address _proposals = PolicedUtils(policyProposalImpl).clone();
-        SimplePolicySetter sps =
-            SimplePolicySetter(
-                SimplePolicySetter(simplePolicyImpl).clone(
-                    ID_POLICY_PROPOSALS,
-                    _proposals
-                )
-            );
+        SimplePolicySetter sps = SimplePolicySetter(
+            SimplePolicySetter(simplePolicyImpl).clone(
+                ID_POLICY_PROPOSALS,
+                _proposals
+            )
+        );
         Policy(policy).internalCommand(address(sps));
         sps.destruct();
         emit PolicyDecisionStarted(_proposals);

@@ -42,7 +42,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
     uint256 public voteEnds;
 
     /** Vote result */
-    enum Result {Accepted, Rejected, Failed}
+    enum Result {
+        Accepted,
+        Rejected,
+        Failed
+    }
 
     /** Event emitted when vote outcome is known.
      */
@@ -70,8 +74,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
      * @param _vote The vote for the proposal
      */
     function vote(bool _vote, uint256[] calldata _lockupGenerations) external {
-        uint256 _amount =
-            votingPower(_msgSender(), generation, _lockupGenerations);
+        uint256 _amount = votingPower(
+            _msgSender(),
+            generation,
+            _lockupGenerations
+        );
 
         require(
             getTime() < voteEnds,

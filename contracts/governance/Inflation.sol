@@ -242,8 +242,8 @@ contract Inflation is PolicedUtils, TimeUtils {
             "A claim can only be made if it has not already been made"
         );
 
-        InflationRootHashProposal rootHashContract =
-            getStore().rootHashAddressPerGeneration(generation);
+        InflationRootHashProposal rootHashContract = getStore()
+            .rootHashAddressPerGeneration(generation);
 
         require(
             rootHashContract.acceptedRootHash() != 0,
@@ -257,9 +257,9 @@ contract Inflation is PolicedUtils, TimeUtils {
 
         claimed[_sequence] = true;
 
-        uint256 _winner =
-            uint256(keccak256(abi.encodePacked(seed, _sequence))) %
-                rootHashContract.acceptedTotalSum();
+        uint256 _winner = uint256(
+            keccak256(abi.encodePacked(seed, _sequence))
+        ) % rootHashContract.acceptedTotalSum();
 
         require(
             _winner < getStore().balanceAt(_who, generation).add(_sum),

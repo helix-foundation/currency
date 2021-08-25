@@ -121,12 +121,12 @@ contract Policed is ForwardTarget, IERC1820Implementer, GSNRecipient {
              * forward the return data prepared above.
              */
             switch result
-                case 0 {
-                    revert(0x0, size)
-                }
-                default {
-                    return(0x0, size)
-                }
+            case 0 {
+                revert(0x0, size)
+            }
+            default {
+                return(0x0, size)
+            }
         }
     }
 

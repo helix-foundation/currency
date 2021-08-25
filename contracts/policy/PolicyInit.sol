@@ -48,21 +48,19 @@ contract PolicyInit is Policy {
         }
 
         for (uint256 i = 0; i < _tokenResolvers.length; ++i) {
-            PolicedUtils a =
-                PolicedUtils(
+            PolicedUtils a = PolicedUtils(
+                ERC1820REGISTRY.getInterfaceImplementer(
+                    address(this),
+                    _tokenResolvers[i]
+                )
+            );
+            for (uint256 j = 0; j < _tokenResolvers.length; ++j) {
+                PolicedUtils b = PolicedUtils(
                     ERC1820REGISTRY.getInterfaceImplementer(
                         address(this),
-                        _tokenResolvers[i]
+                        _tokenResolvers[j]
                     )
                 );
-            for (uint256 j = 0; j < _tokenResolvers.length; ++j) {
-                PolicedUtils b =
-                    PolicedUtils(
-                        ERC1820REGISTRY.getInterfaceImplementer(
-                            address(this),
-                            _tokenResolvers[j]
-                        )
-                    );
 
                 a.setExpectedInterfaceSet(address(b));
                 ERC1820REGISTRY.setInterfaceImplementer(

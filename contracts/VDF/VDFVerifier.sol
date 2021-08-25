@@ -133,24 +133,29 @@ contract VDFVerifier is PolicedUtils, IsPrime {
         require(BigNumber.cmp(u, n) == -1, "u must be less than N");
         require(BigNumber.cmp(u2, one) == 1, "u*u must be greater than 1");
 
-        BigNumber.Instance memory r =
-            BigNumber.from(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            s.x,
-                            s.y.asBytes(nlen),
-                            u.asBytes(nlen),
-                            _nextProgress
-                        )
+        BigNumber.Instance memory r = BigNumber.from(
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        s.x,
+                        s.y.asBytes(nlen),
+                        u.asBytes(nlen),
+                        _nextProgress
                     )
                 )
-            );
+            )
+        );
 
-        BigNumber.Instance memory xi =
-            BigNumber.modmul(BigNumber.modexp(s.xi, r, n), u2, n); // xi^r * u^2
-        BigNumber.Instance memory yi =
-            BigNumber.modmul(BigNumber.modexp(u2, r, n), s.yi, n); // u^2*r * y
+        BigNumber.Instance memory xi = BigNumber.modmul(
+            BigNumber.modexp(s.xi, r, n),
+            u2,
+            n
+        ); // xi^r * u^2
+        BigNumber.Instance memory yi = BigNumber.modmul(
+            BigNumber.modexp(u2, r, n),
+            s.yi,
+            n
+        ); // u^2*r * y
 
         if (_nextProgress != s.t - 1) {
             // Intermediate step

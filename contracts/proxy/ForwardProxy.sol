@@ -13,10 +13,9 @@ contract ForwardProxy {
      * @param _impl The default target address.
      */
     constructor(ForwardTarget _impl) public {
-        (bool _success, ) =
-            address(_impl).delegatecall(
-                abi.encodeWithSelector(_impl.initialize.selector, _impl)
-            );
+        (bool _success, ) = address(_impl).delegatecall(
+            abi.encodeWithSelector(_impl.initialize.selector, _impl)
+        );
         require(_success, "initialize call failed");
 
         // Store forwarding target address at specified storage slot, copied

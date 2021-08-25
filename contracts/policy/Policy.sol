@@ -21,11 +21,10 @@ contract Policy is ForwardTarget, ERC1820Client {
      *                                 the registry.
      */
     function removeSelf(bytes32 _interfaceIdentifierHash) external {
-        address old =
-            ERC1820REGISTRY.getInterfaceImplementer(
-                address(this),
-                _interfaceIdentifierHash
-            );
+        address old = ERC1820REGISTRY.getInterfaceImplementer(
+            address(this),
+            _interfaceIdentifierHash
+        );
 
         if (old == msg.sender) {
             ERC1820REGISTRY.setInterfaceImplementer(
@@ -71,10 +70,9 @@ contract Policy is ForwardTarget, ERC1820Client {
                 ) == msg.sender
             ) {
                 // solhint-disable-next-line avoid-low-level-calls
-                (bool _success, ) =
-                    _delegate.delegatecall(
-                        abi.encodeWithSignature("enacted(address)", _delegate)
-                    );
+                (bool _success, ) = _delegate.delegatecall(
+                    abi.encodeWithSignature("enacted(address)", _delegate)
+                );
                 require(_success, "Command failed during delegatecall");
                 return;
             }

@@ -153,8 +153,9 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         view
         returns (uint256)
     {
-        uint256 ecoSupply =
-            getStore().totalSupplyAt(_gen).sub(historicMinted[_gen]);
+        uint256 ecoSupply = getStore().totalSupplyAt(_gen).sub(
+            historicMinted[_gen]
+        );
         return
             ecoSupply.mul(_value).div(totalSupplyAt(_gen)).mul(rate).div(
                 BILLION
