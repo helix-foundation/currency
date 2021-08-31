@@ -62,7 +62,7 @@
     "prettier-plugin-solidity": "1.0.0-beta.17",
     "solhint": "3.3.6",
     "solhint-plugin-eco": "0.1.0",
-    "solidity-coverage": "0.7.16",
+    "solidity-coverage": "0.7.17",
     "sprintf-js": "1.1.2",
     "truffle": "5.4.7"
   },
