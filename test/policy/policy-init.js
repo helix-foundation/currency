@@ -8,7 +8,7 @@ const { expectRevert } = require('@openzeppelin/test-helpers');
 
 const { singletons } = require('@openzeppelin/test-helpers');
 
-contract('PolicyInit [@group=2]', () => {
+contract('PolicyInit [@group=11]', () => {
   let proxy;
   let proxied;
   let policy;

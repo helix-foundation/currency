@@ -10,7 +10,7 @@ const { expectRevert } = require('@openzeppelin/test-helpers');
 /* Most cases are covered by functionality required by other suites. This
  * suite primarily ensures that rarely-used functionality works correctly.
  */
-contract('Policy [@group=2]', () => {
+contract('Policy [@group=11]', () => {
   let policy;
 
   beforeEach(async () => {

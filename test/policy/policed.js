@@ -15,7 +15,7 @@ const { expectRevert } = require('@openzeppelin/test-helpers');
 const { utils } = require('@openzeppelin/gsn-provider');
 const { deployRelayHub } = require('@openzeppelin/gsn-helpers');
 
-contract('Policed [@group=2]', (accounts) => {
+contract('Policed [@group=11]', (accounts) => {
   let policy;
   let testPoliced;
   let policer;

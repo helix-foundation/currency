@@ -4,7 +4,7 @@ const Backdoor = artifacts.require('Backdoor');
 const { expectRevert, constants } = require('@openzeppelin/test-helpers');
 const util = require('../../tools/test/util');
 
-contract('SimplePolicySetter [@group=2]', () => {
+contract('SimplePolicySetter [@group=11]', () => {
   let policy;
   let policySetter;
 

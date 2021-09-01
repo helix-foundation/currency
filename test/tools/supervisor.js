@@ -31,7 +31,7 @@ const { Supervisor } = require('../../tools/supervisor');
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));
 
-contract('Production Supervisor [@group=8]', (accounts) => {
+contract('Production Supervisor [@group=10]', (accounts) => {
   const policyProposalsIdentifierHash = web3.utils.soliditySha3(
     'PolicyProposals',
   );
