@@ -64,7 +64,7 @@
     "solhint-plugin-eco": "0.1.0",
     "solidity-coverage": "0.7.17",
     "sprintf-js": "1.1.2",
-    "truffle": "5.4.7"
+    "truffle": "5.4.8"
   },
   "dependencies": {
     "@openzeppelin/contracts": "3.4.2",
