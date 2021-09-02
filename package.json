@@ -45,7 +45,7 @@
   "devDependencies": {
     "@openzeppelin/gsn-helpers": "0.2.4",
     "@openzeppelin/gsn-provider": "0.1.11",
-    "@truffle/debug-utils": "5.1.12",
+    "@truffle/debug-utils": "5.1.13",
     "bigint-crypto-utils": "3.0.18",
     "bn-chai": "1.0.1",
     "chai": "4.3.4",
