@@ -38,11 +38,6 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     uint256 public generation;
 
-    /** A mapping of account addresses to ticket positions to indicate who holds
-     * which ticket.
-     */
-    mapping(address => uint256) public holders;
-
     /** The initial value used for VDF to compute random seed. This is set by a
      * call to `commitEntropyVDFSeed()` after the vote results are computed.
      */

@@ -176,6 +176,29 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     await configureInflationRootHash();
   });
 
+  describe('startInflation', () => {
+    it('reverts if startInflation is called with zero value _winners', async () => {
+      await expectRevert(
+        inflation.startInflation(0, 1),
+        'Contract must have rewards',
+      );
+    });
+
+    it('reverts if startInflation is called with zero value _prize', async () => {
+      await expectRevert(
+        inflation.startInflation(1, 0),
+        'Contract must have rewards',
+      );
+    });
+
+    it('reverts if startInflation is called twice', async () => {
+      await expectRevert(
+        inflation.startInflation(1, 1),
+        'The sale can only be started once',
+      );
+    });
+  });
+
   describe('commitEntropyVDF', () => {
     it('emits the EntropyVDFSeedCommitted event', async () => {
       //      time.increase(3600 * 24 * 2);
@@ -400,6 +423,22 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
           'This method can only be called on clones',
         );
       });
+    });
+
+    context('before seed reveal', () => {
+      it('reverts because the contract has a non-zero balance', async () => {
+        await expectRevert(
+          inflation.destruct(),
+          'The contract must have 0 balance to be destructed prior seed revealing.',
+        );
+      });
+
+      // it('succeeds if the balance is zero', async () => {
+      //   // It is very difficult for me to think of a situation where this branch should happen
+      //   // Good for being able to clean up an otherwise broken state, but probably pathological
+      //   // to find a way to test it in this test (it'd go partway in the setup portion)
+      //   await inflation.destruct();
+      // });
     });
 
     context('after the results are computed', () => {
