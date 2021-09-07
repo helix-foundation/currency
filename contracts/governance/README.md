@@ -995,6 +995,7 @@ Emitted once a proposal has reached sufficient support and voting has been start
 
 ###### ProposalSupported
 Attributes:
+  - `supporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
 
 Emitted when `support` is successfully called. Helps external systems keep tabs

@@ -208,7 +208,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
           tx.tx,
           policyProposals.constructor,
           'ProposalSupported',
-          { proposalAddress: testProposal.address },
+          { supporter: alice, proposalAddress: testProposal.address },
         );
       });
 
@@ -387,6 +387,10 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
           { proposer: alice },
         );
       });
+
+      // it('fails', async () => {
+      //   // need to cover the branch where the refund fails for 100% coverage
+      // });
 
       it('transfers the refund tokens', async () => {
         const refundAmount = toBN(await policyProposals.REFUND_IF_LOST());

@@ -105,7 +105,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param proposalAddress The address of the PolicyVotes contract instance that was supported
      */
-    event ProposalSupported(address proposalAddress);
+    event ProposalSupported(address supporter, address proposalAddress);
 
     /** An event indicating that proposal fee was partially refunded.
      *
@@ -236,7 +236,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         _p.totalstake = _p.totalstake.add(_amount);
         _p.staked[_msgSender()] = true;
 
-        emit ProposalSupported(_prop);
+        emit ProposalSupported(_msgSender(), _prop);
 
         if (_p.totalstake > _total.mul(30).div(100)) {
             PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
