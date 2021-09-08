@@ -10,6 +10,7 @@ const {
 } = web3.utils;
 const {
   expectRevert,
+  expectEvent,
   time,
 } = require('@openzeppelin/test-helpers');
 
@@ -79,6 +80,13 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     await expectRevert(lockup.destruct(), 'Cannot destroy while still open for selling');
   });
 
+  it('rejects if no deposit', async () => {
+    await expectRevert(
+      lockup.withdrawFor(charlie),
+      'Withdrawals can only be made for accounts that made deposits',
+    );
+  });
+
   describe('With a valid deposit', async () => {
     beforeEach(async () => {
       await lockup.deposit(1000000000, { from: charlie });
@@ -99,9 +107,27 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
         await timedPolicies.incrementGeneration();
       });
 
+      it('can no longer deposit', async () => {
+        await expectRevert(
+          lockup.deposit(1000000000, { from: charlie }),
+          'Deposits can only be made during sale window',
+        );
+      });
+
       it('rewards late withdrawal', async () => {
         await lockup.withdraw({ from: charlie });
         expect(await token.balanceOf(charlie)).to.eq.BN(1000000040);
+      });
+
+      it('withdrawal event emitted', async () => {
+        const result = await lockup.withdraw({ from: charlie });
+
+        await expectEvent.inTransaction(
+          result.tx,
+          lockup.constructor,
+          'Withdrawal',
+          { to: charlie, amount: '1000000040' },
+        );
       });
 
       it('allows indirect withdrawal', async () => {

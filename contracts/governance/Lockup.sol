@@ -139,6 +139,7 @@ contract Lockup is PolicedUtils, TimeUtils {
         }
 
         getToken().transfer(_owner, _amount);
+        emit Withdrawal(_owner, _amount);
     }
 
     function selling() public view returns (bool) {
