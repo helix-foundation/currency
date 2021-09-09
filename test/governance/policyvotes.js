@@ -168,7 +168,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
             expect(await proxiedPolicyVotes.yesStake()).to.eq.BN(startStake);
           });
 
-          context('with an existing vote', () => {
+          context('with an existing yes vote', () => {
             beforeEach(async () => {
               await proxiedPolicyVotes.vote(true, []);
             });
@@ -191,6 +191,30 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
               ).to.eq.BN(startStake.sub(await token.balanceOf(alice)));
             });
           });
+
+          context('with an existing no vote', () => {
+            beforeEach(async () => {
+              await proxiedPolicyVotes.vote(false, []);
+            });
+
+            it('does not increase total stake', async () => {
+              const startStake = await proxiedPolicyVotes.totalStake();
+
+              await proxiedPolicyVotes.vote(true, []);
+
+              expect(await proxiedPolicyVotes.totalStake()).to.eq.BN(startStake);
+            });
+
+            it('increases yes stake', async () => {
+              const startStake = await proxiedPolicyVotes.yesStake();
+
+              await proxiedPolicyVotes.vote(true, []);
+
+              expect(
+                await proxiedPolicyVotes.yesStake(),
+              ).to.eq.BN(startStake.add(await token.balanceOf(alice)));
+            });
+          });
         });
       });
     });
@@ -202,132 +226,154 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
 
     beforeEach(async () => {
       await proxiedPolicyVotes.configure(proposal);
-
-      await proxiedPolicyVotes.vote(true, [],
-        { from: charlie });
-
-      await proxiedPolicyVotes.vote(true, [],
-        { from: dave });
     });
 
-    context('called on a non-proxied instance', () => {
-      it('reverts', async () => {
-        await expectRevert(
-          policyVotes.execute(),
-          'This method can only be called on clones',
-        );
-      });
-    });
-
-    context('when called before the end of the veto period', () => {
-      it('reverts', async () => {
-        await expectRevert(
-          proxiedPolicyVotes.execute(),
-          'Voting has not ended yet',
-        );
-      });
-    });
-
-    context('when called before the end of the veto period with majority of total stake', () => {
-      it('succeeds', async () => {
-        await proxiedPolicyVotes.vote(true, [],
-          { from: bob });
-
-        await time.increase(3600 * 24 * 8);
-
+    context('when no one votes', () => {
+      it('fails', async () => {
+        await time.increase(3600 * 24 * 4.1);
         const tx = await proxiedPolicyVotes.execute();
-        await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '0' });
-      });
-    });
-
-    context('is not PolicyVotes', () => {
-      let tx;
-      beforeEach(async () => {
-        await policy.testDirectSet('PolicyVotes', policy.address);
-        await time.increase(3600 * 24 * 13);
-        tx = await proxiedPolicyVotes.execute();
-      });
-
-      it('does not enact the policies', async () => {
-        assert.equal(
-          await util.policyFor(policy, adoptedPolicyIdHash),
-          0,
-        );
-      });
-
-      it('self destructs', async () => {
-        assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
-      });
-
-      it('emits the VoteCompleted event', async () => {
         await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '2' });
       });
     });
 
-    context('when no policy wins', () => {
-      let tx;
-      beforeEach(async () => {
-        await proxiedPolicyVotes.vote(false, [],
-          { from: bob });
-        await proxiedPolicyVotes.vote(false, [],
-          { from: alice });
-        await time.increase(3600 * 24 * 4);
-
-        tx = await proxiedPolicyVotes.execute();
-      });
-
-      it('does not enact the policies', async () => {
-        assert.equal(
-          await util.policyFor(policy, adoptedPolicyIdHash),
-          0,
-        );
-      });
-
-      it('removes itself from the PolicyVotes role', async () => {
-        assert.equal(
-          await util.policyFor(policy, votesPolicyIdHash),
-          0,
-        );
-      });
-
-      it('self destructs', async () => {
-        assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
-      });
-
-      it('emits the VoteCompleted event', async () => {
-        await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '1' });
-      });
-    });
-
-    context('when proposal wins', () => {
-      let tx;
+    context('with votes', () => {
       beforeEach(async () => {
         await proxiedPolicyVotes.vote(true, [],
-          { from: bob });
+          { from: charlie });
 
-        await time.increase(3600 * 24 * 8);
-
-        tx = await proxiedPolicyVotes.execute();
+        await proxiedPolicyVotes.vote(true, [],
+          { from: dave });
       });
 
-      it('adopts policy 0', async () => {
-        const newPolicy = await SampleHandler.at(await util.policyFor(policy, adoptedPolicyIdHash));
-        assert.equal((await newPolicy.id()).toString(), 0);
+      context('called on a non-proxied instance', () => {
+        it('reverts', async () => {
+          await expectRevert(
+            policyVotes.execute(),
+            'This method can only be called on clones',
+          );
+        });
       });
 
-      it('removes itself from the PolicyVotes role', async () => {
-        assert.equal(
-          await util.policyFor(policy, votesPolicyIdHash),
-          0,
-        );
+      context('when called early, without majority support', () => {
+        it('reverts', async () => {
+          await expectRevert(
+            proxiedPolicyVotes.execute(),
+            'Majority support required for early enaction',
+          );
+        });
       });
 
-      it('self destructs', async () => {
-        assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
+      context('when called after the delay, with plurality support', () => {
+        it('succeeds', async () => {
+          await time.increase(3600 * 24 * 4.1);
+
+          const tx = await proxiedPolicyVotes.execute();
+          await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '0' });
+        });
       });
 
-      it('emits the VoteCompleted event', async () => {
-        await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '0' });
+      context('when called early with majority of total stake', () => {
+        it('succeeds', async () => {
+          await proxiedPolicyVotes.vote(true, [],
+            { from: bob });
+
+          const tx = await proxiedPolicyVotes.execute();
+          await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '0' });
+        });
+      });
+
+      context('is not PolicyVotes', () => {
+        let tx;
+        beforeEach(async () => {
+          await policy.testDirectSet('PolicyVotes', policy.address);
+          await time.increase(3600 * 24 * 4.1);
+          tx = await proxiedPolicyVotes.execute();
+        });
+
+        it('does not enact the policies', async () => {
+          assert.equal(
+            await util.policyFor(policy, adoptedPolicyIdHash),
+            0,
+          );
+        });
+
+        it('self destructs', async () => {
+          assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
+        });
+
+        it('emits the VoteCompleted event', async () => {
+          await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '2' });
+        });
+      });
+
+      context('when no policy wins', () => {
+        let tx;
+        beforeEach(async () => {
+          await proxiedPolicyVotes.vote(false, [],
+            { from: bob });
+          await proxiedPolicyVotes.vote(false, [],
+            { from: alice });
+          await time.increase(3600 * 24 * 4.1);
+
+          tx = await proxiedPolicyVotes.execute();
+        });
+
+        it('does not enact the policies', async () => {
+          assert.equal(
+            await util.policyFor(policy, adoptedPolicyIdHash),
+            0,
+          );
+        });
+
+        it('removes itself from the PolicyVotes role', async () => {
+          assert.equal(
+            await util.policyFor(policy, votesPolicyIdHash),
+            0,
+          );
+        });
+
+        it('self destructs', async () => {
+          assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
+        });
+
+        it('emits the VoteCompleted event', async () => {
+          await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '1' });
+        });
+      });
+
+      context('when proposal wins', () => {
+        let tx;
+        beforeEach(async () => {
+          await proxiedPolicyVotes.vote(true, [],
+            { from: bob });
+
+          tx = await proxiedPolicyVotes.execute();
+        });
+
+        it('adopts policy 0', async () => {
+          const newPolicy = await SampleHandler.at(
+            await util.policyFor(
+              policy,
+              adoptedPolicyIdHash,
+            ),
+          );
+          assert.equal((await newPolicy.id()).toString(), 0);
+        });
+
+        it('removes itself from the PolicyVotes role', async () => {
+          assert.equal(
+            await util.policyFor(policy, votesPolicyIdHash),
+            0,
+          );
+        });
+
+        it('self destructs', async () => {
+          assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
+        });
+
+        it('emits the VoteCompleted event', async () => {
+          await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '0' });
+        });
       });
     });
   });

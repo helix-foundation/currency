@@ -37,6 +37,10 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     uint256 public constant VOTE_TIME = 3 days;
 
+    /** The delay on a plurality win
+     */
+    uint256 public constant ENACTION_DELAY = 1 days;
+
     /** The timestamp at which the commit portion of the voting phase ends.
      */
     uint256 public voteEnds;
@@ -154,7 +158,10 @@ contract PolicyVotes is VotingPower, TimeUtils {
         Result _res;
 
         if (yesStake <= _total.div(2)) {
-            require(_time > voteEnds, "Voting has not ended yet");
+            require(
+                _time > voteEnds + ENACTION_DELAY,
+                "Majority support required for early enaction"
+            );
         }
 
         if (policyFor(ID_POLICY_VOTES) != address(this)) {
@@ -167,7 +174,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             // Not enough yes votes
             _res = Result.Rejected;
         } else {
-            // Vote passed and veto failed, execute proposal
+            // Vote passed
             Policy(policy).internalCommand(proposal);
             _res = Result.Accepted;
         }
