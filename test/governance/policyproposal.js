@@ -236,6 +236,11 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         );
       });
 
+      it('can still stake for multiple proposals', async () => {
+        await policyProposals.support(testProposal.address, []);
+        await policyProposals.support(testProposal2.address, []);
+      });
+
       context('when the staker has no funds', () => {
         it('reverts', async () => {
           await expectRevert(
