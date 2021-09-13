@@ -164,7 +164,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The address of the proposal to submit.
      */
-    function registerProposal(address _prop) external {
+    function registerProposal(address _prop) external onlyClone {
         Props storage _p = proposals[_prop];
 
         require(_prop != address(0), "The proposal address can't be 0");

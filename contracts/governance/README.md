@@ -1021,6 +1021,7 @@ must be done before calling `registerProposal`. If the proposal does not get vot
 on then the caller will receive a refund of 800 ECO (`REFUND_IF_LOST`).
 
 ###### Security Notes
+ - Can only be called on a cloned contract.
  - Requires payment to call, to prevent abuse.
  - You cannot propose the 0 address.
  - A proposal can only be registered once.
