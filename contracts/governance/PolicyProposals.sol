@@ -60,7 +60,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** The duration of the proposal portion of the proposal phase.
      */
-    uint256 public constant PROPOSAL_TIME = 72 hours;
+    uint256 public constant PROPOSAL_TIME = 10 days;
 
     /** The minimum cost to register a proposal.
      */
@@ -264,14 +264,14 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * Returns a partial refund only, does not work on proposals that are
      * on the ballot for the voting phase, and can only be called after the
-     * results have been computed.
+     * period is over.
      *
      * @param _prop The proposal to issue a refund for.
      */
     function refund(address _prop) external {
         require(
             getTime() > proposalEnds,
-            "Refunds may not be distributed until results have been computed"
+            "Refunds may not be distributed until the period is over"
         );
 
         require(_prop != address(0), "The proposal address can't be 0");
@@ -299,7 +299,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
     function destruct() external onlyClone {
         require(
             getTime() > proposalEnds,
-            "The destruct operation can only be performed after results have been computed"
+            "The destruct operation can only be performed when the period is over"
         );
 
         require(totalproposals == 0, "Must refund all missed proposals first");

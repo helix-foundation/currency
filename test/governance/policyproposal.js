@@ -151,7 +151,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
     context('outside the registration period', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 96 + 1);
+        await time.increase(3600 * 240 + 1);
       });
 
       it('reverts', async () => {
@@ -190,7 +190,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
     context('after the registration period', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 96 + 1);
+        await time.increase(3600 * 240 + 1);
       });
 
       it('reverts', async () => {
@@ -352,28 +352,29 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       it('reverts', async () => {
         await expectRevert(
           policyProposals.refund(testProposal.address),
-          'may not be distributed until results have been computed',
+          'may not be distributed until the period is over',
         );
       });
     });
 
     context('when the policy is selected', () => {
       beforeEach(async () => {
-        await policyProposals.support(testProposal.address, [], { from: charlie });
-        await time.increase(3600 * 96 + 1);
+        await policyProposals.support(testProposal.address, [], { from: alice });
+        await policyProposals.support(testProposal.address, [], { from: bob });
+        time.increase(3600 * 240 + 1);
       });
 
       it('reverts', async () => {
         await expectRevert(
           policyProposals.refund(testProposal.address),
-          'proposal address is not valid',
+          'The provided proposal address is not valid',
         );
       });
     });
 
     context('when the policy is not selected', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 96 + 1);
+        await time.increase(3600 * 240 + 1);
       });
 
       it('reverts', async () => {
@@ -444,7 +445,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       it('reverts', async () => {
         await expectRevert(
           policyProposals.destruct(),
-          'can only be performed after results have been computed',
+          'can only be performed when the period is over',
         );
       });
     });
@@ -462,7 +463,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         await policyProposals.registerProposal(testProposal.address);
         await policyProposals.support(testProposal.address, []);
 
-        await time.increase(3600 * 96 + 1);
+        await time.increase(3600 * 240 + 1);
         await policyProposals.refund(testProposal.address);
       });
 
@@ -491,7 +492,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         await policyProposals.registerProposal(testProposal.address);
         await policyProposals.support(testProposal.address, []);
 
-        await time.increase(3600 * 96 + 1);
+        await time.increase(3600 * 240 + 1);
       });
 
       it('reverts', async () => {
