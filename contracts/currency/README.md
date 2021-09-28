@@ -78,7 +78,7 @@ weighted vote it becomes impossible to count the same staked tokens twice.
  - [ERC20](https://theethereum.wiki/w/index.php/ERC20_Token_Standard)
  - [ERC777](https://eips.ethereum.org/EIPS/eip-777)
  - [ERC777 Reference Implementation](https://github.com/0xjac/ERC777)
- - [ERC1820](need a link here)
+ - [ERC1820](https://eips.ethereum.org/EIPS/eip-1820)
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
