@@ -297,7 +297,10 @@ async function deployStage2(options) {
   const ecoxImpl = await new web3.eth.Contract(ECOxABI.abi)
     .deploy({
       data: ECOxABI.bytecode,
-      arguments: [options.policyProxy.options.address],
+      arguments: [
+        options.policyProxy.options.address,
+        '1000000000000000000000', // TODO: make this the real value
+      ],
     })
     .send({
       from: options.account,

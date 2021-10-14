@@ -25,6 +25,8 @@ const { singletons } = require('@openzeppelin/test-helpers');
 
 const { trace } = require('./trace');
 
+const totalECOx = '1000000000000000000000';
+
 exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const timedPoliciesIdentifierHash = web3.utils.soliditySha3('TimedPolicies');
   const policyProposalsIdentifierHash = web3.utils.soliditySha3('PolicyProposals');
@@ -44,7 +46,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const rootHash = await RootHashProposal.new(proxy.address);
   const balanceStore = await EcoBalanceStore.new(proxy.address, rootHash.address);
   const token = await ERC20EcoToken.new(proxy.address);
-  const ecox = await ECOx.new(proxy.address);
+  const ecox = await ECOx.new(proxy.address, totalECOx);
   const vdf = await VDFVerifier.new(proxy.address);
   const authedCleanup = await Cleanup.new();
   const unauthedCleanup = await Cleanup.new();

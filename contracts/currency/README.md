@@ -385,16 +385,17 @@ has an inflation scale of 1 so that part is simplified.
 
 #### exchange
 Arguments:
- - `_value` (uint256) - the amount of ECOx for the calling address to exchange
+ - `_ecoXValue` (uint256) - the amount of ECOx for the calling address to exchange
 
 This function burns the specified amount of ECOx and gives the user ECO in
-return. The percentage that the burned ECOx was of the total supply of ECOx
-is equal to twice the amount of ECO gained as a percentage of the total supply
-of ECO prior to the transaction. See [our whitepaper](???) for more discussion.
+return. The percentage that the burned ECOx was of the total initial supply of ECOx
+is equal to the ECO given as a percentage of the current total supply of ECO, but 
+continuously compounded along the process. This creates an exponential function relation
+between the two ratios. See [our whitepaper](???) for more discussion.
 
 #### valueAt
 Arguments:
- - `_value` (uint256) - the value of ECOx to be appraised
+ - `_ecoXValue` (uint256) - the value of ECOx to be appraised
  - `_gen` (uint256) - the generation to calculate at
 
 Returns the value of ECO that the ECOx would be worth at the specified generation,
@@ -402,7 +403,7 @@ if it had been exchanged.
 
 #### valueOf
 Arguments:
- - `_value` (uint256) - the value of ECOx to be appraised
+ - `_ecoXValue` (uint256) - the value of ECOx to be appraised
 
 Returns the value of ECO that the ECOx would be worth at the current generation,
 if it was to be exchanged.
