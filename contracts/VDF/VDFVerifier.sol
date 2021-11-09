@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "./BigNumber.sol";
 import "./IsPrime.sol";
@@ -57,7 +57,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
     /** Override parent clone() function to pass owner along */
     function clone() public override returns (address) {
         address _clone = createClone(address(this));
-        VDFVerifier(_clone).initialize(address(this), _msgSender());
+        VDFVerifier(_clone).initialize(address(this), msg.sender);
         return _clone;
     }
 
@@ -92,14 +92,14 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
         require(isProbablePrime(_x, 10), "x must be probable prime");
 
-        state[_msgSender()].progress = 0; // reset the contract
-        state[_msgSender()].t = _t;
+        state[msg.sender].progress = 0; // reset the contract
+        state[msg.sender].t = _t;
 
-        state[_msgSender()].x = _x;
-        state[_msgSender()].y = y;
+        state[msg.sender].x = _x;
+        state[msg.sender].y = y;
 
-        state[_msgSender()].xi = x2; // our time-lock-puzzle is for x2 = x^2; x2 is a QR mod n
-        state[_msgSender()].yi = y;
+        state[msg.sender].xi = x2; // our time-lock-puzzle is for x2 = x^2; x2 is a QR mod n
+        state[msg.sender].yi = y;
     }
 
     /**
@@ -113,7 +113,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
      * In other words, the input is effectively (i, U_sqrt[i]).
      */
     function update(uint256 _nextProgress, bytes calldata _ubytes) external {
-        State memory s = state[_msgSender()]; // saves gas
+        State memory s = state[msg.sender]; // saves gas
 
         require(
             _nextProgress == s.progress + 1 && s.x > 0,
@@ -159,10 +159,10 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
         if (_nextProgress != s.t - 1) {
             // Intermediate step
-            state[_msgSender()].xi = xi;
-            state[_msgSender()].yi = yi;
+            state[msg.sender].xi = xi;
+            state[msg.sender].yi = yi;
 
-            state[_msgSender()].progress = _nextProgress; // this becomes t-1 for the last step
+            state[msg.sender].progress = _nextProgress; // this becomes t-1 for the last step
         } else {
             // Final step. Finalize calculations.
             xi = xi.modexp(BigNumber.from(4), n); // xi^4. Must match yi
@@ -177,7 +177,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
             verified[keccak256(abi.encode(s.t, s.x))] = keccak256(
                 s.y.asBytes(nlen)
             );
-            delete (state[_msgSender()]);
+            delete (state[msg.sender]);
 
             emit Verified(s.x, s.t, s.y.asBytes());
         }
@@ -202,10 +202,10 @@ contract VDFVerifier is PolicedUtils, IsPrime {
     /** Destroy contract when no longer needed */
     function destruct() external onlyClone {
         require(
-            _msgSender() == destroyer,
+            msg.sender == destroyer,
             "Only creating contract may destroy instance"
         );
 
-        selfdestruct(address(uint160(destroyer)));
+        selfdestruct(payable(address(uint160(destroyer))));
     }
 }

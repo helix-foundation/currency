@@ -380,7 +380,7 @@ contract('InflationRootHashProposal', () => {
         );
 
         rootHashProposal = await getRootHash();
-        rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
+        await rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
           amountOfAccounts, {
             from: accounts[0],
           });

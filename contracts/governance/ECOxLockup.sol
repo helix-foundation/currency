@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../currency/GenerationStore.sol";
 import "../currency/ECOx.sol";
@@ -10,8 +9,6 @@ import "../currency/ECOx.sol";
  *
  */
 contract ECOxLockup is GenerationStore {
-    using SafeMath for uint256;
-
     /** The Deposit event indicates that ECOx has been locked up, credited
      * to a particular address in a particular amount.
      *
@@ -36,10 +33,10 @@ contract ECOxLockup is GenerationStore {
      */
     mapping(uint256 => mapping(address => uint256)) public biggestDelta;
 
-    constructor(address _policy) public GenerationStore(_policy) {}
+    constructor(address _policy) GenerationStore(_policy) {}
 
     function deposit(uint256 _amount) external {
-        address _source = _msgSender();
+        address _source = msg.sender;
         update(_source);
 
         require(
@@ -49,14 +46,14 @@ contract ECOxLockup is GenerationStore {
 
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
-        bal[_source] = bal[_source].add(_amount);
-        setTokenSupply(tokenSupply().add(_amount));
+        bal[_source] = bal[_source] + _amount;
+        setTokenSupply(tokenSupply() + _amount);
 
         emit Deposit(_source, _amount);
     }
 
     function withdraw(uint256 _amount) external {
-        address _destination = _msgSender();
+        address _destination = msg.sender;
         update(_destination);
 
         mapping(address => uint256) storage bal = balances[currentGeneration];
@@ -73,8 +70,8 @@ contract ECOxLockup is GenerationStore {
             "Must not vote in the generation on or before withdrawing"
         );
 
-        bal[_destination] = bal[_destination].sub(_amount);
-        setTokenSupply(tokenSupply().sub(_amount));
+        bal[_destination] = bal[_destination] - _amount;
+        setTokenSupply(tokenSupply() - _amount);
 
         if (bal[_destination] < prevbal[_destination]) {
             uint256 _delta = prevbal[_destination] - bal[_destination];
@@ -132,8 +129,8 @@ contract ECOxLockup is GenerationStore {
 
     function recordVote(address _who) external {
         require(
-            _msgSender() == policyFor(ID_POLICY_PROPOSALS) ||
-                _msgSender() == policyFor(ID_POLICY_VOTES),
+            msg.sender == policyFor(ID_POLICY_PROPOSALS) ||
+                msg.sender == policyFor(ID_POLICY_VOTES),
             "Must be a voting contract to call"
         );
 

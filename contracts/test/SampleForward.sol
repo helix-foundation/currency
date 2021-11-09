@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../contracts/proxy/ForwardTarget.sol";
 
 /** @title Test forward target */
 contract SampleForward is ForwardTarget {
-    using SafeMath for uint256;
-
     // value holder
     uint256 public value;
 
-    constructor() public {
+    constructor() {
         value = 1;
     }
 
@@ -23,7 +20,7 @@ contract SampleForward is ForwardTarget {
     /** @notice Chained storage initializer */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        value = SampleForward(address(uint160(_self))).value();
+        value = SampleForward(payable(address(uint160(_self)))).value();
     }
 
     /** @notice Increment value */
@@ -43,12 +40,12 @@ contract SampleForward is ForwardTarget {
         uint256 _f
     ) public {
         uint256 _t = value;
-        _t = _t.add(_a);
-        _t = _t.add(_b);
-        _t = _t.add(_c);
-        _t = _t.add(_d);
-        _t = _t.add(_e);
-        _t = _t.add(_f);
+        _t = _t + _a;
+        _t = _t + _b;
+        _t = _t + _c;
+        _t = _t + _d;
+        _t = _t + _e;
+        _t = _t + _f;
         value = _t;
     }
 
@@ -66,11 +63,11 @@ contract SampleForward is ForwardTarget {
     {
         value += 1;
         _a = value;
-        _b = _a.add(1);
-        _c = _b.add(1);
-        _d = _c.add(1);
-        _e = _d.add(1);
-        _f = _e.add(1);
+        _b = _a + 1;
+        _c = _b + 1;
+        _d = _c + 1;
+        _e = _d + 1;
+        _f = _e + 1;
     }
 
     /** @notice Multi-return without side effects */
@@ -87,11 +84,11 @@ contract SampleForward is ForwardTarget {
         )
     {
         _a = value;
-        _b = _a.add(1);
-        _c = _b.add(1);
-        _d = _c.add(1);
-        _e = _d.add(1);
-        _f = _e.add(1);
+        _b = _a + 1;
+        _c = _b + 1;
+        _d = _c + 1;
+        _e = _d + 1;
+        _f = _e + 1;
     }
 
     /** @notice Recursion test using internal call */
@@ -99,7 +96,7 @@ contract SampleForward is ForwardTarget {
         if (_loops == 0) {
             value++;
         } else {
-            intcall(_loops.sub(1));
+            intcall(_loops - 1);
         }
     }
 
@@ -108,7 +105,7 @@ contract SampleForward is ForwardTarget {
         if (_loops == 0) {
             value++;
         } else {
-            this.extcall(_loops.sub(1));
+            this.extcall(_loops - 1);
         }
     }
 }

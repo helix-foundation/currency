@@ -1,6 +1,6 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
 import "../currency/EcoBalanceStore.sol";
@@ -21,10 +21,7 @@ contract EcoFaucet is PolicedUtils {
      * The exchange rate used is 1:1 - 1 szabo ETH will get you 1 szabo of eco.
      */
     function faucet() external payable returns (uint256) {
-        EcoBalanceStore(policyFor(ID_BALANCESTORE)).mint(
-            _msgSender(),
-            msg.value
-        );
+        EcoBalanceStore(policyFor(ID_BALANCESTORE)).mint(msg.sender, msg.value);
         return msg.value;
     }
 
@@ -33,7 +30,7 @@ contract EcoFaucet is PolicedUtils {
      * The exchange rate used is 1:1 - 1 szabo ETH will get you 1 szabo of eco.
      */
     function faucetX() external payable returns (uint256) {
-        ECOx(policyFor(ID_ECOX)).mint(_msgSender(), msg.value);
+        ECOx(policyFor(ID_ECOX)).mint(msg.sender, msg.value);
         return msg.value;
     }
 }

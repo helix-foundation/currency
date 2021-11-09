@@ -1,8 +1,7 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../policy/PolicedUtils.sol";
 import "./EcoBalanceStore.sol";
@@ -11,15 +10,13 @@ import "./TokenPrototype.sol";
 /** @title An ERC20 token interface to the Eco currency syste4m.
  */
 contract ERC20EcoToken is TokenPrototype, IERC20 {
-    using SafeMath for uint256;
-
     /** Tracks allowances for each user from each other user.
      *  The parameter is in basic unit of 10^{-18} (atto) ECO tokens
      */
     mapping(address => mapping(address => uint256)) public allowances;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) public TokenPrototype(_policy) {}
+    constructor(address _policy) TokenPrototype(_policy) {}
 
     /** Return the friendly name of the ERC20 token.
      */
@@ -65,16 +62,9 @@ contract ERC20EcoToken is TokenPrototype, IERC20 {
         returns (bool)
     {
         if (_to == address(0)) {
-            store.tokenBurn(_msgSender(), _msgSender(), _value, "", "");
+            store.tokenBurn(msg.sender, msg.sender, _value, "", "");
         } else {
-            store.tokenTransfer(
-                _msgSender(),
-                _msgSender(),
-                _to,
-                _value,
-                "",
-                ""
-            );
+            store.tokenTransfer(msg.sender, msg.sender, _to, _value, "", "");
         }
         return true;
     }
@@ -89,16 +79,14 @@ contract ERC20EcoToken is TokenPrototype, IERC20 {
         uint256 _value
     ) external override returns (bool) {
         require(
-            allowances[_from][_msgSender()] >= _value,
+            allowances[_from][msg.sender] >= _value,
             "Insufficient allowance for transfer"
         );
-        allowances[_from][_msgSender()] = allowances[_from][_msgSender()].sub(
-            _value
-        );
+        allowances[_from][msg.sender] = allowances[_from][msg.sender] - _value;
         if (_to == address(0)) {
-            store.tokenBurn(_msgSender(), _from, _value, "", "");
+            store.tokenBurn(msg.sender, _from, _value, "", "");
         } else {
-            store.tokenTransfer(_msgSender(), _from, _to, _value, "", "");
+            store.tokenTransfer(msg.sender, _from, _to, _value, "", "");
         }
         return true;
     }
@@ -110,8 +98,8 @@ contract ERC20EcoToken is TokenPrototype, IERC20 {
         override
         returns (bool)
     {
-        allowances[_msgSender()][_spender] = _value;
-        emit Approval(_msgSender(), _spender, _value);
+        allowances[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -162,9 +150,9 @@ contract ERC20EcoToken is TokenPrototype, IERC20 {
      */
     function destruct() external {
         require(
-            _msgSender() == policyFor(ID_CLEANUP),
+            msg.sender == policyFor(ID_CLEANUP),
             "Only the cleanup policy contract can call destruct."
         );
-        selfdestruct(_msgSender());
+        selfdestruct(payable(msg.sender));
     }
 }

@@ -1,6 +1,6 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./EcoInitializable.sol";
@@ -29,7 +29,9 @@ contract EcoBootstrap is Ownable {
      */
     constructor(address _owner) public {
         transferOwnership(_owner);
-        ForwardTarget init = new EcoInitializable(address(uint160(owner())));
+        ForwardTarget init = new EcoInitializable(
+            payable(address(uint160(owner())))
+        );
 
         /* Create 20 uninitialized addresses for future use. 20 is plenty for
          * now, and there is no particular reason why 20 was selected other than
@@ -44,6 +46,6 @@ contract EcoBootstrap is Ownable {
 
     /** @notice Selfdestruct */
     function destruct() external onlyOwner {
-        selfdestruct(address(uint160(owner())));
+        selfdestruct(payable(address(uint160(owner()))));
     }
 }

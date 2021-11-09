@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";

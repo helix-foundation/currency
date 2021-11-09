@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/introspection/IERC1820Implementer.sol";
-import "@openzeppelin/contracts/GSN/GSNRecipient.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "../proxy/ForwardTarget.sol";
 
 /** @title Policed Contracts
  *
  * A policed contract is any contract managed by a policy.
  */
-contract Policed is ForwardTarget, IERC1820Implementer, GSNRecipient {
+contract Policed is ForwardTarget, IERC1820Implementer {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 
@@ -24,7 +23,7 @@ contract Policed is ForwardTarget, IERC1820Implementer, GSNRecipient {
      */
     modifier onlyPolicy() {
         require(
-            _msgSender() == policy,
+            msg.sender == policy,
             "Only the policy contract may call this method."
         );
         _;
@@ -40,7 +39,7 @@ contract Policed is ForwardTarget, IERC1820Implementer, GSNRecipient {
         _;
     }
 
-    constructor(address _policy) public {
+    constructor(address _policy) {
         policy = _policy;
     }
 
@@ -128,36 +127,5 @@ contract Policed is ForwardTarget, IERC1820Implementer, GSNRecipient {
                 return(0x0, size)
             }
         }
-    }
-
-    function acceptRelayedCall(
-        address,
-        address,
-        bytes calldata,
-        uint256,
-        uint256,
-        uint256,
-        uint256,
-        bytes calldata,
-        uint256 maxPossibleCharge
-    ) external pure override returns (uint256, bytes memory) {
-        if (maxPossibleCharge == 0) {
-            return _approveRelayedCall();
-        } else {
-            return _rejectRelayedCall(0);
-        }
-    }
-
-    function _preRelayedCall(bytes memory) internal override returns (bytes32) {
-        // solhint-disable-previous-line no-empty-blocks
-    }
-
-    function _postRelayedCall(
-        bytes memory,
-        bool,
-        uint256,
-        bytes32
-    ) internal override {
-        // solhint-disable-previous-line no-empty-blocks
     }
 }

@@ -1,8 +1,7 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "./TokenEvents.sol";
@@ -24,8 +23,6 @@ import "./InflationRootHashProposal.sol";
  * contract standard, ie ERC20.
  */
 contract EcoBalanceStore is GenerationStore, TimeUtils {
-    using SafeMath for uint256;
-
     /* Event to be emitted whenever a new token interface is authorized to
      * interact with this balance store instance.
      */
@@ -95,7 +92,7 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         authorizedContracts.push(_hash);
 
         reAuthorize();
-        emit Authorized(_msgSender(), _policyIdentifier);
+        emit Authorized(msg.sender, _policyIdentifier);
     }
 
     function revoke(string calldata _policyIdentifier) external onlyPolicy {
@@ -110,7 +107,7 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
                 authorizedContracts.pop();
 
                 reAuthorize();
-                emit Revoked(_msgSender(), _policyIdentifier);
+                emit Revoked(msg.sender, _policyIdentifier);
                 return;
             }
         }
@@ -147,7 +144,7 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
                 _operatorData
             );
 
-            authorized = authorized || _msgSender() == address(token);
+            authorized = authorized || msg.sender == address(token);
         }
 
         require(authorized, "Sender not authorized to call this function");
@@ -155,9 +152,8 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         update(_from);
         update(_to);
 
-        uint256 _uninflatedValue = _value.mul(
-            historicLinearInflation[currentGeneration]
-        );
+        uint256 _uninflatedValue = _value *
+            historicLinearInflation[currentGeneration];
 
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
@@ -166,8 +162,8 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
             "Source account has insufficient tokens"
         );
 
-        bal[_from] = bal[_from].sub(_uninflatedValue);
-        bal[_to] = bal[_to].add(_uninflatedValue);
+        bal[_from] = bal[_from] - _uninflatedValue;
+        bal[_to] = bal[_to] + _uninflatedValue;
     }
 
     function tokenBurn(
@@ -178,7 +174,7 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         bytes calldata _operatorData
     ) external {
         // apply inflation scalefactor here to convert _value to the uninflated store
-        bool authorized = _msgSender() == policy;
+        bool authorized = msg.sender == policy;
         for (uint256 i = 0; i < authorizedContractAddresses.length; ++i) {
             TokenEvents token = TokenEvents(authorizedContractAddresses[i]);
             token.emitBurnedEvent(
@@ -188,26 +184,23 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
                 _data,
                 _operatorData
             );
-            authorized = authorized || _msgSender() == address(token);
+            authorized = authorized || msg.sender == address(token);
         }
 
         require(authorized, "Sender not authorized to call this function");
 
         update(_from);
 
-        uint256 _uninflatedValue = _value.mul(
-            historicLinearInflation[currentGeneration]
-        );
+        uint256 _uninflatedValue = _value *
+            historicLinearInflation[currentGeneration];
 
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
         require(bal[_from] >= _uninflatedValue, "Insufficient funds to burn");
-        bal[_from] = bal[_from].sub(_uninflatedValue);
-        historicTotalSupplyUninflated[
-            currentGeneration
-        ] = historicTotalSupplyUninflated[currentGeneration].sub(
-            _uninflatedValue
-        );
+        bal[_from] = bal[_from] - _uninflatedValue;
+        historicTotalSupplyUninflated[currentGeneration] =
+            historicTotalSupplyUninflated[currentGeneration] -
+            _uninflatedValue;
     }
 
     function initialize(address _self) public override onlyConstruction {
@@ -219,36 +212,33 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
 
     function mint(address _to, uint256 _value) external {
         require(
-            _msgSender() == policyFor(ID_CURRENCY_GOVERNANCE) ||
-                _msgSender() == policyFor(ID_CURRENCY_TIMER) ||
-                _msgSender() == policyFor(ID_ECOX) ||
-                _msgSender() == policyFor(ID_FAUCET),
+            msg.sender == policyFor(ID_CURRENCY_GOVERNANCE) ||
+                msg.sender == policyFor(ID_CURRENCY_TIMER) ||
+                msg.sender == policyFor(ID_ECOX) ||
+                msg.sender == policyFor(ID_FAUCET),
             "Caller not authorized to mint tokens"
         );
 
         update(_to);
-        uint256 _uninflatedValue = _value.mul(
-            historicLinearInflation[currentGeneration]
-        );
+        uint256 _uninflatedValue = _value *
+            historicLinearInflation[currentGeneration];
         mapping(address => uint256) storage bal = balances[currentGeneration];
-        bal[_to] = bal[_to].add(_uninflatedValue);
-        historicTotalSupplyUninflated[
-            currentGeneration
-        ] = historicTotalSupplyUninflated[currentGeneration].add(
-            _uninflatedValue
-        );
+        bal[_to] = bal[_to] + _uninflatedValue;
+        historicTotalSupplyUninflated[currentGeneration] =
+            historicTotalSupplyUninflated[currentGeneration] +
+            _uninflatedValue;
         for (uint256 i = 0; i < authorizedContractAddresses.length; ++i) {
             TokenEvents token = TokenEvents(authorizedContractAddresses[i]);
-            token.emitMintedEvent(_msgSender(), _to, _value, "", "");
+            token.emitMintedEvent(msg.sender, _to, _value, "", "");
         }
     }
 
     function destruct() external {
         require(
-            _msgSender() == policyFor(ID_CLEANUP),
+            msg.sender == policyFor(ID_CLEANUP),
             "Only the cleanup policy contract can call destruct"
         );
-        selfdestruct(_msgSender());
+        selfdestruct(payable(msg.sender));
     }
 
     function name() public pure returns (string memory) {
@@ -305,11 +295,10 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
                 ) = bg.proposals(winner);
 
                 // updates the inflation value
-                historicLinearInflation[
-                    currentGeneration
-                ] = historicLinearInflation[currentGeneration]
-                    .mul(_inflationMultiplier)
-                    .div(INITIAL_INFLATION_MULTIPLIER);
+                historicLinearInflation[currentGeneration] =
+                    (historicLinearInflation[currentGeneration] *
+                        _inflationMultiplier) /
+                    INITIAL_INFLATION_MULTIPLIER;
             }
         }
 

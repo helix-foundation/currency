@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
 import "../policy/Policed.sol";
 import "../governance/ITimeNotifier.sol";
 import "../governance/ILockups.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
 contract PoodleCurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
-    using SafeMath for uint256;
-
     /** The on-chain address for the currency voting contract. This contract is
      * cloned for each new currency vote.
      */

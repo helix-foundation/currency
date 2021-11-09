@@ -1,6 +1,6 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
 import "./EcoBalanceStore.sol";
@@ -19,7 +19,7 @@ abstract contract TokenPrototype is PolicedUtils, TokenEvents {
     }
 
     modifier onlyStore() {
-        require(_msgSender() == address(store));
+        require(msg.sender == address(store));
         _;
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/Policy.sol";
 import "../clone/CloneFactory.sol";
@@ -76,6 +76,6 @@ contract SimplePolicySetter is Policy, CloneFactory {
             value != address(0),
             "Cannot destruct until after the policy setter has been set"
         );
-        selfdestruct(msg.sender);
+        selfdestruct(payable(msg.sender));
     }
 }

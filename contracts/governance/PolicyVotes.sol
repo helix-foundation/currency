@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
@@ -13,7 +13,6 @@ import "./VotingPower.sol";
  * voting is used for the veto phase.
  */
 contract PolicyVotes is VotingPower, TimeUtils {
-    using SafeMath for uint256;
     /** The proposal being voted on */
     address public proposal;
 
@@ -65,7 +64,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
     uint256 public generation;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) public VotingPower(_policy) {}
+    constructor(address _policy) VotingPower(_policy) {}
 
     /** Reveal a ballot supporting specific policies.
      *
@@ -84,7 +83,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
         );
 
         uint256 _amount = votingPower(
-            _msgSender(),
+            msg.sender,
             generation,
             _lockupGenerations
         );
@@ -94,27 +93,27 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "Voters must have held tokens at the start of the generation"
         );
 
-        uint256 _oldStake = stake[_msgSender()];
+        uint256 _oldStake = stake[msg.sender];
 
         if (_oldStake != 0) {
-            if (yesVote[_msgSender()]) {
-                yesStake = yesStake.sub(_oldStake);
-                yesVote[_msgSender()] = false;
+            if (yesVote[msg.sender]) {
+                yesStake = yesStake - _oldStake;
+                yesVote[msg.sender] = false;
             }
-            totalStake = totalStake.sub(_oldStake);
-            stake[_msgSender()] = 0;
+            totalStake = totalStake - _oldStake;
+            stake[msg.sender] = 0;
         }
 
-        recordVote(_msgSender());
-        emit PolicyVoteCast(_msgSender(), _vote, _amount);
+        recordVote(msg.sender);
+        emit PolicyVoteCast(msg.sender, _vote, _amount);
 
         if (_vote) {
-            yesStake = yesStake.add(_amount);
-            yesVote[_msgSender()] = true;
+            yesStake = yesStake + _amount;
+            yesVote[msg.sender] = true;
         }
-        stake[_msgSender()] = _amount;
+        stake[msg.sender] = _amount;
 
-        totalStake = totalStake.add(_amount);
+        totalStake = totalStake + _amount;
     }
 
     /** Initialize a cloned/proxied copy of this contract.
@@ -138,7 +137,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
     function configure(address _proposal) external onlyClone {
         require(voteEnds == 0, "This instance has already been configured");
 
-        voteEnds = getTime().add(VOTE_TIME);
+        voteEnds = getTime() + VOTE_TIME;
         generation = getStore().currentGeneration();
 
         proposal = _proposal;
@@ -153,13 +152,13 @@ contract PolicyVotes is VotingPower, TimeUtils {
      * from the root policy.
      */
     function execute() external onlyClone {
-        uint256 _requiredStake = totalStake.div(2);
+        uint256 _requiredStake = totalStake / 2;
         uint256 _total = totalVotingPower(generation);
         uint256 _time = getTime();
 
         Result _res;
 
-        if (yesStake <= _total.div(2)) {
+        if (yesStake <= _total / 2) {
             require(
                 _time > voteEnds + ENACTION_DELAY,
                 "Majority support required for early enaction"
@@ -189,7 +188,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             getToken().balanceOf(address(this))
         );
 
-        selfdestruct(address(uint160(policy)));
+        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** Get the associated ERC20 token address.

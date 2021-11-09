@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../../contracts/currency/TokenPrototype.sol";
 import "../../contracts/currency/EcoBalanceStore.sol";
@@ -33,7 +33,7 @@ contract Token is TokenPrototype {
         address _to,
         uint256 _value
     ) public {
-        store.tokenTransfer(_msgSender(), _from, _to, _value, "", "");
+        store.tokenTransfer(msg.sender, _from, _to, _value, "", "");
     }
 
     function emitSentEvent(

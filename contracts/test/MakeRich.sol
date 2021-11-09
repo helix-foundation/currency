@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../../contracts/policy/Policy.sol";
 import "../../contracts/currency/EcoBalanceStore.sol";

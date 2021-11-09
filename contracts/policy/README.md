@@ -167,7 +167,7 @@ functions (eg role-based access control). For example:
 ```
 modifier onlySpecificPolicy() {
   require(
-    _msgSender() == policyFor(0x......),
+    msg.sender == policyFor(0x......),
     "Only a specific policy is allowed to call this function"
     );
   _;
@@ -181,7 +181,7 @@ modifier onlySpecificPolicy() {
 Arguments:
  - `_interfaceIdentifierHash` (bytes32) - the name of the interface to deregister
 
-If the caller (`_msgSender()`) is registered in the ERC1820 registry as the
+If the caller (`msg.sender`) is registered in the ERC1820 registry as the
 provider of the specified interface for this contract, remove the registration.
 
 ##### Security Notes

@@ -1,6 +1,6 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/Policed.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -24,7 +24,7 @@ contract EcoTestCleanup is Policed, Ownable, Destructable {
      * @param _policy The root policy contract in the relevant policy hierarchy.
      */
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) public Policed(_policy) {}
+    constructor(address _policy) Policed(_policy) {}
 
     /** Instruct a specified contract to destruct itself.
      *
@@ -49,24 +49,6 @@ contract EcoTestCleanup is Policed, Ownable, Destructable {
      * instance.
      */
     function destruct() external override onlyOwner {
-        selfdestruct(_msgSender());
-    }
-
-    function _msgSender()
-        internal
-        view
-        override(Context, GSNRecipient)
-        returns (address payable)
-    {
-        return GSNRecipient._msgSender();
-    }
-
-    function _msgData()
-        internal
-        view
-        override(Context, GSNRecipient)
-        returns (bytes memory)
-    {
-        return GSNRecipient._msgData();
+        selfdestruct(payable(msg.sender));
     }
 }

@@ -1,8 +1,7 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
@@ -27,8 +26,6 @@ import "../governance/CurrencyTimer.sol";
  * contract standard, ie ERC20.
  */
 contract ECOx is GenerationStore, TimeUtils, IERC20 {
-    using SafeMath for uint256;
-
     uint8 public constant PRECISION = 100;
 
     uint256 public initialSupply;
@@ -54,9 +51,9 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         returns (bool)
     {
         if (_to == address(0)) {
-            tokenBurn(_msgSender(), _value);
+            tokenBurn(msg.sender, _value);
         } else {
-            tokenTransfer(_msgSender(), _to, _value);
+            tokenTransfer(msg.sender, _to, _value);
         }
         return true;
     }
@@ -67,12 +64,10 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         uint256 _value
     ) external override returns (bool) {
         require(
-            allowances[_from][_msgSender()] >= _value,
+            allowances[_from][msg.sender] >= _value,
             "Insufficient allowance for transfer"
         );
-        allowances[_from][_msgSender()] = allowances[_from][_msgSender()].sub(
-            _value
-        );
+        allowances[_from][msg.sender] = allowances[_from][msg.sender] - _value;
         if (_to == address(0)) {
             tokenBurn(_from, _value);
         } else {
@@ -86,8 +81,8 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         override
         returns (bool)
     {
-        allowances[_msgSender()][_spender] = _value;
-        emit Approval(_msgSender(), _spender, _value);
+        allowances[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -101,7 +96,6 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
     }
 
     constructor(address _policy, uint256 _initialSupply)
-        public
         GenerationStore(_policy)
     {
         initialSupply = _initialSupply;
@@ -120,8 +114,8 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
 
         emit Transfer(_from, _to, _value);
 
-        bal[_from] = bal[_from].sub(_value);
-        bal[_to] = bal[_to].add(_value);
+        bal[_from] = bal[_from] - _value;
+        bal[_to] = bal[_to] + _value;
     }
 
     function tokenBurn(address _from, uint256 _value) internal {
@@ -132,8 +126,8 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
 
         emit Transfer(_from, address(0), _value);
 
-        bal[_from] = bal[_from].sub(_value);
-        setTokenSupply(tokenSupply().sub(_value));
+        bal[_from] = bal[_from] - _value;
+        setTokenSupply(tokenSupply() - _value);
     }
 
     function initialize(address _self) public override onlyConstruction {
@@ -253,22 +247,22 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
     function exchange(uint256 _ecoXValue) external {
         uint256 eco = valueOf(_ecoXValue);
 
-        tokenBurn(_msgSender(), _ecoXValue);
+        tokenBurn(msg.sender, _ecoXValue);
 
-        getStore().mint(_msgSender(), eco);
+        getStore().mint(msg.sender, eco);
     }
 
     function mint(address _to, uint256 _value) external {
         require(
-            _msgSender() == policyFor(ID_FAUCET),
+            msg.sender == policyFor(ID_FAUCET),
             "Caller not authorized to mint tokens"
         );
 
         update(_to);
         mapping(address => uint256) storage bal = balances[currentGeneration];
 
-        bal[_to] = bal[_to].add(_value);
-        setTokenSupply(tokenSupply().add(_value));
+        bal[_to] = bal[_to] + _value;
+        setTokenSupply(tokenSupply() + _value);
 
         emit Transfer(address(0), _to, _value);
     }
@@ -279,10 +273,10 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
 
     function destruct() external {
         require(
-            _msgSender() == policyFor(ID_CLEANUP),
+            msg.sender == policyFor(ID_CLEANUP),
             "Only the cleanup policy contract can call destruct"
         );
-        selfdestruct(_msgSender());
+        selfdestruct(payable(msg.sender));
     }
 
     function name() public pure returns (string memory) {

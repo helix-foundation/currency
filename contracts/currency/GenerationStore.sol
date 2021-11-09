@@ -1,8 +1,7 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../policy/PolicedUtils.sol";
 import "../governance/ITimeNotifier.sol";
 import "../governance/IGeneration.sol";
@@ -18,8 +17,6 @@ abstract contract GenerationStore is
     ITimeNotifier,
     IEcoBalanceStoreGenerationBalance
 {
-    using SafeMath for uint256;
-
     /* Event to be emitted whenever track of balance generations updated.
      */
     event AccountBalanceGenerationUpdate(
@@ -107,26 +104,24 @@ abstract contract GenerationStore is
      */
     function tokenSupply() public view returns (uint256) {
         return
-            historicTotalSupplyUninflated[currentGeneration].div(
-                historicLinearInflation[currentGeneration]
-            );
+            historicTotalSupplyUninflated[currentGeneration] /
+            historicLinearInflation[currentGeneration];
     }
 
     /** Setter for the total (inflation corrected) token supply
      */
     function setTokenSupply(uint256 _amount) internal {
-        historicTotalSupplyUninflated[currentGeneration] = _amount.mul(
-            historicLinearInflation[currentGeneration]
-        );
+        historicTotalSupplyUninflated[currentGeneration] =
+            _amount *
+            historicLinearInflation[currentGeneration];
     }
 
     /** Returns the total (inflation corrected) token supply at a specified generation index
      */
     function totalSupplyAt(uint256 _generation) public view returns (uint256) {
         return
-            historicTotalSupplyUninflated[_generation].div(
-                historicLinearInflation[_generation]
-            );
+            historicTotalSupplyUninflated[_generation] /
+            historicLinearInflation[_generation];
     }
 
     /** Initialize a balance store based on the storage of the contract at the
@@ -285,11 +280,10 @@ abstract contract GenerationStore is
 
         if (_pastGeneration > generationForAddress[_owner]) {
             return
-                balances[generationForAddress[_owner]][_owner].div(
-                    _linearInflation
-                );
+                balances[generationForAddress[_owner]][_owner] /
+                _linearInflation;
         } else {
-            return balances[_pastGeneration][_owner].div(_linearInflation);
+            return balances[_pastGeneration][_owner] / _linearInflation;
         }
     }
 }

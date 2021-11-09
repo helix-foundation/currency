@@ -9,11 +9,8 @@ const Policed = artifacts.require('Policed');
 const RegistrationAttemptContract = artifacts.require(
   'RegistrationAttemptContract',
 );
-const IRelayHub = artifacts.require('IRelayHub');
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
-const { utils } = require('@openzeppelin/gsn-provider');
-const { deployRelayHub } = require('@openzeppelin/gsn-helpers');
 
 contract('Policed [@group=11]', (accounts) => {
   let policy;
@@ -99,76 +96,6 @@ contract('Policed [@group=11]', (accounts) => {
       await expectRevert(
         registrationAttemptContract.register(),
         'contract only implements interfaces for the policy contract',
-      );
-    });
-  });
-
-  describe('GSN', () => {
-    let hub;
-    const [user, relay, staker] = accounts;
-    beforeEach(async () => {
-      await deployRelayHub(web3, { from: staker });
-      hub = await IRelayHub.at('0xD216153c06E857cD7f72665E0aF1d7D82172F494');
-      await hub.stake(relay, web3.utils.toBN(60 * 60 * 24 * 14), { value: web3.utils.toWei('1', 'ether'), from: staker });
-      await hub.depositFor(commander.address, { value: web3.utils.toWei('0', 'ether'), from: staker });
-      await hub.registerRelay(123, 'URL', { from: relay });
-    });
-
-    it('Allows GSN Relays', async () => {
-      const gasPrice = 1;
-      const gasLimit = 4000000;
-      const nonce = 0;
-      const fee = web3.utils.toBN(1).shln(256).subn(100);
-      const calldata = commander.contract.methods.command(
-        testPoliced.address,
-        policer.address,
-      )
-        .encodeABI();
-      const packed = web3.utils.soliditySha3(
-        { t: 'string', v: 'rlx:' },
-        { t: 'address', v: user },
-        { t: 'address', v: commander.address },
-        { t: 'bytes', v: calldata },
-        { t: 'uint256', v: fee },
-        { t: 'uint256', v: gasPrice },
-        { t: 'uint256', v: gasLimit },
-        { t: 'uint256', v: nonce },
-        { t: 'address', v: hub.address },
-        { t: 'address', v: relay },
-      );
-      const signature = utils.fixSignature(await web3.eth.sign(packed, user));
-
-      await hub.relayCall(user, commander.address, calldata, fee, gasPrice, gasLimit, nonce, signature, '0x', { from: relay });
-      assert.equal(await testPoliced.value(), 3);
-    });
-
-    it('Rejects costly GSN Relays', async () => {
-      const gasPrice = 1;
-      const gasLimit = 4000000;
-      const nonce = 0;
-      const fee = web3.utils.toBN(1).shln(256).subn(99);
-      const calldata = commander.contract.methods.command(
-        testPoliced.address,
-        policer.address,
-      )
-        .encodeABI();
-      const packed = web3.utils.soliditySha3(
-        { t: 'string', v: 'rlx:' },
-        { t: 'address', v: user },
-        { t: 'address', v: commander.address },
-        { t: 'bytes', v: calldata },
-        { t: 'uint256', v: fee },
-        { t: 'uint256', v: gasPrice },
-        { t: 'uint256', v: gasLimit },
-        { t: 'uint256', v: nonce },
-        { t: 'address', v: hub.address },
-        { t: 'address', v: relay },
-      );
-      const signature = utils.fixSignature(await web3.eth.sign(packed, user));
-
-      await expectRevert(
-        hub.relayCall(user, commander.address, calldata, fee, gasPrice, gasLimit, nonce, signature, '0x', { from: relay }),
-        'Recipient balance too low',
       );
     });
   });

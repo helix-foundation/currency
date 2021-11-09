@@ -845,7 +845,7 @@ holder.
 
 Emits the `Withdrawal` event.
 
-Identical to `withdrawFor` on behalf of the caller (`_msgSender()`), allowing for
+Identical to `withdrawFor` on behalf of the caller (`msg.sender`), allowing for
 deposits to be withdrawn early.
 
 ###### Security Notes

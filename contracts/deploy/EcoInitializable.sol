@@ -1,6 +1,6 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../proxy/ForwardTarget.sol";
 
@@ -36,7 +36,7 @@ contract EcoInitializable is ForwardTarget {
          * the initializer we're about to run - it shares our address space and
          * we don't want the author to need to worry about that.
          */
-        owner = address(0);
+        owner = payable(address(0));
 
         /* Clear out the implementation, so the safety checks in
          * initialize() do not get triggered.

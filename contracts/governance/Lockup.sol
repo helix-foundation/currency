@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../policy/PolicedUtils.sol";
 import "../currency/EcoBalanceStore.sol";
@@ -23,8 +22,6 @@ import "../utils/TimeUtils.sol";
  * when it is withdrawn at the end of the lockup period.
  */
 contract Lockup is PolicedUtils, TimeUtils {
-    using SafeMath for uint256;
-
     /** The Sale event indicates that a deposit certificate has been sold
      * to a particular address in a particular amount.
      *
@@ -56,22 +53,22 @@ contract Lockup is PolicedUtils, TimeUtils {
     mapping(address => uint256) public depositBalances;
     mapping(address => uint256) public depositLockupEnds;
 
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     function deposit(uint256 _amount) external onlyClone {
-        internalDeposit(_amount, _msgSender(), _msgSender());
+        internalDeposit(_amount, msg.sender, msg.sender);
     }
 
     function depositFor(uint256 _amount, address _who) external onlyClone {
         require(
-            _msgSender() == policyFor(ID_ECOX),
+            msg.sender == policyFor(ID_ECOX),
             "Only allowed for ECOx exchange"
         );
-        internalDeposit(_amount, _msgSender(), _who);
+        internalDeposit(_amount, msg.sender, _who);
     }
 
     function withdraw() external onlyClone {
-        doWithdrawal(_msgSender(), true);
+        doWithdrawal(msg.sender, true);
     }
 
     function withdrawFor(address _who) external onlyClone {
@@ -87,7 +84,7 @@ contract Lockup is PolicedUtils, TimeUtils {
             address(uint160(policy)),
             getToken().balanceOf(address(this))
         );
-        selfdestruct(address(uint160(policy)));
+        selfdestruct(payable(address(uint160(policy))));
     }
 
     function clone(uint256 _duration, uint256 _interest)
@@ -112,9 +109,10 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     function mintNeeded() external view returns (uint256) {
         return
-            totalDeposit.add(totalDeposit.mul(interest).div(BILLION)).sub(
-                getToken().balanceOf(address(this))
-            );
+            totalDeposit +
+            (totalDeposit * interest) /
+            BILLION -
+            getToken().balanceOf(address(this));
     }
 
     function doWithdrawal(address _owner, bool _allowEarly) internal {
@@ -129,13 +127,13 @@ contract Lockup is PolicedUtils, TimeUtils {
 
         require(_allowEarly || !early, "Only depositor may withdraw early");
 
-        totalDeposit = totalDeposit.sub(_amount);
-        uint256 _delta = _amount.mul(interest).div(BILLION);
+        totalDeposit = totalDeposit - _amount;
+        uint256 _delta = (_amount * interest) / BILLION;
 
         if (early) {
-            _amount = _amount.sub(_delta);
+            _amount = _amount - _delta;
         } else {
-            _amount = _amount.add(_delta);
+            _amount = _amount + _delta;
         }
 
         getToken().transfer(_owner, _amount);
@@ -157,9 +155,9 @@ contract Lockup is PolicedUtils, TimeUtils {
 
         getToken().transferFrom(_payer, address(this), _amount);
 
-        totalDeposit = totalDeposit.add(_amount);
-        depositBalances[_who] = depositBalances[_who].add(_amount);
-        depositLockupEnds[_who] = getTime().add(duration);
+        totalDeposit = totalDeposit + _amount;
+        depositBalances[_who] = depositBalances[_who] + _amount;
+        depositLockupEnds[_who] = getTime() + duration;
 
         emit Sale(_who, _amount);
     }

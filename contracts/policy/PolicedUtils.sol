@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 // TODO: revert to @optionality.io/clone-factory/contracts/CloneFactory.sol
 // as soon as that repo is 0.5 compatible
 import "../clone/CloneFactory.sol";
@@ -144,7 +144,7 @@ contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
      * ```
      * function doSomethingPrivileged() public {
      *   require(
-     *     _msgSender() == policyFor(keccak256("PolicyForDoingPrivilegedThing")),
+     *     msg.sender == policyFor(keccak256("PolicyForDoingPrivilegedThing")),
      *     "Only the privileged contract may call this"
      *     );
      * }

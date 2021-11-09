@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
@@ -17,8 +17,6 @@ import "./ILockups.sol";
  * Eco currency.
  */
 contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
-    using SafeMath for uint256;
-
     /** The on-chain address for the currency voting contract. This contract is
      * cloned for each new currency vote.
      */
@@ -44,7 +42,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
         address _inflation,
         address _lockup,
         address _simplepolicy
-    ) public PolicedUtils(_policy) {
+    ) PolicedUtils(_policy) {
         bordaImpl = _borda;
         inflationImpl = _inflation;
         lockupImpl = _lockup;
@@ -108,7 +106,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
             address _clone = Inflation(inflationImpl).clone();
             getStore().mint(
                 _clone,
-                _randomInflationWinners.mul(_randomInflationPrize)
+                _randomInflationWinners * _randomInflationPrize
             );
             Inflation(_clone).startInflation(
                 _randomInflationWinners,

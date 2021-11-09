@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "./TrustedNodes.sol";
 import "../policy/Policy.sol";
@@ -16,7 +16,6 @@ import "../VDF/VDFVerifier.sol";
  * Eco tokens.
  */
 contract CurrencyGovernance is PolicedUtils, TimeUtils {
-    using SafeMath for uint256;
     enum Stages {
         Propose,
         Commit,
@@ -81,13 +80,13 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         }
     }
 
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     /** Restrict access to trusted nodes only.
      */
     modifier onlyTrusted() {
         require(
-            getTrustedNodes().isTrusted(_msgSender()),
+            getTrustedNodes().isTrusted(msg.sender),
             "Only trusted nodes can call this method"
         );
         _;
@@ -178,9 +177,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        proposalEnds = getTime().add(PROPOSAL_TIME);
-        votingEnds = proposalEnds.add(VOTING_TIME);
-        revealEnds = votingEnds.add(REVEAL_TIME);
+        proposalEnds = getTime() + PROPOSAL_TIME;
+        votingEnds = proposalEnds + VOTING_TIME;
+        revealEnds = votingEnds + REVEAL_TIME;
 
         Proposal storage p = proposals[address(0)];
         p.valid = true;

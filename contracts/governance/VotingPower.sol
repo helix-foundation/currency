@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "./ILockups.sol";
 import "./Lockup.sol";
@@ -12,16 +12,14 @@ import "./ECOxLockup.sol";
  * Compute voting power for user
  */
 contract VotingPower is PolicedUtils {
-    using SafeMath for uint256;
-
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     function totalVotingPower(uint256 _gen) public view returns (uint256) {
         uint256 total = getStore().totalSupplyAt(_gen - 1);
 
         uint256 totalx = getXLockup().totalVotingECOx(_gen);
         if (totalx > 0) {
-            total = total.add(getX().valueAt(totalx, _gen - 1));
+            total = total + getX().valueAt(totalx, _gen - 1);
         }
 
         return total;
@@ -36,7 +34,7 @@ contract VotingPower is PolicedUtils {
 
         uint256 _x = getXLockup().votingECOx(_who, _generation);
         if (_x > 0) {
-            _power = _power.add(getX().valueAt(_x, _generation - 1));
+            _power = _power + getX().valueAt(_x, _generation - 1);
         }
 
         ILockups lockups = ILockups(policyFor(ID_CURRENCY_TIMER));
@@ -47,7 +45,7 @@ contract VotingPower is PolicedUtils {
             Lockup lockup = Lockup(lockups.lockups(_gen));
             require(address(lockup) != address(0), "No lockup for generation");
 
-            _power = _power.add(lockup.depositBalances(_who));
+            _power = _power + lockup.depositBalances(_who);
         }
 
         return _power;

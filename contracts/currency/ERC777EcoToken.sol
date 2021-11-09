@@ -1,6 +1,6 @@
 /* -*- mode: solidity; c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -63,7 +63,7 @@ contract ERC777EcoToken is TokenPrototype, IERC777 {
         uint256 _amount,
         bytes memory _data
     ) public override {
-        doSend(_msgSender(), _msgSender(), _to, _amount, _data, "");
+        doSend(msg.sender, msg.sender, _to, _amount, _data, "");
     }
 
     /** Return the list of default operators
@@ -82,11 +82,11 @@ contract ERC777EcoToken is TokenPrototype, IERC777 {
      */
     function authorizeOperator(address _operator) public override {
         require(
-            _msgSender() != _operator,
+            msg.sender != _operator,
             "Can't authorize yourself as an operator."
         );
-        operators[_msgSender()][_operator] = true;
-        emit AuthorizedOperator(_operator, _msgSender());
+        operators[msg.sender][_operator] = true;
+        emit AuthorizedOperator(_operator, msg.sender);
     }
 
     /** Revoke a previous authorization of another address to act on behalf of
@@ -94,11 +94,11 @@ contract ERC777EcoToken is TokenPrototype, IERC777 {
      */
     function revokeOperator(address _operator) public override {
         require(
-            _msgSender() != _operator,
+            msg.sender != _operator,
             "Can't revoke account holder as an operator."
         );
-        operators[_msgSender()][_operator] = false;
-        emit RevokedOperator(_operator, _msgSender());
+        operators[msg.sender][_operator] = false;
+        emit RevokedOperator(_operator, msg.sender);
     }
 
     /** Check the authorization status of an address to act on behalf of
@@ -123,14 +123,14 @@ contract ERC777EcoToken is TokenPrototype, IERC777 {
         bytes memory _operatorData
     ) public override {
         require(
-            isOperatorFor(_msgSender(), _from),
+            isOperatorFor(msg.sender, _from),
             "Only an authorized operator may use this feature."
         );
-        doSend(_msgSender(), _from, _to, _amount, _userData, _operatorData);
+        doSend(msg.sender, _from, _to, _amount, _userData, _operatorData);
     }
 
     function burn(uint256 _amount, bytes calldata _data) external override {
-        store.tokenBurn(_msgSender(), _msgSender(), _amount, _data, "");
+        store.tokenBurn(msg.sender, msg.sender, _amount, _data, "");
     }
 
     function operatorBurn(
@@ -139,9 +139,9 @@ contract ERC777EcoToken is TokenPrototype, IERC777 {
         bytes calldata _data,
         bytes calldata _operatorData
     ) external override {
-        require(isOperatorFor(_msgSender(), _tokenHolder), "Not an operator");
+        require(isOperatorFor(msg.sender, _tokenHolder), "Not an operator");
         store.tokenBurn(
-            _msgSender(),
+            msg.sender,
             _tokenHolder,
             _amount,
             _data,
@@ -184,10 +184,10 @@ contract ERC777EcoToken is TokenPrototype, IERC777 {
      */
     function destruct() external {
         require(
-            _msgSender() == policyFor(ID_CLEANUP),
+            msg.sender == policyFor(ID_CLEANUP),
             "Only the cleanup policy contract can call destruct."
         );
-        selfdestruct(_msgSender());
+        selfdestruct(payable(msg.sender));
     }
 
     /** Utility function to perform the transfer of tokens from one address to another.

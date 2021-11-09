@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../../contracts/policy/ERC1820Client.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Implementer.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "../../contracts/policy/PolicedUtils.sol";
 import "../../contracts/policy/Policy.sol";
 import "../../contracts/proxy/ForwardProxy.sol";
@@ -103,7 +103,7 @@ contract DummyPoliced is PolicedUtils {
 
     modifier onlyInflation() {
         require(
-            _msgSender() == policyFor(ID_CURRENCY_GOVERNANCE),
+            msg.sender == policyFor(ID_CURRENCY_GOVERNANCE),
             "Only the inflation contract may call this function."
         );
         _;

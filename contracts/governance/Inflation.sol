@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
@@ -8,7 +8,6 @@ import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";
 import "../currency/InflationRootHashProposal.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /** @title Inflation Process
  *
@@ -16,8 +15,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
  * on demand by the CurrencyGovernance.
  */
 contract Inflation is PolicedUtils, TimeUtils {
-    using SafeMath for uint256;
-
     // Change this so nodes vote on total_eco and eco_per_ticket, compute
     // tickets and distribute over 28 days.
     /** The time period over which inflation pay-out is spread to prevent the
@@ -76,7 +73,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         address _policy,
         VDFVerifier _vdfVerifierImpl,
         uint256 _randomDifficulty
-    ) public PolicedUtils(_policy) {
+    ) PolicedUtils(_policy) {
         vdfVerifier = _vdfVerifierImpl;
         randomVDFDifficulty = _randomDifficulty;
     }
@@ -111,7 +108,7 @@ contract Inflation is PolicedUtils, TimeUtils {
             address(uint160(policy)),
             getToken().balanceOf(address(this))
         );
-        selfdestruct(address(uint160(policy)));
+        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** Initialize the storage context using parameters copied from the
@@ -123,7 +120,7 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        generation = getStore().currentGeneration().sub(1);
+        generation = getStore().currentGeneration() - 1;
         vdfVerifier = VDFVerifier(
             VDFVerifier(Inflation(_self).vdfVerifier()).clone()
         );
@@ -156,7 +153,7 @@ contract Inflation is PolicedUtils, TimeUtils {
             (x % 7 == 0) ||
             !vdfVerifier.isProbablePrime(x, 10)
         ) {
-            x = x.add(2);
+            x = x + 2;
         }
 
         entropyVDFSeed = x;
@@ -170,7 +167,7 @@ contract Inflation is PolicedUtils, TimeUtils {
     {
         require(_winners > 0 && _prize > 0, "Contract must have rewards");
         require(
-            getToken().balanceOf(address(this)) >= _winners.mul(_prize),
+            getToken().balanceOf(address(this)) >= _winners * _prize,
             "The contract must have a token balance at least the total rewards"
         );
         require(winners == 0, "The sale can only be started once");
@@ -227,9 +224,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         );
         require(
             getTime() >
-                payoutPeriodStarts.add(
-                    (_sequence.mul(PAYOUT_PERIOD)).div(winners)
-                ),
+                payoutPeriodStarts + (_sequence * PAYOUT_PERIOD) / winners,
             "A claim can only be made after enough time has passed - please wait longer"
         );
         require(
@@ -257,7 +252,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         ) % rootHashContract.acceptedTotalSum();
 
         require(
-            _winner < getStore().balanceAt(_who, generation).add(_sum),
+            _winner < getStore().balanceAt(_who, generation) + _sum,
             "The provided address does not hold a winning ticket"
         );
         require(
@@ -282,7 +277,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         uint256 _sum,
         uint256 _index
     ) external {
-        claimFor(_msgSender(), _sequence, _proof, _sum, _index);
+        claimFor(msg.sender, _sequence, _proof, _sum, _index);
     }
 
     /** Get the associated balance store address.

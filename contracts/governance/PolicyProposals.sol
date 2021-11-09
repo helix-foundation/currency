@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../policy/Policy.sol";
 import "../currency/EcoBalanceStore.sol";
@@ -27,7 +27,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * voting phase.
  */
 contract PolicyProposals is VotingPower, TimeUtils {
-    using SafeMath for uint256;
     /** A proposal submitted to the process.
      */
     struct Props {
@@ -126,7 +125,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         address _policy,
         address _policyvotes,
         address _simplepolicy
-    ) public VotingPower(_policy) {
+    ) VotingPower(_policy) {
         policyVotesImpl = _policyvotes;
         simplePolicyImpl = _simplepolicy;
     }
@@ -144,7 +143,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
         simplePolicyImpl = PolicyProposals(_self).simplePolicyImpl();
 
-        proposalEnds = getTime().add(PROPOSAL_TIME);
+        proposalEnds = getTime() + PROPOSAL_TIME;
         generation = getStore().currentGeneration();
     }
 
@@ -178,15 +177,15 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "A proposal may only be registered once"
         );
         require(
-            getToken().transferFrom(_msgSender(), address(this), COST_REGISTER),
+            getToken().transferFrom(msg.sender, address(this), COST_REGISTER),
             "The token cost of registration must be approved to transfer prior to calling registerProposal"
         );
 
         _p.proposal = _prop;
-        _p.proposer = _msgSender();
+        _p.proposer = msg.sender;
 
         allProposals.push(_prop);
-        totalproposals = totalproposals.add(1);
+        totalproposals = totalproposals + 1;
 
         emit ProposalAdded(msg.sender, _prop);
     }
@@ -204,7 +203,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         external
     {
         uint256 _amount = votingPower(
-            _msgSender(),
+            msg.sender,
             generation,
             _lockupGenerations
         );
@@ -229,17 +228,17 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "The supported proposal is not registered"
         );
         require(
-            !_p.staked[_msgSender()],
+            !_p.staked[msg.sender],
             "You may not stake in support of a proposal if you have already staked"
         );
 
-        _p.totalstake = _p.totalstake.add(_amount);
-        _p.staked[_msgSender()] = true;
+        _p.totalstake = _p.totalstake + _amount;
+        _p.staked[msg.sender] = true;
 
-        recordVote(_msgSender());
-        emit ProposalSupported(_msgSender(), _prop);
+        recordVote(msg.sender);
+        emit ProposalSupported(msg.sender, _prop);
 
-        if (_p.totalstake > _total.mul(30).div(100)) {
+        if (_p.totalstake > (_total * 30) / 100) {
             PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
             pv.configure(address(_prop));
 
@@ -255,7 +254,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             emit VotingStarted(address(pv));
 
             delete proposals[address(_prop)];
-            totalproposals = totalproposals.sub(1);
+            totalproposals = totalproposals - 1;
 
             Policy(policy).removeSelf(ID_POLICY_PROPOSALS);
         }
@@ -286,7 +285,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         address receiver = _p.proposer;
 
         delete proposals[_prop];
-        totalproposals = totalproposals.sub(1);
+        totalproposals = totalproposals - 1;
 
         require(
             getToken().transfer(receiver, REFUND_IF_LOST),
@@ -312,7 +311,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             getToken().balanceOf(address(this))
         );
 
-        selfdestruct(address(uint160(policy)));
+        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** Get the associated ERC20 token address.

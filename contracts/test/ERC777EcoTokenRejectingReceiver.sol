@@ -1,9 +1,9 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 
 import "../../contracts/policy/ERC1820Client.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Implementer.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
