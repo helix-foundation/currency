@@ -145,7 +145,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         simplePolicyImpl = PolicyProposals(_self).simplePolicyImpl();
 
         proposalEnds = getTime().add(PROPOSAL_TIME);
-        generation = getStore().currentGeneration().sub(1);
+        generation = getStore().currentGeneration();
     }
 
     /** A list of addresses for all proposed policies
@@ -236,6 +236,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         _p.totalstake = _p.totalstake.add(_amount);
         _p.staked[_msgSender()] = true;
 
+        recordVote(_msgSender());
         emit ProposalSupported(_msgSender(), _prop);
 
         if (_p.totalstake > _total.mul(30).div(100)) {

@@ -47,7 +47,7 @@ abstract contract GenerationStore is
     mapping(uint256 => uint256) public historicLinearInflation;
 
     /* A mapping to store the actual balances of tokens held by each
-     * address, with monthly snapshots.
+     * address, with generational snapshots.
      * The balances values are in the uninflated units which are (initially)
      * units of 10^-36 ECO
      */
@@ -158,17 +158,6 @@ abstract contract GenerationStore is
         return (generationForAddress[_owner] == currentGeneration);
     }
 
-    /** Transform balance when updating generation
-     *
-     * This is a callback allowing balances to change during generation
-     * updates to reflect economy policies.
-     */
-    function transformBalance(
-        address _owner,
-        uint256 _generation,
-        uint256 _balance
-    ) internal virtual returns (uint256);
-
     /** Update address to the current generation.
      *
      * This helper updates the generational store for the specified address that
@@ -214,7 +203,6 @@ abstract contract GenerationStore is
 
             // Write new generational balances
             for (uint256 g = _last + 1; g <= _targetGeneration; ++g) {
-                _balance = transformBalance(_owner, g, _balance);
                 balances[g][_owner] = _balance;
             }
 

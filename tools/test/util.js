@@ -6,6 +6,7 @@ const ForwardProxy = artifacts.require('ForwardProxy');
 const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const ECOx = artifacts.require('ECOx');
+const ECOxLockup = artifacts.require('ECOxLockup');
 const Inflation = artifacts.require('Inflation');
 const Policy = artifacts.require('PolicyTest');
 const VDFVerifier = artifacts.require('VDFVerifier');
@@ -34,6 +35,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const tokenHash = web3.utils.soliditySha3('ERC20Token');
   const balanceStoreIdentifierHash = web3.utils.soliditySha3('BalanceStore');
   const ecoxHash = web3.utils.soliditySha3('ECOx');
+  const ecoxLockupHash = web3.utils.soliditySha3('ECOxLockup');
   const trustedNodesHash = web3.utils.soliditySha3('TrustedNodes');
   const faucetHash = web3.utils.soliditySha3('Faucet');
   const currencyTimerHash = web3.utils.soliditySha3('CurrencyTimer');
@@ -56,6 +58,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const faucet = await FreeFaucet.new(proxy.address);
   const borda = await CurrencyGovernance.new(proxy.address);
   const lockup = await Lockup.new(proxy.address);
+  const ecoxlockup = await ECOxLockup.new(proxy.address);
 
   const policySetter = await SimplePolicySetter.new();
 
@@ -78,7 +81,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     proxy.address,
     policyProposals.address,
     policySetter.address,
-    [balanceStoreIdentifierHash, ecoxHash, currencyTimerHash],
+    [balanceStoreIdentifierHash, ecoxHash, currencyTimerHash, ecoxLockupHash],
   );
 
   await (await PolicyInit.at(proxy.address)).fusedInit(
@@ -98,6 +101,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
       trustedNodesHash,
       faucetHash,
       currencyTimerHash,
+      ecoxLockupHash,
       cleanupHash,
       unknownPolicyIDHash,
     ],
@@ -109,6 +113,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
       trustedNodes.address,
       faucet.address,
       currencyTimer.address,
+      ecoxlockup.address,
       authedCleanup.address,
       unauthedCleanup.address,
     ],
@@ -137,6 +142,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     trustedNodes,
     currencyTimer,
     lockup,
+    ecoxlockup,
     faucet,
     authedCleanup,
     unauthedCleanup,

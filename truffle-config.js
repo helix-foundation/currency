@@ -15,6 +15,7 @@ module.exports = {
     },
   },
   mocha: {
+    enableTimeouts: false,
     grep: process.env.MOCHA_GREP ? new RegExp(process.env.MOCHA_GREP) : new RegExp(),
     invert: process.env.MOCHA_INVERT,
   },

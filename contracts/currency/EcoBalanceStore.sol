@@ -243,14 +243,6 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         }
     }
 
-    function transformBalance(
-        address,
-        uint256,
-        uint256 _balance
-    ) internal pure override returns (uint256) {
-        return _balance;
-    }
-
     function destruct() external {
         require(
             _msgSender() == policyFor(ID_CLEANUP),

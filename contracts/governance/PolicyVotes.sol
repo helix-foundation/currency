@@ -78,16 +78,17 @@ contract PolicyVotes is VotingPower, TimeUtils {
      * @param _vote The vote for the proposal
      */
     function vote(bool _vote, uint256[] calldata _lockupGenerations) external {
+        require(
+            getTime() < voteEnds,
+            "Votes can only be recorded during the voting period"
+        );
+
         uint256 _amount = votingPower(
             _msgSender(),
             generation,
             _lockupGenerations
         );
 
-        require(
-            getTime() < voteEnds,
-            "Votes can only be recorded during the voting period"
-        );
         require(
             _amount > 0,
             "Voters must have held tokens at the start of the generation"
@@ -104,6 +105,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             stake[_msgSender()] = 0;
         }
 
+        recordVote(_msgSender());
         emit PolicyVoteCast(_msgSender(), _vote, _amount);
 
         if (_vote) {
@@ -137,7 +139,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime().add(VOTE_TIME);
-        generation = getStore().currentGeneration().sub(1);
+        generation = getStore().currentGeneration();
 
         proposal = _proposal;
     }

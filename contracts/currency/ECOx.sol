@@ -277,14 +277,6 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         super.notifyGenerationIncrease();
     }
 
-    function transformBalance(
-        address,
-        uint256,
-        uint256 _balance
-    ) internal pure override returns (uint256) {
-        return _balance;
-    }
-
     function destruct() external {
         require(
             _msgSender() == policyFor(ID_CLEANUP),

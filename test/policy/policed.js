@@ -61,6 +61,7 @@ contract('Policed [@group=11]', (accounts) => {
         ID_CURRENCY_GOVERNANCE: 'CurrencyGovernance',
         ID_CURRENCY_TIMER: 'CurrencyTimer',
         ID_ECOX: 'ECOx',
+        ID_ECOXLOCKUP: 'ECOxLockup',
       };
       await Promise.all(Object.entries(ids).map(async ([key, value]) => {
         assert.equal(await commander[key](), web3.utils.soliditySha3(value), `${key} != keccak(${value})`);
