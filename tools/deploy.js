@@ -31,6 +31,7 @@ const CurrencyTimerContractABI = require('../build/contracts/CurrencyTimer.json'
 const LockupContractABI = require('../build/contracts/Lockup.json');
 const PolicyProposalContractABI = require('../build/contracts/PolicyProposals.json');
 const PolicyVotesContractABI = require('../build/contracts/PolicyVotes.json');
+const ECOxLockupContractABI = require('../build/contracts/ECOxLockup.json');
 const SimplePolicySetterABI = require('../build/contracts/SimplePolicySetter.json');
 const EcoBalanceStoreABI = require('../build/contracts/EcoBalanceStore.json');
 const ERC777EcoTokenABI = require('../build/contracts/ERC777EcoToken.json');
@@ -505,6 +506,25 @@ async function deployStage3(options) {
     });
   options.policyProposalContract = policyProposalContract;
 
+  const ecoXLockupContract = await new web3.eth.Contract(
+    ECOxLockupContractABI.abi,
+  )
+    .deploy({
+      data: ECOxLockupContractABI.bytecode,
+      arguments: [options.policyProxy.options.address],
+    })
+    .send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
+  options.ecoXLockupContract = ecoXLockupContract;
+  const ecoXLockupIdentifierHash = web3.utils.soliditySha3(
+    'ECOxLockup',
+  );
+  identifiers.push(ecoXLockupIdentifierHash);
+  addresses.push(ecoXLockupContract.options.address);
+
   // Deploy the currency timer
   console.log('deploying the currency timer contract...');
   const currencyTimerHash = web3.utils.soliditySha3('CurrencyTimer');
@@ -532,7 +552,13 @@ async function deployStage3(options) {
   addresses.push(currencyTimerContract.options.address);
 
   // Deploy the voting policy contract
-  console.log('deploying the voting policy contract...');
+  console.log('deploying the timed actions contract...');
+  const balanceStoreIdentifierHash = web3.utils.soliditySha3(
+    'BalanceStore',
+  );
+  const ecoXIdentifierHash = web3.utils.soliditySha3(
+    'ECOx',
+  );
   const timedPoliciesImpl = await new web3.eth.Contract(TimedPoliciesABI.abi)
     .deploy({
       data: TimedPoliciesABI.bytecode,
@@ -540,7 +566,12 @@ async function deployStage3(options) {
         options.policyProxy.options.address,
         options.policyProposalContract.options.address,
         options.simplePolicySetterContract.options.address,
-        [web3.utils.soliditySha3('BalanceStore'), web3.utils.soliditySha3('ECOx'), currencyTimerHash],
+        [
+          balanceStoreIdentifierHash,
+          ecoXIdentifierHash,
+          currencyTimerHash,
+          ecoXLockupIdentifierHash,
+        ],
       ],
     })
     .send({
@@ -561,7 +592,9 @@ async function deployStage3(options) {
   const policyProposalsIdentifierHash = web3.utils.soliditySha3(
     'PolicyProposals',
   );
-  const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
+  const policyVotesIdentifierHash = web3.utils.soliditySha3(
+    'PolicyVotes',
+  );
   await new web3.eth.Contract(
     EcoInitializableABI.abi,
     timedPoliciesProxyAddress,
