@@ -5,7 +5,7 @@ const {
 } = require('@openzeppelin/test-helpers');
 const util = require('../../tools/test/util');
 
-contract('TimedPolicies [@group=11]', () => {
+contract('TimedPolicies [@group=12]', () => {
   let policy;
   let timedPolicies;
 

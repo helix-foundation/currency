@@ -11,7 +11,7 @@ const { expect } = chai;
 
 chai.use(bnChai(BN));
 
-contract('BigNumber [@group=4]', () => {
+contract('BigNumber [@group=3]', () => {
   let bignum;
 
   beforeEach(async function skipOnCoverage() {

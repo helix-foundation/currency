@@ -7,7 +7,7 @@ const { toBN } = web3.utils;
 
 const MILLER_RABIN_ITERATIONS = 20;
 
-contract('IsPrime [@group=4]', () => {
+contract('IsPrime [@group=8]', () => {
   let instance;
 
   before(async () => {
