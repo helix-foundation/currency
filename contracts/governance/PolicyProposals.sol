@@ -61,6 +61,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     uint256 public constant PROPOSAL_TIME = 10 days;
 
+    /** Whether or not a winning proposal has been selected
+     */
+    bool public proposalSelected;
+
     /** The minimum cost to register a proposal.
      */
     uint256 public constant COST_REGISTER = 1000000000000000000000;
@@ -169,7 +173,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         require(_prop != address(0), "The proposal address can't be 0");
 
         require(
-            getTime() < proposalEnds,
+            getTime() < proposalEnds && !proposalSelected,
             "Proposals may no longer be registered because the registration period has ended"
         );
         require(
@@ -251,6 +255,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             Policy(policy).internalCommand(address(sps));
             sps.destruct();
 
+            proposalSelected = true;
             emit VotingStarted(address(pv));
 
             delete proposals[address(_prop)];
@@ -270,7 +275,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     function refund(address _prop) external {
         require(
-            getTime() > proposalEnds,
+            proposalSelected || getTime() > proposalEnds,
             "Refunds may not be distributed until the period is over"
         );
 
@@ -298,7 +303,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     function destruct() external onlyClone {
         require(
-            getTime() > proposalEnds,
+            proposalSelected || getTime() > proposalEnds,
             "The destruct operation can only be performed when the period is over"
         );
 

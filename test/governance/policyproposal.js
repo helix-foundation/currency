@@ -61,10 +61,12 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
   describe('registerProposal', () => {
     let policyProposals;
     let testProposal;
+    let testProposal2;
 
     beforeEach(async () => {
       policyProposals = await makeProposals();
       testProposal = await Empty.new(1);
+      testProposal2 = await Empty.new(2);
     });
 
     context('during the registration period', () => {
@@ -144,6 +146,31 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
           await expectRevert(
             policyProposals.registerProposal(testProposal.address),
             'proposal may only be registered once',
+          );
+        });
+      });
+
+      context('when a different proposal has already been selected', () => {
+        beforeEach(async () => {
+          await token.approve(
+            policyProposals.address,
+            await policyProposals.COST_REGISTER(),
+          );
+
+          await policyProposals.registerProposal(testProposal.address);
+
+          await policyProposals.support(testProposal.address, [], { from: charlie });
+
+          await token.approve(
+            policyProposals.address,
+            await policyProposals.COST_REGISTER(),
+          );
+        });
+
+        it('reverts', async () => {
+          await expectRevert(
+            policyProposals.registerProposal(testProposal2.address),
+            'Proposals may no longer be registered because the registration period has ended',
           );
         });
       });
@@ -335,10 +362,11 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
   describe('refund', () => {
     let policyProposals;
     let testProposal;
-
+    let testProposal2;
     beforeEach(async () => {
       policyProposals = await makeProposals();
       testProposal = await Empty.new(1);
+      testProposal2 = await Empty.new(2);
 
       await token.approve(
         policyProposals.address,
@@ -346,6 +374,13 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       );
 
       await policyProposals.registerProposal(testProposal.address);
+
+      await token.approve(
+        policyProposals.address,
+        await policyProposals.COST_REGISTER(),
+      );
+
+      await policyProposals.registerProposal(testProposal2.address);
     });
 
     context('before results are computed', () => {
@@ -357,17 +392,26 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       });
     });
 
-    context('when the policy is selected', () => {
+    context('when a policy is selected', () => {
       beforeEach(async () => {
         await policyProposals.support(testProposal.address, [], { from: alice });
-        await policyProposals.support(testProposal.address, [], { from: bob });
-        time.increase(3600 * 240 + 1);
+        await policyProposals.support(testProposal2.address, [], { from: charlie });
       });
 
-      it('reverts', async () => {
+      it('tries to refund selected policy, reverts', async () => {
         await expectRevert(
-          policyProposals.refund(testProposal.address),
+          policyProposals.refund(testProposal2.address),
           'The provided proposal address is not valid',
+        );
+      });
+
+      it('tries to refund non-selected policy, succeeds', async () => {
+        const tx = await policyProposals.refund(testProposal.address);
+        await expectEvent.inTransaction(
+          tx.tx,
+          policyProposals.constructor,
+          'ProposalRefunded',
+          { proposer: alice },
         );
       });
     });
@@ -418,6 +462,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
   describe('destruct', () => {
     let policyProposals;
     let testProposal;
+    let testProposal2;
 
     context('on the implementation contract itself', () => {
       beforeEach(async () => {
@@ -454,6 +499,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       beforeEach(async () => {
         policyProposals = await makeProposals();
         testProposal = await Empty.new(1);
+        testProposal2 = await Empty.new(2);
 
         await token.approve(
           policyProposals.address,
@@ -461,13 +507,13 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         );
 
         await policyProposals.registerProposal(testProposal.address);
-        await policyProposals.support(testProposal.address, []);
-
-        await time.increase(3600 * 240 + 1);
-        await policyProposals.refund(testProposal.address);
       });
 
-      it('succeeds', async () => {
+      it('succeeds if proposal window has ended', async () => {
+        await policyProposals.support(testProposal.address, []);
+        await time.increase(3600 * 240 + 1);
+        await policyProposals.refund(testProposal.address);
+
         const balancePPBefore = await token.balanceOf(policyProposals.address);
         const balancePolicyBefore = await token.balanceOf(policy.address);
         await policyProposals.destruct();
@@ -476,6 +522,27 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         expect(balancePolicyAfter.toString()
                === toBN(balancePolicyBefore + balancePPBefore).toString());
         expect(balancePPAfter.toNumber() === 0);
+      });
+
+      it('succeeds if proposal selected ahead of time', async () => {
+        await token.approve(
+          policyProposals.address,
+          await policyProposals.COST_REGISTER(),
+        );
+
+        await policyProposals.registerProposal(testProposal2.address);
+
+        const charlieBalance = token.balanceOf(charlie);
+
+        await policyProposals.support(testProposal.address, []);
+        await policyProposals.support(testProposal2.address, [], { from: charlie });
+
+        await policyProposals.refund(testProposal.address);
+
+        await policyProposals.destruct();
+
+        const balancePPAfter = await token.balanceOf(policyProposals.address);
+        expect(balancePPAfter.toNumber() === charlieBalance);
       });
     });
 
