@@ -54,7 +54,7 @@ async function awaitAllVDFEnded() {
   logger.info('await to all processes to finish no running VDF calculation to kill');
   while (Object.keys(vdfProcessManager).length) {
     logger.info('VDF running, sleeping 1 second');
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
     await new Promise((done) => setTimeout(done, 1000));
   }
 }

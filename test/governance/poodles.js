@@ -139,10 +139,16 @@ contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) =>
   });
 
   it('Allows all users to vote', async () => {
-    await policyVotes.vote(true, [],
-      { from: alice });
-    await policyVotes.vote(true, [],
-      { from: bob });
+    await policyVotes.vote(
+      true,
+      [],
+      { from: alice },
+    );
+    await policyVotes.vote(
+      true,
+      [],
+      { from: bob },
+    );
   });
 
   it('Waits another week (end of commit period)', async () => {

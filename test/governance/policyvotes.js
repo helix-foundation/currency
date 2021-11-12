@@ -238,11 +238,17 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
 
     context('with votes', () => {
       beforeEach(async () => {
-        await proxiedPolicyVotes.vote(true, [],
-          { from: charlie });
+        await proxiedPolicyVotes.vote(
+          true,
+          [],
+          { from: charlie },
+        );
 
-        await proxiedPolicyVotes.vote(true, [],
-          { from: dave });
+        await proxiedPolicyVotes.vote(
+          true,
+          [],
+          { from: dave },
+        );
       });
 
       context('called on a non-proxied instance', () => {
@@ -274,8 +280,11 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
 
       context('when called early with majority of total stake', () => {
         it('succeeds', async () => {
-          await proxiedPolicyVotes.vote(true, [],
-            { from: bob });
+          await proxiedPolicyVotes.vote(
+            true,
+            [],
+            { from: bob },
+          );
 
           const tx = await proxiedPolicyVotes.execute();
           await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '0' });
@@ -309,10 +318,16 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
       context('when no policy wins', () => {
         let tx;
         beforeEach(async () => {
-          await proxiedPolicyVotes.vote(false, [],
-            { from: bob });
-          await proxiedPolicyVotes.vote(false, [],
-            { from: alice });
+          await proxiedPolicyVotes.vote(
+            false,
+            [],
+            { from: bob },
+          );
+          await proxiedPolicyVotes.vote(
+            false,
+            [],
+            { from: alice },
+          );
           await time.increase(3600 * 24 * 4.1);
 
           tx = await proxiedPolicyVotes.execute();
@@ -344,8 +359,11 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
       context('when proposal wins', () => {
         let tx;
         beforeEach(async () => {
-          await proxiedPolicyVotes.vote(true, [],
-            { from: bob });
+          await proxiedPolicyVotes.vote(
+            true,
+            [],
+            { from: bob },
+          );
 
           tx = await proxiedPolicyVotes.execute();
         });

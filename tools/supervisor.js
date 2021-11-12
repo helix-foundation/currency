@@ -151,8 +151,11 @@ class Supervisor {
       t: 'uint256',
       v: sequence,
     });
-    const [index, winner] = Supervisor.getWinner(toBN(winningTicketHash).mod(toBN(tree.total)),
-      accounts, sums);
+    const [index, winner] = Supervisor.getWinner(
+      toBN(winningTicketHash).mod(toBN(tree.total)),
+      accounts,
+      sums,
+    );
     return [answer(tree, index), index, winner];
   }
 
@@ -166,7 +169,8 @@ class Supervisor {
   async getBalanceStore() {
     return new web3.eth.Contract(
       EcoBalanceStoreABI.abi,
-      await this.policy.methods.policyFor(ID_BALANCESTORE).call(), {
+      await this.policy.methods.policyFor(ID_BALANCESTORE).call(),
+      {
         from: this.account,
       },
     );
@@ -175,7 +179,8 @@ class Supervisor {
   async getERC20Token() {
     return new web3.eth.Contract(
       ERC20EcoToken.abi,
-      await this.policy.methods.policyFor(ID_ERC20TOKEN).call(), {
+      await this.policy.methods.policyFor(ID_ERC20TOKEN).call(),
+      {
         from: this.account,
       },
     );
@@ -235,17 +240,23 @@ class Supervisor {
   async getRootHashContract(inflation) {
     const store = await this.getBalanceStore();
     const gen = await inflation.methods.generation().call();
-    return new web3.eth.Contract(InflationRootHashProposal.abi,
-      await store.methods.rootHashAddressPerGeneration(gen).call(), {
+    return new web3.eth.Contract(
+      InflationRootHashProposal.abi,
+      await store.methods.rootHashAddressPerGeneration(gen).call(),
+      {
         from: this.account,
-      });
+      },
+    );
   }
 
   async proposeRootHash(tree, addressRootHashProposal) {
-    const rootHashProposal = new web3.eth.Contract(InflationRootHashProposal.abi,
-      addressRootHashProposal, {
+    const rootHashProposal = new web3.eth.Contract(
+      InflationRootHashProposal.abi,
+      addressRootHashProposal,
+      {
         from: this.account,
-      });
+      },
+    );
     const token = await this.getERC20Token();
     const balanceStore = await this.getBalanceStore();
     const balance = await balanceStore.methods.balance(this.account).call();
@@ -311,10 +322,13 @@ class Supervisor {
   async processRootHashProposals() {
     const rootHashAddresses = Object.keys(this.rootHashState).filter((key) => this.rootHashState[key].status === 'Pending');
     for (let i = 0; i < rootHashAddresses.length; i += 1) {
-      const rootHashProposal = new web3.eth.Contract(InflationRootHashProposal.abi,
-        rootHashAddresses[i], {
+      const rootHashProposal = new web3.eth.Contract(
+        InflationRootHashProposal.abi,
+        rootHashAddresses[i],
+        {
           from: this.account,
-        });
+        },
+      );
       const responses = (await rootHashProposal.getPastEvents('ChallengeResponseVerified', {
         fromBlock: 0,
         toBlock: 'latest',
@@ -352,9 +366,15 @@ class Supervisor {
     for (let j = 0; j < challengesToRespond.length; j += 1) {
       const index = parseInt(challengesToRespond[j].index, 10);
       const a = answer(this.rootHashState[rootHashProposal._address].tree, index);
-      await rootHashProposal.methods.respondToChallenge(challengesToRespond[j].proposedRootHash,
-        challengesToRespond[j].challenger, a[1].reverse(), a[0].account,
-        bnHex(a[0].balance), bnHex(a[0].sum), index).send({ gas: 1000000 });
+      await rootHashProposal.methods.respondToChallenge(
+        challengesToRespond[j].proposedRootHash,
+        challengesToRespond[j].challenger,
+        a[1].reverse(),
+        a[0].account,
+        bnHex(a[0].balance),
+        bnHex(a[0].sum),
+        index,
+      ).send({ gas: 1000000 });
     }
   }
 
@@ -386,8 +406,12 @@ class Supervisor {
       // nothing to do if there are pending challenges to the current proposal
       if (pendingChallenges.length === 0) {
         // challenge current proposal
-        await this.interrogateProposal(proposals[j], rootHashProposal,
-          this.rootHashState[rootHashProposal._address].tree, relevantResponses);
+        await this.interrogateProposal(
+          proposals[j],
+          rootHashProposal,
+          this.rootHashState[rootHashProposal._address].tree,
+          relevantResponses,
+        );
       }
     }
   }
@@ -406,8 +430,11 @@ class Supervisor {
     if (responses.length !== 0) {
       lastIndex = parseInt(responses[responses.length - 1].eventParams.index, 10);
     } else {
-      await rootHashProposal.methods.challengeRootHashRequestAccount(proposer,
-        proposal.eventParams.proposedRootHash, 0).send({ gas: 1000000 });
+      await rootHashProposal.methods.challengeRootHashRequestAccount(
+        proposer,
+        proposal.eventParams.proposedRootHash,
+        0,
+      ).send({ gas: 1000000 });
       return;
     }
 
@@ -416,11 +443,18 @@ class Supervisor {
 
     if (theirs[0].account > mine[0].account) {
       if (lastIndex > 0) {
-        await rootHashProposal.methods.challengeRootHashRequestAccount(proposer, tree.hash,
-          lastIndex - 1).send({ gas: 1000000 });
+        await rootHashProposal.methods.challengeRootHashRequestAccount(
+          proposer,
+          tree.hash,
+          lastIndex - 1,
+        ).send({ gas: 1000000 });
       }
-      await rootHashProposal.methods.claimMissingAccount(proposer, tree.hash,
-        lastIndex, mine[0].account).send({ gas: 1000000 });
+      await rootHashProposal.methods.claimMissingAccount(
+        proposer,
+        tree.hash,
+        lastIndex,
+        mine[0].account,
+      ).send({ gas: 1000000 });
     }
 
     for (let i = 0; i < mine[1].length; i += 1) {
@@ -431,8 +465,11 @@ class Supervisor {
         break;
       }
     }
-    await rootHashProposal.methods.challengeRootHashRequestAccount(proposer,
-      tree.hash, 0).send({ gas: 1000000 });
+    await rootHashProposal.methods.challengeRootHashRequestAccount(
+      proposer,
+      tree.hash,
+      0,
+    ).send({ gas: 1000000 });
   }
 
   async processProposals() {
@@ -514,22 +551,26 @@ class Supervisor {
           { from: this.account },
         );
 
-        const [EntropySeedRevealed] = (await inflation.getPastEvents('EntropySeedRevealed',
+        const [EntropySeedRevealed] = (await inflation.getPastEvents(
+          'EntropySeedRevealed',
           {
             fromBlock: (await web3.eth.getBlockNumber()) - 1,
             toBlock: 'latest',
-          }));
+          },
+        ));
 
         if (EntropySeedRevealed) {
           logger.info('EntropySeedRevealed event detected, abort ongoing VDF computation');
           killVDFCalculation(null, governance._address, ENTROPY);
         }
       }
-      (await governance.getPastEvents('VoteRevealed',
+      (await governance.getPastEvents(
+        'VoteRevealed',
         {
           fromBlock: 0,
           toBlock: 'latest',
-        })).map((x) => killVDFCalculation(x.returnValues.voter, governance._address, REVEAL));
+        },
+      )).map((x) => killVDFCalculation(x.returnValues.voter, governance._address, REVEAL));
 
       logger.info(`CG@${address}: Checking isAlive(address): ${await isAlive(address)}`);
       if (await isAlive(address)) {
@@ -641,11 +682,19 @@ class Supervisor {
               if (payOut >= this.timeStamp) {
                 break;
               } else {
-                const [a, index, winner] = this.getClaimParameters(rootHash._address,
-                  bnHex(seed, 32), i);
+                const [a, index, winner] = this.getClaimParameters(
+                  rootHash._address,
+                  bnHex(seed, 32),
+                  i,
+                );
                 logger.info(`Paying winning ticket ${i} to ${winner}`);
-                await inflation.methods.claimFor(winner, i, a[1].reverse(),
-                  a[0].sum.toString(), index).send({ gas: 1000000 });
+                await inflation.methods.claimFor(
+                  winner,
+                  i,
+                  a[1].reverse(),
+                  a[0].sum.toString(),
+                  index,
+                ).send({ gas: 1000000 });
               }
             }
           }
@@ -655,8 +704,10 @@ class Supervisor {
             return true;
           }
         } else {
-          await rootHash.methods.checkRootHashStatus(this.account,
-            this.rootHashState[rootHash._address].tree.hash).send({ gas: 1000000 });
+          await rootHash.methods.checkRootHashStatus(
+            this.account,
+            this.rootHashState[rootHash._address].tree.hash,
+          ).send({ gas: 1000000 });
         }
       } else if (await isAlive(certAddress)) {
         if (certAddress !== undefined && await web3.eth.getTransactionCount(certAddress) !== 0) {

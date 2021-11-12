@@ -66,9 +66,11 @@ contract('InflationRootHashProposal', () => {
     } = await util.deployPolicy());
     await time.increase(31557600 / 10);
     txProposal = await timedPolicies.incrementGeneration();
-    const addressRootHashProposal = (await (new web3.eth.Contract(balanceStore.abi,
+    const addressRootHashProposal = (await (new web3.eth.Contract(
+      balanceStore.abi,
       balanceStore
-        .address)).getPastEvents('allEvents', {
+        .address,
+    )).getPastEvents('allEvents', {
       fromBlock: 'latest',
       toBlock: 'latest',
     }))[0].returnValues.inflationRootHashProposalContract;
@@ -80,19 +82,32 @@ contract('InflationRootHashProposal', () => {
     await rootHashProposal.challengeRootHashRequestAccount(proposer, tree.hash, index, {
       from: accounts[1],
     });
-    await rootHashProposal.respondToChallenge(tree.hash, accounts[1], a[1].reverse(),
-      a[0].account, new BN(a[0].balance), new BN(a[0].sum), index, {
+    await rootHashProposal.respondToChallenge(
+      tree.hash,
+      accounts[1],
+      a[1].reverse(),
+      a[0].account,
+      new BN(a[0].balance),
+      new BN(a[0].sum),
+      index,
+      {
         from: proposer,
-      });
+      },
+    );
     return true;
   }
 
   async function claimMissingOnChain(tree, account, index, proposer) {
     try {
-      const tx = await rootHashProposal.claimMissingAccount(proposer, tree.hash, index,
-        account, {
+      const tx = await rootHashProposal.claimMissingAccount(
+        proposer,
+        tree.hash,
+        index,
+        account,
+        {
           from: accounts[1],
-        });
+        },
+      );
       await expectEvent.inTransaction(
         tx.tx,
         InflationRootHashProposal,
@@ -156,9 +171,11 @@ contract('InflationRootHashProposal', () => {
       await time.increase(31557600 / 10);
       txProposal = await timedPolicies.incrementGeneration();
     }
-    const addressRootHashProposal = (await (new web3.eth.Contract(balanceStore.abi,
+    const addressRootHashProposal = (await (new web3.eth.Contract(
+      balanceStore.abi,
       balanceStore
-        .address)).getPastEvents('allEvents', {
+        .address,
+    )).getPastEvents('allEvents', {
       fromBlock: 'latest',
       toBlock: 'latest',
     }))[0].returnValues.inflationRootHashProposalContract;
@@ -204,10 +221,14 @@ contract('InflationRootHashProposal', () => {
       proposedRootHash = tree.hash;
       rootHashProposal = await getRootHash();
 
-      txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-        totalSum, amountOfAccounts, {
+      txProposal = await rootHashProposal.proposeRootHash(
+        proposedRootHash,
+        totalSum,
+        amountOfAccounts,
+        {
           from: accounts[0],
-        });
+        },
+      );
     });
 
     context('basic cases', () => {
@@ -215,7 +236,8 @@ contract('InflationRootHashProposal', () => {
         await expectEvent.inTransaction(
           txProposal.tx,
           InflationRootHashProposal,
-          'RootHashProposed', {
+          'RootHashProposed',
+          {
             proposer: accounts[0],
             proposedRootHash,
             totalSum: totalSum.toString(),
@@ -228,14 +250,17 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 0;
         const tx = await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash, requestedIndex, {
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[1],
           },
         );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
-          'RootHashChallengeIndexRequestAdded', {
+          'RootHashChallengeIndexRequestAdded',
+          {
             challenger: accounts[1],
             proposedRootHash,
             index: requestedIndex.toString(),
@@ -245,22 +270,32 @@ contract('InflationRootHashProposal', () => {
 
       it('challenge responded successfully', async () => {
         const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
           proposedRootHash,
-          requestedIndex, {
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         const a = answer(tree, 2);
-        const tx = await rootHashProposal.respondToChallenge(proposedRootHash,
+        const tx = await rootHashProposal.respondToChallenge(
+          proposedRootHash,
           accounts[1],
-          a[1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0].sum),
-          requestedIndex, {
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[0],
-          });
+          },
+        );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
-          'ChallengeResponseVerified', {
+          'ChallengeResponseVerified',
+          {
             challenger: accounts[1],
             proposedRootHash,
             account: a[0].account.toString(),
@@ -277,15 +312,21 @@ contract('InflationRootHashProposal', () => {
         cheat.set(accounts[3], cheatBalance);
         const ct = getTree(cheat);
         proposedRootHash = ct.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-          totalSum.add(cheatBalance), amountOfAccounts + 1, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum.add(cheatBalance),
+          amountOfAccounts + 1,
+          {
             from: accounts[2],
-          });
+          },
+        );
         expect(await verifyOnChain(ct, 2, accounts[2]));
         expect(await verifyOnChain(ct, 1, accounts[2]));
         expect(await verifyOnChain(ct, 0, accounts[2]));
-        await expectRevert(verifyOnChain(ct, 3, accounts[2]),
-          'Challenge response failed account balance check');
+        await expectRevert(
+          verifyOnChain(ct, 3, accounts[2]),
+          'Challenge response failed account balance check',
+        );
       });
 
       it('missing account', async () => {
@@ -293,10 +334,14 @@ contract('InflationRootHashProposal', () => {
         cheat.delete(accounts[1]);
         const ct = getTree(cheat);
         proposedRootHash = ct.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash, 200,
-          2, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          200,
+          2,
+          {
             from: accounts[2],
-          });
+          },
+        );
         expect(await verifyOnChain(ct, 0, accounts[2]));
         expect(await verifyOnChain(ct, 1, accounts[2]));
         expect(await claimMissingOnChain(ct, accounts[1], 1, accounts[2]));
@@ -305,69 +350,115 @@ contract('InflationRootHashProposal', () => {
 
     context('specific cases', () => {
       it('does not accept challenges from root hash proposer', async () => {
-        await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
-          accounts[0],
-          proposedRootHash, 0, {
-            from: accounts[0],
-          },
-        ),
-        'Root hash proposer can\'t challenge its own submission');
+        await expectRevert(
+          rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            0,
+            {
+              from: accounts[0],
+            },
+          ),
+          'Root hash proposer can\'t challenge its own submission',
+        );
       });
 
       it('does not accept response not from original proposer', async () => {
         const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         const a = answer(tree, 2);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[1],
-          a[1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0]
-            .sum), requestedIndex, {
-            from: accounts[1],
-          }),
-        'There is no such hash proposal');
+        await expectRevert(
+          rootHashProposal.respondToChallenge(
+            proposedRootHash,
+            accounts[1],
+            a[1].reverse(),
+            a[0].account,
+            new BN(a[0].balance),
+            new BN(a[0]
+              .sum),
+            requestedIndex,
+            {
+              from: accounts[1],
+            },
+          ),
+          'There is no such hash proposal',
+        );
       });
 
       it('submit response to not existing challenge', async () => {
         const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         const a = answer(tree, 2);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[1], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex + 1100, {
-            from: accounts[0],
-          }),
-        'There is no pending challenge for this index');
+        await expectRevert(
+          rootHashProposal.respondToChallenge(
+            proposedRootHash,
+            accounts[1],
+            a[1].reverse(),
+            a[0].account,
+            new BN(a[0].balance),
+            new BN(a[0].sum),
+            requestedIndex + 1100,
+            {
+              from: accounts[0],
+            },
+          ),
+          'There is no pending challenge for this index',
+        );
       });
 
       it('submit challenge to not existing root hash', async () => {
         const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         const a = answer(tree, 2);
-        await expectRevert(rootHashProposal.respondToChallenge(`0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
-          accounts[1], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
-            from: accounts[1],
-          }),
-        'There is no such hash proposal');
+        await expectRevert(
+          rootHashProposal.respondToChallenge(
+            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+            accounts[1],
+            a[1].reverse(),
+            a[0].account,
+            new BN(a[0].balance),
+            new BN(a[0].sum),
+            requestedIndex,
+            {
+              from: accounts[1],
+            },
+          ),
+          'There is no such hash proposal',
+        );
       });
 
       it('can\'t challenge index out of number of accounts', async () => {
         const requestedIndex = 2;
-        await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
-          accounts[0], proposedRootHash, requestedIndex + 400, {
-            from: accounts[1],
-          },
-        ),
-        'The index have to be within the range of claimed amount of accounts');
+        await expectRevert(
+          rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            requestedIndex + 400,
+            { from: accounts[1] },
+          ),
+          'The index have to be within the range of claimed amount of accounts',
+        );
       });
     });
 
@@ -380,22 +471,37 @@ contract('InflationRootHashProposal', () => {
         );
 
         rootHashProposal = await getRootHash();
-        await rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
-          amountOfAccounts, {
+        await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[0],
-          });
+          },
+        );
 
         const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         const a = answer(tree, 2);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[1], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[1],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[0],
-          }), 'Challenge response failed account balance check');
+          },
+        ), 'Challenge response failed account balance check');
       });
 
       it('fail merkle proof', async () => {
@@ -406,45 +512,73 @@ contract('InflationRootHashProposal', () => {
         );
 
         rootHashProposal = await getRootHash();
-        await rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
-          amountOfAccounts, {
+        await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[0],
-          });
+          },
+        );
 
         const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
 
         const a = answer(tree, 2);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
           accounts[1],
-          a[1].reverse(), a[0].account,
+          a[1].reverse(),
+          a[0].account,
           (new BN(a[0].balance)).add(new BN('150000000000000000000000000')),
-          new BN(a[0].sum), requestedIndex, {
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[0],
-          }), 'Challenge response failed merkle tree verification check');
+          },
+        ), 'Challenge response failed merkle tree verification check');
       });
 
       it('fail running sum first index', async () => {
         tree = getTree(map, [0, 100]);
         proposedRootHash = tree.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-          totalSum, amountOfAccounts, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[1],
-          });
+          },
+        );
         const requestedIndex = 0;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         const a = answer(tree, 0);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          }), 'cumulative sum does not starts from 0');
+          },
+        ), 'cumulative sum does not starts from 0');
       });
 
       it('fail running sum middle index', async () => {
@@ -456,22 +590,37 @@ contract('InflationRootHashProposal', () => {
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 300000]);
         proposedRootHash = tree.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-          totalSum, amountOfAccounts, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[1],
-          });
+          },
+        );
 
         let requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         let a = answer(tree, requestedIndex);
-        const tx = await rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        const tx = await rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
@@ -479,16 +628,27 @@ contract('InflationRootHashProposal', () => {
         );
 
         requestedIndex = 1;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         a = answer(tree, requestedIndex);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          }), 'Right neighbor sum verification failed');
+          },
+        ), 'Right neighbor sum verification failed');
       });
 
       it('fail running sum last index', async () => {
@@ -500,22 +660,37 @@ contract('InflationRootHashProposal', () => {
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 500]);
         proposedRootHash = tree.hash;
-        await rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
-          amountOfAccounts, {
+        await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[1],
-          });
+          },
+        );
 
         let requestedIndex = 1;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         let a = answer(tree, requestedIndex);
-        const tx = await rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        const tx = await rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
@@ -523,38 +698,64 @@ contract('InflationRootHashProposal', () => {
         );
 
         requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         a = answer(tree, requestedIndex);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          }), 'Left neighbor sum verification failed');
+          },
+        ), 'Left neighbor sum verification failed');
       });
 
       it('fail account order first index', async () => {
         rootHashProposal = await getRootHash();
         tree = getTree(map, [], [0, 2]);
         proposedRootHash = tree.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-          totalSum, amountOfAccounts, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[1],
-          });
+          },
+        );
 
         let requestedIndex = 1;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         let a = answer(tree, requestedIndex);
-        const tx = await rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        const tx = await rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
@@ -562,37 +763,63 @@ contract('InflationRootHashProposal', () => {
         );
 
         requestedIndex = 0;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         a = answer(tree, requestedIndex);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          }), 'Right neighbor order verification failed');
+          },
+        ), 'Right neighbor order verification failed');
       });
 
       it('fail account order middle index', async () => {
         tree = getTree(map, [], [0, 1]);
         proposedRootHash = tree.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-          totalSum, amountOfAccounts, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[1],
-          });
+          },
+        );
 
         let requestedIndex = 0;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         let a = answer(tree, 0);
-        const tx = await rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        const tx = await rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
@@ -600,37 +827,63 @@ contract('InflationRootHashProposal', () => {
         );
 
         requestedIndex = 1;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         a = answer(tree, 1);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          }), 'Left neighbor order verification failed');
+          },
+        ), 'Left neighbor order verification failed');
       });
 
       it('fail account order last index', async () => {
         tree = getTree(map, [], [0, 2]);
         proposedRootHash = tree.hash;
-        txProposal = await rootHashProposal.proposeRootHash(proposedRootHash,
-          totalSum, amountOfAccounts, {
+        txProposal = await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[1],
-          });
+          },
+        );
 
         let requestedIndex = 1;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         let a = answer(tree, requestedIndex);
-        const tx = await rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        const tx = await rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          });
+          },
+        );
         await expectEvent.inTransaction(
           tx.tx,
           InflationRootHashProposal,
@@ -638,16 +891,27 @@ contract('InflationRootHashProposal', () => {
         );
 
         requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-          proposedRootHash, requestedIndex, {
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          proposedRootHash,
+          requestedIndex,
+          {
             from: accounts[2],
-          });
+          },
+        );
         a = answer(tree, requestedIndex);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash,
-          accounts[2], a[1].reverse(), a[0].account, new BN(a[0].balance),
-          new BN(a[0].sum), requestedIndex, {
+        await expectRevert(rootHashProposal.respondToChallenge(
+          proposedRootHash,
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
             from: accounts[1],
-          }), 'Left neighbor order verification failed');
+          },
+        ), 'Left neighbor order verification failed');
       });
     });
 
@@ -657,10 +921,13 @@ contract('InflationRootHashProposal', () => {
         expect((await balanceStore.rootHashAddressPerGeneration((
           await balanceStore.currentGeneration()) - 1)).toString(10) === '0');
         await expectEvent.inTransaction(
-          (await rootHashProposal.checkRootHashStatus(accounts[0],
-            proposedRootHash)).tx,
+          (await rootHashProposal.checkRootHashStatus(
+            accounts[0],
+            proposedRootHash,
+          )).tx,
           InflationRootHashProposal,
-          'RootHashAccepted', {
+          'RootHashAccepted',
+          {
             proposer: accounts[0],
             proposedRootHash,
             totalSum: totalSum.toString(),
@@ -675,45 +942,53 @@ contract('InflationRootHashProposal', () => {
       it('no external function run once hash been accepted', async () => {
         await time.increase(86401);
         await expectEvent.inTransaction(
-          (await rootHashProposal.checkRootHashStatus(accounts[0],
-            proposedRootHash)).tx,
+          (await rootHashProposal.checkRootHashStatus(
+            accounts[0],
+            proposedRootHash,
+          )).tx,
           InflationRootHashProposal,
           'RootHashAccepted',
         );
 
-        await expectRevert(
-          rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
-            amountOfAccounts, {
-              from: accounts[1],
-            }), 'The root hash accepted, no more actions allowed',
-        );
+        await expectRevert(rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
+            from: accounts[1],
+          },
+        ), 'The root hash accepted, no more actions allowed');
 
-        await expectRevert(
-          rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 0, {
-              from: accounts[2],
-            }), 'The root hash accepted, no more actions allowed',
-        );
+        await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          proposedRootHash,
+          0,
+          {
+            from: accounts[2],
+          },
+        ), 'The root hash accepted, no more actions allowed');
 
         const a = answer(tree, 0);
-        await expectRevert(
-          rootHashProposal.respondToChallenge(proposedRootHash, accounts[2], a[
-            1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0]
-            .sum), 0, {
-            from: accounts[1],
-          }), 'The root hash accepted, no more actions allowed',
-        );
+        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash, accounts[2], a[
+          1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0]
+          .sum), 0, {
+          from: accounts[1],
+        }), 'The root hash accepted, no more actions allowed');
 
-        await expectRevert(
-          rootHashProposal.claimMissingAccount(accounts[0], proposedRootHash, 0,
-            accounts[0], {
-              from: accounts[1],
-            }), 'The root hash accepted, no more actions allowed',
-        );
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          proposedRootHash,
+          0,
+          accounts[0],
+          {
+            from: accounts[1],
+          },
+        ), 'The root hash accepted, no more actions allowed');
       });
     });
 
-    context('white box testing of state variables for accepting/rejecting root hahses',
+    context(
+      'white box testing of state variables for accepting/rejecting root hahses',
       () => {
         async function getTime() {
           return (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp;
@@ -722,10 +997,14 @@ contract('InflationRootHashProposal', () => {
         it('lastLiveChallenge correct calculation', async () => {
           let rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.lastLiveChallenge.toString(10) === '0').to.be.true;
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 0, {
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            0,
+            {
               from: accounts[1],
-            });
+            },
+          );
           let t = await getTime();
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.lastLiveChallenge.toString(10) === (t + (3600 * 25)).toString(
@@ -735,10 +1014,14 @@ contract('InflationRootHashProposal', () => {
           /* another challenger comes in, last live challenge gets updated */
 
           await time.increase(3600 * 10);
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 1, {
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            1,
+            {
               from: accounts[2],
-            });
+            },
+          );
           t = await getTime();
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.lastLiveChallenge.toString(10) === (t + (3600 * 25)).toString(
@@ -748,10 +1031,14 @@ contract('InflationRootHashProposal', () => {
           /* time passes, first challenger comes back, lastLiveChallenge remain the same. */
 
           await time.increase(3600 * 10);
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 2, {
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            2,
+            {
               from: accounts[1],
-            });
+            },
+          );
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.lastLiveChallenge.toString(10) === (t + (3600 * 25)).toString(
             10,
@@ -762,52 +1049,85 @@ contract('InflationRootHashProposal', () => {
           let rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.amountPendingChallenges.toString(10) === '0').to.be.true;
 
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 0, {
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            0,
+            {
               from: accounts[1],
-            });
+            },
+          );
 
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.amountPendingChallenges.toString(10) === '1').to.be.true;
 
           let a = answer(tree, 0);
-          await rootHashProposal.respondToChallenge(proposedRootHash, accounts[1],
-            a[1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0].sum),
-            0, {
+          await rootHashProposal.respondToChallenge(
+            proposedRootHash,
+            accounts[1],
+            a[1].reverse(),
+            a[0].account,
+            new BN(a[0].balance),
+            new BN(a[0].sum),
+            0,
+            {
               from: accounts[0],
-            });
+            },
+          );
 
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.amountPendingChallenges.toString(10) === '0').to.be.true;
 
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 1, {
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            1,
+            {
               from: accounts[1],
-            });
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 2, {
+            },
+          );
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            2,
+            {
               from: accounts[2],
-            });
+            },
+          );
 
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.amountPendingChallenges.toString(10) === '2').to.be.true;
 
           a = answer(tree, 1);
-          await rootHashProposal.respondToChallenge(proposedRootHash, accounts[1],
-            a[1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0].sum),
-            1, {
+          await rootHashProposal.respondToChallenge(
+            proposedRootHash,
+            accounts[1],
+            a[1].reverse(),
+            a[0].account,
+            new BN(a[0].balance),
+            new BN(a[0].sum),
+            1,
+            {
               from: accounts[0],
-            });
+            },
+          );
 
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.amountPendingChallenges.toString(10) === '1').to.be.true;
 
           a = answer(tree, 2);
-          await rootHashProposal.respondToChallenge(proposedRootHash, accounts[2],
-            a[1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0].sum),
-            2, {
+          await rootHashProposal.respondToChallenge(
+            proposedRootHash,
+            accounts[2],
+            a[1].reverse(),
+            a[0].account,
+            new BN(a[0].balance),
+            new BN(a[0].sum),
+            2,
+            {
               from: accounts[0],
-            });
+            },
+          );
 
           rhp = await rootHashProposal.rootHashProposals(accounts[0]);
           expect(rhp.amountPendingChallenges.toString(10) === '0').to.be.true;
@@ -815,27 +1135,47 @@ contract('InflationRootHashProposal', () => {
 
         it('newChallengerSubmissionEnds correct calculation', async () => {
           await time.increase(3600 * 10);
-          await rootHashProposal.proposeRootHash(`0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, totalSum,
-            amountOfAccounts, {
+          await rootHashProposal.proposeRootHash(
+            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+            totalSum,
+            amountOfAccounts,
+            {
               from: accounts[1],
-            });
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 0, {
+            },
+          );
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            0,
+            {
               from: accounts[1],
-            });
+            },
+          );
           await time.increase(3600 * 15);
-          expectRevert(rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 1, {
+          expectRevert(rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            1,
+            {
               from: accounts[2],
-            }), 'Time to submit new challenges is over');
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[0],
-            proposedRootHash, 1, {
+            },
+          ), 'Time to submit new challenges is over');
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[0],
+            proposedRootHash,
+            1,
+            {
               from: accounts[1],
-            });
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, 0, {
+            },
+          );
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[1],
+            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+            0,
+            {
               from: accounts[2],
-            });
+            },
+          );
         });
 
         it('requestPerChallenge correct calculation', async () => {
@@ -851,17 +1191,24 @@ contract('InflationRootHashProposal', () => {
               accounts[i],
               new BN('10000000000000000000000000000000000000'),
             );
-            token.approve(rootHashProposal.address,
-              await balanceStore.balance(accounts[i]), {
+            token.approve(
+              rootHashProposal.address,
+              await balanceStore.balance(accounts[i]),
+              {
                 from: accounts[i],
-              });
+              },
+            );
           }
 
           for (let i = 0; i < 4; i += 1) {
-            await rootHashProposal.proposeRootHash(`0x${web3.utils.toBN(proposedRootHash).add(new BN(1 + i)).toString(16)}`,
-              totalSum, amountOfRequests[i], {
+            await rootHashProposal.proposeRootHash(
+              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1 + i)).toString(16)}`,
+              totalSum,
+              amountOfRequests[i],
+              {
                 from: accounts[i + 1],
-              });
+              },
+            );
             allowedAmountOfRequests = 2 * Math.ceil(getBaseLog(2, amountOfRequests[
               i])) + 2;
             for (let j = 0; j < allowedAmountOfRequests; j += 1) {
@@ -878,37 +1225,58 @@ contract('InflationRootHashProposal', () => {
         });
 
         it('challengeEnds correct calculation', async () => {
-          await rootHashProposal.proposeRootHash(`0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, totalSum,
-            10, {
+          await rootHashProposal.proposeRootHash(
+            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+            totalSum,
+            10,
+            {
               from: accounts[1],
-            });
+            },
+          );
           for (let i = 0; i < 3; i += 1) {
-            await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, i, {
+            await rootHashProposal.challengeRootHashRequestAccount(
+              accounts[1],
+              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+              i,
+              {
                 from: accounts[2],
-              });
+              },
+            );
             await time.increase(3600);
           }
           await time.increase(3600 * 15);
           for (let i = 0; i < 3; i += 1) {
-            await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, i + 3, {
+            await rootHashProposal.challengeRootHashRequestAccount(
+              accounts[1],
+              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+              i + 3,
+              {
                 from: accounts[2],
-              });
+              },
+            );
             await time.increase(3600);
           }
           await time.increase(3600 * 7);
-          await rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, 6, {
+          await rootHashProposal.challengeRootHashRequestAccount(
+            accounts[1],
+            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+            6,
+            {
               from: accounts[2],
-            });
+            },
+          );
           await time.increase(3600 * 3);
-          expectRevert(rootHashProposal.challengeRootHashRequestAccount(accounts[1],
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`, 7, {
+          expectRevert(rootHashProposal.challengeRootHashRequestAccount(
+            accounts[1],
+            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
+            7,
+            {
               from: accounts[2],
-            }), 'Time to submit additional challenges is over');
+            },
+          ), 'Time to submit additional challenges is over');
         });
-      });
+      },
+    );
   });
 
   context('random tests', () => {
@@ -930,10 +1298,13 @@ contract('InflationRootHashProposal', () => {
       rootHashProposal = await getRootHash();
 
       for (let i = 0; i < amountOfAccounts; i += 1) {
-        token.approve(rootHashProposal.address,
-          await balanceStore.balance(accounts[i]), {
+        token.approve(
+          rootHashProposal.address,
+          await balanceStore.balance(accounts[i]),
+          {
             from: accounts[i],
-          });
+          },
+        );
       }
 
       const bigMap = new Map(list);
@@ -945,10 +1316,14 @@ contract('InflationRootHashProposal', () => {
       const ct = getTree(cheatMap);
 
       const proposedRootHash = ct.hash;
-      txProposal = await rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
-        amountOfAccounts, {
+      txProposal = await rootHashProposal.proposeRootHash(
+        proposedRootHash,
+        totalSum,
+        amountOfAccounts,
+        {
           from: accounts[0],
-        });
+        },
+      );
       expect(await verifyOnChain(ct, 9, accounts[0]));
       const {
         result,
@@ -1025,16 +1400,22 @@ contract('InflationRootHashProposal', () => {
 
         assert.notDeepEqual(goodMap, badmap);
 
-        await rootHashProposal.proposeRootHash(badTree.hash, totalSum,
-          amountOfAccounts, {
+        await rootHashProposal.proposeRootHash(
+          badTree.hash,
+          totalSum,
+          amountOfAccounts,
+          {
             from: accounts[0],
-          });
+          },
+        );
 
         const [res, tests] = await interrogateOnChain(goodTree, badTree, accounts[0]);
 
         assert(!res);
-        assert(tests <= Math.ceil(Math.log2(amountOfAccounts)),
-          `Needed ${tests}, expected ${Math.ceil(Math.log2(amountOfAccounts))}`);
+        assert(
+          tests <= Math.ceil(Math.log2(amountOfAccounts)),
+          `Needed ${tests}, expected ${Math.ceil(Math.log2(amountOfAccounts))}`,
+        );
       });
     }
   });

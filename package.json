@@ -52,7 +52,7 @@
     "coveralls": "3.1.1",
     "depcheck": "1.4.2",
     "eslint": "8.2.0",
-    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-chai-friendly": "0.7.2",
     "eslint-plugin-import": "2.25.3",
     "eslint-plugin-mocha": "9.0.0",

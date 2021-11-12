@@ -92,10 +92,14 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     }
 
     rootHashProposal = await InflationRootHashProposal.at(addressRootHashProposal);
-    await rootHashProposal.proposeRootHash(proposedRootHash, totalSum,
-      amountOfAccounts, {
+    await rootHashProposal.proposeRootHash(
+      proposedRootHash,
+      totalSum,
+      amountOfAccounts,
+      {
         from: accounts[0],
-      });
+      },
+    );
     await time.increase(3600 * 25);
     await expectEvent.inTransaction(
       (await rootHashProposal.checkRootHashStatus(accounts[0], proposedRootHash)).tx,
@@ -319,7 +323,8 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
             from: winner,
           })).tx,
           inflation.constructor,
-          'Claimed', {
+          'Claimed',
+          {
             who: winner.toString(),
             sequence: '0',
           },
@@ -329,15 +334,24 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       it('emits the Claimed event', async () => {
         await time.increase(3600 * 24 * 10 + 1);
         const [a, index, winner] = await getClaimParameters(inflation, 3);
-        const tx = await inflation.claim(3, a[1].reverse(),
-          toBN(a[0].sum), index, {
+        const tx = await inflation.claim(
+          3,
+          a[1].reverse(),
+          toBN(a[0].sum),
+          index,
+          {
             from: winner,
-          });
-        await expectEvent.inTransaction(tx.tx, inflation.constructor,
-          'Claimed', {
+          },
+        );
+        await expectEvent.inTransaction(
+          tx.tx,
+          inflation.constructor,
+          'Claimed',
+          {
             who: winner,
             sequence: '3',
-          });
+          },
+        );
       });
 
       it('reverts when called with a non-winning ticket', async () => {

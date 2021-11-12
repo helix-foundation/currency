@@ -92,10 +92,14 @@ contract('Production Supervisor [@group=10]', (accounts) => {
     token.approve(addressRootHashProposal, await balanceStore.balance(accounts[1]), {
       from: accounts[1],
     });
-    await rootHashProposal.challengeRootHashRequestAccount(supervisor.account,
-      supervisor.rootHashState[addressRootHashProposal].tree.hash, 2, {
+    await rootHashProposal.challengeRootHashRequestAccount(
+      supervisor.account,
+      supervisor.rootHashState[addressRootHashProposal].tree.hash,
+      2,
+      {
         from: accounts[1],
-      });
+      },
+    );
     await supervisor.processAllBlocks();
   });
 
@@ -107,10 +111,14 @@ contract('Production Supervisor [@group=10]', (accounts) => {
     });
     const { tree } = supervisor.rootHashState[addressRootHashProposal];
     const wrongHash = web3.utils.toHex(web3.utils.toBN(tree.hash).sub(web3.utils.toBN('1')));
-    await rootHashProposal.proposeRootHash(wrongHash,
-      tree.total, tree.items, {
+    await rootHashProposal.proposeRootHash(
+      wrongHash,
+      tree.total,
+      tree.items,
+      {
         from: accounts[1],
-      });
+      },
+    );
     await supervisor.processAllBlocks();
   });
 
@@ -178,10 +186,16 @@ contract('Production Supervisor [@group=10]', (accounts) => {
   });
 
   it('Allows all users to vote', async () => {
-    await policyVotes.vote(true, [],
-      { from: accounts[1] });
-    await policyVotes.vote(true, [],
-      { from: accounts[2] });
+    await policyVotes.vote(
+      true,
+      [],
+      { from: accounts[1] },
+    );
+    await policyVotes.vote(
+      true,
+      [],
+      { from: accounts[2] },
+    );
   });
 
   it('Waits another week (end of voting period)', async () => {

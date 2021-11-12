@@ -272,7 +272,8 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         it('reverts', async () => {
           await expectRevert(
             policyProposals.support(
-              testProposal.address, [],
+              testProposal.address,
+              [],
               { from: dave },
             ),
             'must stake a non-zero amount',

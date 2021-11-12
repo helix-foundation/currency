@@ -127,10 +127,16 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Allows all users to vote', async () => {
-    await policyVotes.vote(true, [],
-      { from: accounts[1] });
-    await policyVotes.vote(true, [],
-      { from: accounts[2] });
+    await policyVotes.vote(
+      true,
+      [],
+      { from: accounts[1] },
+    );
+    await policyVotes.vote(
+      true,
+      [],
+      { from: accounts[2] },
+    );
   });
 
   it('Waits until the voting period ends', async () => {

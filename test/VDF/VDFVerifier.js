@@ -117,9 +117,7 @@ contract('VDFVerifier [@group=6]', ([account]) => {
 
     context('with a valid start', () => {
       beforeEach(async () => {
-        await await instanceVDFVerifier.start(
-          bnHex(xbn), t, bnHex(ybn), { gas: 6000000 },
-        );
+        await await instanceVDFVerifier.start(bnHex(xbn), t, bnHex(ybn), { gas: 6000000 });
       });
 
       it('Rejects out-of-order updates', async () => {
@@ -180,9 +178,7 @@ contract('VDFVerifier [@group=6]', ([account]) => {
 
     it(`full VDF compute with t=${t}`, async () => {
       // re-init with correct values
-      let result = await instanceVDFVerifier.start(
-        bnHex(xbn), t, bnHex(ybn), { gas: 6000000 },
-      );
+      let result = await instanceVDFVerifier.start(bnHex(xbn), t, bnHex(ybn), { gas: 6000000 });
       vdfTrace(`start: gas used ${result.receipt.gasUsed}`);
 
       let totalGasInVerify = result.receipt.gasUsed;
