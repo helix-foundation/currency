@@ -41,6 +41,7 @@ contract('ECOx', ([alice, bob, charlie]) => {
 
   it('checks the gas cost of converting', async () => {
     const gas = await ecox.exchange.estimateGas(new BN('100000000000000000000'), { from: alice });
+    // eslint-disable-next-line no-console
     console.log(`Conversion costs: ${gas} gas`);
   });
 

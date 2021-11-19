@@ -279,20 +279,8 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
         if (address(bg) != address(0)) {
             address winner = bg.winner();
             if (winner != address(0)) {
-                bool _valid;
-                uint256 _randomInflationWinners;
-                uint256 _randomInflationPrize;
-                uint256 _lockupDuration;
-                uint256 _lockupInterest;
                 uint256 _inflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
-                (
-                    _valid,
-                    _randomInflationWinners,
-                    _randomInflationPrize,
-                    _lockupDuration,
-                    _lockupInterest,
-                    _inflationMultiplier
-                ) = bg.proposals(winner);
+                (, , , , , _inflationMultiplier) = bg.proposals(winner);
 
                 // updates the inflation value
                 historicLinearInflation[currentGeneration] =

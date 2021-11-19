@@ -77,15 +77,13 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
         if (address(bg) != address(0)) {
             address winner = bg.winner();
             if (winner != address(0)) {
-                bool _valid;
-                uint256 _inflationMultiplier;
                 (
-                    _valid,
+                    ,
                     _randomInflationWinners,
                     _randomInflationPrize,
                     _lockupDuration,
                     _lockupInterest,
-                    _inflationMultiplier
+
                 ) = bg.proposals(winner);
             }
         }
