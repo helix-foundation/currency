@@ -14,14 +14,14 @@ import "../currency/ECOx.sol";
  */
 contract EcoFaucet is PolicedUtils {
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     /** Exchange ETH for an equivalent amount of Eco tokens.
      *
      * The exchange rate used is 1:1 - 1 szabo ETH will get you 1 szabo of eco.
      */
     function faucet() external payable returns (uint256) {
-        EcoBalanceStore(policyFor(ID_BALANCESTORE)).mint(msg.sender, msg.value);
+        EcoBalanceStore(policyFor(ID_ERC20TOKEN)).mint(msg.sender, msg.value);
         return msg.value;
     }
 

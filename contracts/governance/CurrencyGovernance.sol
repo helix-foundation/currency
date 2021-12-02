@@ -190,12 +190,6 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         leader = address(0);
     }
 
-    /** Get the associated balance store address.
-     */
-    function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_BALANCESTORE));
-    }
-
     function getTrustedNodes() private view returns (TrustedNodes) {
         return TrustedNodes(policyFor(ID_TRUSTED_NODES));
     }

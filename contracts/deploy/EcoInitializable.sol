@@ -23,7 +23,7 @@ contract EcoInitializable is ForwardTarget {
     address payable public owner;
 
     /** Initialize contract */
-    constructor(address payable _owner) public {
+    constructor(address payable _owner) {
         owner = _owner;
     }
 

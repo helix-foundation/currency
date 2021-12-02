@@ -17,7 +17,7 @@ contract MakeBackdoor is Policy, Proposal {
      *
      * @param _who The address of the contract to grant privileges to.
      */
-    constructor(address _who) public {
+    constructor(address _who) {
         who = _who;
     }
 

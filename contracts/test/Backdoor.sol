@@ -4,7 +4,6 @@ pragma solidity ^0.8.9;
 import "../../contracts/governance/Proposal.sol";
 import "../../contracts/policy/Policy.sol";
 import "../../contracts/policy/PolicyInit.sol";
-import "../../contracts/currency/EcoBalanceStore.sol";
 import "../../contracts/proxy/ForwardProxy.sol";
 import "../../contracts/deploy/EcoInitializable.sol";
 import "../../contracts/deploy/EcoBootstrap.sol";
@@ -16,7 +15,7 @@ import "./FakePolicy.sol";
  * A dummy contract used in tests.
  */
 contract Backdoor is Policed {
-    constructor(address _policy) public Policed(_policy) {}
+    constructor(address _policy) Policed(_policy) {}
 }
 
 /** @title Empty
@@ -32,7 +31,7 @@ contract Empty {
      *
      * @param _number The value to set the number attribute to.
      */
-    constructor(uint256 _number) public {
+    constructor(uint256 _number) {
         number = _number;
     }
 }
@@ -82,7 +81,7 @@ contract SampleHandler is Policed {
      */
     uint256 public id;
 
-    constructor(address _policy, uint256 _id) public Policed(_policy) {
+    constructor(address _policy, uint256 _id) Policed(_policy) {
         id = _id;
     }
 }
@@ -96,7 +95,7 @@ contract SampleProposal is Policy, Proposal {
      */
     uint256 public id;
 
-    constructor(uint256 _id) public {
+    constructor(uint256 _id) {
         id = _id;
     }
 

@@ -12,7 +12,7 @@ contract ForwardProxy {
      *
      * @param _impl The default target address.
      */
-    constructor(ForwardTarget _impl) public {
+    constructor(ForwardTarget _impl) {
         (bool _success, ) = address(_impl).delegatecall(
             abi.encodeWithSelector(_impl.initialize.selector, _impl)
         );

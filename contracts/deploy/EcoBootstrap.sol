@@ -27,7 +27,7 @@ contract EcoBootstrap is Ownable {
      * @param _owner The owner of the reservation contract. Also the only
      *               address permitted to claim reserved addresses.
      */
-    constructor(address _owner) public {
+    constructor(address _owner) {
         transferOwnership(_owner);
         ForwardTarget init = new EcoInitializable(
             payable(address(uint160(owner())))

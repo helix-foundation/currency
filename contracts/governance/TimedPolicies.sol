@@ -56,7 +56,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         address _policyproposal,
         address _simplepolicy,
         bytes32[] memory _notificationHashes
-    ) public PolicedUtils(_policy) {
+    ) PolicedUtils(_policy) {
         policyProposalImpl = _policyproposal;
         simplePolicyImpl = _simplepolicy;
         internalGeneration = GENERATION_START;

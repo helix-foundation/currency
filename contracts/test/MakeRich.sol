@@ -23,7 +23,7 @@ contract MakeRich is Policy, Proposal {
      * @param _account The account to mint tokens into.
      * @param _amount The amount of tokens to mint.
      */
-    constructor(address _account, uint256 _amount) public {
+    constructor(address _account, uint256 _amount) {
         account = _account;
         amount = _amount;
     }

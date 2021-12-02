@@ -733,6 +733,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         view
         returns (IEcoBalanceStoreGenerationBalance)
     {
-        return IEcoBalanceStoreGenerationBalance(policyFor(ID_BALANCESTORE));
+        return IEcoBalanceStoreGenerationBalance(policyFor(ID_ERC20TOKEN));
     }
 }

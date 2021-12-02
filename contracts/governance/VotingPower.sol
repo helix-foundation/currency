@@ -14,12 +14,12 @@ import "./ECOxLockup.sol";
 contract VotingPower is PolicedUtils {
     constructor(address _policy) PolicedUtils(_policy) {}
 
-    function totalVotingPower(uint256 _gen) public view returns (uint256) {
-        uint256 total = getStore().totalSupplyAt(_gen - 1);
+    function totalVotingPower(uint256 _blockNumber) public view returns (uint256) {
+        uint256 total = getStore().totalSupplyAt(_blockNumber);
 
-        uint256 totalx = getXLockup().totalVotingECOx(_gen);
+        uint256 totalx = getXLockup().totalVotingECOx(_blockNumber);
         if (totalx > 0) {
-            total = total + getX().valueAt(totalx, _gen - 1);
+            total = total + getX().valueAt(totalx, _blockNumber);
         }
 
         return total;
@@ -27,25 +27,13 @@ contract VotingPower is PolicedUtils {
 
     function votingPower(
         address _who,
-        uint256 _generation,
-        uint256[] memory _lockups
+        uint256 _blockNumber
     ) public view returns (uint256) {
-        uint256 _power = getStore().balanceAt(_who, _generation - 1);
+        uint256 _power = getStore().balanceAt(_who, _blockNumber);
 
-        uint256 _x = getXLockup().votingECOx(_who, _generation);
+        uint256 _x = getXLockup().votingECOx(_who, _blockNumber);
         if (_x > 0) {
-            _power = _power + getX().valueAt(_x, _generation - 1);
-        }
-
-        ILockups lockups = ILockups(policyFor(ID_CURRENCY_TIMER));
-        for (uint256 i = 0; i < _lockups.length; ++i) {
-            uint256 _gen = _lockups[i];
-            require(_gen < _generation, "Lockup newer than voting period");
-
-            Lockup lockup = Lockup(lockups.lockups(_gen));
-            require(address(lockup) != address(0), "No lockup for generation");
-
-            _power = _power + lockup.depositBalances(_who);
+            _power = _power + getX().valueAt(_x, _blockNumber);
         }
 
         return _power;
@@ -58,7 +46,7 @@ contract VotingPower is PolicedUtils {
     /** Get the associated balance store address.
      */
     function getStore() internal view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_BALANCESTORE));
+        return EcoBalanceStore(policyFor(ID_ERC20TOKEN));
     }
 
     function getX() internal view returns (ECOx) {

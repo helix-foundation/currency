@@ -21,7 +21,7 @@ contract MakePoodle is Policy, Proposal {
      *
      * @param _newGovernance The address of the updated CurrencyGovernance contract
      */
-    constructor(address _newGovernance, address _switcherCurrencyTimer) public {
+    constructor(address _newGovernance, address _switcherCurrencyTimer) {
         newGovernance = _newGovernance;
         switcherCurrencyTimer = _switcherCurrencyTimer;
     }

@@ -71,7 +71,7 @@ contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
 
     address internal expectedInterfaceSet;
 
-    constructor(address _policy) public Policed(_policy) {
+    constructor(address _policy) Policed(_policy) {
         ERC1820REGISTRY.setManager(address(this), _policy);
     }
 

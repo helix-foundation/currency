@@ -16,7 +16,7 @@ contract SimplePolicyCloner {
      * @param _key The key to pass to the policy setter on initialization.
      * @param _value The value to pass to the policy setter on initialization.
      */
-    constructor(bytes32 _key, address _value) public {
+    constructor(bytes32 _key, address _value) {
         clone = new SimplePolicySetter().clone(_key, _value);
     }
 }

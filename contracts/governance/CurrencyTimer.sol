@@ -31,6 +31,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
     uint256 public currentGeneration;
 
     mapping(uint256 => address) public override lockups;
+    mapping(address => bool) public isLockup;
 
     event CurrencyGovernanceDecisionStarted(address contractAddress);
     event InflationStarted(address indexed addr);
@@ -124,6 +125,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
             );
             emit LockupOffered(address(lockup));
             lockups[_new] = address(lockup);
+            isLockup[address(lockup)] = true;
         }
     }
 
@@ -136,6 +138,6 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
     /** Get the associated balance store address.
      */
     function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_BALANCESTORE));
+        return EcoBalanceStore(policyFor(ID_ERC20TOKEN));
     }
 }

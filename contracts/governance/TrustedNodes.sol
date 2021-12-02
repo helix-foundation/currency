@@ -34,7 +34,6 @@ contract TrustedNodes is PolicedUtils {
     /** Creates a new trusted node registry, populated with some initial nodes.
      */
     constructor(address _policy, address[] memory _initial)
-        public
         PolicedUtils(_policy)
     {
         for (uint256 i = 0; i < _initial.length; ++i) {

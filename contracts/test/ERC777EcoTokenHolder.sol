@@ -37,7 +37,7 @@ contract ERC777EcoTokenHolder is
      * @param _tokenContract The address of the token contract.
      * @param register Register the contract with ERC1820?
      */
-    constructor(address _tokenContract, bool register) public {
+    constructor(address _tokenContract, bool register) {
         tokenContract = _tokenContract;
         if (register) {
             setInterfaceImplementation("ERC777TokensSender", address(this));

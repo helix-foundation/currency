@@ -2,157 +2,97 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./ERC20InflationaryVotes.sol";
 import "../policy/PolicedUtils.sol";
-import "./EcoBalanceStore.sol";
-import "./TokenPrototype.sol";
+import "../utils/TimeUtils.sol";
+import "../currency/InflationRootHashProposal.sol";
+import "../currency/EcoBalanceStore.sol";
+import "../governance/CurrencyTimer.sol";
 
 /** @title An ERC20 token interface to the Eco currency syste4m.
  */
-contract ERC20EcoToken is TokenPrototype, IERC20 {
-    /** Tracks allowances for each user from each other user.
-     *  The parameter is in basic unit of 10^{-18} (atto) ECO tokens
+contract ERC20EcoToken is ERC20InflationaryVotes, PolicedUtils, TimeUtils {
+    /* Event to be emitted when InflationRootHashProposalStarted contract spawned.
      */
-    mapping(address => mapping(address => uint256)) public allowances;
+    event InflationRootHashProposalStarted(
+        address inflationRootHashProposalContract,
+        uint256 indexed generation
+    );
 
-    // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) TokenPrototype(_policy) {}
+    /* Current generation of the balance store. */
+    uint256 public currentGeneration;
 
-    /** Return the friendly name of the ERC20 token.
-     */
-    function name() external view returns (string memory) {
-        return store.name();
+    mapping(uint256 => InflationRootHashProposal) public rootHashAddressPerGeneration;
+
+    InflationRootHashProposal public inflationRootHashProposalImpl;
+
+    constructor(address _policy, InflationRootHashProposal _rootHashProposalImpl) ERC20InflationaryVotes("Eco", "ECO") PolicedUtils(_policy) {
+        inflationRootHashProposalImpl = _rootHashProposalImpl;
     }
 
-    /** Return the exchange symbol of the ERC20 token.
-     */
-    function symbol() external view returns (string memory) {
-        return store.symbol();
+    function initialize(address _self) public override onlyConstruction {
+        super.initialize(_self);
+        inflationRootHashProposalImpl = EcoBalanceStore(_self).inflationRootHashProposalImpl();
     }
 
-    /** Return the number of digits to the right of the decimal point for the
-     * ERC20 token.
-     */
-    function decimals() external view returns (uint8) {
-        return store.decimals();
-    }
-
-    /** Return the total quantity of token in existence.
-     */
-    function totalSupply() external view override returns (uint256) {
-        return store.tokenSupply();
-    }
-
-    /** Get the balance of a specific address.
-     */
-    function balanceOf(address _address)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return store.balance(_address);
-    }
-
-    /** Transfer tokens from the caller's address to another address.
-     */
-    function transfer(address _to, uint256 _value)
-        external
-        override
-        returns (bool)
-    {
-        if (_to == address(0)) {
-            store.tokenBurn(msg.sender, msg.sender, _value, "", "");
-        } else {
-            store.tokenTransfer(msg.sender, msg.sender, _to, _value, "", "");
-        }
-        return true;
-    }
-
-    /** Transfer tokens from one address to another.
-     *
-     * Caller must have been previously approved to do so.
-     */
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
-    ) external override returns (bool) {
+    function mint(address _to, uint256 _value) external {
         require(
-            allowances[_from][msg.sender] >= _value,
-            "Insufficient allowance for transfer"
+            msg.sender == policyFor(ID_CURRENCY_GOVERNANCE) ||
+                msg.sender == policyFor(ID_CURRENCY_TIMER) ||
+                msg.sender == policyFor(ID_ECOX) ||
+                msg.sender == policyFor(ID_FAUCET),
+            "Caller not authorized to mint tokens"
         );
-        allowances[_from][msg.sender] = allowances[_from][msg.sender] - _value;
-        if (_to == address(0)) {
-            store.tokenBurn(msg.sender, _from, _value, "", "");
-        } else {
-            store.tokenTransfer(msg.sender, _from, _to, _value, "", "");
+
+        _mint(_to, _value);
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {
+        // If to or from is a lockup early return so voting power and delegation remain
+        CurrencyTimer _currencyTimer = CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
+        if (_currencyTimer.isLockup(from) || _currencyTimer.isLockup(to)) return;
+        
+        super._afterTokenTransfer(from, to, amount);
+    }
+
+    function notifyGenerationIncrease() public virtual override {
+        uint256 _old = currentGeneration;
+        uint256 _new = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
+        require(_new != _old, "Generation has not increased");
+
+        // update currentGeneration
+        currentGeneration = _new;
+
+        CurrencyGovernance bg = CurrencyGovernance(
+            policyFor(ID_CURRENCY_GOVERNANCE)
+        );
+
+        if (address(bg) != address(0)) {
+            address winner = bg.winner();
+            if (winner != address(0)) {
+                uint256 _inflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
+                (, , , , , _inflationMultiplier) = bg.proposals(winner);
+
+                // updates the inflation value
+                uint256 _newInflationMultiplier = _linearInflationCheckpoints[_linearInflationCheckpoints.length - 1].value *
+                    _inflationMultiplier /
+                    INITIAL_INFLATION_MULTIPLIER;
+                _writeCheckpoint(_linearInflationCheckpoints, _replace, _newInflationMultiplier);
+            }
         }
-        return true;
-    }
 
-    /** Approve an address to transfer tokens on behalf of the caller.
-     */
-    function approve(address _spender, uint256 _value)
-        external
-        override
-        returns (bool)
-    {
-        allowances[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    /** Check how much value one address is allowed to transfer on behalf of
-     * another.
-     */
-    function allowance(address _owner, address _spender)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return allowances[_owner][_spender];
-    }
-
-    function emitSentEvent(
-        address,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes calldata,
-        bytes calldata
-    ) external override onlyStore {
-        emit Transfer(_from, _to, _amount);
-    }
-
-    function emitMintedEvent(
-        address,
-        address _to,
-        uint256 _amount,
-        bytes calldata,
-        bytes calldata
-    ) external override onlyStore {
-        emit Transfer(address(0), _to, _amount);
-    }
-
-    function emitBurnedEvent(
-        address,
-        address _from,
-        uint256 _amount,
-        bytes calldata,
-        bytes calldata
-    ) external override onlyStore {
-        emit Transfer(_from, address(0), _amount);
-    }
-
-    /** Allow the cleanup policy provider to self-destruct the contract.
-     */
-    function destruct() external {
-        require(
-            msg.sender == policyFor(ID_CLEANUP),
-            "Only the cleanup policy contract can call destruct."
+        rootHashAddressPerGeneration[_old] = InflationRootHashProposal(
+            inflationRootHashProposalImpl.clone()
         );
-        selfdestruct(payable(msg.sender));
+        rootHashAddressPerGeneration[_old].configure(_old);
+
+        emit InflationRootHashProposalStarted(
+            address(rootHashAddressPerGeneration[_old]),
+            _old
+        );
     }
 }
