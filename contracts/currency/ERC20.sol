@@ -29,14 +29,14 @@ pragma solidity ^0.8.9;
  * allowances. See {IERC20-approve}.
  */
 contract ERC20 {
-    mapping(address => uint256) private _balances;
+    mapping(address => uint256) internal _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    uint256 private _totalSupply;
+    uint256 internal _totalSupply;
 
-    string private _name;
-    string private _symbol;
+    string internal _name;
+    string internal _symbol;
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -231,12 +231,12 @@ contract ERC20 {
     function _transfer(
         address sender,
         address recipient,
-        uint256 amount
+        uint256 originalAmount
     ) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        amount = _beforeTokenTransfer(sender, recipient, amount);
+        uint256 amount = _beforeTokenTransfer(sender, recipient, originalAmount);
 
         uint256 senderBalance = _balances[sender];
         require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
@@ -245,7 +245,7 @@ contract ERC20 {
         }
         _balances[recipient] += amount;
 
-        emit Transfer(sender, recipient, amount);
+        emit Transfer(sender, recipient, originalAmount);
 
         _afterTokenTransfer(sender, recipient, amount);
     }
@@ -259,16 +259,18 @@ contract ERC20 {
      *
      * - `account` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount) internal virtual {
+    function _mint(address account, uint256 originalAmount) internal virtual returns (uint256) {
         require(account != address(0), "ERC20: mint to the zero address");
 
-        amount = _beforeTokenTransfer(address(0), account, amount);
+        uint256 amount = _beforeTokenTransfer(address(0), account, originalAmount);
 
         _totalSupply += amount;
         _balances[account] += amount;
-        emit Transfer(address(0), account, amount);
+        emit Transfer(address(0), account, originalAmount);
 
         _afterTokenTransfer(address(0), account, amount);
+
+        return amount;
     }
 
     /**
@@ -282,10 +284,10 @@ contract ERC20 {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount) internal virtual {
+    function _burn(address account, uint256 originalAmount) internal virtual returns (uint256) {
         require(account != address(0), "ERC20: burn from the zero address");
 
-        amount = _beforeTokenTransfer(account, address(0), amount);
+        uint256 amount = _beforeTokenTransfer(account, address(0), originalAmount);
 
         uint256 accountBalance = _balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
@@ -294,9 +296,11 @@ contract ERC20 {
         }
         _totalSupply -= amount;
 
-        emit Transfer(account, address(0), amount);
+        emit Transfer(account, address(0), originalAmount);
 
         _afterTokenTransfer(account, address(0), amount);
+
+        return amount;
     }
 
     /**

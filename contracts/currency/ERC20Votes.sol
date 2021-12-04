@@ -45,6 +45,52 @@ abstract contract ERC20Votes is ERC20 {
 
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
 
+    function totalSupply() public view override returns (uint256) {
+        return tokenSupply();
+    }
+
+    function balanceOf(address account) public view override returns (uint256) {
+        return balance(account);
+    }
+
+    /** Access function to determine the token balance held by some address.
+     */
+    function balance(address _owner) public virtual view returns (uint256) {
+        return _balances[_owner];
+    }
+
+    /** Returns the total (inflation corrected) token supply
+     */
+    function tokenSupply() public virtual view returns (uint256) {
+        return _totalSupply;
+    }
+
+    /** Returns the total (inflation corrected) token supply at a specified block number
+     */
+    function totalSupplyAt(uint256 _blockNumber) public virtual view returns (uint256) {
+        return getPastTotalSupply(_blockNumber);
+    }
+
+    /** Return historical balance at given generation.
+     *
+     * If the latest block number for the account is before the requested
+     * block then the most recent known balance is returned. Otherwise the
+     * exact block number requested is returned.
+     *
+     * @param _owner The account to check the balance of.
+     * @param _blockNumber The block number to check the balance at the start
+     *                        of. Must be less than or equal to the present
+     *                        block number.
+     */
+    function balanceAt(address _owner, uint256 _blockNumber)
+        public
+        virtual
+        view
+        returns (uint256)
+    {
+        return  getPastVotes(_owner, _blockNumber);
+    }
+
     /**
      * @dev Get the `pos`-th checkpoint for `account`.
      */
@@ -101,7 +147,7 @@ abstract contract ERC20Votes is ERC20 {
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
-    // TODO: evaluate if we actually want binary search as opposed to just backwards iteration from present
+    // CONSIDER: evaluate if we actually want binary search as opposed to just backwards iteration from present
     /**
      * @dev Lookup a value in a list of (sorted) checkpoints.
      */
@@ -117,6 +163,11 @@ abstract contract ERC20Votes is ERC20 {
         // Note that if the latest checkpoint available is exactly for `blockNumber`, we end up with an index that is
         // past the end of the array, so we technically don't find a checkpoint after `blockNumber`, but it works out
         // the same.
+
+        // Early exit if this is a request for the most recent value or we have no checkpoints
+        if (ckpts.length == 0) return 0;
+        if (blockNumber > ckpts[ckpts.length - 1].fromBlock) return ckpts[ckpts.length - 1].value;
+
         uint256 high = ckpts.length;
         uint256 low = 0;
         while (low < high) {
@@ -148,20 +199,22 @@ abstract contract ERC20Votes is ERC20 {
     /**
      * @dev Snapshots the totalSupply after it has been increased.
      */
-    function _mint(address account, uint256 amount) internal virtual override {
-        super._mint(account, amount);
+    function _mint(address account, uint256 amount) internal virtual override returns (uint256) {
+        amount = super._mint(account, amount);
         require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
 
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
+        return amount;
     }
 
     /**
      * @dev Snapshots the totalSupply after it has been decreased.
      */
-    function _burn(address account, uint256 amount) internal virtual override {
-        super._burn(account, amount);
+    function _burn(address account, uint256 amount) internal virtual override returns (uint256)  {
+        amount = super._burn(account, amount);
 
         _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
+        return amount;
     }
 
     /**

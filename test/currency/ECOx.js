@@ -35,6 +35,14 @@ contract('ECOx', ([alice, bob, charlie]) => {
   });
 
   it('Verifies starting conditions', async () => {
+    expect(await token.balanceOf(alice)).to.eq.BN('20000000000000000000000');
+    expect(await token.balanceOf(bob)).to.eq.BN('30000000000000000000000');
+    expect(await token.balanceOf(charlie)).to.eq.BN('50000000000000000000000');
+
+    expect(await ecox.balanceOf(alice)).to.eq.BN('500000000000000000000');
+    expect(await ecox.balanceOf(bob)).to.eq.BN('300000000000000000000');
+    expect(await ecox.balanceOf(charlie)).to.eq.BN('200000000000000000000');
+
     expect(await token.totalSupply()).to.eq.BN('100000000000000000000000');
     expect(await ecox.totalSupply()).to.eq.BN('1000000000000000000000');
   });

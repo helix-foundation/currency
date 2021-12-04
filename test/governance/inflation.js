@@ -146,9 +146,6 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     await initInflation.mint(balanceStore.address, accounts[1], accountsBalances[1]);
     await initInflation.mint(balanceStore.address, accounts[2], accountsBalances[2]);
 
-    //    await configureInflationRootHash();
-    await Promise.all([0, 1, 2].map((id) => balanceStore.update(accounts[id])));
-
     governance = await CurrencyGovernance.at(
       await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
     );

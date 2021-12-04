@@ -56,7 +56,7 @@ contract MakeRich is Policy, Proposal {
         bytes32 _inflationId = keccak256(
             abi.encodePacked("CurrencyGovernance")
         );
-        bytes32 _storeId = keccak256(abi.encodePacked("BalanceStore"));
+        bytes32 _storeId = keccak256(abi.encodePacked("ERC20Token"));
 
         address _account = MakeRich(_self).account();
         uint256 _amount = MakeRich(_self).amount();

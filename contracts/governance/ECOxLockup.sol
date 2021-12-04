@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../currency/ERC20Votes.sol";
 import "../currency/ECOx.sol";
@@ -85,6 +86,8 @@ contract ECOxLockup is ERC20Votes, PolicedUtils {
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
+        _name = IERC20Metadata(_self).name();
+        _symbol = IERC20Metadata(_self).symbol();
         currentGeneration = IGeneration(policyFor(ID_TIMED_POLICIES))
             .generation();
     }

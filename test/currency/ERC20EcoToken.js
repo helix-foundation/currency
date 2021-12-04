@@ -7,7 +7,6 @@ const { expect } = chai;
 const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
 const Policy = artifacts.require('FakePolicy');
-const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const MurderousPolicy = artifacts.require('MurderousPolicy');
 const FakeInflation = artifacts.require('FakeInflation');
@@ -19,7 +18,6 @@ const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 chai.use(bnChai(BN));
 
 contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
-  let balanceStore;
   let token;
   let inflation;
   let murderer;
@@ -29,42 +27,36 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     const policyInit = await PolicyInit.new();
     const proxy = await ForwardProxy.new(policyInit.address);
     const rootHash = await InflationRootHashProposal.new(proxy.address);
-    balanceStore = await EcoBalanceStore.new(proxy.address, rootHash.address, { from: owner });
     inflation = await FakeInflation.new();
-    token = await ERC20EcoToken.new(proxy.address, { from: owner });
+    token = await ERC20EcoToken.new(proxy.address, rootHash.address, { from: owner });
 
     murderer = await MurderousPolicy.new();
     attemptedMurderer = await MurderousPolicy.new();
 
     const tokenHash = web3.utils.soliditySha3('ERC20Token');
-    const balanceStoreHash = web3.utils.soliditySha3('BalanceStore');
 
     await (await PolicyInit.at(proxy.address)).fusedInit(
       (await Policy.new()).address,
       [],
       [
         tokenHash,
-        balanceStoreHash,
-        await balanceStore.ID_CLEANUP(),
+        await token.ID_CLEANUP(),
         UNKNOWN_POLICY_ID,
-        await balanceStore.ID_CURRENCY_GOVERNANCE(),
+        await token.ID_CURRENCY_GOVERNANCE(),
       ],
       [
         token.address,
-        balanceStore.address,
         murderer.address,
         attemptedMurderer.address,
         inflation.address,
       ],
       [tokenHash],
     );
-
-    await balanceStore.reAuthorize();
   });
 
   describe('total supply', () => {
     beforeEach(async () => {
-      await inflation.mint(balanceStore.address, accounts[1], new BN(100));
+      await inflation.mint(token.address, accounts[1], new BN(100));
     });
 
     it('returns the total amount of tokens', async () => {
@@ -76,7 +68,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
 
   describe('balanceOf', () => {
     beforeEach(async () => {
-      await inflation.mint(balanceStore.address, accounts[1], new BN(100));
+      await inflation.mint(token.address, accounts[1], new BN(100));
     });
 
     context('when the requrested account has no tokens', () => {
@@ -100,7 +92,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     const amount = new BN(100);
 
     beforeEach(async () => {
-      await inflation.mint(balanceStore.address, accounts[1], amount);
+      await inflation.mint(token.address, accounts[1], amount);
     });
 
     context('when the sender doesn\'t have enough balance', () => {
@@ -108,8 +100,8 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
       it('reverts', async () => {
         await expectRevert(
           token.transfer(accounts[3], amount, meta),
-          'account has insufficient tokens',
-          balanceStore.constructor,
+          'ERC20: transfer amount exceeds balance',
+          token.constructor,
         );
       });
     });
@@ -249,7 +241,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     ];
 
     beforeEach(async () => {
-      await inflation.mint(balanceStore.address, from, balance);
+      await inflation.mint(token.address, from, balance);
       await token.approve(authorized, allowance, { from });
     });
 
@@ -260,7 +252,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
         it('reverts', async () => {
           await expectRevert(
             token.transferFrom(from, to, allowanceParts[0], meta),
-            'Insufficient allowance for transfer',
+            'ERC20: transfer amount exceeds allowance.',
           );
         });
       });
@@ -269,7 +261,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
         it('reverts', async () => {
           await expectRevert(
             token.transferFrom(from, to, allowance.add(new BN(10)), meta),
-            'Insufficient allowance for transfer',
+            'ERC20: transfer amount exceeds allowance.',
           );
         });
       });
@@ -355,7 +347,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
           it('reverts', async () => {
             await expectRevert(
               token.transferFrom(from, to, allowance.add(new BN(1)), meta),
-              'Insufficient allowance for transfer',
+              'ERC20: transfer amount exceeds allowance.',
             );
           });
         });
@@ -372,7 +364,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
 
             await expectRevert(
               token.transferFrom(from, to, extra, meta),
-              'Insufficient allowance for transfer',
+              'ERC20: transfer amount exceeds allowance.',
             );
           });
         });
@@ -411,43 +403,16 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     });
   });
 
-  describe('Destructible', () => {
-    context('when instructed by an unauthorized user', () => {
-      const [, other] = accounts;
-      it('cannot be killed', async () => {
-        await expectRevert(
-          token.destruct({ from: other }),
-          'Only the cleanup policy contract',
-        );
-      });
-    });
-
-    context('when instructed by an authorized policy', () => {
-      it('can be killed', async () => {
-        await murderer.destruct(token.address);
-      });
-    });
-
-    context('when instructed by an unauthorized policy', () => {
-      it('cannot be killed', async () => {
-        await expectRevert(
-          attemptedMurderer.destruct(token.address),
-          'Only the cleanup policy contract',
-        );
-      });
-    });
-  });
-
   describe('Events from BalanceStore', () => {
     it('emits Transfer when minting', async () => {
-      const tx = await inflation.mint(balanceStore.address, accounts[1], new BN(100));
+      const tx = await inflation.mint(token.address, accounts[1], new BN(100));
       await expectEvent.inTransaction(tx.tx, token.constructor, 'Transfer', { from: '0x0000000000000000000000000000000000000000', to: accounts[1], value: '100' });
     });
 
     it('emits Transfer when burning', async () => {
-      await inflation.mint(balanceStore.address, accounts[1], new BN(100));
-      const tx = await token.transfer('0x0000000000000000000000000000000000000000', new BN(10), { from: accounts[1] });
-      await expectEvent.inTransaction(tx.tx, token.constructor, 'Transfer', { to: '0x0000000000000000000000000000000000000000', from: accounts[1], value: '10' });
+      await inflation.mint(token.address, accounts[1], new BN(100));
+      const tx = await token.transfer('0x0000000000000000000000000000000000000001', new BN(10), { from: accounts[1] });
+      await expectEvent.inTransaction(tx.tx, token.constructor, 'Transfer', { to: '0x0000000000000000000000000000000000000001', from: accounts[1], value: '10' });
     });
   });
 });

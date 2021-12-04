@@ -67,8 +67,6 @@ contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) =>
   it('Waits a generation', async () => {
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
-    await balanceStore.update(alice);
-    await balanceStore.update(bob);
   });
 
   it('Checks that the current governance contract is not poodles', async () => {
@@ -127,8 +125,8 @@ contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) =>
   });
 
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
-    await policyProposals.support(makePoodle.address, [], { from: alice });
-    await policyProposals.support(makePoodle.address, [], { from: bob });
+    await policyProposals.support(makePoodle.address, { from: alice });
+    await policyProposals.support(makePoodle.address, { from: bob });
   });
 
   it('Transitions from proposing to voting', async () => {
@@ -141,12 +139,10 @@ contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) =>
   it('Allows all users to vote', async () => {
     await policyVotes.vote(
       true,
-      [],
       { from: alice },
     );
     await policyVotes.vote(
       true,
-      [],
       { from: bob },
     );
   });

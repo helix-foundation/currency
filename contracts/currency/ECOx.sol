@@ -1,7 +1,7 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./EcoBalanceStore.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
@@ -36,6 +36,8 @@ contract ECOx is ERC20, PolicedUtils {
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
+        _name = IERC20Metadata(_self).name();
+        _symbol = IERC20Metadata(_self).symbol();
     }
 
     function valueOf(uint256 _ecoXValue) public view returns (uint256) {

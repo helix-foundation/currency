@@ -1,9 +1,10 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../currency/ERC20Votes.sol";
 import "../governance/ITimeNotifier.sol";
+import "../policy/PolicedUtils.sol";
 
 /** @title ERC20InflationaryVotes
  * This implements a generational store with snapshotted balances. Balances
@@ -12,6 +13,7 @@ import "../governance/ITimeNotifier.sol";
  */
 abstract contract ERC20InflationaryVotes is
     ERC20Votes,
+    PolicedUtils,
     ITimeNotifier
 {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1_000_000_000_000_000_000;
@@ -25,7 +27,14 @@ abstract contract ERC20InflationaryVotes is
      * contracts cache. These calls are separated to allow the authorized
      * contracts to be configured/deployed after the balance store contract.
      */
-    constructor(string memory _name, string memory _symbol) ERC20Votes(_name, _symbol) {
+    constructor(address _policy, string memory _name, string memory _symbol) ERC20Votes(_name, _symbol) PolicedUtils(_policy) {
+        _writeCheckpoint(_linearInflationCheckpoints, _replace, INITIAL_INFLATION_MULTIPLIER);
+    }
+
+    function initialize(address _self) public virtual override onlyConstruction {
+        super.initialize(_self);
+        _name = IERC20Metadata(_self).name();
+        _symbol = IERC20Metadata(_self).symbol();
         _writeCheckpoint(_linearInflationCheckpoints, _replace, INITIAL_INFLATION_MULTIPLIER);
     }
 
@@ -43,22 +52,22 @@ abstract contract ERC20InflationaryVotes is
     }
 
     /** Access function to determine the token balance held by some address.
-     * Function is included for interface compliance and convenience, but just
-     * backs into balanceAt
      */
-    function balance(address _owner) public view returns (uint256) {
-        return balanceAt(_owner, block.number);
+    function balance(address _owner) public override view returns (uint256) {
+        uint256 _linearInflation = _checkpointsLookup(_linearInflationCheckpoints, block.number);
+        return _balances[_owner] / _linearInflation;
     }
 
     /** Returns the total (inflation corrected) token supply
      */
-    function tokenSupply() public view returns (uint256) {
-        return totalSupplyAt(block.number);
+    function tokenSupply() public override view returns (uint256) {
+        uint256 _linearInflation = _checkpointsLookup(_linearInflationCheckpoints, block.number);
+        return _totalSupply / _linearInflation;
     }
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */
-    function totalSupplyAt(uint256 _blockNumber) public view returns (uint256) {
+    function totalSupplyAt(uint256 _blockNumber) public override view returns (uint256) {
         uint256 _linearInflation = getPastLinearInflation(_blockNumber);
 
         if (_linearInflation == 0) {
@@ -81,6 +90,7 @@ abstract contract ERC20InflationaryVotes is
      */
     function balanceAt(address _owner, uint256 _blockNumber)
         public
+        override
         view
         returns (uint256)
     {

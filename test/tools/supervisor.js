@@ -81,8 +81,6 @@ contract('Production Supervisor [@group=10]', (accounts) => {
   it('Increases time and kicks off processes', async () => {
     await time.increase(3600 * 24 * 40);
     await supervisor.processAllBlocks();
-    await balanceStore.update(accounts[1]);
-    await balanceStore.update(accounts[2]);
   });
 
   it('challenge root hash proposal', async () => {
@@ -169,12 +167,12 @@ contract('Production Supervisor [@group=10]', (accounts) => {
   });
 
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
-    await policyProposals.support(makerich.address, [], { from: accounts[1] });
+    await policyProposals.support(makerich.address, { from: accounts[1] });
 
-    await policyProposals.support(backdoor.address, [], { from: accounts[2] });
-    await policyProposals.support(makerich.address, [], { from: accounts[2] });
+    await policyProposals.support(backdoor.address, { from: accounts[2] });
+    await policyProposals.support(makerich.address, { from: accounts[2] });
 
-    await policyProposals.support(makerich.address, [], { from: accounts[0] });
+    await policyProposals.support(makerich.address, { from: accounts[0] });
   });
 
   it('Transitions from proposing to voting', async () => {
@@ -188,12 +186,10 @@ contract('Production Supervisor [@group=10]', (accounts) => {
   it('Allows all users to vote', async () => {
     await policyVotes.vote(
       true,
-      [],
       { from: accounts[1] },
     );
     await policyVotes.vote(
       true,
-      [],
       { from: accounts[2] },
     );
   });

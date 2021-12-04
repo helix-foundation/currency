@@ -3,7 +3,6 @@
 
 const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
-const EcoBalanceStore = artifacts.require('EcoBalanceStore');
 const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const ECOx = artifacts.require('ECOx');
 const ECOxLockup = artifacts.require('ECOxLockup');
@@ -33,7 +32,6 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const policyProposalsIdentifierHash = web3.utils.soliditySha3('PolicyProposals');
   const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
   const tokenHash = web3.utils.soliditySha3('ERC20Token');
-  const balanceStoreIdentifierHash = web3.utils.soliditySha3('BalanceStore');
   const ecoxHash = web3.utils.soliditySha3('ECOx');
   const ecoxLockupHash = web3.utils.soliditySha3('ECOxLockup');
   const trustedNodesHash = web3.utils.soliditySha3('TrustedNodes');
@@ -46,8 +44,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const proxy = await ForwardProxy.new(init.address);
 
   const rootHash = await RootHashProposal.new(proxy.address);
-  const balanceStore = await EcoBalanceStore.new(proxy.address, rootHash.address);
-  const token = await ERC20EcoToken.new(proxy.address);
+  const token = await ERC20EcoToken.new(proxy.address,rootHash.address);
   const ecox = await ECOx.new(proxy.address, totalECOx);
   const vdf = await VDFVerifier.new(proxy.address);
   const authedCleanup = await Cleanup.new();
@@ -81,7 +78,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     proxy.address,
     policyProposals.address,
     policySetter.address,
-    [balanceStoreIdentifierHash, ecoxHash, currencyTimerHash, ecoxLockupHash],
+    [tokenHash, currencyTimerHash, ecoxLockupHash],
   );
 
   await (await PolicyInit.at(proxy.address)).fusedInit(
@@ -95,7 +92,6 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     ],
     [
       tokenHash,
-      balanceStoreIdentifierHash,
       ecoxHash,
       timedPoliciesIdentifierHash,
       trustedNodesHash,
@@ -107,7 +103,6 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     ],
     [
       token.address,
-      balanceStore.address,
       ecox.address,
       timedPolicies.address,
       trustedNodes.address,
@@ -120,7 +115,6 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
     [tokenHash],
   );
 
-  await balanceStore.reAuthorize();
   await timedPolicies.incrementGeneration();
 
   const initInflation = {
@@ -131,7 +125,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
 
   return {
     policy: (await Policy.at(proxy.address)),
-    balanceStore,
+    balanceStore: token,
     token,
     initInflation,
     inflation,

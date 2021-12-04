@@ -72,7 +72,6 @@ const InflationRootHashProposal = req('InflationRootHashProposal');
 
 const ID_TIMEDPOLICIES = web3.utils.soliditySha3('TimedPolicies');
 const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
-const ID_BALANCESTORE = web3.utils.soliditySha3('BalanceStore');
 const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
 const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
 
@@ -169,7 +168,7 @@ class Supervisor {
   async getBalanceStore() {
     return new web3.eth.Contract(
       EcoBalanceStoreABI.abi,
-      await this.policy.methods.policyFor(ID_BALANCESTORE).call(),
+      await this.policy.methods.policyFor(ID_ERC20TOKEN).call(),
       {
         from: this.account,
       },

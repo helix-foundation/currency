@@ -21,10 +21,6 @@ contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
     bytes32 public constant ID_ERC20TOKEN =
         0xaea199e31a596269b42cdafd93407f14436db6e4cad65417994c2eb37381e05a;
 
-    // keccak256("ERC777Token")
-    bytes32 public constant ID_ERC777TOKEN =
-        0xac7fbab5f54a3ca8194167523c6753bfeb96a445279294b6125b68cce2177054;
-
     // keccak256("BalanceStore")
     bytes32 public constant ID_BALANCESTORE =
         0x10eb0fd2529484be37462efd7e95e7db98bdb78b6713e8e220ee2a5175707db6;

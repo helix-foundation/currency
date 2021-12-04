@@ -11,7 +11,7 @@ import "../governance/CurrencyTimer.sol";
 
 /** @title An ERC20 token interface to the Eco currency syste4m.
  */
-contract ERC20EcoToken is ERC20InflationaryVotes, PolicedUtils, TimeUtils {
+contract ERC20EcoToken is ERC20InflationaryVotes, TimeUtils {
     /* Event to be emitted when InflationRootHashProposalStarted contract spawned.
      */
     event InflationRootHashProposalStarted(
@@ -26,7 +26,7 @@ contract ERC20EcoToken is ERC20InflationaryVotes, PolicedUtils, TimeUtils {
 
     InflationRootHashProposal public inflationRootHashProposalImpl;
 
-    constructor(address _policy, InflationRootHashProposal _rootHashProposalImpl) ERC20InflationaryVotes("Eco", "ECO") PolicedUtils(_policy) {
+    constructor(address _policy, InflationRootHashProposal _rootHashProposalImpl) ERC20InflationaryVotes(_policy, "Eco", "ECO") {
         inflationRootHashProposalImpl = _rootHashProposalImpl;
     }
 
@@ -54,7 +54,7 @@ contract ERC20EcoToken is ERC20InflationaryVotes, PolicedUtils, TimeUtils {
     ) internal virtual override {
         // If to or from is a lockup early return so voting power and delegation remain
         CurrencyTimer _currencyTimer = CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
-        if (_currencyTimer.isLockup(from) || _currencyTimer.isLockup(to)) return;
+        if (address(_currencyTimer) != address(0) && (_currencyTimer.isLockup(from) || _currencyTimer.isLockup(to))) return;
         
         super._afterTokenTransfer(from, to, amount);
     }
@@ -88,7 +88,7 @@ contract ERC20EcoToken is ERC20InflationaryVotes, PolicedUtils, TimeUtils {
         rootHashAddressPerGeneration[_old] = InflationRootHashProposal(
             inflationRootHashProposalImpl.clone()
         );
-        rootHashAddressPerGeneration[_old].configure(_old);
+        rootHashAddressPerGeneration[_old].configure(block.number);
 
         emit InflationRootHashProposalStarted(
             address(rootHashAddressPerGeneration[_old]),
