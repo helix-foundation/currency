@@ -11,7 +11,7 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
 
   beforeEach(async () => {
     ({ policy } = await util.deployPolicy());
-    trustedNodes = await TrustedNodes.new(policy.address, [accountB]);
+    trustedNodes = await TrustedNodes.new(policy.address, [accountB], 1000);
   });
 
   describe('trust', () => {
@@ -169,6 +169,28 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
           preAddLength
             .sub(toBN(await trustedNodes.trustedNodesLength()))
             .eq(toBN(1)),
+        );
+      });
+    });
+  });
+
+  describe('redeemVoteRewards', () => {
+    context('checking revert on no reward to redeem', () => {
+      it('reverts', async () => {
+        await expectRevert(
+          trustedNodes.redeemVoteRewards({ from: accountB }),
+          'No rewards to redeem',
+        );
+      });
+    });
+  });
+
+  describe('recordVote', () => {
+    context('checking revert on non-authorized call', () => {
+      it('reverts', async () => {
+        await expectRevert(
+          trustedNodes.recordVote(accountB, { from: accountA }),
+          'Must be the monetary policy contract to call',
         );
       });
     });

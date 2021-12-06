@@ -9,7 +9,7 @@ contract('trace', ([accountA, accountB]) => {
 
   beforeEach(async () => {
     ({ policy } = await util.deployPolicy());
-    trustedNodes = await TrustedNodes.new(policy.address, [accountB]);
+    trustedNodes = await TrustedNodes.new(policy.address, [accountB], 1);
   });
 
   it('traces reverting transactions', async () => {
