@@ -7,6 +7,7 @@ import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "../governance/Lockup.sol";
 import "../governance/CurrencyTimer.sol";
+import "./ERC20.sol";
 
 /** @title ECOx
  * TODO: Update doc

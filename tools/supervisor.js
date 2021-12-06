@@ -158,13 +158,6 @@ class Supervisor {
     return [answer(tree, index), index, winner];
   }
 
-  async processBalanceStore() {
-    // eslint-disable-next-line no-unused-vars
-    const store = this.getBalanceStore();
-
-    return false;
-  }
-
   async getBalanceStore() {
     return new web3.eth.Contract(
       EcoBalanceStoreABI.abi,
@@ -257,8 +250,7 @@ class Supervisor {
       },
     );
     const token = await this.getERC20Token();
-    const balanceStore = await this.getBalanceStore();
-    const balance = await balanceStore.methods.balance(this.account).call();
+    const balance = await token.methods.balance(this.account).call();
     token.methods.approve(addressRootHashProposal, balance).send({ gas: 1000000 });
 
     await rootHashProposal.methods.proposeRootHash(
@@ -284,15 +276,16 @@ class Supervisor {
 
     if (await timedpolicies.methods.nextGenerationStart().call() < this.timeStamp) {
       logger.info('Increasing Balance generation');
-      const store = await this.getBalanceStore();
+      const token = await this.getERC20Token();
       const { tree, accounts, sums } = await this.constructTreeData();
       await timedpolicies.methods.incrementGeneration().send({ gas: 4000000 });
 
       // TODO: This violates one-transaction-per-pass, allowing third party to break supervisor
-      const addressRootHashProposal = (await store.getPastEvents('allEvents', {
+      const pastEvents = await token.getPastEvents('allEvents', {
         fromBlock: 'latest',
         toBlock: 'latest',
-      }))[0].returnValues.inflationRootHashProposalContract;
+      })
+      const addressRootHashProposal = pastEvents[0].returnValues.inflationRootHashProposalContract;
       if (addressRootHashProposal) {
         await this.proposeRootHash(tree, addressRootHashProposal);
         this.rootHashState[addressRootHashProposal] = {
@@ -755,8 +748,7 @@ class Supervisor {
       [this.account] = await web3.eth.getAccounts();
     }
 
-    const actionDone = await this.processBalanceStore()
-    || await this.processTimedPolicies()
+    const actionDone = await this.processTimedPolicies()
     || await this.processProposals()
     || await this.processRootHashProposals()
     || await this.processInflations();
