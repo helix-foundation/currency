@@ -337,8 +337,10 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
     beforeEach(async () => {
       // we need to get the addresses some voting power
       await ecox.approve(ecoxlockup.address, one.muln(10), { from: alice });
+      await ecoxlockup.deposit(one.muln(10), { from: alice });
 
       await ecox.approve(ecoxlockup.address, one.muln(100), { from: bob });
+      await ecoxlockup.deposit(one.muln(100), { from: bob });
 
       await time.increase(3600 * 24 * 14 + 1);
       await timedPolicies.incrementGeneration();
