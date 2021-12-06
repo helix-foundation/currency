@@ -145,8 +145,7 @@ async function deployStage1(options) {
 // the `EcoInitializable` at the 0th reserved address to redirect the address
 // to the new `PolicyInit` instance.
 //
-// Afterwards, we deploy the `EcoBalanceStore` and bind it to a slot, and then
-// depoly and bind the currency implementation contracts (`ERC20`, `ECOx`).
+// Afterwards, we deploy the currency implementation contracts (`ERC20`, `ECOx`).
 // The addresses of the currency implementation contracts are stored for the
 // next stage. We also deploy `InflationRootHashProposal` which is a contract for
 // submitting a Merkel hash of all balances, used in governance.
@@ -160,12 +159,12 @@ async function deployStage2(options) {
     .placeholders(0)
     .call({ from: options.account });
   const erc20ProxyAddress = await options.bootstrap.methods
-    .placeholders(3)
+    .placeholders(1)
     .call({
       from: options.account,
     });
   const ecoxProxyAddress = await options.bootstrap.methods
-    .placeholders(4)
+    .placeholders(2)
     .call({
       from: options.account,
     });
@@ -485,8 +484,8 @@ async function deployStage3(options) {
 
   // Deploy the voting policy contract
   console.log('deploying the timed actions contract...');
-  const ecoXIdentifierHash = web3.utils.soliditySha3(
-    'ECOx',
+  const tokenHash = web3.utils.soliditySha3(
+    'ERC20Token',
   );
   const timedPoliciesImpl = await new web3.eth.Contract(TimedPoliciesABI.abi)
     .deploy({
@@ -496,7 +495,7 @@ async function deployStage3(options) {
         options.policyProposalContract.options.address,
         options.simplePolicySetterContract.options.address,
         [
-          ecoXIdentifierHash,
+          tokenHash,
           currencyTimerHash,
           ecoXLockupIdentifierHash,
         ],
@@ -510,7 +509,7 @@ async function deployStage3(options) {
   // Update the proxy targets to the implementation contract addresses
   console.log('binding proxy 5 to the TimedPolicies implementation contract...');
   const timedPoliciesProxyAddress = await options.bootstrap.methods
-    .placeholders(5)
+    .placeholders(3)
     .call({
       from: options.account,
     });
