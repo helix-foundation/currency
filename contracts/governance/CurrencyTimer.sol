@@ -10,6 +10,7 @@ import "../utils/TimeUtils.sol";
 import "./ITimeNotifier.sol";
 import "./IGeneration.sol";
 import "./Lockup.sol";
+import "./Inflation.sol";
 import "./ILockups.sol";
 
 /** @title TimedPolicies

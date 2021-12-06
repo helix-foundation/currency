@@ -20,15 +20,22 @@ chai.use(bnChai(BN));
 contract('CurrencyGovernance [@group=4]', ([alice, bob, charlie, dave]) => {
   let policy;
   let borda;
+  let trustedNodes;
+  let faucet;
+  let ecox;
 
   beforeEach(async () => {
     ({
       policy,
+      trustedNodes,
+      faucet,
+      ecox,
     } = await util.deployPolicy({ trustees: [bob, charlie, dave] }));
 
     const originalBorda = await CurrencyGovernance.new(policy.address);
-    const cloner = await Cloner.new(originalBorda.address);
-    borda = await CurrencyGovernance.at(await cloner.clone());
+    const bordaCloner = await Cloner.new(originalBorda.address);
+    borda = await CurrencyGovernance.at(await bordaCloner.clone());
+    await policy.testDirectSet('CurrencyGovernance', borda.address);
   });
 
   describe('Propose phase', () => {
@@ -130,7 +137,7 @@ contract('CurrencyGovernance [@group=4]', ([alice, bob, charlie, dave]) => {
     describe('With valid commits', async () => {
       const bobvote = [web3.utils.randomHex(32), bob, [bob, charlie, dave]];
       const charlievote = [web3.utils.randomHex(32), charlie, [charlie]];
-      const davevote = [web3.utils.randomHex(32), dave, [dave, charlie, bob]];
+      const davevote = [web3.utils.randomHex(32), dave, [dave, bob, charlie]];
 
       beforeEach(async () => {
         await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
@@ -167,10 +174,10 @@ contract('CurrencyGovernance [@group=4]', ([alice, bob, charlie, dave]) => {
         await borda.reveal(bobvote[0], bobvote[2], { from: bob });
         await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
         await borda.reveal(davevote[0], davevote[2], { from: dave });
-        expect(await borda.score(bob)).to.eq.BN(4);
-        expect(await borda.score(charlie)).to.eq.BN(5);
+        expect(await borda.score(bob)).to.eq.BN(5);
+        expect(await borda.score(charlie)).to.eq.BN(4);
         expect(await borda.score(dave)).to.eq.BN(4);
-        expect(await borda.leader()).to.equal(charlie);
+        expect(await borda.leader()).to.equal(bob);
       });
 
       it('Computing defaults if no one reveals', async () => {
@@ -191,14 +198,29 @@ contract('CurrencyGovernance [@group=4]', ([alice, bob, charlie, dave]) => {
       describe('Compute Phase', async () => {
         beforeEach(async () => {
           await borda.reveal(bobvote[0], bobvote[2], { from: bob });
-          await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
+          // await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
           await borda.reveal(davevote[0], davevote[2], { from: dave });
         });
         it('Picks a winner', async () => {
           await time.increase(3600 * 24 * 1);
           await borda.updateStage();
           await borda.compute();
-          expect(await borda.winner()).to.equal(charlie);
+          expect(await borda.winner()).to.equal(bob);
+        });
+
+        it('Successfully records the vote of the trustees', async () => {
+          // bob and dave do reveal
+          expect(await trustedNodes.votingRecord(bob)).to.eq.BN(new BN(1));
+          expect(await trustedNodes.votingRecord(dave)).to.eq.BN(new BN(1));
+
+          // charlie didn't reveal
+          expect(await trustedNodes.votingRecord(charlie)).to.eq.BN(new BN(0));
+        });
+
+        it('Can pay out trustee vote rewards', async () => {
+          await faucet.mintx(trustedNodes.address, 3000);
+          await trustedNodes.redeemVoteRewards({ from: dave });
+          expect(await ecox.balanceOf(dave)).to.eq.BN(new BN(1000));
         });
       });
     });

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../policy/PolicedUtils.sol";
 import "../currency/EcoBalanceStore.sol";
 import "../utils/TimeUtils.sol";
+import "./IGeneration.sol";
 
 /** @title Lockup
  * This provides deposit certificate functionality for the purpose of countering

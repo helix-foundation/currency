@@ -54,7 +54,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const unauthedCleanup = await Cleanup.new();
 
   const inflation = await Inflation.new(proxy.address, vdf.address, 2);
-  const trustedNodes = await TrustedNodes.new(proxy.address, trustees);
+  const trustedNodes = await TrustedNodes.new(proxy.address, trustees, 1000);
   const faucet = await FreeFaucet.new(proxy.address);
   const borda = await CurrencyGovernance.new(proxy.address);
   const lockup = await Lockup.new(proxy.address);
