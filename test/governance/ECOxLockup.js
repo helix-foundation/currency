@@ -10,7 +10,6 @@ const Cloner = artifacts.require('Cloner');
 const { expect } = chai;
 const {
   expectRevert,
-  expectEvent,
   time,
 } = require('@openzeppelin/test-helpers');
 
@@ -22,16 +21,11 @@ chai.use(bnChai(BN));
 contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
   let policy;
   let token;
-  let balanceStore;
   let faucet;
   let timedPolicies;
-  let result;
   let proposals;
   let testProposal;
   let votes;
-  let initialBlockNumber;
-  let intermediateBlockNumber;
-  let blockNumber;
   let ecox;
   let ecoxlockup;
   let one;
@@ -40,7 +34,6 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
     one = toBN(10).pow(toBN(18));
     ({
       policy,
-      balanceStore,
       token,
       faucet,
       timedPolicies,
@@ -58,16 +51,14 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
 
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
-    
-    blockNumber = await time.latestBlock();
-    generation = await balanceStore.currentGeneration();
 
     await time.advanceBlock();
   });
 
   // context('deposit', () => {
   //   it('cannot deposit without allowance', async () => {
-  //     await expectRevert(ecoxlockup.deposit(one.muln(400), { from: alice }), 'ERC20: transfer amount exceeds allowance.');
+  //     await expectRevert(ecoxlockup.deposit(one.muln(400), { from: alice }),
+  //     'ERC20: transfer amount exceeds allowance.');
   //     expect(await ecoxlockup.balance(alice)).to.eq.BN(0);
   //   });
 
@@ -91,13 +82,15 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
   //     });
 
   //     it('the deposit emitted the correct event', async () => {
-  //       await expectEvent.inTransaction(result.tx, ecoxlockup.constructor, 'Deposit', { source: alice, amount: one.muln(400).toString() });
+  //       await expectEvent.inTransaction(result.tx, ecoxlockup.constructor, 'Deposit',
+  //       { source: alice, amount: one.muln(400).toString() });
   //     });
   //   });
 
   //   it('cannot deposit more than balance', async () => {
   //     await ecox.approve(ecoxlockup.address, one.muln(400), { from: charlie });
-  //     await expectRevert(ecoxlockup.deposit(one.muln(400), { from: charlie }), 'ERC20: transfer amount exceeds balance.');
+  //     await expectRevert(ecoxlockup.deposit(one.muln(400), { from: charlie }),
+  //     'ERC20: transfer amount exceeds balance.');
   //   });
 
   //   it('depositing after multiple blocks of inactivity updates correctly', async () => {
@@ -224,7 +217,8 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
 
   //       context('intermediateBlockNumber', () => {
   //         it('alice has the right balance at intermediateBlockNumber', async () => {
-  //           expect(await ecoxlockup.balanceAt(alice, intermediateBlockNumber)).to.eq.BN(one.muln(202));
+  //           expect(await ecoxlockup.balanceAt(alice, intermediateBlockNumber))
+  //             .to.eq.BN(one.muln(202));
   //         });
 
   //         it('bob has the right balance at intermediateBlockNumber', async () => {
@@ -260,7 +254,8 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
   //         });
 
   //         it('the lockup  has the right balance at blockNumber-1', async () => {
-  //           expect(await ecoxlockup.totalSupplyAt(intermediateBlockNumber)).to.eq.BN(one.muln(202));
+  //           expect(await ecoxlockup.totalSupplyAt(intermediateBlockNumber)).
+  //             to.eq.BN(one.muln(202));
   //         });
 
   //         it('the lockup has the right total balance before deposits', async () => {
@@ -274,7 +269,8 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
   // context('withdraw', () => {
   //   context('without balance', () => {
   //     it('cannot withdraw', async () => {
-  //       await expectRevert(ecoxlockup.withdraw(one.muln(101), { from: alice }), 'ERC20: burn amount exceeds balance.');
+  //       await expectRevert(ecoxlockup.withdraw(one.muln(101), { from: alice }),
+  //       'ERC20: burn amount exceeds balance.');
   //     });
   //   });
 
@@ -291,7 +287,8 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
   //     });
 
   //     it('cannot withdraw more than balance', async () => {
-  //       await expectRevert(ecoxlockup.withdraw(one.muln(301), { from: alice }), 'ERC20: burn amount exceeds balance.');
+  //       await expectRevert(ecoxlockup.withdraw(one.muln(301), { from: alice }),
+  //       'ERC20: burn amount exceeds balance.');
   //       expect(await ecox.balanceOf(alice)).to.eq.BN(one.muln(100));
   //       expect(await ecoxlockup.balance(alice)).to.eq.BN(one.muln(300));
   //     });
@@ -308,7 +305,8 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
 
   //     it('the withdrawal emitted the correct event', async () => {
   //       result = await ecoxlockup.withdraw(one.muln(101), { from: alice });
-  //       await expectEvent.inTransaction(result.tx, ecoxlockup.constructor, 'Withdrawal', { destination: alice, amount: one.muln(101).toString() });
+  //       await expectEvent.inTransaction(result.tx, ecoxlockup.constructor,
+  //       'Withdrawal', { destination: alice, amount: one.muln(101).toString() });
   //     });
   //   });
   // });
@@ -339,16 +337,13 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
     beforeEach(async () => {
       // we need to get the addresses some voting power
       await ecox.approve(ecoxlockup.address, one.muln(10), { from: alice });
-      result = await ecoxlockup.deposit(one.muln(10), { from: alice });
 
       await ecox.approve(ecoxlockup.address, one.muln(100), { from: bob });
-      result = await ecoxlockup.deposit(one.muln(100), { from: bob });
 
       await time.increase(3600 * 24 * 14 + 1);
       await timedPolicies.incrementGeneration();
       await time.increase(3600 * 24 * 14 + 1);
       await timedPolicies.incrementGeneration();
-      generation = await balanceStore.currentGeneration();
 
       proposals = await makeProposals();
 
@@ -378,7 +373,6 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
 
       it('alice can still deposit', async () => {
         await ecox.approve(ecoxlockup.address, one.muln(10), { from: alice });
-        result = await ecoxlockup.deposit(one.muln(10), { from: alice });
       });
     });
 

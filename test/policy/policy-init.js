@@ -2,7 +2,6 @@ const ForwardProxy = artifacts.require('ForwardProxy');
 const TestPolicy = artifacts.require('PolicyTestPolicy');
 const PolicyInit = artifacts.require('PolicyInit');
 const PolicyForAll = artifacts.require('PolicyForAll');
-const DummyInflation = artifacts.require('DummyInflation');
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
 

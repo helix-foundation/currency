@@ -6,9 +6,20 @@ import "./InflationRootHashProposal.sol";
 
 interface EcoBalanceStore {
     function mint(address, uint256) external;
-    function inflationRootHashProposalImpl() external view returns (InflationRootHashProposal);
-    function rootHashAddressPerGeneration(uint256) external view returns (InflationRootHashProposal);
+
+    function inflationRootHashProposalImpl()
+        external
+        view
+        returns (InflationRootHashProposal);
+
+    function rootHashAddressPerGeneration(uint256)
+        external
+        view
+        returns (InflationRootHashProposal);
+
     function currentGeneration() external view returns (uint256);
+
     function balanceAt(address, uint256) external view returns (uint256);
+
     function totalSupplyAt(uint256) external view returns (uint256);
 }

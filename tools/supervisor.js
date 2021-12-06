@@ -284,7 +284,7 @@ class Supervisor {
       const pastEvents = await token.getPastEvents('allEvents', {
         fromBlock: 'latest',
         toBlock: 'latest',
-      })
+      });
       const addressRootHashProposal = pastEvents[0].returnValues.inflationRootHashProposalContract;
       if (addressRootHashProposal) {
         await this.proposeRootHash(tree, addressRootHashProposal);

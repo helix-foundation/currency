@@ -11,14 +11,12 @@ const {
 
 const ForwardProxy = artifacts.require('ForwardProxy');
 const EcoBalanceStore = artifacts.require('ERC20EcoToken');
-const Token = artifacts.require('Token');
 // const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
 const MAX_ACCOUNT_BALANCE = new BN(
   '115792089237316195423570985008687907853269984665640564039457', // 584007913129639935', removed as we use 18 digits to store inflation
 );
 const {
-  expectEvent,
   expectRevert,
   time,
 } = require('@openzeppelin/test-helpers');
@@ -33,18 +31,14 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
   const accounts = Array.from(unsortedAccounts);
   accounts.sort((a, b) => Number(a - b));
   let timedPolicies;
-  const [creator] = accounts;
 
   beforeEach('global setup', async () => {
     ({
-      policy,
       // token,
       timedPolicies,
       balanceStore,
       // currencyTimer,
       faucet,
-      authedCleanup,
-      unauthedCleanup,
     } = await util.deployPolicy());
 
     // borda = await CurrencyGovernance.at(
@@ -266,12 +260,10 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
       context('after even longer', () => {
         let intermediateBlockNumber;
-        let intermediateGeneration;
         let intermediateBalance;
 
         beforeEach(async () => {
           intermediateBlockNumber = await time.latestBlock();
-          intermediateGeneration = await balanceStore.currentGeneration();
           intermediateBalance = await balanceStore.balance(testAccount);
 
           // 12 months pass...
@@ -297,11 +289,11 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
     context('after 3 checkpoints', () => {
       const [, testAccount1, testAccount2] = accounts;
 
-      let testAccount1Balances = [0, 1000, 2000, 3000];
-      let testAccount2Balances = [0, 1000, 1000, 2000];
+      const testAccount1Balances = [0, 1000, 2000, 3000];
+      const testAccount2Balances = [0, 1000, 1000, 2000];
 
       it(
-        `Accounts have correct balances for the appropriate checkpoints`,
+        'Accounts have correct balances for the appropriate checkpoints',
         async () => {
           const checkPoints = [await time.latestBlock()];
 
@@ -318,17 +310,17 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
           for (let i = 0; i < 3; i += 1) {
             const account1Balance = await balanceStore.balanceAt(
               testAccount1,
-              checkPoints[i]
+              checkPoints[i],
             );
             expect(account1Balance).to.eq.BN(testAccount1Balances[i]);
 
             const account2Balance = await balanceStore.balanceAt(
               testAccount2,
-              checkPoints[i]
+              checkPoints[i],
             );
             expect(account2Balance).to.eq.BN(testAccount2Balances[i]);
           }
-        }
+        },
       );
     });
   });

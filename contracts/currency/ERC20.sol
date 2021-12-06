@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.9;
 
-
 /**
  * @dev Implementation of the {IERC20} interface.
  *
@@ -50,7 +49,11 @@ contract ERC20 {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 
     /**
      * @dev Sets the values for {name} and {symbol}.
@@ -120,7 +123,11 @@ contract ERC20 {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual returns (bool) {
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        returns (bool)
+    {
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -128,7 +135,12 @@ contract ERC20 {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
         return _allowances[owner][spender];
     }
 
@@ -139,7 +151,11 @@ contract ERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) public virtual returns (bool) {
+    function approve(address spender, uint256 amount)
+        public
+        virtual
+        returns (bool)
+    {
         _approve(msg.sender, spender, amount);
         return true;
     }
@@ -165,7 +181,10 @@ contract ERC20 {
         _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = _allowances[sender][msg.sender];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        require(
+            currentAllowance >= amount,
+            "ERC20: transfer amount exceeds allowance"
+        );
         unchecked {
             _approve(sender, msg.sender, currentAllowance - amount);
         }
@@ -185,8 +204,16 @@ contract ERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
+        virtual
+        returns (bool)
+    {
+        _approve(
+            msg.sender,
+            spender,
+            _allowances[msg.sender][spender] + addedValue
+        );
         return true;
     }
 
@@ -204,9 +231,16 @@ contract ERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        virtual
+        returns (bool)
+    {
         uint256 currentAllowance = _allowances[msg.sender][spender];
-        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        require(
+            currentAllowance >= subtractedValue,
+            "ERC20: decreased allowance below zero"
+        );
         unchecked {
             _approve(msg.sender, spender, currentAllowance - subtractedValue);
         }
@@ -236,10 +270,17 @@ contract ERC20 {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        uint256 amount = _beforeTokenTransfer(sender, recipient, originalAmount);
+        uint256 amount = _beforeTokenTransfer(
+            sender,
+            recipient,
+            originalAmount
+        );
 
         uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        require(
+            senderBalance >= amount,
+            "ERC20: transfer amount exceeds balance"
+        );
         unchecked {
             _balances[sender] = senderBalance - amount;
         }
@@ -259,10 +300,18 @@ contract ERC20 {
      *
      * - `account` cannot be the zero address.
      */
-    function _mint(address account, uint256 originalAmount) internal virtual returns (uint256) {
+    function _mint(address account, uint256 originalAmount)
+        internal
+        virtual
+        returns (uint256)
+    {
         require(account != address(0), "ERC20: mint to the zero address");
 
-        uint256 amount = _beforeTokenTransfer(address(0), account, originalAmount);
+        uint256 amount = _beforeTokenTransfer(
+            address(0),
+            account,
+            originalAmount
+        );
 
         _totalSupply += amount;
         _balances[account] += amount;
@@ -284,10 +333,18 @@ contract ERC20 {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 originalAmount) internal virtual returns (uint256) {
+    function _burn(address account, uint256 originalAmount)
+        internal
+        virtual
+        returns (uint256)
+    {
         require(account != address(0), "ERC20: burn from the zero address");
 
-        uint256 amount = _beforeTokenTransfer(account, address(0), originalAmount);
+        uint256 amount = _beforeTokenTransfer(
+            account,
+            address(0),
+            originalAmount
+        );
 
         uint256 accountBalance = _balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");

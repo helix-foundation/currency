@@ -44,7 +44,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
   const proxy = await ForwardProxy.new(init.address);
 
   const rootHash = await RootHashProposal.new(proxy.address);
-  const token = await ERC20EcoToken.new(proxy.address,rootHash.address);
+  const token = await ERC20EcoToken.new(proxy.address, rootHash.address);
   const ecox = await ECOx.new(proxy.address, totalECOx);
   const vdf = await VDFVerifier.new(proxy.address);
   const authedCleanup = await Cleanup.new();

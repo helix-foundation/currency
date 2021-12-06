@@ -27,7 +27,8 @@ abstract contract ERC20Votes is ERC20 {
         uint224 value;
     }
 
-    bytes32 private constant _DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
+    bytes32 private constant _DELEGATION_TYPEHASH =
+        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
     mapping(address => Checkpoint[]) private _checkpoints;
@@ -36,14 +37,24 @@ abstract contract ERC20Votes is ERC20 {
     /**
      * @dev Emitted when an account changes their delegate.
      */
-    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+    event DelegateChanged(
+        address indexed delegator,
+        address indexed fromDelegate,
+        address indexed toDelegate
+    );
 
     /**
      * @dev Emitted when a token transfer or delegate change results in changes to an account's voting power.
      */
-    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
+    event DelegateVotesChanged(
+        address indexed delegate,
+        uint256 previousBalance,
+        uint256 newBalance
+    );
 
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+    constructor(string memory _name, string memory _symbol)
+        ERC20(_name, _symbol)
+    {}
 
     function totalSupply() public view override returns (uint256) {
         return tokenSupply();
@@ -55,19 +66,24 @@ abstract contract ERC20Votes is ERC20 {
 
     /** Access function to determine the token balance held by some address.
      */
-    function balance(address _owner) public virtual view returns (uint256) {
+    function balance(address _owner) public view virtual returns (uint256) {
         return _balances[_owner];
     }
 
     /** Returns the total (inflation corrected) token supply
      */
-    function tokenSupply() public virtual view returns (uint256) {
+    function tokenSupply() public view virtual returns (uint256) {
         return _totalSupply;
     }
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */
-    function totalSupplyAt(uint256 _blockNumber) public virtual view returns (uint256) {
+    function totalSupplyAt(uint256 _blockNumber)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
         return getPastTotalSupply(_blockNumber);
     }
 
@@ -84,24 +100,34 @@ abstract contract ERC20Votes is ERC20 {
      */
     function balanceAt(address _owner, uint256 _blockNumber)
         public
-        virtual
         view
+        virtual
         returns (uint256)
     {
-        return  getPastVotes(_owner, _blockNumber);
+        return getPastVotes(_owner, _blockNumber);
     }
 
     /**
      * @dev Get the `pos`-th checkpoint for `account`.
      */
-    function checkpoints(address account, uint32 pos) public view virtual returns (Checkpoint memory) {
+    function checkpoints(address account, uint32 pos)
+        public
+        view
+        virtual
+        returns (Checkpoint memory)
+    {
         return _checkpoints[account][pos];
     }
 
     /**
      * @dev Get number of checkpoints for `account`.
      */
-    function numCheckpoints(address account) public view virtual returns (uint32) {
+    function numCheckpoints(address account)
+        public
+        view
+        virtual
+        returns (uint32)
+    {
         // Casting error not feasible here
         return uint32(_checkpoints[account].length);
     }
@@ -129,7 +155,11 @@ abstract contract ERC20Votes is ERC20 {
      *
      * - `blockNumber` must have been already mined
      */
-    function getPastVotes(address account, uint256 blockNumber) public view returns (uint256) {
+    function getPastVotes(address account, uint256 blockNumber)
+        public
+        view
+        returns (uint256)
+    {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_checkpoints[account], blockNumber);
     }
@@ -142,7 +172,11 @@ abstract contract ERC20Votes is ERC20 {
      *
      * - `blockNumber` must have been already mined
      */
-    function getPastTotalSupply(uint256 blockNumber) public view returns (uint256) {
+    function getPastTotalSupply(uint256 blockNumber)
+        public
+        view
+        returns (uint256)
+    {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
@@ -151,7 +185,11 @@ abstract contract ERC20Votes is ERC20 {
     /**
      * @dev Lookup a value in a list of (sorted) checkpoints.
      */
-    function _checkpointsLookup(Checkpoint[] storage ckpts, uint256 blockNumber) internal view returns (uint256) {
+    function _checkpointsLookup(Checkpoint[] storage ckpts, uint256 blockNumber)
+        internal
+        view
+        returns (uint256)
+    {
         // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
         //
         // During the loop, the index of the wanted checkpoint remains in the range [low-1, high).
@@ -166,7 +204,8 @@ abstract contract ERC20Votes is ERC20 {
 
         // Early exit if this is a request for the most recent value or we have no checkpoints
         if (ckpts.length == 0) return 0;
-        if (blockNumber > ckpts[ckpts.length - 1].fromBlock) return ckpts[ckpts.length - 1].value;
+        if (blockNumber > ckpts[ckpts.length - 1].fromBlock)
+            return ckpts[ckpts.length - 1].value;
 
         uint256 high = ckpts.length;
         uint256 low = 0;
@@ -199,9 +238,17 @@ abstract contract ERC20Votes is ERC20 {
     /**
      * @dev Snapshots the totalSupply after it has been increased.
      */
-    function _mint(address account, uint256 amount) internal virtual override returns (uint256) {
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         amount = super._mint(account, amount);
-        require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
+        require(
+            totalSupply() <= _maxSupply(),
+            "ERC20Votes: total supply risks overflowing votes"
+        );
 
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
         return amount;
@@ -210,7 +257,12 @@ abstract contract ERC20Votes is ERC20 {
     /**
      * @dev Snapshots the totalSupply after it has been decreased.
      */
-    function _burn(address account, uint256 amount) internal virtual override returns (uint256)  {
+    function _burn(address account, uint256 amount)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         amount = super._burn(account, amount);
 
         _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
@@ -252,12 +304,20 @@ abstract contract ERC20Votes is ERC20 {
     ) private {
         if (src != dst && amount > 0) {
             if (src != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_checkpoints[src], _subtract, amount);
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(
+                    _checkpoints[src],
+                    _subtract,
+                    amount
+                );
                 emit DelegateVotesChanged(src, oldWeight, newWeight);
             }
 
             if (dst != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_checkpoints[dst], _add, amount);
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(
+                    _checkpoints[dst],
+                    _add,
+                    amount
+                );
                 emit DelegateVotesChanged(dst, oldWeight, newWeight);
             }
         }
@@ -272,13 +332,24 @@ abstract contract ERC20Votes is ERC20 {
         oldWeight = pos == 0 ? 0 : ckpts[pos - 1].value;
         newWeight = op(oldWeight, delta);
 
-        require(newWeight <= type(uint224).max, "newWeight cannot be casted safely");
-        require(block.number <= type(uint32).max, "block number cannot be casted safely");
+        require(
+            newWeight <= type(uint224).max,
+            "newWeight cannot be casted safely"
+        );
+        require(
+            block.number <= type(uint32).max,
+            "block number cannot be casted safely"
+        );
 
         if (pos > 0 && ckpts[pos - 1].fromBlock == block.number) {
             ckpts[pos - 1].value = uint224(newWeight);
         } else {
-            ckpts.push(Checkpoint({fromBlock: uint32(block.number), value: uint224(newWeight)}));
+            ckpts.push(
+                Checkpoint({
+                    fromBlock: uint32(block.number),
+                    value: uint224(newWeight)
+                })
+            );
         }
     }
 

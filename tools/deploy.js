@@ -33,7 +33,6 @@ const PolicyProposalContractABI = require('../build/contracts/PolicyProposals.js
 const PolicyVotesContractABI = require('../build/contracts/PolicyVotes.json');
 const ECOxLockupContractABI = require('../build/contracts/ECOxLockup.json');
 const SimplePolicySetterABI = require('../build/contracts/SimplePolicySetter.json');
-const EcoBalanceStoreABI = require('../build/contracts/EcoBalanceStore.json');
 const ERC20EcoTokenABI = require('../build/contracts/ERC20EcoToken.json');
 const ERC20TokenABI = require('../build/contracts/IERC20.json');
 const EcoFaucetABI = require('../build/contracts/EcoFaucet.json');
@@ -160,11 +159,6 @@ async function deployStage2(options) {
   const policyProxyAddress = await options.bootstrap.methods
     .placeholders(0)
     .call({ from: options.account });
-  const balanceStoreProxyAddress = await options.bootstrap.methods
-    .placeholders(1)
-    .call({
-      from: options.account,
-    });
   const erc20ProxyAddress = await options.bootstrap.methods
     .placeholders(3)
     .call({

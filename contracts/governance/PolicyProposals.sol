@@ -203,13 +203,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The proposal to support.
      */
-    function support(address _prop)
-        external
-    {
-        uint256 _amount = votingPower(
-            msg.sender,
-            blockNumber
-        );
+    function support(address _prop) external {
+        uint256 _amount = votingPower(msg.sender, blockNumber);
         uint256 _total = totalVotingPower(blockNumber);
 
         Props storage _p = proposals[address(_prop)];

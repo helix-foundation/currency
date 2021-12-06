@@ -14,7 +14,11 @@ import "./ECOxLockup.sol";
 contract VotingPower is PolicedUtils {
     constructor(address _policy) PolicedUtils(_policy) {}
 
-    function totalVotingPower(uint256 _blockNumber) public view returns (uint256) {
+    function totalVotingPower(uint256 _blockNumber)
+        public
+        view
+        returns (uint256)
+    {
         uint256 total = getStore().totalSupplyAt(_blockNumber);
 
         uint256 totalx = getXLockup().totalVotingECOx(_blockNumber);
@@ -25,10 +29,11 @@ contract VotingPower is PolicedUtils {
         return total;
     }
 
-    function votingPower(
-        address _who,
-        uint256 _blockNumber
-    ) public view returns (uint256) {
+    function votingPower(address _who, uint256 _blockNumber)
+        public
+        view
+        returns (uint256)
+    {
         uint256 _power = getStore().balanceAt(_who, _blockNumber);
 
         uint256 _x = getXLockup().votingECOx(_who, _blockNumber);

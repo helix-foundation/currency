@@ -81,10 +81,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "Votes can only be recorded during the voting period"
         );
 
-        uint256 _amount = votingPower(
-            msg.sender,
-            blockNumber
-        );
+        uint256 _amount = votingPower(msg.sender, blockNumber);
 
         require(
             _amount > 0,

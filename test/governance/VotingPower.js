@@ -16,7 +16,6 @@ chai.use(bnChai(BN));
 contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
   let policy;
   // let token;
-  let balanceStore;
   let faucet;
   let timedPolicies;
   let proposals;
@@ -31,7 +30,6 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
     one = toBN(10).pow(toBN(18));
     ({
       policy,
-      balanceStore,
       // token,
       faucet,
       timedPolicies,

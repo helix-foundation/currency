@@ -7,7 +7,6 @@ import "../currency/ECOx.sol";
 import "../policy/PolicedUtils.sol";
 import "../governance/IGeneration.sol";
 
-
 /** @title ECOxLockup
  *
  */
@@ -32,7 +31,10 @@ contract ECOxLockup is ERC20Votes, PolicedUtils {
 
     uint256 public currentGeneration;
 
-    constructor(address _policy) ERC20Votes("S-Eco-X", "sECOx") PolicedUtils(_policy) {}
+    constructor(address _policy)
+        ERC20Votes("S-Eco-X", "sECOx")
+        PolicedUtils(_policy)
+    {}
 
     function deposit(uint256 _amount) external {
         address _source = msg.sender;
@@ -70,7 +72,11 @@ contract ECOxLockup is ERC20Votes, PolicedUtils {
         return getPastVotes(_voter, _blockNumber);
     }
 
-    function totalVotingECOx(uint256 _blockNumber) external view returns (uint256) {
+    function totalVotingECOx(uint256 _blockNumber)
+        external
+        view
+        returns (uint256)
+    {
         return getPastTotalSupply(_blockNumber);
     }
 

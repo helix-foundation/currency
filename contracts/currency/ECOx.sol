@@ -52,7 +52,8 @@ contract ECOx is ERC20, PolicedUtils {
         view
         returns (uint256)
     {
-        uint256 _ecoSupplyAt = EcoBalanceStore(address(getToken())).totalSupplyAt(_blockNumber);
+        uint256 _ecoSupplyAt = EcoBalanceStore(address(getToken()))
+            .totalSupplyAt(_blockNumber);
 
         return computeValue(_ecoXValue, _ecoSupplyAt);
     }

@@ -22,17 +22,22 @@ contract ERC20EcoToken is ERC20InflationaryVotes, TimeUtils {
     /* Current generation of the balance store. */
     uint256 public currentGeneration;
 
-    mapping(uint256 => InflationRootHashProposal) public rootHashAddressPerGeneration;
+    mapping(uint256 => InflationRootHashProposal)
+        public rootHashAddressPerGeneration;
 
     InflationRootHashProposal public inflationRootHashProposalImpl;
 
-    constructor(address _policy, InflationRootHashProposal _rootHashProposalImpl) ERC20InflationaryVotes(_policy, "Eco", "ECO") {
+    constructor(
+        address _policy,
+        InflationRootHashProposal _rootHashProposalImpl
+    ) ERC20InflationaryVotes(_policy, "Eco", "ECO") {
         inflationRootHashProposalImpl = _rootHashProposalImpl;
     }
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        inflationRootHashProposalImpl = EcoBalanceStore(_self).inflationRootHashProposalImpl();
+        inflationRootHashProposalImpl = EcoBalanceStore(_self)
+            .inflationRootHashProposalImpl();
     }
 
     function mint(address _to, uint256 _value) external {
@@ -53,9 +58,14 @@ contract ERC20EcoToken is ERC20InflationaryVotes, TimeUtils {
         uint256 amount
     ) internal virtual override {
         // If to or from is a lockup early return so voting power and delegation remain
-        CurrencyTimer _currencyTimer = CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
-        if (address(_currencyTimer) != address(0) && (_currencyTimer.isLockup(from) || _currencyTimer.isLockup(to))) return;
-        
+        CurrencyTimer _currencyTimer = CurrencyTimer(
+            policyFor(ID_CURRENCY_TIMER)
+        );
+        if (
+            address(_currencyTimer) != address(0) &&
+            (_currencyTimer.isLockup(from) || _currencyTimer.isLockup(to))
+        ) return;
+
         super._afterTokenTransfer(from, to, amount);
     }
 
@@ -78,10 +88,14 @@ contract ERC20EcoToken is ERC20InflationaryVotes, TimeUtils {
                 (, , , , , _inflationMultiplier) = bg.proposals(winner);
 
                 // updates the inflation value
-                uint256 _newInflationMultiplier = _linearInflationCheckpoints[_linearInflationCheckpoints.length - 1].value *
-                    _inflationMultiplier /
-                    INITIAL_INFLATION_MULTIPLIER;
-                _writeCheckpoint(_linearInflationCheckpoints, _replace, _newInflationMultiplier);
+                uint256 _newInflationMultiplier = (_linearInflationCheckpoints[
+                    _linearInflationCheckpoints.length - 1
+                ].value * _inflationMultiplier) / INITIAL_INFLATION_MULTIPLIER;
+                _writeCheckpoint(
+                    _linearInflationCheckpoints,
+                    _replace,
+                    _newInflationMultiplier
+                );
             }
         }
 

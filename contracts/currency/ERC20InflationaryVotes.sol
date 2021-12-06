@@ -16,7 +16,8 @@ abstract contract ERC20InflationaryVotes is
     PolicedUtils,
     ITimeNotifier
 {
-    uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1_000_000_000_000_000_000;
+    uint256 public constant INITIAL_INFLATION_MULTIPLIER =
+        1_000_000_000_000_000_000;
 
     Checkpoint[] internal _linearInflationCheckpoints;
 
@@ -27,15 +28,32 @@ abstract contract ERC20InflationaryVotes is
      * contracts cache. These calls are separated to allow the authorized
      * contracts to be configured/deployed after the balance store contract.
      */
-    constructor(address _policy, string memory _name, string memory _symbol) ERC20Votes(_name, _symbol) PolicedUtils(_policy) {
-        _writeCheckpoint(_linearInflationCheckpoints, _replace, INITIAL_INFLATION_MULTIPLIER);
+    constructor(
+        address _policy,
+        string memory _name,
+        string memory _symbol
+    ) ERC20Votes(_name, _symbol) PolicedUtils(_policy) {
+        _writeCheckpoint(
+            _linearInflationCheckpoints,
+            _replace,
+            INITIAL_INFLATION_MULTIPLIER
+        );
     }
 
-    function initialize(address _self) public virtual override onlyConstruction {
+    function initialize(address _self)
+        public
+        virtual
+        override
+        onlyConstruction
+    {
         super.initialize(_self);
         _name = IERC20Metadata(_self).name();
         _symbol = IERC20Metadata(_self).symbol();
-        _writeCheckpoint(_linearInflationCheckpoints, _replace, INITIAL_INFLATION_MULTIPLIER);
+        _writeCheckpoint(
+            _linearInflationCheckpoints,
+            _replace,
+            INITIAL_INFLATION_MULTIPLIER
+        );
     }
 
     function _beforeTokenTransfer(
@@ -43,31 +61,51 @@ abstract contract ERC20InflationaryVotes is
         address,
         uint256 amount
     ) internal virtual override returns (uint256) {
-        return amount * _checkpointsLookup(_linearInflationCheckpoints, block.number);
+        return
+            amount *
+            _checkpointsLookup(_linearInflationCheckpoints, block.number);
     }
 
-    function getPastLinearInflation(uint256 blockNumber) public view returns (uint256) {
-        require(blockNumber < block.number, "ERC20InflationaryVotes: block not yet mined");
+    function getPastLinearInflation(uint256 blockNumber)
+        public
+        view
+        returns (uint256)
+    {
+        require(
+            blockNumber < block.number,
+            "ERC20InflationaryVotes: block not yet mined"
+        );
         return _checkpointsLookup(_linearInflationCheckpoints, blockNumber);
     }
 
     /** Access function to determine the token balance held by some address.
      */
-    function balance(address _owner) public override view returns (uint256) {
-        uint256 _linearInflation = _checkpointsLookup(_linearInflationCheckpoints, block.number);
+    function balance(address _owner) public view override returns (uint256) {
+        uint256 _linearInflation = _checkpointsLookup(
+            _linearInflationCheckpoints,
+            block.number
+        );
         return _balances[_owner] / _linearInflation;
     }
 
     /** Returns the total (inflation corrected) token supply
      */
-    function tokenSupply() public override view returns (uint256) {
-        uint256 _linearInflation = _checkpointsLookup(_linearInflationCheckpoints, block.number);
+    function tokenSupply() public view override returns (uint256) {
+        uint256 _linearInflation = _checkpointsLookup(
+            _linearInflationCheckpoints,
+            block.number
+        );
         return _totalSupply / _linearInflation;
     }
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */
-    function totalSupplyAt(uint256 _blockNumber) public override view returns (uint256) {
+    function totalSupplyAt(uint256 _blockNumber)
+        public
+        view
+        override
+        returns (uint256)
+    {
         uint256 _linearInflation = getPastLinearInflation(_blockNumber);
 
         if (_linearInflation == 0) {
@@ -90,8 +128,8 @@ abstract contract ERC20InflationaryVotes is
      */
     function balanceAt(address _owner, uint256 _blockNumber)
         public
-        override
         view
+        override
         returns (uint256)
     {
         uint256 _linearInflation = getPastLinearInflation(_blockNumber);
@@ -100,6 +138,6 @@ abstract contract ERC20InflationaryVotes is
             return 0;
         }
 
-        return  getPastVotes(_owner, _blockNumber) / _linearInflation;
+        return getPastVotes(_owner, _blockNumber) / _linearInflation;
     }
 }
