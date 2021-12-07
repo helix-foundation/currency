@@ -11,7 +11,7 @@ const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const MurderousPolicy = artifacts.require('MurderousPolicy');
 const FakeInflation = artifacts.require('FakeInflation');
 const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
-const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 let one;
@@ -55,6 +55,33 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
       ],
       [tokenHash],
     );
+  });
+
+  it('reverts when called by any address other than the store ', async () => {
+    await expectRevert(
+      token.emitSentEvent(accounts[1], accounts[1], accounts[1], 200, web3.utils.soliditySha3('data1'), web3.utils.soliditySha3('data2')),
+      'Only the balanceStore can call this',
+    );
+  });
+  context('getters', () => {
+    it('returns the name of the related balanceStore', async () => {
+      const tokenName = await token.name();
+      const balanceStoreName = await balanceStore.name();
+      expect(tokenName).to.equal(balanceStoreName);
+    });
+
+    it('returns the symbol of the related balanceStore', async () => {
+      // assert.equal(await token.symbol(), await balanceStore.symbol(), 'wrong symbol');
+      const tokenSymbol = await token.symbol();
+      const balanceStoreSymbol = await balanceStore.symbol();
+      expect(tokenSymbol).to.equal(balanceStoreSymbol);
+    });
+
+    it('returns the decimals of the related balanceStore', async () => {
+      const tokenDecimals = (await token.decimals()).toNumber();
+      const storeDecimals = (await balanceStore.decimals()).toNumber();
+      expect(tokenDecimals).to.equal(storeDecimals);
+    });
   });
 
   describe('total supply', () => {
@@ -293,7 +320,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
           expect(endBalance.sub(startBalance)).to.eq.BN(amount);
         });
 
-        it('subrtacts from the source balance', async () => {
+        it('subtracts from the source balance', async () => {
           const amount = allowanceParts[1];
 
           const startBalance = await token.balanceOf(from);
@@ -325,6 +352,10 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
           const endBalance = await token.balanceOf(from);
 
           expect(startBalance.sub(endBalance)).to.eq.BN(allowance);
+        });
+
+        it('doesnt revert when transferring to 0 address', async () => {
+          await token.transferFrom(from, constants.ZERO_ADDRESS, allowanceParts[0], meta);
         });
 
         context('with multiple transfers', () => {
