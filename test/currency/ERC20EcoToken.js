@@ -1,6 +1,6 @@
 const chai = require('chai');
 
-const { BN } = web3.utils;
+const { BN, toBN } = web3.utils;
 const bnChai = require('bn-chai');
 
 const { expect } = chai;
@@ -11,13 +11,15 @@ const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const MurderousPolicy = artifacts.require('MurderousPolicy');
 const FakeInflation = artifacts.require('FakeInflation');
 const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
-const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const { expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 
 const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 
 chai.use(bnChai(BN));
 
 contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
+  one = toBN(10).pow(toBN(18));
+
   let token;
   let inflation;
   let murderer;
@@ -420,6 +422,33 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     it('has the standard 18 decimals', async () => {
       const decimals = await token.decimals();
       expect(decimals).to.be.eq.BN(18);
+    });
+  });
+
+  describe('Checkpoint data', () => {
+    const [, from] = accounts;
+    const balance = new BN(1000);
+    let blockNumber;
+
+    beforeEach(async () => {
+      await inflation.mint(token.address, from, balance);
+      blockNumber = await time.latestBlock();
+      await inflation.mint(token.address, from, balance);
+    });
+
+    it(`can get a checkpoint value`, async () => {
+      const checkpoint = await token.checkpoints(from, 1);
+      expect(checkpoint.value).to.be.eq.BN(one.muln(2000));
+    });
+
+    it(`can get the number of checkpoints`, async () => {
+      const numCheckpoints = await token.numCheckpoints(from);
+      expect(numCheckpoints).to.be.eq.BN(2);
+    });
+
+    it(`can get the internal votes for an account`, async () => {
+      const votes = await token.getVotes(from);
+      expect(votes).to.be.eq.BN(one.muln(2000));
     });
   });
 

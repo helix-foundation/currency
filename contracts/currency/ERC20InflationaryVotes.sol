@@ -107,10 +107,6 @@ abstract contract ERC20InflationaryVotes is
     {
         uint256 _linearInflation = getPastLinearInflation(_blockNumber);
 
-        if (_linearInflation == 0) {
-            return 0;
-        }
-
         return getPastTotalSupply(_blockNumber) / _linearInflation;
     }
 
@@ -132,10 +128,6 @@ abstract contract ERC20InflationaryVotes is
         returns (uint256)
     {
         uint256 _linearInflation = getPastLinearInflation(_blockNumber);
-
-        if (_linearInflation == 0) {
-            return 0;
-        }
 
         return getPastVotes(_owner, _blockNumber) / _linearInflation;
     }

@@ -327,13 +327,9 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
     return policyProposalsClone;
   }
 
-  // context('unauthed recordVote', () => {
-  //   it('cannot call recordVote as unauthed contract', async () => {
-  //     await expectRevert(ecoxlockup.recordVote(alice), 'Must be a voting contract to call');
-  //   });
-  // });
-
   context('authed recordVote', () => {
+    let blockNumber;
+
     beforeEach(async () => {
       // we need to get the addresses some voting power
       await ecox.approve(ecoxlockup.address, one.muln(10), { from: alice });
@@ -341,6 +337,8 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
 
       await ecox.approve(ecoxlockup.address, one.muln(100), { from: bob });
       await ecoxlockup.deposit(one.muln(100), { from: bob });
+
+      blockNumber = await time.latestBlock();
 
       await time.increase(3600 * 24 * 14 + 1);
       await timedPolicies.incrementGeneration();
@@ -357,6 +355,23 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
       );
 
       await proposals.registerProposal(testProposal.address);
+    });
+
+    context('basic token and checkpoints data', async () => {
+      // Confirm the internal balance method works
+      it (`can get the balance`, async () => {
+        expect(await ecoxlockup.balance(alice)).to.eq.BN(await ecoxlockup.balanceOf(alice));
+      });
+
+      it('Can get the past total supply', async () => {
+        const pastTotalSupply = await ecoxlockup.totalSupplyAt(blockNumber);
+        expect(pastTotalSupply).to.be.eq.BN(one.muln(110));
+      });
+  
+      it('Can get a past balance', async () => {
+        const pastBalance = await ecoxlockup.balanceAt(alice, blockNumber);
+        expect(pastBalance).to.be.eq.BN(one.muln(10));
+      });
     });
 
     context('alice supporting a proposal', () => {
