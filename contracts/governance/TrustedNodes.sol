@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
+import "../currency/ECOx.sol";
 
 /** @title TrustedNodes
  *
@@ -23,6 +24,11 @@ contract TrustedNodes is PolicedUtils {
     /** @dev Index of trusted node to position in trustedNodes */
     mapping(address => uint256) private trustedNodeIndex;
 
+    /** Increments each time the trustee votes */
+    mapping(address => uint256) public votingRecord;
+
+    uint256 public voteReward;
+
     /** Event emitted when a node added to a list of trusted nodes.
      */
     event TrustedNodeAdded(address indexed node);
@@ -31,14 +37,21 @@ contract TrustedNodes is PolicedUtils {
      */
     event TrustedNodeRemoved(address indexed node);
 
+    /** Event emitted when a trustee redeems their voting rewards */
+    event VotingRewardRedeemed(address indexed trustee, uint256 amount);
+
     /** Creates a new trusted node registry, populated with some initial nodes.
      */
-    constructor(address _policy, address[] memory _initial)
-        PolicedUtils(_policy)
-    {
+    constructor(
+        address _policy,
+        address[] memory _initial,
+        uint256 _voteReward
+    ) PolicedUtils(_policy) {
         for (uint256 i = 0; i < _initial.length; ++i) {
             _trust(_initial[i]);
         }
+
+        voteReward = _voteReward;
     }
 
     /** Grant trust to a node.
@@ -80,6 +93,30 @@ contract TrustedNodes is PolicedUtils {
         delete trustedNodes[lastIndex];
         trustedNodes.pop();
         emit TrustedNodeRemoved(_node);
+    }
+
+    /** Incements the counter when the trustee reveals their vote
+     * only callable by the CurrencyGovernance contract
+     */
+    function recordVote(address _who) external {
+        require(
+            msg.sender == policyFor(ID_CURRENCY_GOVERNANCE),
+            "Must be the monetary policy contract to call"
+        );
+
+        votingRecord[_who]++;
+    }
+
+    function redeemVoteRewards() external {
+        require(votingRecord[msg.sender] > 0, "No rewards to redeem");
+
+        uint256 _votesRedeemed = votingRecord[msg.sender];
+        uint256 _reward = _votesRedeemed * voteReward;
+
+        votingRecord[msg.sender] = 0;
+
+        ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward);
+        emit VotingRewardRedeemed(msg.sender, _reward);
     }
 
     /** Return the number of entries in trustedNodes

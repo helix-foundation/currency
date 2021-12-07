@@ -569,12 +569,15 @@ async function deployStage3(options) {
   identifiers.push(web3.utils.soliditySha3('CurrencyGovernance'));
   addresses.push(initContract.options.address);
 
+  const trustedvotereward = '1000000000'; // TODO: make this the real value
+
   console.log('deploying the TrustedNodes policy contract...');
   console.log('trusted addresses:', options.trustednodes);
+  console.log('ecox voting reward for trusted addresses:', trustedvotereward);
   const trustedNodesContract = await new web3.eth.Contract(TrustedNodesABI.abi)
     .deploy({
       data: TrustedNodesABI.bytecode,
-      arguments: [options.policyProxy.options.address, options.trustednodes],
+      arguments: [options.policyProxy.options.address, options.trustednodes, trustedvotereward],
     })
     .send({
       from: options.account,

@@ -25,7 +25,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
 
     Stages public stage;
 
-    struct Proposal {
+    struct GovernanceProposal {
         bool valid;
         uint256 randomInflationWinners;
         uint256 randomInflationPrize;
@@ -38,7 +38,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
     uint256 public constant VOTING_TIME = 3 days;
     uint256 public constant REVEAL_TIME = 1 days;
 
-    mapping(address => Proposal) public proposals;
+    mapping(address => GovernanceProposal) public proposals;
     mapping(address => bytes32) public commitments;
     mapping(address => uint256) public score;
 
@@ -102,7 +102,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _lockupInterest,
         uint256 _numPoodles
     ) external onlyClone onlyTrusted atStage(Stages.Propose) {
-        Proposal storage p = proposals[msg.sender];
+        GovernanceProposal storage p = proposals[msg.sender];
         p.valid = true;
         p.randomInflationWinners = _randomInflationWinners;
         p.randomInflationPrize = _randomInflationPrize;
@@ -181,7 +181,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
         votingEnds = proposalEnds + VOTING_TIME;
         revealEnds = votingEnds + REVEAL_TIME;
 
-        Proposal storage p = proposals[address(0)];
+        GovernanceProposal storage p = proposals[address(0)];
         p.valid = true;
     }
 
