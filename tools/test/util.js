@@ -12,7 +12,7 @@ const VDFVerifier = artifacts.require('VDFVerifier');
 const RootHashProposal = artifacts.require('InflationRootHashProposal');
 const TimedPolicies = artifacts.require('TimedPolicies');
 const TrustedNodes = artifacts.require('TrustedNodes');
-const FreeFaucet = artifacts.require('FreeFaucet');
+const EcoFaucet = artifacts.require('EcoFaucet');
 const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 const CurrencyTimer = artifacts.require('CurrencyTimer');
 const SimplePolicySetter = artifacts.require('SimplePolicySetter');
@@ -52,7 +52,7 @@ exports.deployPolicy = async ({ trustees = [] } = {}) => {
 
   const inflation = await Inflation.new(proxy.address, vdf.address, 2);
   const trustedNodes = await TrustedNodes.new(proxy.address, trustees, 1000);
-  const faucet = await FreeFaucet.new(proxy.address);
+  const faucet = await EcoFaucet.new(proxy.address);
   const borda = await CurrencyGovernance.new(proxy.address);
   const lockup = await Lockup.new(proxy.address);
   const ecoxlockup = await ECOxLockup.new(proxy.address);

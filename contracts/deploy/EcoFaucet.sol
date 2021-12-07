@@ -8,7 +8,7 @@ import "../currency/ECOx.sol";
 
 /** @title EcoFaucet
  *
- * The Faucet contract provides a way to exchange ETH for Eco tokens. It should
+ * Faucet that also mints out of thin air. It should
  * only be deployed on the testnet. The contract requires the "Faucet"
  * permission in the policy system, which allows it to mint new tokens.
  */
@@ -16,21 +16,11 @@ contract EcoFaucet is PolicedUtils {
     // solhint-disable-next-line no-empty-blocks
     constructor(address _policy) PolicedUtils(_policy) {}
 
-    /** Exchange ETH for an equivalent amount of Eco tokens.
-     *
-     * The exchange rate used is 1:1 - 1 szabo ETH will get you 1 szabo of eco.
-     */
-    function faucet() external payable returns (uint256) {
-        EcoBalanceStore(policyFor(ID_ERC20TOKEN)).mint(msg.sender, msg.value);
-        return msg.value;
+    function mint(address _who, uint256 _amount) external {
+        EcoBalanceStore(policyFor(ID_ERC20TOKEN)).mint(_who, _amount);
     }
 
-    /** Exchange ETH for an equivalent amount of EcoX tokens.
-     *
-     * The exchange rate used is 1:1 - 1 szabo ETH will get you 1 szabo of eco.
-     */
-    function faucetX() external payable returns (uint256) {
-        ECOx(policyFor(ID_ECOX)).mint(msg.sender, msg.value);
-        return msg.value;
+    function mintx(address _who, uint256 _amount) external {
+        ECOx(policyFor(ID_ECOX)).mint(_who, _amount);
     }
 }
