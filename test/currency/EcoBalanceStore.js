@@ -18,6 +18,7 @@ const MAX_ACCOUNT_BALANCE = new BN(
   '115792089237316195423570985008687907853269984665640564039457', // 584007913129639935', removed as we use 18 digits to store inflation
 );
 const {
+  constants,
   expectEvent,
   expectRevert,
   time,
@@ -56,6 +57,23 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
     // borda = await CurrencyGovernance.at(
     //   await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
     // );
+  });
+
+  describe('Decimals', () => {
+    it('returns the right number', async () => {
+      const balanceStoreDecimals = (await balanceStore.decimals()).toNumber();
+      // assert.equal(await balanceStore.decimals(), 18, 'wrong number');
+      expect(balanceStoreDecimals).to.equal(18, 'no');
+    });
+  });
+
+  describe('Token burn', () => {
+    it('reverts when not authorized', async () => {
+      await expectRevert(
+        balanceStore.tokenBurn(constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 2000, web3.utils.soliditySha3('nothing'), web3.utils.soliditySha3('nothing'), { from: accounts[1] }),
+        'Sender not authorized to call this function',
+      );
+    });
   });
 
   describe('Initializable', () => {
@@ -541,6 +559,15 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       });
     });
 
+    context('when generation has not increased', () => {
+      it('reverts when call notifyGenerationIncrease', async () => {
+        await expectRevert(
+          balanceStore.notifyGenerationIncrease(),
+          'Generation has not increased',
+        );
+      });
+    });
+
     context('for a stale account', () => {
       const [, testAccount] = accounts;
       let originalGeneration;
@@ -677,6 +704,29 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
           expect(await balanceStore.balanceAt(testAccount, originalGeneration))
             .to.be.zero;
         });
+      });
+    });
+
+    context('checking generation balance', () => {
+      it('returns 0 when corresponding inflation is 0', async () => {
+        /* eslint-disable no-await-in-loop */
+        const currGen = (await balanceStore.currentGeneration()).toNumber();
+        let zeroInfGen;
+        for (let i = currGen; i >= 0; i -= 1) {
+          const inflationMultiplier = (await balanceStore.historicLinearInflation(i)).toString();
+          if (inflationMultiplier === '0') {
+            zeroInfGen = i;
+            break;
+          }
+        }
+
+        // TODO: ensure a nonzero balance with inflationMultiplier of 0 returns 0 for balanceAt
+        // this is sufficient for now though since we can tell if the branch is taken via coveralls
+        // assert.notEqual((await balanceStore.balanceAt(accounts[0], zeroInfGen+1)), 0)
+
+        // assert.equal(await balanceStore.balanceAt(accounts[0], zeroInfGen), 0);
+        const bal = (await balanceStore.balanceAt(accounts[0], zeroInfGen)).toNumber();
+        expect(bal).to.equal(0);
       });
     });
 

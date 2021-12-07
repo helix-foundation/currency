@@ -19,7 +19,10 @@ abstract contract TokenPrototype is PolicedUtils, TokenEvents {
     }
 
     modifier onlyStore() {
-        require(msg.sender == address(store));
+        require(
+            msg.sender == address(store),
+            "Only the balanceStore can call this"
+        );
         _;
     }
 

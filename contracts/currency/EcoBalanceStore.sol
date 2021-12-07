@@ -263,7 +263,10 @@ contract EcoBalanceStore is GenerationStore, TimeUtils {
                 (bool success, ) = _contract.call(
                     abi.encodeWithSignature("updateStore()")
                 );
-                require(success, "Failed to upateStore on authorized contract");
+                require(
+                    success,
+                    "Failed to updateStore on authorized contract"
+                );
             }
         }
     }

@@ -153,19 +153,7 @@ abstract contract GenerationStore is
         return (generationForAddress[_owner] == currentGeneration);
     }
 
-    /** Update address to the current generation.
-     *
-     * This helper updates the generational store for the specified address that
-     * generationForAddress[_owner] == currentGeneration, cleans out the old
-     * historical generations where appropriate, and updates
-     * cleanedForAddress[_owner] to the proper point history,
-     * GENERATIONS_TO_KEEP positions behind generationForAddress[_owner]. Any
-     * historical generations that must be filled in between the two generation
-     * pointers are filled with the most recent balance.
-     *
-     * @param _owner The account to update the generational history of.
-     */
-    function updateTo(address _owner, uint256 _targetGeneration) internal {
+    function update(address _owner) public {
         // Record the last time we updated this address's generation.
         uint256 _last = generationForAddress[_owner];
 
@@ -175,11 +163,6 @@ abstract contract GenerationStore is
         }
 
         require(currentGeneration != 0, "Generation must be initialized");
-        require(
-            _targetGeneration <= currentGeneration,
-            "Cannot update to the future"
-        );
-        require(_targetGeneration > _last, "Cannot rewrite history");
 
         /* If the address has no old generation records then we don't need to do
          * any cleaning but we should update the cleaned generation pointer for
@@ -188,21 +171,17 @@ abstract contract GenerationStore is
          * set to 0.
          */
         if (_last == 0) {
-            require(
-                _targetGeneration == currentGeneration,
-                "New accounts must update to the present"
-            );
-            cleanedForAddress[_owner] = _targetGeneration - 1;
+            cleanedForAddress[_owner] = currentGeneration - 1;
         } else {
             uint256 _balance = balances[_last][_owner];
 
             // Write new generational balances
-            for (uint256 g = _last + 1; g <= _targetGeneration; ++g) {
+            for (uint256 g = _last + 1; g <= currentGeneration; ++g) {
                 balances[g][_owner] = _balance;
             }
 
             // Clean old generational balances
-            uint256 _pruneTo = _targetGeneration - GENERATIONS_TO_KEEP;
+            uint256 _pruneTo = currentGeneration - GENERATIONS_TO_KEEP;
             for (
                 uint256 g = cleanedForAddress[_owner] + 1;
                 g <= _pruneTo;
@@ -214,18 +193,8 @@ abstract contract GenerationStore is
         }
 
         // Update the address's generation pointer.
-        generationForAddress[_owner] = _targetGeneration;
-        emit AccountBalanceGenerationUpdate(_owner, _targetGeneration);
-    }
-
-    /** Update address to current generation.
-     *
-     * Calling this function is never required, but it's provided as a
-     * convenience so that external systems can prompt an update to the
-     * generation pointer for an address.
-     */
-    function update(address _owner) public {
-        updateTo(_owner, currentGeneration);
+        generationForAddress[_owner] = currentGeneration;
+        emit AccountBalanceGenerationUpdate(_owner, currentGeneration);
     }
 
     function notifyGenerationIncrease() public virtual override {
