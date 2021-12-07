@@ -18,7 +18,6 @@ const MAX_ACCOUNT_BALANCE = new BN(
 );
 const {
   constants,
-  expectEvent,
   expectRevert,
   time,
 } = require('@openzeppelin/test-helpers');

@@ -63,26 +63,6 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
       'Only the balanceStore can call this',
     );
   });
-  context('getters', () => {
-    it('returns the name of the related balanceStore', async () => {
-      const tokenName = await token.name();
-      const balanceStoreName = await balanceStore.name();
-      expect(tokenName).to.equal(balanceStoreName);
-    });
-
-    it('returns the symbol of the related balanceStore', async () => {
-      // assert.equal(await token.symbol(), await balanceStore.symbol(), 'wrong symbol');
-      const tokenSymbol = await token.symbol();
-      const balanceStoreSymbol = await balanceStore.symbol();
-      expect(tokenSymbol).to.equal(balanceStoreSymbol);
-    });
-
-    it('returns the decimals of the related balanceStore', async () => {
-      const tokenDecimals = (await token.decimals()).toNumber();
-      const storeDecimals = (await balanceStore.decimals()).toNumber();
-      expect(tokenDecimals).to.equal(storeDecimals);
-    });
-  });
 
   describe('total supply', () => {
     beforeEach(async () => {
