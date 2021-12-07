@@ -415,4 +415,39 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
       await expectEvent.inTransaction(tx.tx, token.constructor, 'Transfer', { to: '0x0000000000000000000000000000000000000001', from: accounts[1], value: '10' });
     });
   });
+
+  describe('Metadata', () => {
+    it('has the standard 18 decimals', async () => {
+      const decimals = await token.decimals();
+      expect(decimals).to.be.eq.BN(18);
+    });
+  });
+
+  describe('increase and decrease allowance', () => {
+    const [, from, to, authorized, unauthorized] = accounts;
+    const balance = new BN(1000);
+    const allowanceAmount = new BN(100);
+    const increment = new BN(10);
+
+    beforeEach(async () => {
+      await inflation.mint(token.address, from, balance);
+      await token.approve(authorized, allowanceAmount, { from });
+    });
+
+    context('we can increase the allowance', () => {
+      it('increases the allowance', async () => {
+        await token.increaseAllowance(authorized, increment, { from });
+        const allowance = await token.allowance(from, authorized);
+        expect(allowance).to.be.eq.BN(allowanceAmount.add(increment));
+      });
+    });
+
+    context('we can decrease the allowance', () => {
+      it('decreases the allowance', async () => {
+        await token.decreaseAllowance(authorized, increment, { from });
+        const allowance = await token.allowance(from, authorized);
+        expect(allowance).to.be.eq.BN(allowanceAmount - increment);
+      });
+    });
+  });
 });

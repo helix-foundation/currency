@@ -47,8 +47,7 @@ abstract contract ERC20InflationaryVotes is
         onlyConstruction
     {
         super.initialize(_self);
-        _name = IERC20Metadata(_self).name();
-        _symbol = IERC20Metadata(_self).symbol();
+        copyTokenMetadata(_self);
         _writeCheckpoint(
             _linearInflationCheckpoints,
             _replace,

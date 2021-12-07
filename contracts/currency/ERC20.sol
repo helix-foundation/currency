@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 /**
  * @dev Implementation of the {IERC20} interface.
  *
@@ -67,6 +69,11 @@ contract ERC20 {
     constructor(string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
+    }
+
+    function copyTokenMetadata(address _target) internal {
+        _name = IERC20Metadata(_target).name();
+        _symbol = IERC20Metadata(_target).symbol();
     }
 
     /**

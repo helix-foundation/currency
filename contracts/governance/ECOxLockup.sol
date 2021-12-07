@@ -92,8 +92,7 @@ contract ECOxLockup is ERC20Votes, PolicedUtils {
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        _name = IERC20Metadata(_self).name();
-        _symbol = IERC20Metadata(_self).symbol();
+        copyTokenMetadata(_self);
         currentGeneration = IGeneration(policyFor(ID_TIMED_POLICIES))
             .generation();
     }

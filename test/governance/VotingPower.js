@@ -9,6 +9,7 @@ const {
 } = require('@openzeppelin/test-helpers');
 
 const util = require('../../tools/test/util');
+const balance = require('@openzeppelin/test-helpers/src/balance');
 
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));
@@ -30,7 +31,7 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
     one = toBN(10).pow(toBN(18));
     ({
       policy,
-      // token,
+      token,
       faucet,
       timedPolicies,
       ecox,
@@ -94,6 +95,17 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
       it('Has the right power for alice', async () => {
         // full power, but all in ECO
         expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(toBN(alicePower));
+      });
+    });
+  });
+
+  context('by delegating', () => {
+    describe('only ECO power', () => {
+      it('Has the right power for bob after alice delegates here votes to him', async () => {
+        await token.delegate(bob, { from: alice });
+        blockNumber = await time.latestBlock();
+        await time.advanceBlock();
+        expect(await proposals.votingPower(bob, blockNumber)).to.eq.BN(one.muln(10000));
       });
     });
   });
