@@ -424,7 +424,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
   });
 
   describe('increase and decrease allowance', () => {
-    const [, from, to, authorized, unauthorized] = accounts;
+    const [, from, authorized] = accounts;
     const balance = new BN(1000);
     const allowanceAmount = new BN(100);
     const increment = new BN(10);

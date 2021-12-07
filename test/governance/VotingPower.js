@@ -9,14 +9,13 @@ const {
 } = require('@openzeppelin/test-helpers');
 
 const util = require('../../tools/test/util');
-const balance = require('@openzeppelin/test-helpers/src/balance');
 
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));
 
 contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
   let policy;
-  // let token;
+  let token;
   let faucet;
   let timedPolicies;
   let proposals;
