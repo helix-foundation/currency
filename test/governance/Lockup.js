@@ -68,7 +68,7 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     const [evt] = await currencyTimer.getPastEvents('LockupOffered');
     lockup = await Lockup.at(evt.args.addr);
 
-    await faucet.faucet({ value: 1000000000, from: charlie });
+    await faucet.mint(charlie, 1000000000, { from: charlie });
     await token.approve(lockup.address, 1000000000, { from: charlie });
   });
 
