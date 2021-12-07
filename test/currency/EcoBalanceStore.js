@@ -17,7 +17,6 @@ const MAX_ACCOUNT_BALANCE = new BN(
   '115792089237316195423570985008687907853269984665640564039457', // 584007913129639935', removed as we use 18 digits to store inflation
 );
 const {
-  constants,
   expectRevert,
   time,
 } = require('@openzeppelin/test-helpers');
@@ -52,15 +51,6 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       const balanceStoreDecimals = (await balanceStore.decimals()).toNumber();
       // assert.equal(await balanceStore.decimals(), 18, 'wrong number');
       expect(balanceStoreDecimals).to.equal(18, 'no');
-    });
-  });
-
-  describe('Token burn', () => {
-    it('reverts when not authorized', async () => {
-      await expectRevert(
-        balanceStore.tokenBurn(constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 2000, web3.utils.soliditySha3('nothing'), web3.utils.soliditySha3('nothing'), { from: accounts[1] }),
-        'Sender not authorized to call this function',
-      );
     });
   });
 

@@ -11,7 +11,7 @@ const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const MurderousPolicy = artifacts.require('MurderousPolicy');
 const FakeInflation = artifacts.require('FakeInflation');
 const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
-const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 let one;
@@ -54,13 +54,6 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
         inflation.address,
       ],
       [tokenHash],
-    );
-  });
-
-  it('reverts when called by any address other than the store ', async () => {
-    await expectRevert(
-      token.emitSentEvent(accounts[1], accounts[1], accounts[1], 200, web3.utils.soliditySha3('data1'), web3.utils.soliditySha3('data2')),
-      'Only the balanceStore can call this',
     );
   });
 
@@ -332,10 +325,6 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
           const endBalance = await token.balanceOf(from);
 
           expect(startBalance.sub(endBalance)).to.eq.BN(allowance);
-        });
-
-        it('doesnt revert when transferring to 0 address', async () => {
-          await token.transferFrom(from, constants.ZERO_ADDRESS, allowanceParts[0], meta);
         });
 
         context('with multiple transfers', () => {
