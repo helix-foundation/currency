@@ -189,7 +189,11 @@ async function deployEco() {
       const faucet = new web3.eth.Contract(EcoFaucetABI.abi, faucetaddr);
 
       const mintAmount = web3.utils.toWei('500000', 'ether');
-      await faucet.methods.mint().send(options.account, mintAmount, { from: options.account, gas: 1000000 });
+      await faucet.methods.mint().send(
+        options.account,
+        mintAmount,
+        { from: options.account, gas: 1000000 },
+      );
     }
     console.log(`ERC20 at ${options.erc20}`);
   }
