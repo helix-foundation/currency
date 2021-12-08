@@ -11,6 +11,7 @@ const RegistrationAttemptContract = artifacts.require(
 );
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
 
 contract('Policed [@group=11]', (accounts) => {
   let policy;
@@ -96,6 +97,11 @@ contract('Policed [@group=11]', (accounts) => {
         registrationAttemptContract.register(),
         'contract only implements interfaces for the policy contract',
       );
+    });
+
+    it('responds to canImplementInterfaceForAddress', async () => {
+      const testRawPoliced = await Policed.new(policy.address);
+      testRawPoliced.canImplementInterfaceForAddress('0x00', policy.address);
     });
   });
 
