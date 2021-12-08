@@ -100,7 +100,7 @@ contract('Policed [@group=11]', (accounts) => {
 
     it('responds to canImplementInterfaceForAddress', async () => {
       const testRawPoliced = await Policed.new(policy.address);
-      testRawPoliced.canImplementInterfaceForAddress('0x00', policy.address);
+      await testRawPoliced.canImplementInterfaceForAddress('0x00', policy.address);
     });
   });
 
