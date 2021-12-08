@@ -43,9 +43,4 @@ contract EcoBootstrap is Ownable {
             );
         }
     }
-
-    /** @notice Selfdestruct */
-    function destruct() external onlyOwner {
-        selfdestruct(payable(address(uint160(owner()))));
-    }
 }

@@ -53,12 +53,6 @@ contract EcoInitializable is ForwardTarget {
         require(_success, "initialize call failed");
     }
 
-    /** @notice Selfdestruct */
-    function destruct() external {
-        require(msg.sender == owner, "Only owner may clean up");
-        selfdestruct(owner);
-    }
-
     /** @notice Chained initializer to copy from origin contract */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
