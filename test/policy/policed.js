@@ -11,7 +11,6 @@ const RegistrationAttemptContract = artifacts.require(
 );
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
-const { expect } = require('chai');
 
 contract('Policed [@group=11]', (accounts) => {
   let policy;
