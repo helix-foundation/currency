@@ -16,7 +16,7 @@ contract VdfCloner {
      *
      * @param _addr The address of the contract to clone.
      */
-    constructor(address _addr) public {
+    constructor(address _addr) {
         clone = VDFVerifier(VDFVerifier(_addr).clone());
     }
 

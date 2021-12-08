@@ -39,7 +39,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
     await initInflation.mint(balanceStore.address, dave, toBN(10).pow(toBN(18)).muln(5000));
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
-    await balanceStore.update(alice);
 
     policyVotes = await PolicyVotes.new(policy.address);
     proposal = (await SampleProposal.new(0)).address;
@@ -99,7 +98,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
     context('before the contract is configured', () => {
       it('reverts', async () => {
         await expectRevert(
-          proxiedPolicyVotes.vote(true, []),
+          proxiedPolicyVotes.vote(true),
           'Votes can only be recorded during the voting period',
         );
       });
@@ -117,7 +116,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
 
         it('reverts', async () => {
           await expectRevert(
-            proxiedPolicyVotes.vote(true, []),
+            proxiedPolicyVotes.vote(true),
             'Votes can only be recorded during the voting period',
           );
         });
@@ -127,7 +126,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
         context('with no tokens', () => {
           it('reverts', async () => {
             await expectRevert(
-              proxiedPolicyVotes.vote(true, [], { from: frank }),
+              proxiedPolicyVotes.vote(true, { from: frank }),
               'must have held tokens',
             );
           });
@@ -135,14 +134,14 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
 
         context('with tokens', () => {
           it('can vote', async () => {
-            const tx = await proxiedPolicyVotes.vote(true, []);
+            const tx = await proxiedPolicyVotes.vote(true);
             await expectEvent.inLogs(tx.logs, 'PolicyVoteCast');
           });
 
           it('increases the total stake', async () => {
             const startStake = await proxiedPolicyVotes.totalStake();
 
-            await proxiedPolicyVotes.vote(true, []);
+            await proxiedPolicyVotes.vote(true);
 
             assert(
               startStake.add(await token.balanceOf(alice))
@@ -153,7 +152,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
           it('increases the yes stake on yes', async () => {
             const startStake = await proxiedPolicyVotes.yesStake();
 
-            await proxiedPolicyVotes.vote(true, []);
+            await proxiedPolicyVotes.vote(true);
 
             expect(
               await proxiedPolicyVotes.yesStake(),
@@ -163,20 +162,20 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
           it('does not increas the yes stake on no', async () => {
             const startStake = await proxiedPolicyVotes.yesStake();
 
-            await proxiedPolicyVotes.vote(false, []);
+            await proxiedPolicyVotes.vote(false);
 
             expect(await proxiedPolicyVotes.yesStake()).to.eq.BN(startStake);
           });
 
           context('with an existing yes vote', () => {
             beforeEach(async () => {
-              await proxiedPolicyVotes.vote(true, []);
+              await proxiedPolicyVotes.vote(true);
             });
 
             it('does not increase total stake', async () => {
               const startStake = await proxiedPolicyVotes.totalStake();
 
-              await proxiedPolicyVotes.vote(false, []);
+              await proxiedPolicyVotes.vote(false);
 
               expect(await proxiedPolicyVotes.totalStake()).to.eq.BN(startStake);
             });
@@ -184,7 +183,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
             it('decreases yes stake', async () => {
               const startStake = await proxiedPolicyVotes.yesStake();
 
-              await proxiedPolicyVotes.vote(false, []);
+              await proxiedPolicyVotes.vote(false);
 
               expect(
                 await proxiedPolicyVotes.yesStake(),
@@ -194,13 +193,13 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
 
           context('with an existing no vote', () => {
             beforeEach(async () => {
-              await proxiedPolicyVotes.vote(false, []);
+              await proxiedPolicyVotes.vote(false);
             });
 
             it('does not increase total stake', async () => {
               const startStake = await proxiedPolicyVotes.totalStake();
 
-              await proxiedPolicyVotes.vote(true, []);
+              await proxiedPolicyVotes.vote(true);
 
               expect(await proxiedPolicyVotes.totalStake()).to.eq.BN(startStake);
             });
@@ -208,7 +207,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
             it('increases yes stake', async () => {
               const startStake = await proxiedPolicyVotes.yesStake();
 
-              await proxiedPolicyVotes.vote(true, []);
+              await proxiedPolicyVotes.vote(true);
 
               expect(
                 await proxiedPolicyVotes.yesStake(),
@@ -240,13 +239,11 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
       beforeEach(async () => {
         await proxiedPolicyVotes.vote(
           true,
-          [],
           { from: charlie },
         );
 
         await proxiedPolicyVotes.vote(
           true,
-          [],
           { from: dave },
         );
       });
@@ -282,7 +279,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
         it('succeeds', async () => {
           await proxiedPolicyVotes.vote(
             true,
-            [],
             { from: bob },
           );
 
@@ -320,12 +316,10 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
         beforeEach(async () => {
           await proxiedPolicyVotes.vote(
             false,
-            [],
             { from: bob },
           );
           await proxiedPolicyVotes.vote(
             false,
-            [],
             { from: alice },
           );
           await time.increase(3600 * 24 * 4.1);
@@ -361,7 +355,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
         beforeEach(async () => {
           await proxiedPolicyVotes.vote(
             true,
-            [],
             { from: bob },
           );
 

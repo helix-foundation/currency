@@ -2,8 +2,8 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../governance/IGeneration.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
 import "../utils/TimeUtils.sol";
 import "./IGeneration.sol";
 
@@ -60,32 +60,8 @@ contract Lockup is PolicedUtils, TimeUtils {
         internalDeposit(_amount, msg.sender, msg.sender);
     }
 
-    function depositFor(uint256 _amount, address _who) external onlyClone {
-        require(
-            msg.sender == policyFor(ID_ECOX),
-            "Only allowed for ECOx exchange"
-        );
-        internalDeposit(_amount, msg.sender, _who);
-    }
-
     function withdraw() external onlyClone {
         doWithdrawal(msg.sender, true);
-    }
-
-    function withdrawFor(address _who) external onlyClone {
-        doWithdrawal(_who, false);
-    }
-
-    function destruct() external onlyClone {
-        require(!selling(), "Cannot destroy while still open for selling");
-
-        require(totalDeposit == 0, "All deposits must be withdrawn");
-
-        getToken().transfer(
-            address(uint160(policy)),
-            getToken().balanceOf(address(this))
-        );
-        selfdestruct(payable(address(uint160(policy))));
     }
 
     function clone(uint256 _duration, uint256 _interest)

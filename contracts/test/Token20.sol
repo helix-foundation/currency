@@ -7,7 +7,7 @@ import "../../contracts/proxy/ForwardTarget.sol";
 
 /** @title ERC20 test token */
 contract Token20 is ForwardTarget, Ownable, ERC20PresetMinterPauser {
-    constructor() public ERC20PresetMinterPauser("Twenty", "20") {}
+    constructor() ERC20PresetMinterPauser("Twenty", "20") {}
 
     /** @notice Upgrade function */
     function upgrade(address _target) public {

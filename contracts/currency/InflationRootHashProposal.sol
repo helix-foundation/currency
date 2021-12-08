@@ -83,9 +83,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     uint256 public feeCollectionEnds;
 
-    /** merkle tree verified against balances at generation
+    /** merkle tree verified against balances at block number
      */
-    uint256 public generation;
+    uint256 public blockNumber;
 
     /* Event to be emitted whenever a new challenge to root hash submitted to the contract.
      */
@@ -210,11 +210,11 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** @notice Configure the inflation root hash proposal contract
      *  which is part of the inflation lottery mechanism
      *
-     * @param _generation generation to verify accounts balances against
+     * @param _blockNumber block number to verify accounts balances against
      */
-    function configure(uint256 _generation) external onlyClone {
-        require(generation == 0, "This instance has already been configured");
-        generation = _generation;
+    function configure(uint256 _blockNumber) external onlyClone {
+        require(blockNumber == 0, "This instance has already been configured");
+        blockNumber = _blockNumber;
     }
 
     /** @notice Allows to propose new root hash co
@@ -337,7 +337,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         require(
-            getStore().balanceAt(_account, generation) > 0,
+            getStore().balanceAt(_account, blockNumber) > 0,
             "Missing account does not exist"
         );
 
@@ -424,7 +424,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         proposal.challengeResponses[_index].sum = _sum;
 
         require(
-            getStore().balanceAt(_account, generation) == _claimedBalance,
+            getStore().balanceAt(_account, blockNumber) == _claimedBalance,
             "Challenge response failed account balance check"
         );
 
@@ -548,7 +548,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             acceptedRootHash != 0,
             "Can't claim win before _rootHash established"
         );
-        uint256 balance = getStore().balanceAt(_who, generation);
+        uint256 balance = getStore().balanceAt(_who, blockNumber);
         return
             verifyMerkleProof(
                 _proof,
@@ -733,6 +733,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         view
         returns (IEcoBalanceStoreGenerationBalance)
     {
-        return IEcoBalanceStoreGenerationBalance(policyFor(ID_BALANCESTORE));
+        return IEcoBalanceStoreGenerationBalance(policyFor(ID_ERC20TOKEN));
     }
 }

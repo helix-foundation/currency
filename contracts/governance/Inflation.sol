@@ -30,8 +30,13 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     uint256 public winners;
 
-    /** The generation (in the generational balance store) to use as the
+    /** The block number to use as the
      * reference point when checking if an account holds currency.
+     */
+    uint256 public blockNumber;
+
+    /** The generation to use as the
+     * reference point for inflation policies
      */
     uint256 public generation;
 
@@ -121,6 +126,7 @@ contract Inflation is PolicedUtils, TimeUtils {
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
         generation = getStore().currentGeneration() - 1;
+        blockNumber = block.number;
         vdfVerifier = VDFVerifier(
             VDFVerifier(Inflation(_self).vdfVerifier()).clone()
         );
@@ -252,7 +258,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         ) % rootHashContract.acceptedTotalSum();
 
         require(
-            _winner < getStore().balanceAt(_who, generation) + _sum,
+            _winner < getStore().balanceAt(_who, blockNumber) + _sum,
             "The provided address does not hold a winning ticket"
         );
         require(
@@ -283,7 +289,7 @@ contract Inflation is PolicedUtils, TimeUtils {
     /** Get the associated balance store address.
      */
     function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_BALANCESTORE));
+        return EcoBalanceStore(policyFor(ID_ERC20TOKEN));
     }
 
     /** Get the associated ERC20 token address.

@@ -62,8 +62,6 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   it('Waits a generation', async () => {
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
-    await balanceStore.update(accounts[1]);
-    await balanceStore.update(accounts[2]);
   });
 
   it('Constructs the proposals', async () => {
@@ -113,10 +111,10 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
-    await policyProposals.support(makerich.address, [], { from: accounts[1] });
+    await policyProposals.support(makerich.address, { from: accounts[1] });
 
-    await policyProposals.support(backdoor.address, [], { from: accounts[2] });
-    await policyProposals.support(makerich.address, [], { from: accounts[2] });
+    await policyProposals.support(backdoor.address, { from: accounts[2] });
+    await policyProposals.support(makerich.address, { from: accounts[2] });
   });
 
   it('Transitions from proposing to voting', async () => {
@@ -129,12 +127,10 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   it('Allows all users to vote', async () => {
     await policyVotes.vote(
       true,
-      [],
       { from: accounts[1] },
     );
     await policyVotes.vote(
       true,
-      [],
       { from: accounts[2] },
     );
   });
@@ -151,10 +147,6 @@ contract('Production Policy Change [@group=4]', (accounts) => {
     // 10 total days of waiting until the refunds can be accessed
     await time.increase(3600 * 24 * 6 + 1);
     await policyProposals.refund(backdoor.address);
-  });
-
-  it('Cleans up the proposal contract', async () => {
-    await policyProposals.destruct();
   });
 
   it('Confirms the backdoor is not there', async () => {

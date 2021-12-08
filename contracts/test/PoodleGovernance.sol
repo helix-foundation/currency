@@ -4,7 +4,6 @@ pragma solidity ^0.8.9;
 import "../governance/TrustedNodes.sol";
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
 import "../governance/Inflation.sol";
 import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";
@@ -184,12 +183,6 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
 
         GovernanceProposal storage p = proposals[address(0)];
         p.valid = true;
-    }
-
-    /** Get the associated balance store address.
-     */
-    function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_BALANCESTORE));
     }
 
     function getTrustedNodes() private view returns (TrustedNodes) {

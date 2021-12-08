@@ -37,9 +37,6 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
     await initInflation.mint(balanceStore.address, charlie, toBN(10).pow(toBN(18)).muln(10000));
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
-    await balanceStore.update(alice);
-    await balanceStore.update(bob);
-    await balanceStore.update(charlie);
   });
 
   async function makeProposals() {
@@ -74,7 +71,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         it('cannot register a proposal', async () => {
           await expectRevert(
             policyProposals.registerProposal(testProposal.address),
-            'Insufficient allowance for transfer',
+            'ERC20: transfer amount exceeds allowance.',
           );
         });
       });
@@ -159,7 +156,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
           await policyProposals.registerProposal(testProposal.address);
 
-          await policyProposals.support(testProposal.address, [], { from: charlie });
+          await policyProposals.support(testProposal.address, { from: charlie });
 
           await token.approve(
             policyProposals.address,
@@ -222,7 +219,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
       it('reverts', async () => {
         await expectRevert(
-          policyProposals.support(testProposal.address, []),
+          policyProposals.support(testProposal.address),
           'Proposals may no longer be supported because the registration period has ended',
         );
       });
@@ -230,7 +227,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
     context('during the staking period', () => {
       it('allows staking once', async () => {
-        const tx = await policyProposals.support(testProposal.address, []);
+        const tx = await policyProposals.support(testProposal.address);
         await expectEvent.inTransaction(
           tx.tx,
           policyProposals.constructor,
@@ -244,7 +241,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
           (await policyProposals.proposals(testProposal.address))[2],
         );
 
-        await policyProposals.support(testProposal.address, []);
+        await policyProposals.support(testProposal.address);
 
         const postSupportStake = toBN(
           (await policyProposals.proposals(testProposal.address))[2],
@@ -256,16 +253,16 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       });
 
       it('does not allow staking twice', async () => {
-        await policyProposals.support(testProposal.address, []);
+        await policyProposals.support(testProposal.address);
         await expectRevert(
-          policyProposals.support(testProposal.address, []),
+          policyProposals.support(testProposal.address),
           'may not stake in support of a proposal if you have already staked',
         );
       });
 
       it('can still stake for multiple proposals', async () => {
-        await policyProposals.support(testProposal.address, []);
-        await policyProposals.support(testProposal2.address, []);
+        await policyProposals.support(testProposal.address);
+        await policyProposals.support(testProposal2.address);
       });
 
       context('when the staker has no funds', () => {
@@ -273,7 +270,6 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
           await expectRevert(
             policyProposals.support(
               testProposal.address,
-              [],
               { from: dave },
             ),
             'must stake a non-zero amount',
@@ -284,7 +280,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       context('when supporting a non-existent proposal', () => {
         it('reverts', async () => {
           await expectRevert(
-            policyProposals.support(constants.ZERO_ADDRESS, []),
+            policyProposals.support(constants.ZERO_ADDRESS),
             'proposal is not registered',
           );
         });
@@ -298,7 +294,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
       it('does not allow staking', async () => {
         await expectRevert(
-          policyProposals.support(testProposal.address, []),
+          policyProposals.support(testProposal.address),
           'registration period has ended',
         );
       });
@@ -319,12 +315,12 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       );
 
       await policyProposals.registerProposal(testProposal.address);
-      await policyProposals.support(testProposal.address, []);
+      await policyProposals.support(testProposal.address);
     });
 
     context('when still holds the policy role and proposals made', () => {
       it('emits the VotingStarted event', async () => {
-        const result = await policyProposals.support(testProposal.address, [], { from: charlie });
+        const result = await policyProposals.support(testProposal.address, { from: charlie });
 
         await expectEvent.inTransaction(
           result.tx,
@@ -334,7 +330,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       });
 
       it('gives up the PolicyProposals role', async () => {
-        await policyProposals.support(testProposal.address, [], { from: charlie });
+        await policyProposals.support(testProposal.address, { from: charlie });
 
         assert.notEqual(
           await util.policyFor(
@@ -353,7 +349,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
       it('rejects support', async () => {
         await expectRevert(
-          policyProposals.support(testProposal.address, []),
+          policyProposals.support(testProposal.address),
           'no longer active',
         );
       });
@@ -395,8 +391,8 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
     context('when a policy is selected', () => {
       beforeEach(async () => {
-        await policyProposals.support(testProposal.address, [], { from: alice });
-        await policyProposals.support(testProposal2.address, [], { from: charlie });
+        await policyProposals.support(testProposal.address, { from: alice });
+        await policyProposals.support(testProposal2.address, { from: charlie });
       });
 
       it('tries to refund selected policy, reverts', async () => {
@@ -511,7 +507,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       });
 
       it('succeeds if proposal window has ended', async () => {
-        await policyProposals.support(testProposal.address, []);
+        await policyProposals.support(testProposal.address);
         await time.increase(3600 * 240 + 1);
         await policyProposals.refund(testProposal.address);
 
@@ -535,8 +531,8 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
 
         const charlieBalance = token.balanceOf(charlie);
 
-        await policyProposals.support(testProposal.address, []);
-        await policyProposals.support(testProposal2.address, [], { from: charlie });
+        await policyProposals.support(testProposal.address);
+        await policyProposals.support(testProposal2.address, { from: charlie });
 
         await policyProposals.refund(testProposal.address);
 
@@ -558,7 +554,7 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
         );
 
         await policyProposals.registerProposal(testProposal.address);
-        await policyProposals.support(testProposal.address, []);
+        await policyProposals.support(testProposal.address);
 
         await time.increase(3600 * 240 + 1);
       });

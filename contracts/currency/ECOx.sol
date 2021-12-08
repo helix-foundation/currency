@@ -1,15 +1,13 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "./EcoBalanceStore.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
-import "./TokenEvents.sol";
-import "./GenerationStore.sol";
-import "./EcoBalanceStore.sol";
 import "../governance/Lockup.sol";
 import "../governance/CurrencyTimer.sol";
+import "./ERC20.sol";
 
 /** @title ECOx
  * TODO: Update doc
@@ -25,113 +23,21 @@ import "../governance/CurrencyTimer.sol";
  * the context of an interface, presumably implementing a widely accepted token
  * contract standard, ie ERC20.
  */
-contract ECOx is GenerationStore, TimeUtils, IERC20 {
+contract ECOx is ERC20, PolicedUtils {
     uint8 public constant PRECISION = 100;
 
     uint256 public initialSupply;
 
-    mapping(address => mapping(address => uint256)) public allowances;
-
-    function totalSupply() external view override returns (uint256) {
-        return tokenSupply();
-    }
-
-    function balanceOf(address _address)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return balance(_address);
-    }
-
-    function transfer(address _to, uint256 _value)
-        external
-        override
-        returns (bool)
-    {
-        if (_to == address(0)) {
-            tokenBurn(msg.sender, _value);
-        } else {
-            tokenTransfer(msg.sender, _to, _value);
-        }
-        return true;
-    }
-
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
-    ) external override returns (bool) {
-        require(
-            allowances[_from][msg.sender] >= _value,
-            "Insufficient allowance for transfer"
-        );
-        allowances[_from][msg.sender] = allowances[_from][msg.sender] - _value;
-        if (_to == address(0)) {
-            tokenBurn(_from, _value);
-        } else {
-            tokenTransfer(_from, _to, _value);
-        }
-        return true;
-    }
-
-    function approve(address _spender, uint256 _value)
-        external
-        override
-        returns (bool)
-    {
-        allowances[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    function allowance(address _owner, address _spender)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return allowances[_owner][_spender];
-    }
-
     constructor(address _policy, uint256 _initialSupply)
-        GenerationStore(_policy)
+        ERC20("Eco-X", "ECOx")
+        PolicedUtils(_policy)
     {
         initialSupply = _initialSupply;
     }
 
-    function tokenTransfer(
-        address _from,
-        address _to,
-        uint256 _value
-    ) internal {
-        update(_from);
-        update(_to);
-        mapping(address => uint256) storage bal = balances[currentGeneration];
-
-        require(bal[_from] >= _value, "Source account has insufficient tokens");
-
-        emit Transfer(_from, _to, _value);
-
-        bal[_from] = bal[_from] - _value;
-        bal[_to] = bal[_to] + _value;
-    }
-
-    function tokenBurn(address _from, uint256 _value) internal {
-        update(_from);
-        mapping(address => uint256) storage bal = balances[currentGeneration];
-
-        require(bal[_from] >= _value, "Insufficient funds to burn");
-
-        emit Transfer(_from, address(0), _value);
-
-        bal[_from] = bal[_from] - _value;
-        setTokenSupply(tokenSupply() - _value);
-    }
-
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
+        copyTokenMetadata(_self);
     }
 
     function valueOf(uint256 _ecoXValue) public view returns (uint256) {
@@ -140,12 +46,13 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
         return computeValue(_ecoXValue, _ecoSupply);
     }
 
-    function valueAt(uint256 _ecoXValue, uint256 _gen)
+    function valueAt(uint256 _ecoXValue, uint256 _blockNumber)
         public
         view
         returns (uint256)
     {
-        uint256 _ecoSupplyAt = getStore().totalSupplyAt(_gen);
+        uint256 _ecoSupplyAt = EcoBalanceStore(address(getToken()))
+            .totalSupplyAt(_blockNumber);
 
         return computeValue(_ecoXValue, _ecoSupplyAt);
     }
@@ -247,9 +154,9 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
     function exchange(uint256 _ecoXValue) external {
         uint256 eco = valueOf(_ecoXValue);
 
-        tokenBurn(msg.sender, _ecoXValue);
+        _burn(msg.sender, _ecoXValue);
 
-        getStore().mint(msg.sender, eco);
+        EcoBalanceStore(address(getToken())).mint(msg.sender, eco);
     }
 
     function mint(address _to, uint256 _value) external {
@@ -258,53 +165,10 @@ contract ECOx is GenerationStore, TimeUtils, IERC20 {
             "Caller not authorized to mint tokens"
         );
 
-        update(_to);
-        mapping(address => uint256) storage bal = balances[currentGeneration];
-
-        bal[_to] = bal[_to] + _value;
-        setTokenSupply(tokenSupply() + _value);
-
-        emit Transfer(address(0), _to, _value);
-    }
-
-    function notifyGenerationIncrease() public override {
-        super.notifyGenerationIncrease();
-    }
-
-    function destruct() external {
-        require(
-            msg.sender == policyFor(ID_CLEANUP),
-            "Only the cleanup policy contract can call destruct"
-        );
-        selfdestruct(payable(msg.sender));
-    }
-
-    function name() public pure returns (string memory) {
-        return "Eco-X";
-    }
-
-    function symbol() public pure returns (string memory) {
-        return "ECOx";
-    }
-
-    function decimals() public pure returns (uint8) {
-        return 18;
+        _mint(_to, _value);
     }
 
     function getToken() private view returns (IERC20) {
         return IERC20(policyFor(ID_ERC20TOKEN));
-    }
-
-    function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_BALANCESTORE));
-    }
-
-    function getLockup() private view returns (Lockup) {
-        return
-            Lockup(
-                CurrencyTimer(policyFor(ID_CURRENCY_TIMER)).lockups(
-                    currentGeneration
-                )
-            );
     }
 }

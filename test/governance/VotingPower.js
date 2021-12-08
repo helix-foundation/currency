@@ -15,12 +15,11 @@ chai.use(bnChai(BN));
 
 contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
   let policy;
-  // let token;
-  let balanceStore;
+  let token;
   let faucet;
   let timedPolicies;
   let proposals;
-  let generation;
+  let blockNumber;
   let ecox;
   let ecoxlockup;
   let one;
@@ -31,8 +30,7 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
     one = toBN(10).pow(toBN(18));
     ({
       policy,
-      balanceStore,
-      // token,
+      token,
       faucet,
       timedPolicies,
       ecox,
@@ -56,7 +54,8 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
 
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
-    generation = await balanceStore.currentGeneration();
+    blockNumber = await time.latestBlock();
+    await time.advanceBlock();
 
     proposals = await PolicyProposals.at(
       await util.policyFor(policy, web3.utils.soliditySha3('PolicyProposals')),
@@ -67,12 +66,12 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
     describe('only ECO power', () => {
       it('Has the correct total power', async () => {
         // 20k total, no ECOx power
-        expect(await proposals.totalVotingPower(generation)).to.eq.BN(one.muln(20000));
+        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(one.muln(20000));
       });
 
       it('Has the right power for alice', async () => {
         // 5k, no ECOx power
-        expect(await proposals.votingPower(alice, generation, [])).to.eq.BN(one.muln(5000));
+        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(one.muln(5000));
       });
     });
 
@@ -81,19 +80,31 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
         await ecox.exchange(one.muln(400), { from: alice });
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
-        generation = await balanceStore.currentGeneration();
+        blockNumber = await time.latestBlock();
+        await time.advanceBlock();
       });
 
       it('Has the correct total power', async () => {
         // The original 20k plus all of alice's power as ECO
-        expect(await proposals.totalVotingPower(generation)).to.eq.BN(
+        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(
           one.muln(15000).add(toBN(alicePower)),
         );
       });
 
       it('Has the right power for alice', async () => {
         // full power, but all in ECO
-        expect(await proposals.votingPower(alice, generation, [])).to.eq.BN(toBN(alicePower));
+        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(toBN(alicePower));
+      });
+    });
+  });
+
+  context('by delegating', () => {
+    describe('only ECO power', () => {
+      it('Has the right power for bob after alice delegates here votes to him', async () => {
+        await token.delegate(bob, { from: alice });
+        blockNumber = await time.latestBlock();
+        await time.advanceBlock();
+        expect(await proposals.votingPower(bob, blockNumber)).to.eq.BN(one.muln(10000));
       });
     });
   });
@@ -116,17 +127,18 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
         await timedPolicies.incrementGeneration();
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
-        generation = await balanceStore.currentGeneration();
+        blockNumber = await time.latestBlock();
+        await time.advanceBlock();
       });
 
       it('Has the correct total power', async () => {
         // 20k total + ECOx power
-        expect(await proposals.totalVotingPower(generation)).to.eq.BN(toBN(totalPower));
+        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(toBN(totalPower));
       });
 
       it('Has the right power for alice', async () => {
         // 5k + ECOx power
-        expect(await proposals.votingPower(alice, generation, [])).to.eq.BN(toBN(alicePower));
+        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(toBN(alicePower));
       });
     });
 

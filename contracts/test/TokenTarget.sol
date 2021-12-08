@@ -8,7 +8,7 @@ contract TokenTarget {
     // Token to use
     ERC20 public token;
 
-    constructor(address _token) public {
+    constructor(address _token) {
         token = ERC20(_token);
     }
 

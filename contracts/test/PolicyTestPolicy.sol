@@ -49,7 +49,7 @@ contract FakeCommandAction is Policy {
      * @param _policed The contract being policed.
      * @param _action The contract providing the code to execute.
      */
-    constructor(address _policed, address _action) public {
+    constructor(address _policed, address _action) {
         policed = Policed(_policed);
         action = _action;
     }
@@ -73,7 +73,7 @@ contract FakeCommandAction is Policy {
  * Object that is allowed by policy to take its role
  */
 contract FakeCommander is PolicedUtils {
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     /** Run a FakeCommandAction in the context of the root policy object.
      *
@@ -99,7 +99,7 @@ contract DummyPoliced is PolicedUtils {
      */
     address public c;
 
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     modifier onlyInflation() {
         require(
@@ -136,7 +136,7 @@ contract DummyPoliced is PolicedUtils {
  * Object that will act as inflation to test modifier
  */
 contract DummyInflation is PolicedUtils {
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     /** Ask a policed contract to modify itself, verifying that having the
      * Inflation role is sufficient.
@@ -152,7 +152,7 @@ contract DummyInflation is PolicedUtils {
  * Inherits from DummyPoliced to have easy access to storage layout
  */
 contract Policer is DummyPoliced {
-    constructor(address _policy) public DummyPoliced(_policy) {}
+    constructor(address _policy) DummyPoliced(_policy) {}
 
     /** Set the value to 3. This is intended as a test policy action to be run
      * in the context of some other contract.
@@ -169,7 +169,7 @@ contract Policer is DummyPoliced {
  * delegatecall results in a revert.
  */
 contract RevertingAction is PolicedUtils {
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     function doit() public view onlyPolicy {
         revert("failing as it should");
@@ -204,7 +204,7 @@ contract RegistrationAttemptContract is ERC1820Client {
     address public implementer;
     string public identifier;
 
-    constructor(address _implementer, string memory _identifier) public {
+    constructor(address _implementer, string memory _identifier) {
         implementer = _implementer;
         identifier = _identifier;
     }

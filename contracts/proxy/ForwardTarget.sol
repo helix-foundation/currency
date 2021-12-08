@@ -18,7 +18,7 @@ contract ForwardTarget {
         _;
     }
 
-    constructor() public {
+    constructor() {
         require(
             IMPLEMENTATION_SLOT ==
                 uint256(

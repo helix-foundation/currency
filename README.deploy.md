@@ -33,7 +33,6 @@ const PolicyProposalContractABI = require('../build/contracts/PolicyProposals.js
 const PolicyVotesContractABI = require('../build/contracts/PolicyVotes.json');
 const SimplePolicySetterABI = require('../build/contracts/SimplePolicySetter.json');
 const EcoBalanceStoreABI = require('../build/contracts/EcoBalanceStore.json');
-const ERC777EcoTokenABI = require('../build/contracts/ERC777EcoToken.json');
 const ERC20EcoTokenABI = require('../build/contracts/ERC20EcoToken.json');
 const ERC20TokenABI = require('../build/contracts/IERC20.json');
 const EcoFaucetABI = require('../build/contracts/EcoFaucet.json');
@@ -161,7 +160,7 @@ the `EcoInitializable` at the 0th reserved address to redirect the address
 to the new `PolicyInit` instance.
 
 Afterwards, we deploy the `EcoBalanceStore` and bind it to a slot, and then
-depoly and bind the currency implementation contracts (`ERC20`, `ERC777`, `ECOx`).
+depoly and bind the currency implementation contracts (`ERC20`, `ECOx`).
 The addresses of the currency implementation contracts are stored for the
 next stage. We also deploy `InflationRootHashProposal` which is a contract for
 submitting a Merkel hash of all balances, used in governance.
@@ -179,11 +178,6 @@ Lookup proxy addresses
     .call({ from: options.account });
   const balanceStoreProxyAddress = await options.bootstrap.methods
     .placeholders(1)
-    .call({
-      from: options.account,
-    });
-  const erc777ProxyAddress = await options.bootstrap.methods
-    .placeholders(2)
     .call({
       from: options.account,
     });
@@ -290,18 +284,6 @@ Deploy the root hash and balance store contract
 Deploy the implementation contracts
 ![Deploy the Token Interfaces](https://www.lucidchart.com/publicSegments/view/b528bda8-df21-49fd-8d8e-2e05a8875f58/image.png)
 ```js
-  console.log('deploying the ERC777 implementation contract...');
-  const erc777Impl = await new web3.eth.Contract(ERC777EcoTokenABI.abi)
-    .deploy({
-      data: ERC777EcoTokenABI.bytecode,
-      arguments: [options.policyProxy.options.address],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    });
-
   console.log('deploying the ERC20 implementation contract...');
   const erc20Impl = await new web3.eth.Contract(ERC20EcoTokenABI.abi)
     .deploy({
@@ -329,16 +311,6 @@ Deploy the implementation contracts
 ```
 Update the proxy targets to the implementation contract addresses
 ```js
-  console.log('binding proxy 2 to the ERC777 implementation contract...');
-  await new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    erc777ProxyAddress,
-  ).methods['fuseImplementation(address)'](erc777Impl.options.address).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
-
   console.log('binding proxy 3 to the ERC20 implementation contract...');
   await new web3.eth.Contract(
     EcoInitializableABI.abi,
@@ -365,10 +337,6 @@ Pass along the local token contract objects
   options.erc20 = new web3.eth.Contract(
     ERC20TokenABI.abi,
     erc20ProxyAddress,
-  );
-  options.erc777 = new web3.eth.Contract(
-    ERC777EcoTokenABI.abi,
-    erc777ProxyAddress,
   );
   options.ecox = new web3.eth.Contract(
     ECOxABI.abi,
@@ -706,10 +674,6 @@ our policy initilization action.
   identifiers.push(web3.utils.soliditySha3('ERC20Token'));
   addresses.push(options.erc20.options.address);
   tokenResolvers.push(web3.utils.soliditySha3('ERC20Token'));
-
-  identifiers.push(web3.utils.soliditySha3('ERC777Token'));
-  addresses.push(options.erc777.options.address);
-  tokenResolvers.push(web3.utils.soliditySha3('ERC777Token'));
 
   identifiers.push(web3.utils.soliditySha3('BalanceStore'));
   addresses.push(options.balanceStore.options.address);

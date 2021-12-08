@@ -9,7 +9,7 @@ const {
   expect,
 } = chai;
 
-const { constants, expectRevert } = require('@openzeppelin/test-helpers');
+const { expectRevert } = require('@openzeppelin/test-helpers');
 const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
@@ -36,6 +36,14 @@ contract('ECOx', ([alice, bob, charlie]) => {
   });
 
   it('Verifies starting conditions', async () => {
+    expect(await token.balanceOf(alice)).to.eq.BN('20000000000000000000000');
+    expect(await token.balanceOf(bob)).to.eq.BN('30000000000000000000000');
+    expect(await token.balanceOf(charlie)).to.eq.BN('50000000000000000000000');
+
+    expect(await ecox.balanceOf(alice)).to.eq.BN('500000000000000000000');
+    expect(await ecox.balanceOf(bob)).to.eq.BN('300000000000000000000');
+    expect(await ecox.balanceOf(charlie)).to.eq.BN('200000000000000000000');
+
     expect(await token.totalSupply()).to.eq.BN('100000000000000000000000');
     expect(await ecox.totalSupply()).to.eq.BN('1000000000000000000000');
   });
@@ -70,24 +78,11 @@ contract('ECOx', ([alice, bob, charlie]) => {
     // OF ECO DUE TO ROUNDING/TRUNCATING ERRORS
   });
 
-  context('token burn', () => {
-    it('burns tokens sent to Zero address using transfer', async () => {
-      await ecox.transfer(constants.ZERO_ADDRESS, new BN('300000000000000000000'), { from: alice });
-      expect(await ecox.balanceOf(alice)).to.eq.BN('200000000000000000000');
-    });
-
-    it('burns tokens sent to Zero address using transferFrom', async () => {
-      await ecox.approve(bob, new BN('300000000000000000000'), { from: alice });
-      await ecox.transferFrom(alice, constants.ZERO_ADDRESS, new BN('300000000000000000000'), { from: bob });
-      expect(await ecox.balanceOf(alice)).to.eq.BN('200000000000000000000');
-    });
-  });
-
   context('allowance', () => {
     it('returns the correct allowance', async () => {
       await ecox.approve(bob, new BN('300000000000000000000'), { from: alice });
       await ecox.approve(bob, new BN('100000000000000000000'), { from: alice });
-      expect(await ecox.allowances(alice, bob)).to.eq.BN('100000000000000000000');
+      expect(await ecox.allowance(alice, bob)).to.eq.BN('100000000000000000000');
     });
   });
 
@@ -97,19 +92,6 @@ contract('ECOx', ([alice, bob, charlie]) => {
         ecox.mint(charlie, new BN('50000000000000000000000'), { from: charlie }),
         'Caller not authorized to mint tokens',
       );
-    });
-  });
-
-  context('destruct works properly', () => {
-    it('reverts when called by non-ID_CLEANUP address', async () => {
-      await expectRevert(
-        ecox.destruct({ from: alice }),
-        'Only the cleanup policy contract can call destruct',
-      );
-    });
-
-    it('successfully destructs when called by ID_CLEANUP', async () => {
-      // TODO
     });
   });
 

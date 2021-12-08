@@ -68,23 +68,12 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     const [evt] = await currencyTimer.getPastEvents('LockupOffered');
     lockup = await Lockup.at(evt.args.addr);
 
-    await faucet.faucet({ value: 1000000000, from: charlie });
+    await faucet.mint(charlie, 1000000000, { from: charlie });
     await token.approve(lockup.address, 1000000000, { from: charlie });
   });
 
   it('allows deposits', async () => {
     await lockup.deposit(1000000000, { from: charlie });
-  });
-
-  it('Rejects destruction', async () => {
-    await expectRevert(lockup.destruct(), 'Cannot destroy while still open for selling');
-  });
-
-  it('rejects if no deposit', async () => {
-    await expectRevert(
-      lockup.withdrawFor(charlie),
-      'Withdrawals can only be made for accounts that made deposits',
-    );
   });
 
   describe('With a valid deposit', async () => {
@@ -95,10 +84,6 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     it('punishes early withdrawal', async () => {
       await lockup.withdraw({ from: charlie });
       expect(await token.balanceOf(charlie)).to.eq.BN(999999960);
-    });
-
-    it('doesnt allow indirect early withdrawal', async () => {
-      await expectRevert(lockup.withdrawFor(charlie), 'Only depositor may withdraw early');
     });
 
     describe('A week later', async () => {
@@ -128,20 +113,6 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
           'Withdrawal',
           { to: charlie, amount: '1000000040' },
         );
-      });
-
-      it('allows indirect withdrawal', async () => {
-        await lockup.withdrawFor(charlie);
-        expect(await token.balanceOf(charlie)).to.eq.BN(1000000040);
-      });
-
-      it('Rejects destruction', async () => {
-        await expectRevert(lockup.destruct(), 'All deposits must be withdrawn');
-      });
-
-      it('allows destruction after last withdrawal', async () => {
-        await lockup.withdrawFor(charlie);
-        await lockup.destruct();
       });
     });
   });

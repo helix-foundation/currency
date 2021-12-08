@@ -2,7 +2,6 @@ const ForwardProxy = artifacts.require('ForwardProxy');
 const TestPolicy = artifacts.require('PolicyTestPolicy');
 const PolicyInit = artifacts.require('PolicyInit');
 const PolicyForAll = artifacts.require('PolicyForAll');
-const DummyInflation = artifacts.require('DummyInflation');
 
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
@@ -65,33 +64,6 @@ contract('PolicyInit [@group=11]', () => {
           await registry.getInterfaceImplementer(
             proxied.address,
             interfaceName,
-          ),
-        );
-      });
-
-      it('duplicates the token resolver interfaces registrations', async () => {
-        const tokenName = web3.utils.soliditySha3('ERC777Token');
-
-        /* It doens't matter what contract is used here, just that it extends
-         * PolicedUtils so that the `proxied` contract can set its interfaces.
-         */
-        const contractAllowingERC1820Management = await DummyInflation.new(
-          proxy.address,
-        );
-
-        await proxied.fusedInit(
-          policy.address,
-          [],
-          [tokenName],
-          [contractAllowingERC1820Management.address],
-          [tokenName],
-        );
-
-        assert.equal(
-          contractAllowingERC1820Management.address,
-          await registry.getInterfaceImplementer(
-            contractAllowingERC1820Management.address,
-            tokenName,
           ),
         );
       });

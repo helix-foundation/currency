@@ -91,7 +91,7 @@ contract('CurrencyTimer [@group=6]', ([alice, bob, charlie]) => {
         const lockup = await Lockup.at(evt.args.addr);
         expect(await token.balanceOf(lockup.address)).to.eq.BN(0);
 
-        await faucet.faucet({ value: 1000000000, from: charlie });
+        await faucet.mint(charlie, 1000000000, { from: charlie });
         await token.approve(lockup.address, 1000000000, { from: charlie });
         await lockup.deposit(1000000000, { from: charlie });
 

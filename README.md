@@ -68,11 +68,10 @@ The user-facing logic comprises of the `currency` and the `governance`:
 
 #### Tokens (/currency)
 ##### The Token Implementation
-The token (ECO) implementation provides the code driving our ERC20 and ERC777 tokens,
-and the shared balance tracking between them. It takes responsibility for
-storing balances for all account holders, transferring funds between accounts,
-creating and destroying tokens, and providing the interfaces that token holders
-will typically interact with.
+The token (ECO) implementation provides the code driving our ERC20 token,
+It takes responsibility for storing balances for all account holders, transferring
+funds between accounts, creating and destroying tokens, and providing the
+interfaces that token holders will typically interact with.
 
 ##### The Partner Token
 The partner token (ECOx) establishes a value to the future success of the ECO token.
@@ -190,7 +189,6 @@ Root:     0xAD4371ce9D4Bd8100577684F18D416585Ad0EdBC
 Policy:   0xF710A0b2D104F30a1b32F398F0CFD404C48AC523
 Store:    0x24FffDBcc509205b478ED0ea37c74D56715BD59a
 ERC20:    0x24FffDBcc509205b478ED0ea37c74D56715BD59a
-ERC777:   0xcf6bfE4E29e06c79Ce8b6A49861CFf62f77A32e2
 Voting:   0xf724586058838104d24E3Cf32F21f375DB3Ddcd6
 Cleanup:  0xb15BD484bb23dFEC1534d0bA2FDb4827F01Ec1F6
 Faucet:   0x356aa04ab1Af60ce46b0822d6a34e6adbb4cb810

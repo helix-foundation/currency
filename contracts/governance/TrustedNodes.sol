@@ -46,7 +46,7 @@ contract TrustedNodes is PolicedUtils {
         address _policy,
         address[] memory _initial,
         uint256 _voteReward
-    ) public PolicedUtils(_policy) {
+    ) PolicedUtils(_policy) {
         for (uint256 i = 0; i < _initial.length; ++i) {
             _trust(_initial[i]);
         }

@@ -76,8 +76,6 @@ weighted vote it becomes impossible to count the same staked tokens twice.
 ### References
 
  - [ERC20](https://theethereum.wiki/w/index.php/ERC20_Token_Standard)
- - [ERC777](https://eips.ethereum.org/EIPS/eip-777)
- - [ERC777 Reference Implementation](https://github.com/0xjac/ERC777)
  - [ERC1820](https://eips.ethereum.org/EIPS/eip-1820)
 
 ## Install
@@ -86,8 +84,8 @@ See the [main README](../../README.md) for installation instructions.
 ## Usage
 The currency contracts are intended for deployment on the Ethereum blockchain,
 using Eco's [Governance System](../governance) (built on the
-[policy framework](../policy)). The currency additionally provides an ERC20 and
-ERC777 interface, which is how most systems will interact with it. The
+[policy framework](../policy)). The currency additionally provides an ERC20
+interface, which is how most systems will interact with it. The
 governance system can be used to add new interfaces in the future.
 
 ## API
@@ -275,10 +273,6 @@ Arguments:
  - `_from` (address) - the address who is the source balance of the transfer
  - `_to` (address) - the address who is the recipient balance of the transfer
  - `_value` (uint256) - the amount minted (in units of 10^-18 of one, inflated ECO)
- - `_data` (bytes) - data added by the balance owner to be emitted by an
-      ERC777 interface transfer event.
- - `_operatorData` (bytes) - data added by the operator to be emitted by an
-      ERC777 interface transfer event.
 
 Uses `update` (above) to make sure both balances are current, then transfers
 the tokens, recording it in the generational balance store. Then passes the data
@@ -292,10 +286,6 @@ Arguments:
  - `_operator` (address) - the address that called for the transfer
  - `_from` (address) - the address who is the source balance of the transfer
  - `_value` (uint256) - the amount minted (in units of 10^-18 of one, inflated ECO)
- - `_data` (bytes) - data added by the balance owner to be emitted by an
-      ERC777 interface transfer event.
- - `_operatorData` (bytes) - data added by the operator to be emitted by an
-      ERC777 interface transfer event.
 
 Uses `update` (above) to make sure the source balance is current, then burns
 the tokens, recording the balance in the generational balance store. Then passes
@@ -309,10 +299,6 @@ Arguments:
  - `_operator` (address) - the address that called for the transfer
  - `_to` (address) - the address who is the recipient balance of the transfer
  - `_value` (uint256) - the amount minted (in units of 10^-18 of one, inflated ECO)
- - `_data` (bytes) - data added by the balance owner to be emitted by an
-      ERC777 interface transfer event.
- - `_operatorData` (bytes) - data added by the operator to be emitted by an
-      ERC777 interface transfer event.
 
 Uses `update` (above) to make sure the balance is current, then adds the tokens
 to the specified address recording it in the generational balance store. Then

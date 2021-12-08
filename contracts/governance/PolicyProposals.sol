@@ -77,10 +77,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     uint256 public proposalEnds;
 
-    /** The generation of the generational balance store to use for staking in
+    /** The block number of the balance stores to use for staking in
      * support of a proposal.
      */
-    uint256 public generation;
+    uint256 public blockNumber;
 
     /** The address of the `PolicyVotes` contract, to be cloned for the voting
      * phase.
@@ -148,7 +148,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         simplePolicyImpl = PolicyProposals(_self).simplePolicyImpl();
 
         proposalEnds = getTime() + PROPOSAL_TIME;
-        generation = getStore().currentGeneration();
+        blockNumber = block.number;
     }
 
     /** A list of addresses for all proposed policies
@@ -203,15 +203,9 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The proposal to support.
      */
-    function support(address _prop, uint256[] calldata _lockupGenerations)
-        external
-    {
-        uint256 _amount = votingPower(
-            msg.sender,
-            generation,
-            _lockupGenerations
-        );
-        uint256 _total = totalVotingPower(generation);
+    function support(address _prop) external {
+        uint256 _amount = votingPower(msg.sender, blockNumber);
+        uint256 _total = totalVotingPower(blockNumber);
 
         Props storage _p = proposals[address(_prop)];
 

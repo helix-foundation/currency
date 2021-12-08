@@ -18,7 +18,7 @@ import "../currency/EcoBalanceStore.sol";
  */
 contract EcoTokenInit is PolicedUtils {
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) public PolicedUtils(_policy) {}
+    constructor(address _policy) PolicedUtils(_policy) {}
 
     /** Mint initial tokens and remove permissions to prevent future calls.
      *

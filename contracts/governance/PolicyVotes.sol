@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
 import "../utils/TimeUtils.sol";
 import "./VotingPower.sol";
 
@@ -59,9 +58,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     event PolicyVoteCast(address indexed voter, bool vote, uint256 amount);
 
-    /** The store generation to use when checking account balances for staking.
+    /** The store block number to use when checking account balances for staking.
      */
-    uint256 public generation;
+    uint256 public blockNumber;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address _policy) VotingPower(_policy) {}
@@ -76,21 +75,17 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _vote The vote for the proposal
      */
-    function vote(bool _vote, uint256[] calldata _lockupGenerations) external {
+    function vote(bool _vote) external {
         require(
             getTime() < voteEnds,
             "Votes can only be recorded during the voting period"
         );
 
-        uint256 _amount = votingPower(
-            msg.sender,
-            generation,
-            _lockupGenerations
-        );
+        uint256 _amount = votingPower(msg.sender, blockNumber);
 
         require(
             _amount > 0,
-            "Voters must have held tokens at the start of the generation"
+            "Voters must have held tokens before the block number of the proposal"
         );
 
         uint256 _oldStake = stake[msg.sender];
@@ -138,7 +133,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
-        generation = getStore().currentGeneration();
+        blockNumber = block.number;
 
         proposal = _proposal;
     }
@@ -153,7 +148,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     function execute() external onlyClone {
         uint256 _requiredStake = totalStake / 2;
-        uint256 _total = totalVotingPower(generation);
+        uint256 _total = totalVotingPower(blockNumber);
         uint256 _time = getTime();
 
         Result _res;

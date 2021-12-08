@@ -23,7 +23,7 @@ contract PoodleCurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
 
     function notifyGenerationIncrease() external override {}
 
-    function lockups(uint256) external view override returns (address) {
+    function lockups(uint256) external pure override returns (address) {
         return address(0x0);
     }
 
