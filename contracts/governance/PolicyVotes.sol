@@ -129,7 +129,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _proposal The proposal to vote on.
      */
-    function configure(address _proposal) external onlyClone {
+    function configure(address _proposal) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
@@ -146,7 +146,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
      * will be enacted by calling the `enacted` functions using `delegatecall`
      * from the root policy.
      */
-    function execute() external onlyClone {
+    function execute() external {
         uint256 _requiredStake = totalStake / 2;
         uint256 _total = totalVotingPower(blockNumber);
         uint256 _time = getTime();
@@ -182,8 +182,6 @@ contract PolicyVotes is VotingPower, TimeUtils {
             address(uint160(policy)),
             getToken().balanceOf(address(this))
         );
-
-        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** Get the associated ERC20 token address.

@@ -167,7 +167,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The address of the proposal to submit.
      */
-    function registerProposal(address _prop) external onlyClone {
+    function registerProposal(address _prop) external {
         Props storage _p = proposals[_prop];
 
         require(_prop != address(0), "The proposal address can't be 0");
@@ -247,7 +247,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
                 )
             );
             Policy(policy).internalCommand(address(sps));
-            sps.destruct();
 
             proposalSelected = true;
             emit VotingStarted(address(pv));
@@ -293,9 +292,9 @@ contract PolicyProposals is VotingPower, TimeUtils {
         emit ProposalRefunded(receiver);
     }
 
-    /** Remove this contract instance from the chain and free storage.
+    /** Reclaim tokens after end time
      */
-    function destruct() external onlyClone {
+    function destruct() external {
         require(
             proposalSelected || getTime() > proposalEnds,
             "The destruct operation can only be performed when the period is over"
@@ -309,8 +308,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
             address(uint160(policy)),
             getToken().balanceOf(address(this))
         );
-
-        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** Get the associated ERC20 token address.

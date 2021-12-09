@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
 const VDFVerifier = artifacts.require('VDFVerifier');
-const VdfCloner = artifacts.require('VdfCloner');
 const chai = require('chai');
 const bnChai = require('bn-chai');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
@@ -63,28 +62,6 @@ contract('VDFVerifier [@group=6]', ([account]) => {
       }
 
       expect(s).to.eq.BN(y);
-    });
-
-    context('With a valid clone', () => {
-      let clone;
-      let cloner;
-
-      beforeEach(async () => {
-        cloner = await VdfCloner.new(instanceVDFVerifier.address);
-        clone = await VDFVerifier.at(await cloner.clone());
-      });
-
-      it('Rejects destructions from non-creator', async () => {
-        await expectRevert(clone.destruct(), 'Only creating contract may destroy instance');
-      });
-
-      it('Cannot destroy the parent', async () => {
-        await expectRevert(instanceVDFVerifier.destruct(), 'This method can only be called on clones');
-      });
-
-      it('The clone can be destroyed by the creator', async () => {
-        await cloner.destruct();
-      });
     });
 
     context('When starting', () => {

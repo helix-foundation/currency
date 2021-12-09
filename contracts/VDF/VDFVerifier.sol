@@ -198,14 +198,4 @@ contract VDFVerifier is PolicedUtils, IsPrime {
             verified[keccak256(abi.encode(_t, _x))] ==
             keccak256(y.asBytes(nlen));
     }
-
-    /** Destroy contract when no longer needed */
-    function destruct() external onlyClone {
-        require(
-            msg.sender == destroyer,
-            "Only creating contract may destroy instance"
-        );
-
-        selfdestruct(payable(address(uint160(destroyer))));
-    }
 }

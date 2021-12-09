@@ -88,7 +88,7 @@ contract Inflation is PolicedUtils, TimeUtils {
      * Can only be called after all pay-outs
      * have been claimed.
      */
-    function destruct() external onlyClone {
+    function destruct() external {
         if (seed != 0) {
             /* The higher bound for the loop iterations is the amount
              * of the winners according to a vote by trusted nodes.
@@ -107,13 +107,11 @@ contract Inflation is PolicedUtils, TimeUtils {
                 "The contract must have 0 balance to be destructed prior seed revealing"
             );
         }
-        vdfVerifier.destruct();
 
         getToken().transfer(
             address(uint160(policy)),
             getToken().balanceOf(address(this))
         );
-        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** Initialize the storage context using parameters copied from the
@@ -167,10 +165,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         emit EntropyVDFSeedCommitted(entropyVDFSeed);
     }
 
-    function startInflation(uint256 _winners, uint256 _prize)
-        external
-        onlyClone
-    {
+    function startInflation(uint256 _winners, uint256 _prize) external {
         require(_winners > 0 && _prize > 0, "Contract must have rewards");
         require(
             getToken().balanceOf(address(this)) >= _winners * _prize,
