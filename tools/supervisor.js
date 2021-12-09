@@ -481,7 +481,9 @@ class Supervisor {
         .map((x) => x.returnValues.contractAddress)
         .shift();
 
-      if (votesAddress !== undefined && await web3.eth.getTransactionCount(votesAddress) !== 0 && !this.policyVotesAddressesExecuted.has(votesAddress)) {
+      if (votesAddress !== undefined
+        && await web3.eth.getTransactionCount(votesAddress) !== 0
+        && !this.policyVotesAddressesExecuted.has(votesAddress)) {
         const votes = new web3.eth.Contract(
           PolicyVotesContractABI.abi,
           votesAddress,
