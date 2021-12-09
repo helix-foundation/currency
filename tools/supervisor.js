@@ -125,6 +125,7 @@ class Supervisor {
     this.policy = new web3.eth.Contract(PolicyABI.abi, policyAddr);
     this.timedPoliciesEventStamp = 0;
     this.policyDecisionAddresses = new Set();
+    this.policyVotesAddressesExecuted = new Set();
     this.currencyAddresses = new Set();
     this.mutex = new Mutex();
     this.account = account;
@@ -480,7 +481,7 @@ class Supervisor {
         .map((x) => x.returnValues.contractAddress)
         .shift();
 
-      if (votesAddress !== undefined && await web3.eth.getTransactionCount(votesAddress) !== 0) {
+      if (votesAddress !== undefined && await web3.eth.getTransactionCount(votesAddress) !== 0 && !this.policyVotesAddressesExecuted.has(votesAddress)) {
         const votes = new web3.eth.Contract(
           PolicyVotesContractABI.abi,
           votesAddress,
@@ -490,6 +491,7 @@ class Supervisor {
         if (await votes.methods.voteEnds().call() < this.timeStamp) {
           logger.info('Executing PolicyVotes');
           await votes.methods.execute().send({ gas: 4000000 });
+          this.policyVotesAddressesExecuted.add(votesAddress);
           return true;
         }
       } else if (await proposals.methods.proposalEnds().call() < this.timeStamp) {
@@ -506,6 +508,7 @@ class Supervisor {
 
         logger.info('Destroying PolicyProposals');
         await proposals.methods.destruct().send({ gas: 4000000 });
+        this.policyDecisionAddresses.delete(address);
         return true;
       }
     }
