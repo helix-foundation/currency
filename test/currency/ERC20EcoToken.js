@@ -11,7 +11,7 @@ const ERC20EcoToken = artifacts.require('ERC20EcoToken');
 const MurderousPolicy = artifacts.require('MurderousPolicy');
 const FakeInflation = artifacts.require('FakeInflation');
 const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
-const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const { expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 
 const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
 let one;
@@ -465,6 +465,22 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
       const votes = await token.getVotes(from);
       expect(votes).to.be.eq.BN(one.muln(2000));
     });
+
+    it('cannot get the internal votes for an account until the block requestsed has been mined', async () => {
+      await expectRevert(
+        token.getPastVotes(from, await time.latestBlock(), { from }),
+        'ERC20Votes: block not yet mined',
+        token.constructor,
+      );
+    });
+
+    it('cannot get the past supply until the block requestsed has been mined', async () => {
+      await expectRevert(
+        token.getPastTotalSupply(await time.latestBlock(), { from }),
+        'ERC20Votes: block not yet mined',
+        token.constructor,
+      );
+    });
   });
 
   describe('increase and decrease allowance', () => {
@@ -491,6 +507,14 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
         await token.decreaseAllowance(authorized, increment, { from });
         const allowance = await token.allowance(from, authorized);
         expect(allowance).to.be.eq.BN(allowanceAmount - increment);
+      });
+
+      it('cant decreases the allowance into negative values', async () => {
+        await expectRevert(
+          token.decreaseAllowance(authorized, allowanceAmount.add(new BN(1)), { from }),
+          'ERC20: decreased allowance below zero',
+          token.constructor,
+        );
       });
     });
   });
