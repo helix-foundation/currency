@@ -141,6 +141,14 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
         const result = await token.transfer.call(accounts[2], amount, meta);
         expect(result).to.be.true;
       });
+
+      it('prevents a transfer to the 0 address', async () => {
+        await expectRevert(
+          token.transfer('0x0000000000000000000000000000000000000000', amount, meta),
+          'ERC20: transfer to the zero address',
+          token.constructor,
+        );
+      });
     });
   });
 
@@ -158,6 +166,14 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
           result.tx,
           token.constructor,
           'Approval',
+        );
+      });
+
+      it('prevents an approve for the 0 address', async () => {
+        await expectRevert(
+          token.approve('0x0000000000000000000000000000000000000000', amount, meta),
+          'ERC20: approve to the zero address',
+          token.constructor,
         );
       });
 
