@@ -29,16 +29,6 @@ contract Policed is ForwardTarget, IERC1820Implementer {
         _;
     }
 
-    /** Restrict method access to only be on clones.
-     */
-    modifier onlyClone() {
-        require(
-            implementation() != address(this),
-            "This method can only be called on clones"
-        );
-        _;
-    }
-
     constructor(address _policy) {
         policy = _policy;
     }

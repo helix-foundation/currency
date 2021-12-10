@@ -54,15 +54,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
   });
 
   describe('configure', () => {
-    context('when called on a direct instance', () => {
-      it('reverts', async () => {
-        await expectRevert(
-          policyVotes.configure(proposal),
-          'This method can only be called on clones',
-        );
-      });
-    });
-
     context('when called on a proxied instance', () => {
       context('that has not been configured', () => {
         it('succeeds', async () => {
@@ -252,7 +243,7 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
         it('reverts', async () => {
           await expectRevert(
             policyVotes.execute(),
-            'This method can only be called on clones',
+            'revert',
           );
         });
       });
@@ -302,10 +293,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
           );
         });
 
-        it('self destructs', async () => {
-          assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
-        });
-
         it('emits the VoteCompleted event', async () => {
           await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '2' });
         });
@@ -341,10 +328,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
           );
         });
 
-        it('self destructs', async () => {
-          assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
-        });
-
         it('emits the VoteCompleted event', async () => {
           await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '1' });
         });
@@ -376,10 +359,6 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
             await util.policyFor(policy, votesPolicyIdHash),
             0,
           );
-        });
-
-        it('self destructs', async () => {
-          assert.equal(await web3.eth.getCode(proxiedPolicyVotes.address), '0x');
         });
 
         it('emits the VoteCompleted event', async () => {
