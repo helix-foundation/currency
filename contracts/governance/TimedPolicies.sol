@@ -120,7 +120,6 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             )
         );
         Policy(policy).internalCommand(address(sps));
-        sps.destruct();
         emit PolicyDecisionStarted(_proposals);
     }
 }

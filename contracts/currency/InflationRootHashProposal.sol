@@ -212,7 +212,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *
      * @param _blockNumber block number to verify accounts balances against
      */
-    function configure(uint256 _blockNumber) external onlyClone {
+    function configure(uint256 _blockNumber) external {
         require(blockNumber == 0, "This instance has already been configured");
         blockNumber = _blockNumber;
     }
@@ -228,7 +228,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         bytes32 _proposedRootHash,
         uint256 _totalSum,
         uint256 _amountOfAccounts
-    ) external onlyClone hashIsNotAcceptedYet {
+    ) external hashIsNotAcceptedYet {
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
 
         require(!proposal.initialized, "Root hash already proposed");
@@ -266,7 +266,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _index
     )
         external
-        onlyClone
         hashIsNotAcceptedYet
         challengeConstraintsAreValid(
             _proposer,
@@ -325,7 +324,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         address _account
     )
         external
-        onlyClone
         hashIsNotAcceptedYet
         challengeConstraintsAreValid(
             _proposer,
@@ -396,7 +394,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _claimedBalance,
         uint256 _sum,
         uint256 _index
-    ) external onlyClone hashIsNotAcceptedYet {
+    ) external hashIsNotAcceptedYet {
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
 
@@ -507,7 +505,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     function checkRootHashStatus(address _proposer, bytes32 _rootHash)
         external
-        onlyClone
     {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
@@ -543,7 +540,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         bytes32[] calldata _proof,
         uint256 _sum,
         uint256 _index
-    ) external view onlyClone returns (bool) {
+    ) external view returns (bool) {
         require(
             acceptedRootHash != 0,
             "Can't claim win before _rootHash established"
@@ -568,7 +565,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         address _who,
         address _proposer,
         bytes32 _rootHash
-    ) public onlyClone {
+    ) public {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         require(
@@ -613,14 +610,14 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *  @param _rootHash   root hash sender claims fee for challenges/proposal
      *
      */
-    function claimFee(address _proposer, bytes32 _rootHash) external onlyClone {
+    function claimFee(address _proposer, bytes32 _rootHash) external {
         claimFeeFor(msg.sender, _proposer, _rootHash);
     }
 
-    /** @notice Self-destructs the inflation root hash proposal contract.
+    /** @notice Reclaims tokens on the inflation root hash proposal contract.
      *
      */
-    function destruct() external onlyClone {
+    function destruct() external {
         require(
             feeCollectionEnds != 0 && getTime() > feeCollectionEnds,
             "contract might be destructed after fee collection period is over"
@@ -629,7 +626,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             address(uint160(policy)),
             getToken().balanceOf(address(this))
         );
-        selfdestruct(payable(address(uint160(policy))));
     }
 
     /** @notice updates root hash proposal data structure to mark it rejected

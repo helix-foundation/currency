@@ -95,25 +95,4 @@ contract('SimplePolicySetter [@group=11]', () => {
       );
     });
   });
-
-  describe('destruct', () => {
-    context('when called before setup', () => {
-      it('reverts', async () => {
-        await expectRevert(
-          policySetter.destruct(),
-          'after the policy setter has been set',
-        );
-      });
-    });
-
-    context('when called after setup', () => {
-      beforeEach(async () => {
-        await policySetter.set(web3.utils.fromAscii('Hello'), policySetter.address);
-      });
-
-      it('succeeds', async () => {
-        await policySetter.destruct();
-      });
-    });
-  });
 });

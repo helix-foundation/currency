@@ -470,13 +470,6 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
           policySetter.address,
         );
       });
-
-      it('reverts', async () => {
-        await expectRevert(
-          policyProposals.destruct(),
-          'This method can only be called on clones',
-        );
-      });
     });
 
     context('before results are computed', () => {

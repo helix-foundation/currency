@@ -19,8 +19,4 @@ contract VdfCloner {
     constructor(address _addr) {
         clone = VDFVerifier(VDFVerifier(_addr).clone());
     }
-
-    function destruct() public {
-        clone.destruct();
-    }
 }

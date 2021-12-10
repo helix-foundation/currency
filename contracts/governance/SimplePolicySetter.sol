@@ -68,14 +68,4 @@ contract SimplePolicySetter is Policy, CloneFactory {
             _sps.value()
         );
     }
-
-    /** Clean up this contract and free all storage.
-     */
-    function destruct() external {
-        require(
-            value != address(0),
-            "Cannot destruct until after the policy setter has been set"
-        );
-        selfdestruct(payable(msg.sender));
-    }
 }
