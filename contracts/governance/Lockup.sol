@@ -56,11 +56,11 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     constructor(address _policy) PolicedUtils(_policy) {}
 
-    function deposit(uint256 _amount) external onlyClone {
+    function deposit(uint256 _amount) external {
         internalDeposit(_amount, msg.sender, msg.sender);
     }
 
-    function withdraw() external onlyClone {
+    function withdraw() external {
         doWithdrawal(msg.sender, true);
     }
 

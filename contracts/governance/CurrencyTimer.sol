@@ -99,7 +99,6 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
                 )
             );
             Policy(policy).internalCommand(address(sps));
-            sps.destruct();
         }
 
         if (_randomInflationWinners > 0 && _randomInflationPrize > 0) {

@@ -101,7 +101,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _lockupDuration,
         uint256 _lockupInterest,
         uint256 _numPoodles
-    ) external onlyClone onlyTrusted atStage(Stages.Propose) {
+    ) external onlyTrusted atStage(Stages.Propose) {
         GovernanceProposal storage p = proposals[msg.sender];
         p.valid = true;
         p.randomInflationWinners = _randomInflationWinners;
@@ -111,13 +111,12 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
         p.numPoodles = _numPoodles;
     }
 
-    function unpropose() external onlyClone atStage(Stages.Propose) {
+    function unpropose() external atStage(Stages.Propose) {
         delete proposals[msg.sender];
     }
 
     function commit(bytes32 _commitment)
         external
-        onlyClone
         onlyTrusted
         atStage(Stages.Commit)
     {
@@ -126,7 +125,6 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
 
     function reveal(bytes32 _seed, address[] calldata _votes)
         external
-        onlyClone
         atStage(Stages.Reveal)
     {
         require(
@@ -161,7 +159,7 @@ contract PoodleCurrencyGovernance is PolicedUtils, TimeUtils {
         emit VoteRevealed(msg.sender, _votes);
     }
 
-    function compute() external onlyClone atStage(Stages.Compute) {
+    function compute() external atStage(Stages.Compute) {
         winner = leader;
         stage = Stages.Finished;
 

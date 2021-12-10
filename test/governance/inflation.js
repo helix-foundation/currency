@@ -30,7 +30,6 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   let policy;
   let token;
   let balanceStore;
-  let originalInflation;
   let governance;
   let initInflation;
   let addressRootHashProposal;
@@ -139,8 +138,6 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       currencyTimer,
       inflation,
     } = await util.deployPolicy({ trustees: accounts.slice(1, 5) }));
-
-    originalInflation = inflation;
 
     await initInflation.mint(balanceStore.address, accounts[0], accountsBalances[0]);
     await initInflation.mint(balanceStore.address, accounts[1], accountsBalances[1]);
@@ -427,15 +424,6 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   });
 
   describe('destruct', () => {
-    context('the base implementation', () => {
-      it('reverts', async () => {
-        await expectRevert(
-          originalInflation.destruct(),
-          'This method can only be called on clones',
-        );
-      });
-    });
-
     context('before seed reveal', () => {
       it('reverts because the contract has a non-zero balance', async () => {
         await expectRevert(
