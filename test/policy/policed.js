@@ -97,6 +97,11 @@ contract('Policed [@group=11]', (accounts) => {
         'contract only implements interfaces for the policy contract',
       );
     });
+
+    it('responds to canImplementInterfaceForAddress', async () => {
+      const testRawPoliced = await Policed.new(policy.address);
+      await testRawPoliced.canImplementInterfaceForAddress('0x00', policy.address);
+    });
   });
 
   it('Should set values on the dummy object', async () => {

@@ -56,13 +56,6 @@ contract('EcoInitializable [@group=5]', (accounts) => {
       );
     });
 
-    it('should destruct', async () => {
-      const initializableProxyAddress = initializableProxy.address;
-      await initializableProxy.destruct(meta);
-
-      assert.equal(await web3.eth.getCode(initializableProxyAddress), '0x');
-    });
-
     context('and the new target fails to initialize', () => {
       let failingInitializeTarget;
 
@@ -102,13 +95,6 @@ contract('EcoInitializable [@group=5]', (accounts) => {
           meta,
         ),
         'Only owner can change implementation',
-      );
-    });
-
-    it('should not allow destructing', async () => {
-      await expectRevert(
-        initializableProxy.destruct(meta),
-        'Only owner may clean up',
       );
     });
 
