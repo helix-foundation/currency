@@ -390,6 +390,12 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
 
       it('alice can still deposit', async () => {
         await ecox.approve(ecoxlockup.address, one.muln(10), { from: alice });
+        await ecoxlockup.deposit(one.muln(10), { from: alice });
+      });
+
+      it('alice cannot deposit more than approved', async () => {
+        await ecox.approve(ecoxlockup.address, one.muln(10), { from: alice });
+        await expectRevert(ecoxlockup.deposit(one.muln(1000), { from: alice }), 'ERC20: transfer amount exceeds balance.');
       });
     });
 

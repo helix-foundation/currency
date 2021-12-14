@@ -194,8 +194,4 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     function getTrustedNodes() private view returns (TrustedNodes) {
         return TrustedNodes(policyFor(ID_TRUSTED_NODES));
     }
-
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
-    }
 }
