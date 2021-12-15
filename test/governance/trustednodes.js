@@ -1,9 +1,13 @@
+const chai = require('chai');
 const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
+const bnChai = require('bn-chai');
 const util = require('../../tools/test/util');
 
 const TrustedNodes = artifacts.require('TrustedNodes');
 
-const { toBN } = web3.utils;
+const { BN, toBN } = web3.utils;
+chai.use(bnChai(BN));
+const { expect } = chai;
 
 contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
   let policy;
@@ -46,7 +50,7 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
           it('adds the address to the set', async () => {
             await policy.testTrust(trustedNodes.address, accountA);
 
-            assert(await trustedNodes.isTrusted(accountA));
+            expect(await trustedNodes.isTrusted(accountA)).to.be.true;
           });
         });
 
@@ -62,7 +66,7 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
           it('adds the address to the set', async () => {
             await policy.testTrust(trustedNodes.address, accountA);
 
-            assert(await trustedNodes.isTrusted(accountA));
+            expect(await trustedNodes.isTrusted(accountA)).to.be.true;
           });
         });
       });
@@ -91,7 +95,7 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
         it('removes the address from the set', async () => {
           await policy.testDistrust(trustedNodes.address, accountB);
 
-          assert(!(await trustedNodes.isTrusted(accountB)));
+          expect(await trustedNodes.isTrusted(accountB)).to.be.false;
         });
       });
 
@@ -102,21 +106,21 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
 
         it('Can remove the first address', async () => {
           await policy.testDistrust(trustedNodes.address, accountB);
-          assert(await trustedNodes.isTrusted(accountA));
-          assert(!await trustedNodes.isTrusted(accountB));
+          expect(await trustedNodes.isTrusted(accountA)).to.be.true;
+          expect(await trustedNodes.isTrusted(accountB)).to.be.false;
         });
 
         it('Can remove the second address', async () => {
           await policy.testDistrust(trustedNodes.address, accountA);
-          assert(!await trustedNodes.isTrusted(accountA));
-          assert(await trustedNodes.isTrusted(accountB));
+          expect(await trustedNodes.isTrusted(accountA)).to.be.false;
+          expect(await trustedNodes.isTrusted(accountB)).to.be.true;
         });
 
         it('Can remove both addresses', async () => {
           await policy.testDistrust(trustedNodes.address, accountB);
           await policy.testDistrust(trustedNodes.address, accountA);
-          assert(!await trustedNodes.isTrusted(accountA));
-          assert(!await trustedNodes.isTrusted(accountB));
+          expect(await trustedNodes.isTrusted(accountA)).to.be.false;
+          expect(await trustedNodes.isTrusted(accountB)).to.be.false;
         });
 
         it('Can remove and readd both addresses', async () => {
@@ -125,8 +129,8 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
           await policy.testTrust(trustedNodes.address, accountA);
           await policy.testTrust(trustedNodes.address, accountB);
 
-          assert(await trustedNodes.isTrusted(accountA));
-          assert(await trustedNodes.isTrusted(accountB));
+          expect(await trustedNodes.isTrusted(accountA)).to.be.true;
+          expect(await trustedNodes.isTrusted(accountB)).to.be.true;
         });
       });
 
@@ -134,26 +138,25 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
         it('reverts', async () => {
           await expectRevert(
             policy.testDistrust(trustedNodes.address, accountA),
-            'Cannot distrust a node that is already not trusted',
+            'Node already not trusted',
           );
         });
       });
     });
   });
 
-  describe('trustedNodesLength', () => {
+  describe('numTrustees', () => {
     context('adding adding an address to the set', () => {
       context('that is not already present', () => {
         it('increases the nodes length', async () => {
-          const preAddLength = toBN(await trustedNodes.trustedNodesLength());
+          const preAddLength = toBN(await trustedNodes.numTrustees());
 
           await policy.testTrust(trustedNodes.address, accountA);
 
-          assert(
-            toBN(await trustedNodes.trustedNodesLength())
-              .sub(preAddLength)
-              .eqn(1),
-          );
+          expect(
+            toBN(await trustedNodes.numTrustees())
+              .sub(preAddLength),
+          ).to.eq.BN(1);
         });
       });
     });
@@ -161,15 +164,14 @@ contract('TrustedNodes [@group=7]', ([accountA, accountB]) => {
     context('removing an address from the set', () => {
       it('decreases the nodes length', async () => {
         await policy.testTrust(trustedNodes.address, accountA);
-        const preAddLength = toBN(await trustedNodes.trustedNodesLength());
+        const preAddLength = toBN(await trustedNodes.numTrustees());
 
         await policy.testDistrust(trustedNodes.address, accountA);
 
-        assert(
+        expect(
           preAddLength
-            .sub(toBN(await trustedNodes.trustedNodesLength()))
-            .eq(toBN(1)),
-        );
+            .sub(toBN(await trustedNodes.numTrustees())),
+        ).to.eq.BN(1);
       });
     });
   });

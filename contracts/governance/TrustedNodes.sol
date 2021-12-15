@@ -12,17 +12,17 @@ import "../currency/ECOx.sol";
  *
  */
 contract TrustedNodes is PolicedUtils {
-    /** The list of trusted nodes.
+    /** Tracks the current trustee cohort
+     * each trustee election cycle corresponds to a new trustee cohort.
      */
-    address[] public trustedNodes;
+    uint256 public cohort;
 
-    /** An index to determine if a given node is trusted without iterating
-     * through the entire list.
+    /** The list of trusted nodes per cohort.
      */
-    mapping(address => bool) public isTrusted;
+    mapping(uint256 => address[]) public trustedNodes;
 
-    /** @dev Index of trusted node to position in trustedNodes */
-    mapping(address => uint256) private trustedNodeIndex;
+    /** @dev Index of trusted node to position in trustedNodes per cohort */
+    mapping(uint256 => mapping(address => uint256)) public trusteeNumber;
 
     /** Increments each time the trustee votes */
     mapping(address => uint256) public votingRecord;
@@ -47,6 +47,8 @@ contract TrustedNodes is PolicedUtils {
         address[] memory _initial,
         uint256 _voteReward
     ) PolicedUtils(_policy) {
+        _trust(address(0));
+
         for (uint256 i = 0; i < _initial.length; ++i) {
             _trust(_initial[i]);
         }
@@ -72,26 +74,22 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to stop trusting.
      */
     function distrust(address _node) external onlyPolicy {
-        require(
-            isTrusted[_node],
-            "Cannot distrust a node that is already not trusted"
-        );
+        require(trusteeNumber[cohort][_node] > 0, "Node already not trusted");
 
-        uint256 oldIndex = trustedNodeIndex[_node];
-        uint256 lastIndex = trustedNodes.length - 1;
+        uint256 oldIndex = trusteeNumber[cohort][_node];
+        uint256 lastIndex = trustedNodes[cohort].length - 1;
 
-        delete isTrusted[_node];
-        delete trustedNodeIndex[_node];
+        delete trusteeNumber[cohort][_node];
 
         if (oldIndex != lastIndex) {
-            address lastNode = trustedNodes[lastIndex];
+            address lastNode = trustedNodes[cohort][lastIndex];
 
-            trustedNodes[oldIndex] = lastNode;
-            trustedNodeIndex[lastNode] = oldIndex;
+            trustedNodes[cohort][oldIndex] = lastNode;
+            trusteeNumber[cohort][lastNode] = oldIndex;
         }
 
-        delete trustedNodes[lastIndex];
-        trustedNodes.pop();
+        delete trustedNodes[cohort][lastIndex];
+        trustedNodes[cohort].pop();
         emit TrustedNodeRemoved(_node);
     }
 
@@ -120,10 +118,11 @@ contract TrustedNodes is PolicedUtils {
     }
 
     /** Return the number of entries in trustedNodes
-     * array.
+     * array. As the 0 position of the array is unusuable,
+     * you subtract by 1.
      */
-    function trustedNodesLength() external view returns (uint256) {
-        return trustedNodes.length;
+    function numTrustees() external view returns (uint256) {
+        return trustedNodes[cohort].length - 1;
     }
 
     /** Helper function for adding a node to the trusted set.
@@ -131,10 +130,26 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to add to the trusted set.
      */
     function _trust(address _node) private {
-        require(!isTrusted[_node], "Node is already trusted");
+        require(trusteeNumber[cohort][_node] == 0, "Node is already trusted");
 
-        isTrusted[_node] = true;
-        trustedNodeIndex[_node] = trustedNodes.length;
-        trustedNodes.push(_node);
+        trusteeNumber[cohort][_node] = trustedNodes[cohort].length;
+        trustedNodes[cohort].push(_node);
+    }
+
+    function isTrusted(address _node) public view returns (bool) {
+        return trusteeNumber[cohort][_node] > 0;
+    }
+
+    /** Function for adding a new cohort of trustees
+     * used for implementing the results of a trustee election
+     */
+    function newCohort(address[] memory _newCohort) external onlyPolicy {
+        cohort++;
+
+        _trust(address(0));
+
+        for (uint256 i = 0; i < _newCohort.length; ++i) {
+            _trust(_newCohort[i]);
+        }
     }
 }

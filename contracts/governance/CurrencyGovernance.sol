@@ -187,7 +187,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         // the default values for everything are currently 0
 
         // sets the default votes for the default proposal
-        score[address(0)] = getTrustedNodes().trustedNodesLength();
+        score[address(0)] = getTrustedNodes().numTrustees();
         leader = address(0);
     }
 
