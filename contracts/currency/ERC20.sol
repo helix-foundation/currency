@@ -274,7 +274,6 @@ contract ERC20 {
         address recipient,
         uint256 originalAmount
     ) internal virtual {
-        require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
         uint256 amount = _beforeTokenTransfer(
@@ -345,8 +344,6 @@ contract ERC20 {
         virtual
         returns (uint256)
     {
-        require(account != address(0), "ERC20: burn from the zero address");
-
         uint256 amount = _beforeTokenTransfer(
             account,
             address(0),
@@ -385,7 +382,6 @@ contract ERC20 {
         address spender,
         uint256 amount
     ) internal virtual {
-        require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
