@@ -90,7 +90,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             ITimeNotifier notifier = ITimeNotifier(
                 Policy(policy).policyFor(notificationHashes[i])
             );
-            require(address(notifier) != address(0), "Broken state");
+            // require(address(notifier) != address(0), "Broken state");
             notifier.notifyGenerationIncrease();
         }
 
