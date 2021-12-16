@@ -67,6 +67,12 @@ contract('Governance Trustee Change [@group=9]', ([alice, bob, charlie, dave]) =
     );
     const name = await trusteeReplacement.name();
     expect(name).to.equal('Trustee Election Proposal Template');
+    expect(await trusteeReplacement.description()).to.equal(
+      'Created with a list of trustees and replaces all current trustees with those trustees',
+    );
+    expect(await trusteeReplacement.url()).to.equal(
+      'https://description.of.proposal make this link to a discussion of the new trustee slate',
+    );
     expect(await trusteeReplacement.newTrustees(0)).to.equal(charlie);
     expect(await trusteeReplacement.newTrustees(1)).to.equal(dave);
   });
