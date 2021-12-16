@@ -38,15 +38,15 @@ contract('SimplePolicySetter [@group=11]', () => {
       });
     });
 
-    context('when the key is already set', () => {
+    context('when it is already set', () => {
       beforeEach(async () => {
         await policySetter.set(web3.utils.fromAscii('Hello'), constants.ZERO_ADDRESS);
       });
 
       it('reverts', async () => {
         await expectRevert(
-          policySetter.set(web3.utils.fromAscii('Hello'), constants.ZERO_ADDRESS),
-          'The key has already been set',
+          policySetter.set(web3.utils.fromAscii('Goodbye'), constants.ZERO_ADDRESS),
+          'The key/value pair has already been set',
         );
       });
     });
