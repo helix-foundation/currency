@@ -55,6 +55,24 @@ contract('ECOxLockup [@group=12]', ([alice, bob, charlie]) => {
     await time.advanceBlock();
   });
 
+  describe('called early', () => {
+    it('reverts', async () => {
+      await expectRevert(
+        ecoxlockup.notifyGenerationIncrease(),
+        'Generation has not increased',
+      );
+    });
+  });
+
+  describe('unauthorized call of recordVote', () => {
+    it('reverts', async () => {
+      await expectRevert(
+        ecoxlockup.recordVote(alice),
+        'Must be a voting contract to call',
+      );
+    });
+  });
+
   // context('deposit', () => {
   //   it('cannot deposit without allowance', async () => {
   //     await expectRevert(ecoxlockup.deposit(one.muln(400), { from: alice }),

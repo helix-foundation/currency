@@ -59,7 +59,7 @@ contract ECOxLockup is ERC20Votes, PolicedUtils {
 
         _burn(_destination, _amount);
 
-        require(getToken().transfer(_destination, _amount), "Transfer failed");
+        getToken().transfer(_destination, _amount);
 
         emit Withdrawal(_destination, _amount);
     }
