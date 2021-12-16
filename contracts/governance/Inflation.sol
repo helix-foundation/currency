@@ -101,11 +101,6 @@ contract Inflation is PolicedUtils, TimeUtils {
                     "All winnings must be claimed prior to destruct"
                 );
             }
-        } else {
-            require(
-                getToken().balanceOf(address(this)) == 0,
-                "The contract must have 0 balance to be destructed prior seed revealing"
-            );
         }
 
         getToken().transfer(

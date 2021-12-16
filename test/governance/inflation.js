@@ -348,15 +348,27 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
         );
       });
 
-      it('reverts when called with a non-winning ticket', async () => {
-        const winners = await inflation.winners();
-        const [a, index, winner] = await getClaimParameters(inflation, 2);
-        await expectRevert(
-          inflation.claim(winners, a[1].reverse(), toBN(a[0].sum), index, {
-            from: winner,
-          }),
-          'must be within the set of winners',
-        );
+      context('reverts when called with a non-winning ticket', async () => {
+        it('sequence is not in winners', async () => {
+          const winners = await inflation.winners();
+          const [a, index, winner] = await getClaimParameters(inflation, 2);
+          await expectRevert(
+            inflation.claim(winners, a[1].reverse(), toBN(a[0].sum), index, {
+              from: winner,
+            }),
+            'must be within the set of winners',
+          );
+        });
+
+        it('fail root hash verification', async () => {
+          const [a, index, winner] = await getClaimParameters(inflation, 2);
+          await expectRevert(
+            inflation.claim(0, a[1].reverse(), toBN(a[0].sum + 1000000), index, {
+              from: winner,
+            }),
+            'A claim submission failed root hash verification',
+          );
+        });
       });
 
       it('reverts when called for the next period', async () => {
@@ -431,13 +443,6 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
           'The contract must have 0 balance to be destructed prior seed revealing.',
         );
       });
-
-      // it('succeeds if the balance is zero', async () => {
-      //   // It is very difficult for me to think of a situation where this branch should happen
-      //   // Good for being able to clean up an otherwise broken state, but probably pathological
-      //   // to find a way to test it in this test (it'd go partway in the setup portion)
-      //   await inflation.destruct();
-      // });
     });
 
     context('after the results are computed', () => {
