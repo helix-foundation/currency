@@ -285,10 +285,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
         delete proposals[_prop];
         totalproposals = totalproposals - 1;
 
-        require(
-            getToken().transfer(receiver, REFUND_IF_LOST),
-            "Transfer failure - unable to issue refund"
-        );
+        getToken().transfer(receiver, REFUND_IF_LOST);
+
         emit ProposalRefunded(receiver);
     }
 
