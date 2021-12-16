@@ -129,12 +129,6 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
         }
     }
 
-    /** Get the associated ERC20 token address.
-     */
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
-    }
-
     /** Get the associated balance store address.
      */
     function getStore() private view returns (EcoBalanceStore) {
