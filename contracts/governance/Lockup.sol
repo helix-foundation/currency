@@ -64,6 +64,10 @@ contract Lockup is PolicedUtils, TimeUtils {
         doWithdrawal(msg.sender, true);
     }
 
+    function withdrawFor(address _who) external {
+        doWithdrawal(_who, false);
+    }
+
     function clone(uint256 _duration, uint256 _interest)
         external
         returns (address)

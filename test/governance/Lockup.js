@@ -76,6 +76,15 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     await lockup.deposit(1000000000, { from: charlie });
   });
 
+  describe('Without a valid deposit', async () => {
+    it('reverts on withdraw', async () => {
+      await expectRevert(
+        lockup.withdraw({ from: alice }),
+        'Withdrawals can only be made for accounts that made deposits',
+      );
+    });
+  });
+
   describe('With a valid deposit', async () => {
     beforeEach(async () => {
       await lockup.deposit(1000000000, { from: charlie });
@@ -84,6 +93,13 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
     it('punishes early withdrawal', async () => {
       await lockup.withdraw({ from: charlie });
       expect(await token.balanceOf(charlie)).to.eq.BN(999999960);
+    });
+
+    it('does not allow early withdrawFor', async () => {
+      await expectRevert(
+        lockup.withdrawFor(charlie, { from: alice }),
+        'Only depositor may withdraw early',
+      );
     });
 
     describe('A week later', async () => {
@@ -101,6 +117,11 @@ contract('Lockup [@group=3]', ([alice, bob, charlie]) => {
 
       it('rewards late withdrawal', async () => {
         await lockup.withdraw({ from: charlie });
+        expect(await token.balanceOf(charlie)).to.eq.BN(1000000040);
+      });
+
+      it('allows and rewards late withdrawFor', async () => {
+        await lockup.withdrawFor(charlie, { from: alice });
         expect(await token.balanceOf(charlie)).to.eq.BN(1000000040);
       });
 
