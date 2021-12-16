@@ -571,7 +571,7 @@ class Supervisor {
 
       logger.info(`CG@${address}: Checking isAlive(address): ${await isAlive(address)}`);
       if (await isAlive(address)) {
-        const numTrustedNodes = await trustednodes.methods.trustedNodesLength().call();
+        const numTrustedNodes = await trustednodes.methods.numTrustees().call();
         const numRevealedNodes = await governance.methods.totalRevealed.call();
         const revealedNodes = [];
         for (let i = 0; i < numRevealedNodes; i += 1) {
@@ -582,7 +582,8 @@ class Supervisor {
 
         for (let i = 0; i < numTrustedNodes; i += 1) {
           // Note that 'node' here could be 0x0 for deleted nodes, but 0x0 doesn't commit
-          const node = await trustednodes.methods.trustedNodes(i).call();
+          const node = await trustednodes.methods.trustedNodes(i).call(); // TODO: this is broken
+          // I don't even really know if any of this works right now
           const commitment = await governance.methods.commitments(node).call();
           if (commitment.encryptedVote !== null
               && this.timeStamp > votingEnds

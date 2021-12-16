@@ -892,8 +892,9 @@ Sends all tokens back to the root policy and self-destructs the contract.
 
 Provides a registry of trustees, and allows the root policy contract to
 grant or revoke trust. The nodes are stored in the array `trustedNodes` along
-with the mapping `isTrusted` which maps addresses to `true` if the address
-is a trustee address.
+with the mapping `trusteeNumber` which maps addresses to a number greater than
+zero if they are trusted, corrresponding to theic position in `trustedNodes`, and
+maps them to zero if they are not trusted.
 
 Trusted nodes participate in the inflation/deflation voting process. They can be
 added and removed using policy proposals.
@@ -923,10 +924,10 @@ Arguments:
 
 Revokes trust in a node.
 
-##### trustedNodesLength
+##### numTrustees
 Arguments: none
 
-Returns the length of `trustedNodes` which is the current number of trustees
+Returns the length of `trustedNodes` minus 1 which is the current number of trustees
 
 ### Policy Decisions
 
