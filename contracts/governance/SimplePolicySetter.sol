@@ -33,7 +33,10 @@ contract SimplePolicySetter is Policy, CloneFactory {
      * @param _value The implementation address to set.
      */
     function set(bytes32 _key, address _value) external {
-        require(key == bytes32(0) && value == address(0), "The key/value pair has already been set");
+        require(
+            key == bytes32(0) && value == address(0),
+            "The key/value pair has already been set"
+        );
         require(_key != bytes32(0), "The key can't be empty");
 
         key = _key;

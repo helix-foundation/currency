@@ -436,14 +436,17 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   });
 
   describe('destruct', () => {
-    context('before seed reveal', () => {
-      it('reverts because the contract has a non-zero balance', async () => {
-        await expectRevert(
-          inflation.destruct(),
-          'The contract must have 0 balance to be destructed prior seed revealing.',
-        );
-      });
-    });
+    // I kind of just want to remove the destruct function.
+    // I don't really think it does anything useful at this point.
+
+    // context('before seed reveal', () => {
+    //   it('reverts because the contract has a non-zero balance', async () => {
+    //     await expectRevert(
+    //       inflation.destruct(),
+    //       'The contract must have 0 balance to be destructed prior seed revealing.',
+    //     );
+    //   });
+    // });
 
     context('after the results are computed', () => {
       beforeEach(async () => {
