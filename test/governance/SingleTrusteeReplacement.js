@@ -22,7 +22,7 @@ const SingleTrusteeReplacement = artifacts.require('SingleTrusteeReplacement');
 const { toBN } = web3.utils;
 const { expect } = chai;
 
-contract('Governance Trustee Change [@group=9]', ([alice, bob, charlie, dave]) => {
+contract('Governance Trustee Change [@group=9]', (accounts) => {
   let policy;
   let balanceStore;
   let token;
@@ -33,6 +33,12 @@ contract('Governance Trustee Change [@group=9]', ([alice, bob, charlie, dave]) =
   let trustedNodes;
   let singleTrusteeReplacement;
 
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  const dave = accounts[3];
+  let counter = 0;
+
   it('Deploys the production system', async () => {
     ({
       policy,
@@ -41,7 +47,8 @@ contract('Governance Trustee Change [@group=9]', ([alice, bob, charlie, dave]) =
       initInflation,
       timedPolicies,
       trustedNodes,
-    } = await util.deployPolicy({ trustees: [bob, charlie, dave] }));
+    } = await util.deployPolicy(accounts[counter], { trustees: [bob, charlie, dave] }));
+    counter += 1;
   });
 
   it('Stakes accounts', async () => {

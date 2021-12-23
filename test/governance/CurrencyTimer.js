@@ -22,7 +22,11 @@ const { expect } = chai;
 
 chai.use(bnChai(BN));
 
-contract('CurrencyTimer [@group=6]', ([alice, bob, charlie]) => {
+contract('CurrencyTimer [@group=6]', (accounts) => {
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  let counter = 0;
   let policy;
   let token;
   let timedPolicies;
@@ -37,7 +41,8 @@ contract('CurrencyTimer [@group=6]', ([alice, bob, charlie]) => {
       timedPolicies,
       currencyTimer,
       faucet,
-    } = await util.deployPolicy({ trustees: [alice, bob, charlie] }));
+    } = await util.deployPolicy(accounts[counter], { trustees: [alice, bob, charlie] }));
+    counter += 1;
 
     borda = await CurrencyGovernance.at(
       await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),

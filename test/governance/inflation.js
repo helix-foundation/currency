@@ -39,6 +39,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   let inflation;
   let currencyTimer;
   let vdf;
+  let counter = 0;
 
   //    const inflationVote = 800000;
   //    const prizeVote = 20000;
@@ -137,7 +138,8 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       timedPolicies,
       currencyTimer,
       inflation,
-    } = await util.deployPolicy({ trustees: accounts.slice(1, 5) }));
+    } = await util.deployPolicy(accounts[counter], { trustees: accounts.slice(1, 5) }));
+    counter += 1;
 
     await initInflation.mint(balanceStore.address, accounts[0], accountsBalances[0]);
     await initInflation.mint(balanceStore.address, accounts[1], accountsBalances[1]);

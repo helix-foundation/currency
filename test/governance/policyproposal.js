@@ -16,7 +16,12 @@ const util = require('../../tools/test/util');
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));
 
-contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
+contract('PolicyProposals [@group=7]', (accounts) => {
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  const dave = accounts[3];
+  let counter = 0;
   let policy;
   let token;
   let balanceStore;
@@ -30,7 +35,8 @@ contract('PolicyProposals [@group=7]', ([alice, bob, charlie, dave]) => {
       token,
       initInflation,
       timedPolicies,
-    } = await util.deployPolicy());
+    } = await util.deployPolicy(accounts[counter]));
+    counter += 1;
 
     await initInflation.mint(balanceStore.address, alice, toBN(10).pow(toBN(18)).muln(5000));
     await initInflation.mint(balanceStore.address, bob, toBN(10).pow(toBN(18)).muln(5000));

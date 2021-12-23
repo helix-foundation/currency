@@ -58,7 +58,7 @@ contract('Production Supervisor [@group=10]', (accounts) => {
       token,
       initInflation,
       currencyTimer,
-    } = await util.deployPolicy({ trustees: accounts.slice(1, 5) }));
+    } = await util.deployPolicy(accounts[0], { trustees: accounts.slice(1, 5) }));
   });
 
   it('Creates the supervisor', async () => {

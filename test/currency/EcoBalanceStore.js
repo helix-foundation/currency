@@ -9,8 +9,8 @@ const {
   expect,
 } = chai;
 
-const ForwardProxy = artifacts.require('ForwardProxy');
-const EcoBalanceStore = artifacts.require('ERC20EcoToken');
+// const ForwardProxy = artifacts.require('ForwardProxy');
+// const EcoBalanceStore = artifacts.require('ERC20EcoToken');
 // const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
 const MAX_ACCOUNT_BALANCE = new BN(
@@ -31,6 +31,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
   const accounts = Array.from(unsortedAccounts);
   accounts.sort((a, b) => Number(a - b));
   let timedPolicies;
+  let counter = 0;
 
   beforeEach('global setup', async () => {
     ({
@@ -39,7 +40,8 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       balanceStore,
       // currencyTimer,
       faucet,
-    } = await util.deployPolicy());
+    } = await util.deployPolicy(accounts[counter]));
+    counter += 1;
 
     // borda = await CurrencyGovernance.at(
     //   await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
@@ -54,31 +56,31 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
     });
   });
 
-  describe('Initializable', () => {
-    it('should not allow calling initialize on the base contract', async () => {
-      await expectRevert(
-        balanceStore.initialize(balanceStore.address),
-        'Can only be called during initialization',
-      );
-    });
+  // describe('Initializable', () => {
+  //   it('should not allow calling initialize on the base contract', async () => {
+  //     await expectRevert(
+  //       balanceStore.initialize(balanceStore.address),
+  //       'Can only be called during initialization',
+  //     );
+  //   });
 
-    context('when proxied', () => {
-      let proxiedBalanceStore;
+  //   context('when proxied', () => {
+  //     let proxiedBalanceStore;
 
-      beforeEach(async () => {
-        proxiedBalanceStore = await EcoBalanceStore.at(
-          (await ForwardProxy.new(balanceStore.address)).address,
-        );
-      });
+  //     beforeEach(async () => {
+  //       proxiedBalanceStore = await EcoBalanceStore.at(
+  //         (await ForwardProxy.new(balanceStore.address)).address,
+  //       );
+  //     });
 
-      it('should not allow calling initialize on the proxy', async () => {
-        await expectRevert(
-          proxiedBalanceStore.initialize(balanceStore.address),
-          'Can only be called during initialization',
-        );
-      });
-    });
-  });
+  //     it('should not allow calling initialize on the proxy', async () => {
+  //       await expectRevert(
+  //         proxiedBalanceStore.initialize(balanceStore.address),
+  //         'Can only be called during initialization',
+  //       );
+  //     });
+  //   });
+  // });
 
   describe('Mintable', () => {
     const mintAmount = new BN(1000);
@@ -91,7 +93,6 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
     it('should start with 0 token supply', async () => {
       const tokenSupply = await balanceStore.tokenSupply();
-
       expect(tokenSupply).to.be.zero;
     });
 

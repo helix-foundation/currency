@@ -29,7 +29,7 @@ const { isCoverage } = require('../../tools/test/coverage');
 
 const { toBN } = web3.utils;
 
-contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) => {
+contract('Governance Policy Change [@group=9]', (accounts) => {
   let policy;
   let balanceStore;
   let token;
@@ -43,6 +43,12 @@ contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) =>
   let poodleCurrencyTimer;
   let poodleBorda;
 
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  const dave = accounts[3];
+  let counter = 0;
+
   it('Deploys the production system', async () => {
     ({
       policy,
@@ -50,7 +56,8 @@ contract('Governance Policy Change [@group=9]', ([alice, bob, charlie, dave]) =>
       token,
       initInflation,
       timedPolicies,
-    } = await util.deployPolicy({ trustees: [bob, charlie, dave] }));
+    } = await util.deployPolicy(accounts[counter], { trustees: [bob, charlie, dave] }));
+    counter += 1;
   });
 
   it('Stakes accounts', async () => {

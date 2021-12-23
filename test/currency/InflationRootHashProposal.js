@@ -41,14 +41,16 @@ contract('InflationRootHashProposal', () => {
   let timedPolicies;
   let token;
   let accounts;
+  let counter = 0;
+  let currAcc;
 
   before(async () => {
-    const originalAccounts = await web3.eth.getAccounts();
+    const originalAccounts = (await web3.eth.getAccounts());
     for (let i = 0; i < 200; i += 1) {
       await web3.eth.personal.unlockAccount(await web3.eth.personal.newAccount());
     }
     accounts = (await web3.eth.getAccounts()).sort((a, b) => Number(a - b));
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < originalAccounts.length; i += 1) {
       await web3.eth.sendTransaction({
         from: originalAccounts[i],
         to: accounts[i],
@@ -58,23 +60,17 @@ contract('InflationRootHashProposal', () => {
   });
 
   beforeEach('global setup', async () => {
+    currAcc = accounts[counter];
     ({
       balanceStore,
       token,
       initInflation,
       timedPolicies,
-    } = await util.deployPolicy());
+      rootHashProposal,
+    } = await util.deployPolicy(currAcc));
+    counter += 1;
     await time.increase(31557600 / 10);
     txProposal = await timedPolicies.incrementGeneration();
-    const addressRootHashProposal = (await (new web3.eth.Contract(
-      balanceStore.abi,
-      balanceStore
-        .address,
-    )).getPastEvents('allEvents', {
-      fromBlock: 'latest',
-      toBlock: 'latest',
-    }))[0].returnValues.inflationRootHashProposalContract;
-    rootHashProposal = await InflationRootHashProposal.at(addressRootHashProposal);
   });
 
   async function verifyOnChain(tree, index, proposer) {
@@ -171,11 +167,7 @@ contract('InflationRootHashProposal', () => {
       await time.increase(31557600 / 10);
       txProposal = await timedPolicies.incrementGeneration();
     }
-    const addressRootHashProposal = (await (new web3.eth.Contract(
-      balanceStore.abi,
-      balanceStore
-        .address,
-    )).getPastEvents('allEvents', {
+    const addressRootHashProposal = (await balanceStore.getPastEvents('allEvents', {
       fromBlock: 'latest',
       toBlock: 'latest',
     }))[0].returnValues.inflationRootHashProposalContract;
@@ -1510,7 +1502,6 @@ contract('InflationRootHashProposal', () => {
         }
 
         rootHashProposal = await getRootHash();
-
         for (let i = 0; i < amountOfAccounts; i += 1) {
           token.approve(rootHashProposal.address, await balanceStore.balance(accounts[
             i]), {

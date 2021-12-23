@@ -14,32 +14,40 @@
 // ## Dependencies
 const nick = require('./nicks');
 
-const BLOCK_GAS_LIMIT = 6000000;
+let BLOCK_GAS_LIMIT = 6000000;
+let importPath;
+
+if (process.env.IS_COVERAGE === '1') {
+  importPath = '.coverage_artifacts';
+} else {
+  importPath = 'build';
+}
 
 // ### Contract ABIs and Bytecode
-/* eslint-disable import/no-unresolved */
-const PolicyABI = require('../build/contracts/Policy.json');
-const PolicyInitABI = require('../build/contracts/PolicyInit.json');
-const EcoBootstrapABI = require('../build/contracts/EcoBootstrap.json');
-const EcoInitializableABI = require('../build/contracts/EcoInitializable.json');
-const TimedPoliciesABI = require('../build/contracts/TimedPolicies.json');
-const TrustedNodesABI = require('../build/contracts/TrustedNodes.json');
-const rootHashProposalABI = require('../build/contracts/InflationRootHashProposal.json');
-const InflationContractABI = require('../build/contracts/Inflation.json');
-const CurrencyGovernanceABI = require('../build/contracts/CurrencyGovernance.json');
-const CurrencyTimerContractABI = require('../build/contracts/CurrencyTimer.json');
-const LockupContractABI = require('../build/contracts/Lockup.json');
-const PolicyProposalContractABI = require('../build/contracts/PolicyProposals.json');
-const PolicyVotesContractABI = require('../build/contracts/PolicyVotes.json');
-const ECOxLockupContractABI = require('../build/contracts/ECOxLockup.json');
-const SimplePolicySetterABI = require('../build/contracts/SimplePolicySetter.json');
-const ERC20EcoTokenABI = require('../build/contracts/ERC20EcoToken.json');
-const ERC20TokenABI = require('../build/contracts/IERC20.json');
-const EcoFaucetABI = require('../build/contracts/EcoFaucet.json');
-const EcoTestCleanupABI = require('../build/contracts/EcoTestCleanup.json');
-const EcoTokenInitABI = require('../build/contracts/EcoTokenInit.json');
-const VDFVerifierABI = require('../build/contracts/VDFVerifier.json');
-const ECOxABI = require('../build/contracts/ECOx.json');
+/* eslint-disable import/no-unresolved, import/no-dynamic-require */
+const PolicyABI = require(`../${importPath}/contracts/Policy.json`);
+const PolicyTestABI = require(`../${importPath}/contracts/PolicyTest.json`);
+const PolicyInitABI = require(`../${importPath}/contracts/PolicyInit.json`);
+const EcoBootstrapABI = require(`../${importPath}/contracts/EcoBootstrap.json`);
+const EcoInitializableABI = require(`../${importPath}/contracts/EcoInitializable.json`);
+const TimedPoliciesABI = require(`../${importPath}/contracts/TimedPolicies.json`);
+const TrustedNodesABI = require(`../${importPath}/contracts/TrustedNodes.json`);
+const rootHashProposalABI = require(`../${importPath}/contracts/InflationRootHashProposal.json`);
+const InflationContractABI = require(`../${importPath}/contracts/Inflation.json`);
+const CurrencyGovernanceABI = require(`../${importPath}/contracts/CurrencyGovernance.json`);
+const CurrencyTimerContractABI = require(`../${importPath}/contracts/CurrencyTimer.json`);
+const LockupContractABI = require(`../${importPath}/contracts/Lockup.json`);
+const PolicyProposalContractABI = require(`../${importPath}/contracts/PolicyProposals.json`);
+const PolicyVotesContractABI = require(`../${importPath}/contracts/PolicyVotes.json`);
+const ECOxLockupContractABI = require(`../${importPath}/contracts/ECOxLockup.json`);
+const SimplePolicySetterABI = require(`../${importPath}/contracts/SimplePolicySetter.json`);
+const ERC20EcoTokenABI = require(`../${importPath}/contracts/ERC20EcoToken.json`);
+const ERC20TokenABI = require(`../${importPath}/contracts/IERC20.json`);
+const EcoFaucetABI = require(`../${importPath}/contracts/EcoFaucet.json`);
+const EcoTestCleanupABI = require(`../${importPath}/contracts/EcoTestCleanup.json`);
+const EcoTokenInitABI = require(`../${importPath}/contracts/EcoTokenInit.json`);
+const VDFVerifierABI = require(`../${importPath}/contracts/VDFVerifier.json`);
+const ECOxABI = require(`../${importPath}/contracts/ECOx.json`);
 /* eslint-enable import/no-unresolved */
 
 // ## PrepDeploy
@@ -47,14 +55,39 @@ const ECOxABI = require('../build/contracts/ECOx.json');
 async function prepDeploy(options) {
   options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
   const limit = (await web3.eth.getBlock('latest')).gasLimit;
-
-  console.log(`Deploying with gasPrice ${web3.utils.fromWei(options.gasPrice, 'gwei')} gwei and limit of ${BLOCK_GAS_LIMIT}/${limit} gas`);
-
-  if (BLOCK_GAS_LIMIT > 0.95 * limit) {
-    throw Error(`Gas limit (${BLOCK_GAS_LIMIT}) too high compared to block limit (${limit}); unlikely to succeed in deploying`);
+  if (options.production) {
+    options.verbose = true; // product deploy should always be verbose
+  }
+  if (options.verbose) {
+    console.log(`verbose deploy: ${options.verbose}`);
+  }
+  if (options.production) {
+    options.correctPolicyABI = PolicyABI;
+  } else {
+    if (options.verbose) {
+      console.log('This is a test, using the testing policy.');
+    }
+    options.correctPolicyABI = PolicyTestABI;
   }
 
-  const cost = web3.utils.toWei(web3.utils.toBN(80), 'gwei');
+  let bootstrapGasCost;
+  let bootstrapGas;
+
+  if (options.production) {
+    if (BLOCK_GAS_LIMIT > 0.95 * limit) {
+      throw Error(`Gas limit (${BLOCK_GAS_LIMIT}) too high compared to block limit (${limit}); unlikely to succeed in deploying`);
+    }
+    bootstrapGasCost = web3.utils.toWei(web3.utils.toBN(80), 'gwei');
+    bootstrapGas = 4538418;
+  } else {
+    BLOCK_GAS_LIMIT = limit;
+    bootstrapGasCost = options.gasPrice;
+    bootstrapGas = BLOCK_GAS_LIMIT;
+  }
+
+  if (options.verbose) {
+    console.log(`Deploying with gasPrice ${web3.utils.fromWei(options.gasPrice, 'gwei')} gwei and limit of ${BLOCK_GAS_LIMIT}/${limit} gas`);
+  }
 
   // ### Bootstrap Transaction Data
   options.stage1 = JSON.parse(
@@ -63,8 +96,8 @@ async function prepDeploy(options) {
         nick.generateTx(
           EcoBootstrapABI.bytecode,
           '0x1234',
-          4538418,
-          cost,
+          bootstrapGas,
+          bootstrapGasCost,
           web3.eth.abi.encodeParameter('address', options.account),
         ),
       ),
@@ -115,23 +148,27 @@ async function prepDeploy(options) {
 //
 async function deployStage1(options) {
   // Verify that the bootstrap deployment hasn't already been done
-  console.log('Checking for bootstrap transaction presence...');
+  if (options.verbose) {
+    console.log('Checking for bootstrap transaction presence...');
+  }
   const codeAtAddr = await web3.eth.getCode(options.stage1.to);
 
   if (codeAtAddr === '0x' || codeAtAddr === '0x0') {
     // Fund the deployment account
-    console.log('Running bootstrap transaction...');
+    if (options.verbose) {
+      console.log('Running bootstrap transaction...');
+    }
     await web3.eth.sendTransaction({
       from: options.account,
       to: options.stage1.from,
       value: web3.utils
         .toBN(options.stage1.tx.gasLimit)
         .mul(web3.utils.toBN(options.stage1.tx.gasPrice)),
-      gas: 25000,
+      gas: BLOCK_GAS_LIMIT,
     });
     // Issue the pre-signed deployment transaction
     await web3.eth.sendSignedTransaction(options.stage1.raw);
-  } else {
+  } else if (options.verbose) {
     console.log('Bootstrap stage already deployed');
   }
 
@@ -153,7 +190,9 @@ async function deployStage1(options) {
 // ![Step 2 of Policy Setup](https://www.lucidchart.com/publicSegments/view/ddd05c82-5b4b-4742-9f37-666ffd318261/image.png)
 //
 async function deployStage2(options) {
-  console.log(`Bootstrap contract address: ${options.stage1.to}`);
+  if (options.verbose) {
+    console.log(`Bootstrap contract address: ${options.stage1.to}`);
+  }
   // Lookup proxy addresses
   const policyProxyAddress = await options.bootstrap.methods
     .placeholders(0)
@@ -174,7 +213,9 @@ async function deployStage2(options) {
     policyProxyAddress,
   );
 
-  console.log('deploying policy initialization contract...');
+  if (options.verbose) {
+    console.log('deploying policy initialization contract...');
+  }
   const policyInit = await new web3.eth.Contract(PolicyInitABI.abi)
     .deploy({
       data: PolicyInitABI.bytecode,
@@ -185,12 +226,14 @@ async function deployStage2(options) {
       gasPrice: options.gasPrice,
     });
 
-  console.log(
-    'binding proxy 0 to policy initialization contract...',
-    policyProxyAddress,
-    ecoInitPolicyProxy.options.address,
-    policyInit.options.address,
-  );
+  if (options.verbose) {
+    console.log(
+      'binding proxy 0 to policy initialization contract...',
+      policyProxyAddress,
+      ecoInitPolicyProxy.options.address,
+      policyInit.options.address,
+    );
+  }
   await ecoInitPolicyProxy.methods['fuseImplementation(address)'](
     policyInit.options.address,
   ).send({
@@ -198,14 +241,17 @@ async function deployStage2(options) {
     gas: BLOCK_GAS_LIMIT,
     gasPrice: options.gasPrice,
   });
+
   options.policyProxy = new web3.eth.Contract(
-    PolicyABI.abi,
+    options.correctPolicyABI.abi,
     policyProxyAddress,
   );
 
   // Deploy the root hash
   //
-  console.log('deploying Root Hash...');
+  if (options.verbose) {
+    console.log('deploying Root Hash...');
+  }
 
   const rootHashProposal = await new web3.eth.Contract(
     rootHashProposalABI.abi,
@@ -226,7 +272,9 @@ async function deployStage2(options) {
 
   // Deploy the implementation contracts
   // ![Deploy the Token Interfaces](https://www.lucidchart.com/publicSegments/view/b528bda8-df21-49fd-8d8e-2e05a8875f58/image.png)
-  console.log('deploying the ERC20 implementation contract...');
+  if (options.verbose) {
+    console.log('deploying the ERC20 implementation contract...');
+  }
   const erc20Impl = await new web3.eth.Contract(ERC20EcoTokenABI.abi)
     .deploy({
       data: ERC20EcoTokenABI.bytecode,
@@ -238,7 +286,9 @@ async function deployStage2(options) {
       gasPrice: options.gasPrice,
     });
 
-  console.log('deploying the ECOx implementation contract...');
+  if (options.verbose) {
+    console.log('deploying the ECOx implementation contract...');
+  }
   const ecoxImpl = await new web3.eth.Contract(ECOxABI.abi)
     .deploy({
       data: ECOxABI.bytecode,
@@ -252,8 +302,9 @@ async function deployStage2(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-
-  console.log('binding proxy 2 to the ERC20 implementation contract...');
+  if (options.verbose) {
+    console.log('binding proxy 1 to the ERC20 implementation contract...');
+  }
   await new web3.eth.Contract(
     EcoInitializableABI.abi,
     erc20ProxyAddress,
@@ -263,7 +314,9 @@ async function deployStage2(options) {
     gasPrice: options.gasPrice,
   });
 
-  console.log('binding proxy 3 to the ECOx implementation contract...');
+  if (options.verbose) {
+    console.log('binding proxy 2 to the ECOx implementation contract...');
+  }
   await new web3.eth.Contract(
     EcoInitializableABI.abi,
     ecoxProxyAddress,
@@ -284,6 +337,7 @@ async function deployStage2(options) {
   );
 
   options.balanceStore = options.erc20;
+  // console.log(options.balanceStore)
 
   return options;
 }
@@ -327,7 +381,9 @@ async function deployStage3(options) {
   const addresses = [];
   const tokenResolvers = [];
 
-  console.log('deploying policy helper contracts...');
+  if (options.verbose) {
+    console.log('deploying policy helper contracts...');
+  }
   const vdfContract = await new web3.eth.Contract(
     VDFVerifierABI.abi,
   )
@@ -355,7 +411,6 @@ async function deployStage3(options) {
       gasPrice: options.gasPrice,
     });
   options.depositCertificatesContract = depositCertificatesContract;
-
   const inflationContract = await new web3.eth.Contract(
     InflationContractABI.abi,
   )
@@ -457,7 +512,9 @@ async function deployStage3(options) {
   addresses.push(ecoXLockupContract.options.address);
 
   // Deploy the currency timer
-  console.log('deploying the currency timer contract...');
+  if (options.verbose) {
+    console.log('deploying the currency timer contract...');
+  }
   const currencyTimerHash = web3.utils.soliditySha3('CurrencyTimer');
   const currencyTimerContract = await new web3.eth.Contract(
     CurrencyTimerContractABI.abi,
@@ -483,7 +540,9 @@ async function deployStage3(options) {
   addresses.push(currencyTimerContract.options.address);
 
   // Deploy the voting policy contract
-  console.log('deploying the timed actions contract...');
+  if (options.verbose) {
+    console.log('deploying the timed actions contract...');
+  }
   const tokenHash = web3.utils.soliditySha3(
     'ERC20Token',
   );
@@ -507,7 +566,9 @@ async function deployStage3(options) {
       gasPrice: options.gasPrice,
     });
   // Update the proxy targets to the implementation contract addresses
-  console.log('binding proxy 5 to the TimedPolicies implementation contract...');
+  if (options.verbose) {
+    console.log('binding proxy 5 to the TimedPolicies implementation contract...');
+  }
   const timedPoliciesProxyAddress = await options.bootstrap.methods
     .placeholders(3)
     .call({
@@ -539,11 +600,13 @@ async function deployStage3(options) {
   setters.push(timedPoliciesIdentifierHash);
   addresses.push(timedPoliciesProxyAddress);
 
-  // Deploy the policy implementatiaon contract
-  console.log('deploying the policy implementation contract...');
-  const policyContract = await new web3.eth.Contract(PolicyABI.abi)
+  // Deploy the policy implementation contract
+  if (options.verbose) {
+    console.log('deploying the policy implementation contract...');
+  }
+  const policyContract = await new web3.eth.Contract(options.correctPolicyABI.abi)
     .deploy({
-      data: PolicyABI.bytecode,
+      data: options.correctPolicyABI.bytecode,
     })
     .send({
       from: options.account,
@@ -553,7 +616,9 @@ async function deployStage3(options) {
   options.policyContract = policyContract;
 
   // Deploy the currency initialization contract
-  console.log('deploying the token initialization policy contract...');
+  if (options.verbose) {
+    console.log('deploying the token initialization policy contract...');
+  }
   const initContract = await new web3.eth.Contract(EcoTokenInitABI.abi)
     .deploy({
       data: EcoTokenInitABI.bytecode,
@@ -569,11 +634,13 @@ async function deployStage3(options) {
   identifiers.push(web3.utils.soliditySha3('CurrencyGovernance'));
   addresses.push(initContract.options.address);
 
-  const trustedvotereward = '1000000000'; // TODO: make this the real value
+  const trustedvotereward = '1000'; // TODO: make this the real value
 
-  console.log('deploying the TrustedNodes policy contract...');
-  console.log('trusted addresses:', options.trustednodes);
-  console.log('ecox voting reward for trusted addresses:', trustedvotereward);
+  if (options.verbose) {
+    console.log('deploying the TrustedNodes policy contract...');
+    console.log('trusted addresses:', options.trustednodes);
+    console.log('ecox voting reward for trusted addresses:', trustedvotereward);
+  }
   const trustedNodesContract = await new web3.eth.Contract(TrustedNodesABI.abi)
     .deploy({
       data: TrustedNodesABI.bytecode,
@@ -590,7 +657,9 @@ async function deployStage3(options) {
 
   // If this is not going to production, deploy the cleanup contract and the faucet
   if (!options.production) {
-    console.log('deploying the cleanup policy contract...');
+    if (options.verbose) {
+      console.log('deploying the cleanup policy contract...');
+    }
     const cleanupContract = await new web3.eth.Contract(EcoTestCleanupABI.abi)
       .deploy({
         data: EcoTestCleanupABI.bytecode,
@@ -606,7 +675,9 @@ async function deployStage3(options) {
     addresses.push(cleanupContract.options.address);
     options.cleanupContract = cleanupContract;
 
-    console.log('deploying the faucet policy contract...');
+    if (options.verbose) {
+      console.log('deploying the faucet policy contract...');
+    }
     const faucetContract = await new web3.eth.Contract(EcoFaucetABI.abi)
       .deploy({
         data: EcoFaucetABI.bytecode,
@@ -623,7 +694,7 @@ async function deployStage3(options) {
   }
 
   // Add token interfaces and balance store to the ERC1820 interfaces lists for
-  // our policy initilization action.
+  // our policy initialization action.
   identifiers.push(web3.utils.soliditySha3('ERC20Token'));
   addresses.push(options.erc20.options.address);
   tokenResolvers.push(web3.utils.soliditySha3('ERC20Token'));
@@ -632,8 +703,10 @@ async function deployStage3(options) {
   addresses.push(options.ecox.options.address);
 
   setters.push(policyProposalsIdentifierHash, policyVotesIdentifierHash);
-  // Initialize the policy structure and prevent any futher changes
-  console.log('fusing policy initializer...');
+  // Initialize the policy structure and prevent any further changes
+  if (options.verbose) {
+    console.log('fusing policy initializer...');
+  }
   const ecoInitPolicy = new web3.eth.Contract(
     PolicyInitABI.abi,
     options.policyProxy.options.address,
@@ -663,11 +736,13 @@ async function deployStage3(options) {
 // which sends the code live to be used.
 //
 async function deployStage4(options) {
-  console.log(
-    `minting initial coins using ${options.initContract.options.address} ${
-      options.balanceStore.options.address
-    }...`,
-  );
+  if (options.verbose) {
+    console.log(
+      `minting initial coins using ${options.initContract.options.address} ${
+        options.balanceStore.options.address
+      }...`,
+    );
+  }
   await options.initContract.methods
     .initializeAndFuse(options.balanceStore.options.address)
     .send({
@@ -675,7 +750,9 @@ async function deployStage4(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  console.log('Incrementing initial generation');
+  if (options.verbose) {
+    console.log('Incrementing initial generation');
+  }
   await options.timedPolicies.methods
     .incrementGeneration()
     .send({
@@ -686,13 +763,15 @@ async function deployStage4(options) {
   return options;
 }
 
-function deploy(account, trustednodes) {
-  return prepDeploy({ account, trustednodes })
+function deploy(account, trustednodes, production, verbose) {
+  return prepDeploy({
+    account, trustednodes, production, verbose,
+  })
     .then(deployStage1)
     .then(deployStage2)
     .then(deployStage3)
-    .then(deployStage4)
-    .then(async (options) => options.erc20.options.address);
+    .then(deployStage4);
+  // .then(async (options) => options.erc20.options.address);
 }
 
 module.exports = {

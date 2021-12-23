@@ -13,7 +13,7 @@ const util = require('../../tools/test/util');
 const { BN, toBN } = web3.utils;
 chai.use(bnChai(BN));
 
-contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
+contract('VotingPower [@group=2]', (accounts) => {
   let policy;
   let token;
   let faucet;
@@ -21,10 +21,15 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
   let proposals;
   let blockNumber;
   let ecox;
-  let ecoxlockup;
+  let ecoXLockup;
   let one;
   let totalPower;
   let alicePower;
+
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  let counter = 0;
 
   beforeEach(async () => {
     one = toBN(10).pow(toBN(18));
@@ -34,8 +39,9 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
       faucet,
       timedPolicies,
       ecox,
-      ecoxlockup,
-    } = await util.deployPolicy({ trustees: [bob] }));
+      ecoXLockup,
+    } = await util.deployPolicy(accounts[counter], { trustees: [bob] }));
+    counter += 1;
 
     await faucet.mint(alice, one.muln(5000));
     await faucet.mint(bob, one.muln(5000));
@@ -113,14 +119,14 @@ contract('VotingPower [@group=2]', ([alice, bob, charlie]) => {
     describe('Voting power with ECO and ECOx', async () => {
       beforeEach(async () => {
         // approve deposits
-        await ecox.approve(ecoxlockup.address, one.muln(400), { from: alice });
-        await ecox.approve(ecoxlockup.address, one.muln(400), { from: bob });
-        await ecox.approve(ecoxlockup.address, one.muln(200), { from: charlie });
+        await ecox.approve(ecoXLockup.address, one.muln(400), { from: alice });
+        await ecox.approve(ecoXLockup.address, one.muln(400), { from: bob });
+        await ecox.approve(ecoXLockup.address, one.muln(200), { from: charlie });
 
         // lockup funds
-        await ecoxlockup.deposit(one.muln(400), { from: alice });
-        await ecoxlockup.deposit(one.muln(400), { from: bob });
-        await ecoxlockup.deposit(one.muln(200), { from: charlie });
+        await ecoXLockup.deposit(one.muln(400), { from: alice });
+        await ecoXLockup.deposit(one.muln(400), { from: bob });
+        await ecoXLockup.deposit(one.muln(200), { from: charlie });
 
         // one total generation in lockup before voting
         await time.increase(3600 * 24 * 14 + 1);

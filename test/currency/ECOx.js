@@ -14,17 +14,22 @@ const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
-contract('ECOx', ([alice, bob, charlie]) => {
+contract('ECOx', (accounts) => {
   let token;
   let ecox;
   let faucet;
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  let counter = 0;
 
   beforeEach('global setup', async () => {
     ({
       token,
       ecox,
       faucet,
-    } = await util.deployPolicy({ trustees: [alice, bob, charlie] }));
+    } = await util.deployPolicy(accounts[counter], { trustees: [alice, bob, charlie] }));
+    counter += 1;
 
     await faucet.mint(alice, new BN('20000000000000000000000'));
     await faucet.mint(bob, new BN('30000000000000000000000'));
@@ -36,6 +41,9 @@ contract('ECOx', ([alice, bob, charlie]) => {
   });
 
   it('Verifies starting conditions', async () => {
+    // console.log(token);
+    // console.log(ecox);
+    // console.log(faucet);
     expect(await token.balanceOf(alice)).to.eq.BN('20000000000000000000000');
     expect(await token.balanceOf(bob)).to.eq.BN('30000000000000000000000');
     expect(await token.balanceOf(charlie)).to.eq.BN('50000000000000000000000');
@@ -49,7 +57,8 @@ contract('ECOx', ([alice, bob, charlie]) => {
   });
 
   it('checks the gas cost of converting', async () => {
-    const gas = await ecox.exchange.estimateGas(new BN('100000000000000000000'), { from: alice });
+    // console.log((await ecox.initialSupply()).toString());
+    const gas = await ecox.exchange.estimateGas(new BN('1000'), { from: alice });
     // eslint-disable-next-line no-console
     console.log(`Conversion costs: ${gas} gas`);
   });

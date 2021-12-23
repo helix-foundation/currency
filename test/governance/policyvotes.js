@@ -14,7 +14,7 @@ const { expect } = chai;
 
 chai.use(bnChai(BN));
 
-contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
+contract('PolicyVotes [@group=8]', (accounts) => {
   let policy;
   let balanceStore;
   let token;
@@ -24,6 +24,13 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
   let proxiedPolicyVotes;
   let timedPolicies;
 
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  const dave = accounts[3];
+  const frank = accounts[4];
+  let counter = 0;
+
   beforeEach(async () => {
     ({
       policy,
@@ -31,7 +38,8 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
       token,
       initInflation,
       timedPolicies,
-    } = await util.deployPolicy());
+    } = await util.deployPolicy(accounts[counter]));
+    counter++;
 
     await initInflation.mint(balanceStore.address, alice, toBN(10).pow(toBN(18)).muln(5000));
     await initInflation.mint(balanceStore.address, bob, toBN(10).pow(toBN(18)).muln(5000));
@@ -47,11 +55,11 @@ contract('PolicyVotes [@group=8]', ([alice, bob, charlie, dave, frank]) => {
     await policy.testDirectSet('PolicyVotes', proxiedPolicyVotes.address);
   });
 
-  describe('initialize', () => {
-    it('can be proxied', async () => {
-      await ForwardProxy.new(policyVotes.address);
-    });
-  });
+  // describe('initialize', () => {
+  //   it('can be proxied', async () => {
+  //     await ForwardProxy.new(policyVotes.address);
+  //   });
+  // });
 
   describe('configure', () => {
     context('when called on a proxied instance', () => {

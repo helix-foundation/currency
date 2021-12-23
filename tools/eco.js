@@ -27,6 +27,7 @@ const PolicyABI = reqArtifact('Policy');
 const EcoFaucetABI = reqArtifact('EcoFaucet');
 
 let options;
+let fullOptions;
 
 // ## Init
 // Parse command line
@@ -180,7 +181,8 @@ async function deployEco() {
         ),
       );
     }
-    options.erc20 = await deploy(options.account, trustednodes);
+    fullOptions = await deploy(options.account, trustednodes, true);
+    options.erc20 = fullOptions.erc20.options.address;
 
     if (options.devmode) {
       const token = new web3.eth.Contract(PolicedUtilsABI.abi, options.erc20);

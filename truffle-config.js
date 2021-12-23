@@ -13,6 +13,13 @@ module.exports = {
       network_id: '4',
       gas: 6712390,
     },
+    develop: {
+      host: '127.0.0.1',
+      port: 8545,
+      network_id: 20,
+      accounts: 100,
+      defaultEtherBalance: 100,
+    },
   },
   mocha: {
     enableTimeouts: false,

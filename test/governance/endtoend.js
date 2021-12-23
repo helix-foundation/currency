@@ -45,7 +45,7 @@ contract('Production Policy Change [@group=4]', (accounts) => {
       token,
       initInflation,
       timedPolicies,
-    } = await util.deployPolicy());
+    } = await util.deployPolicy(accounts[0]));
   });
 
   it('Stakes accounts', async () => {

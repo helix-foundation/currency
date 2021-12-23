@@ -1,20 +1,21 @@
 const { expectRevert } = require('@openzeppelin/test-helpers');
 const util = require('../../tools/test/util');
 
-const TrustedNodes = artifacts.require('TrustedNodes');
-
-contract('trace', ([accountA, accountB]) => {
-  let policy;
+contract('trace', (accounts) => {
   let trustedNodes;
 
+  const alice = accounts[0];
+  const bob = accounts[1];
+  let counter = 0;
+
   beforeEach(async () => {
-    ({ policy } = await util.deployPolicy());
-    trustedNodes = await TrustedNodes.new(policy.address, [accountB], 1);
+    ({ trustedNodes } = await util.deployPolicy(accounts[counter], { trustees: [bob] }));
+    counter++;
   });
 
   it('traces reverting transactions', async () => {
     await expectRevert(
-      util.trace(trustedNodes.trust(accountA)),
+      util.trace(trustedNodes.trust(alice)),
       'Only the policy contract',
     );
   });

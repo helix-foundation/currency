@@ -5,15 +5,18 @@ const {
 } = require('@openzeppelin/test-helpers');
 const util = require('../../tools/test/util');
 
-contract('TimedPolicies [@group=12]', () => {
+contract('TimedPolicies [@group=12]', (accounts) => {
   let policy;
   let timedPolicies;
+
+  let count = 0;
 
   beforeEach(async () => {
     ({
       policy,
       timedPolicies,
-    } = await util.deployPolicy());
+    } = await util.deployPolicy(accounts[count]));
+    count += 1;
   });
 
   it('Should do a simple voting cycle', async () => {

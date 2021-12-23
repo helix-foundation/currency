@@ -38,6 +38,7 @@ contract ECOx is ERC20, PolicedUtils {
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
         copyTokenMetadata(_self);
+        initialSupply = ECOx(_self).initialSupply();
     }
 
     function valueOf(uint256 _ecoXValue) public view returns (uint256) {

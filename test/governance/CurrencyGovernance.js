@@ -17,7 +17,12 @@ const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
-contract('CurrencyGovernance [@group=4]', ([alice, bob, charlie, dave]) => {
+contract('CurrencyGovernance [@group=4]', (accounts) => {
+  const alice = accounts[0];
+  const bob = accounts[1];
+  const charlie = accounts[2];
+  const dave = accounts[3];
+  let counter = 1;
   let policy;
   let borda;
   let trustedNodes;
@@ -25,16 +30,19 @@ contract('CurrencyGovernance [@group=4]', ([alice, bob, charlie, dave]) => {
   let ecox;
 
   beforeEach(async () => {
+    // console.log(accounts[counter]);
     ({
       policy,
       trustedNodes,
       faucet,
       ecox,
-    } = await util.deployPolicy({ trustees: [bob, charlie, dave] }));
+    } = await util.deployPolicy(accounts[counter], { trustees: [bob, charlie, dave] }));
+    counter += 1;
 
     const originalBorda = await CurrencyGovernance.new(policy.address);
     const bordaCloner = await Cloner.new(originalBorda.address);
     borda = await CurrencyGovernance.at(await bordaCloner.clone());
+    // console.log(borda.address);
     await policy.testDirectSet('CurrencyGovernance', borda.address);
   });
 
