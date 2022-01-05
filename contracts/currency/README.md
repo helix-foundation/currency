@@ -387,7 +387,7 @@ Arguments:
 Returns the value of ECO that the ECOx would be worth at the specified generation,
 if it had been exchanged.
 
-#### valueOf
+#### ecoValueOf
 Arguments:
  - `_ecoXValue` (uint256) - the value of ECOx to be appraised
 

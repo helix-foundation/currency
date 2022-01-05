@@ -9,12 +9,15 @@ const {
   expect,
 } = chai;
 
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const ECOx = artifacts.require('ECOx');
+
+const { expectRevert, constants } = require('@openzeppelin/test-helpers');
 const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
 contract('ECOx', (accounts) => {
+  let policy;
   let token;
   let ecox;
   let faucet;
@@ -25,6 +28,7 @@ contract('ECOx', (accounts) => {
 
   beforeEach('global setup', async () => {
     ({
+      policy,
       token,
       ecox,
       faucet,
@@ -41,9 +45,6 @@ contract('ECOx', (accounts) => {
   });
 
   it('Verifies starting conditions', async () => {
-    // console.log(token);
-    // console.log(ecox);
-    // console.log(faucet);
     expect(await token.balanceOf(alice)).to.eq.BN('20000000000000000000000');
     expect(await token.balanceOf(bob)).to.eq.BN('30000000000000000000000');
     expect(await token.balanceOf(charlie)).to.eq.BN('50000000000000000000000');
@@ -57,10 +58,35 @@ contract('ECOx', (accounts) => {
   });
 
   it('checks the gas cost of converting', async () => {
-    // console.log((await ecox.initialSupply()).toString());
     const gas = await ecox.exchange.estimateGas(new BN('1000'), { from: alice });
     // eslint-disable-next-line no-console
     console.log(`Conversion costs: ${gas} gas`);
+  });
+
+  it('fails if initialSupply == 0', async () => {
+    const newEcoX = await ECOx.new(policy.address, 0);
+    await expectRevert(
+      newEcoX.ecoValueOf(200),
+      'initial supply not set',
+    );
+  });
+
+  it('doesnt allow minting to 0 address', async () => {
+    await expectRevert(
+      faucet.mint(constants.ZERO_ADDRESS, new BN('1000000')),
+      'mint to the zero address.',
+    );
+  });
+
+  it('doesnt allow minting past a certain block', async () => {
+    // takes too long to test
+
+    // const maxInt32 = 2**32;
+    // await time.advanceBlockTo(maxInt32);
+    // await expectRevert(
+    //   faucet.mint(alice, new BN('1000000')),
+    //   'block number cannot be casted safely',
+    // );
   });
 
   it('exchanges ECOx', async () => {
@@ -85,6 +111,13 @@ contract('ECOx', (accounts) => {
     // THIS IS THE APPROXIMATE MINIMUM ACCURATE EXCHANGEABLE PERCENTAGE VALUE
     // BELOW THIS AMOUNT, THE USER MAY BE SHORTCHANGED 1 OF THE SMALLEST UNIT
     // OF ECO DUE TO ROUNDING/TRUNCATING ERRORS
+  });
+
+  it('exchanges more ECOx than exists in balance', async () => {
+    await expectRevert(
+      ecox.exchange(new BN('3000000000000000000000'), { from: alice }),
+      'ERC20: burn amount exceeds balance',
+    );
   });
 
   context('allowance', () => {
@@ -115,10 +148,6 @@ contract('ECOx', (accounts) => {
 
     it('decimals returns correct number of decimals', async () => {
       expect(await ecox.decimals()).to.eq.BN('18');
-    });
-
-    it('getLockup works properly', async () => {
-      // TODO
     });
   });
 });

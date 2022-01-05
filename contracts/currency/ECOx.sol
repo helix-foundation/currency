@@ -41,7 +41,7 @@ contract ECOx is ERC20, PolicedUtils {
         initialSupply = ECOx(_self).initialSupply();
     }
 
-    function valueOf(uint256 _ecoXValue) public view returns (uint256) {
+    function ecoValueOf(uint256 _ecoXValue) public view returns (uint256) {
         uint256 _ecoSupply = getToken().totalSupply();
 
         return computeValue(_ecoXValue, _ecoSupply);
@@ -153,7 +153,7 @@ contract ECOx is ERC20, PolicedUtils {
     }
 
     function exchange(uint256 _ecoXValue) external {
-        uint256 eco = valueOf(_ecoXValue);
+        uint256 eco = ecoValueOf(_ecoXValue);
 
         _burn(msg.sender, _ecoXValue);
 

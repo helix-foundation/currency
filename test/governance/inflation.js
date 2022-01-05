@@ -191,6 +191,13 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       );
     });
 
+    it('reverts if contract doesnt have the required funds to reward winners', async () => {
+      await expectRevert(
+        inflation.startInflation(1000000000, 1000000000),
+        'The contract must have a token balance at least the total rewards',
+      );
+    });
+
     it('reverts if startInflation is called twice', async () => {
       await expectRevert(
         inflation.startInflation(1, 1),
