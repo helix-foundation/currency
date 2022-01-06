@@ -41,7 +41,7 @@ const PolicyProposalContractABI = require(`../${importPath}/contracts/PolicyProp
 const PolicyVotesContractABI = require(`../${importPath}/contracts/PolicyVotes.json`);
 const ECOxLockupContractABI = require(`../${importPath}/contracts/ECOxLockup.json`);
 const SimplePolicySetterABI = require(`../${importPath}/contracts/SimplePolicySetter.json`);
-const ERC20EcoTokenABI = require(`../${importPath}/contracts/ERC20EcoToken.json`);
+const ECOABI = require(`../${importPath}/contracts/ECO.json`);
 const ERC20TokenABI = require(`../${importPath}/contracts/IERC20.json`);
 const EcoFaucetABI = require(`../${importPath}/contracts/EcoFaucet.json`);
 const EcoTestCleanupABI = require(`../${importPath}/contracts/EcoTestCleanup.json`);
@@ -275,9 +275,9 @@ async function deployStage2(options) {
   if (options.verbose) {
     console.log('deploying the ERC20 implementation contract...');
   }
-  const erc20Impl = await new web3.eth.Contract(ERC20EcoTokenABI.abi)
+  const erc20Impl = await new web3.eth.Contract(ECOABI.abi)
     .deploy({
-      data: ERC20EcoTokenABI.bytecode,
+      data: ECOABI.bytecode,
       arguments: [options.policyProxy.options.address, options.rootHashProposal.options.address],
     })
     .send({

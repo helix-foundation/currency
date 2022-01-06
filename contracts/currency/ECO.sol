@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./ERC20InflationaryVotes.sol";
+import "./InflationCheckpoints.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "../currency/InflationRootHashProposal.sol";
@@ -11,7 +11,7 @@ import "../governance/CurrencyTimer.sol";
 
 /** @title An ERC20 token interface to the Eco currency syste4m.
  */
-contract ERC20EcoToken is ERC20InflationaryVotes, TimeUtils {
+contract ECO is InflationCheckpoints, TimeUtils {
     /* Event to be emitted when InflationRootHashProposalStarted contract spawned.
      */
     event InflationRootHashProposalStarted(
@@ -30,7 +30,7 @@ contract ERC20EcoToken is ERC20InflationaryVotes, TimeUtils {
     constructor(
         address _policy,
         InflationRootHashProposal _rootHashProposalImpl
-    ) ERC20InflationaryVotes(_policy, "Eco", "ECO") {
+    ) InflationCheckpoints(_policy, "Eco", "ECO") {
         inflationRootHashProposalImpl = _rootHashProposalImpl;
     }
 

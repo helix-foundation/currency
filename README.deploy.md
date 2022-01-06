@@ -33,7 +33,7 @@ const PolicyProposalContractABI = require('../build/contracts/PolicyProposals.js
 const PolicyVotesContractABI = require('../build/contracts/PolicyVotes.json');
 const SimplePolicySetterABI = require('../build/contracts/SimplePolicySetter.json');
 const EcoBalanceStoreABI = require('../build/contracts/EcoBalanceStore.json');
-const ERC20EcoTokenABI = require('../build/contracts/ERC20EcoToken.json');
+const ECOABI = require('../build/contracts/ECO.json');
 const ERC20TokenABI = require('../build/contracts/IERC20.json');
 const EcoFaucetABI = require('../build/contracts/EcoFaucet.json');
 const EcoTestCleanupABI = require('../build/contracts/EcoTestCleanup.json');
@@ -285,9 +285,9 @@ Deploy the implementation contracts
 ![Deploy the Token Interfaces](https://www.lucidchart.com/publicSegments/view/b528bda8-df21-49fd-8d8e-2e05a8875f58/image.png)
 ```js
   console.log('deploying the ERC20 implementation contract...');
-  const erc20Impl = await new web3.eth.Contract(ERC20EcoTokenABI.abi)
+  const erc20Impl = await new web3.eth.Contract(ECOABI.abi)
     .deploy({
-      data: ERC20EcoTokenABI.bytecode,
+      data: ECOABI.bytecode,
       arguments: [options.policyProxy.options.address],
     })
     .send({

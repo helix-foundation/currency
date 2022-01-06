@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../currency/ERC20Votes.sol";
+import "../currency/VoteCheckpoints.sol";
 import "../currency/ECOx.sol";
 import "../policy/PolicedUtils.sol";
 import "../governance/IGeneration.sol";
@@ -10,7 +10,7 @@ import "../governance/IGeneration.sol";
 /** @title ECOxLockup
  *
  */
-contract ECOxLockup is ERC20Votes, PolicedUtils {
+contract ECOxLockup is VoteCheckpoints, PolicedUtils {
     /** The Deposit event indicates that ECOx has been locked up, credited
      * to a particular address in a particular amount.
      *
@@ -32,7 +32,7 @@ contract ECOxLockup is ERC20Votes, PolicedUtils {
     uint256 public currentGeneration;
 
     constructor(address _policy)
-        ERC20Votes("S-Eco-X", "sECOx")
+        VoteCheckpoints("S-Eco-X", "sECOx")
         PolicedUtils(_policy)
     {}
 

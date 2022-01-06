@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "../currency/ERC20Votes.sol";
+import "../currency/VoteCheckpoints.sol";
 import "../governance/ITimeNotifier.sol";
 import "../policy/PolicedUtils.sol";
 
-/** @title ERC20InflationaryVotes
+/** @title InflationCheckpoints
  * This implements a generational store with snapshotted balances. Balances
  * are lazy-evaluated, but are effectively all atomically snapshotted when
  * the generation changes.
  */
-abstract contract ERC20InflationaryVotes is
-    ERC20Votes,
+abstract contract InflationCheckpoints is
+    VoteCheckpoints,
     PolicedUtils,
     ITimeNotifier
 {
@@ -32,7 +32,7 @@ abstract contract ERC20InflationaryVotes is
         address _policy,
         string memory _name,
         string memory _symbol
-    ) ERC20Votes(_name, _symbol) PolicedUtils(_policy) {
+    ) VoteCheckpoints(_name, _symbol) PolicedUtils(_policy) {
         _writeCheckpoint(
             _linearInflationCheckpoints,
             _replace,
@@ -72,7 +72,7 @@ abstract contract ERC20InflationaryVotes is
     {
         require(
             blockNumber < block.number,
-            "ERC20InflationaryVotes: block not yet mined"
+            "InflationCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(_linearInflationCheckpoints, blockNumber);
     }

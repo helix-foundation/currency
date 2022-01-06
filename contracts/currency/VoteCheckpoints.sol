@@ -8,8 +8,6 @@ import "./ERC20.sol";
  * @dev Extension of ERC20 to support Compound-like voting and delegation. This version is more generic than Compound's,
  * and supports token supply up to 2^224^ - 1, while COMP is limited to 2^96^ - 1.
  *
- * NOTE: If exact COMP compatibility is required, use the {ERC20VotesComp} variant of this module.
- *
  * This extension keeps a history (checkpoints) of each account's vote power. Vote power can be delegated either
  * by calling the {delegate} function directly, or by providing a signature to be used with {delegateBySig}. Voting
  * power can be queried through the public accessors {getVotes} and {getPastVotes}.
@@ -21,7 +19,7 @@ import "./ERC20.sol";
  *
  * _Available since v4.2._
  */
-abstract contract ERC20Votes is ERC20 {
+abstract contract VoteCheckpoints is ERC20 {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 value;
@@ -160,7 +158,10 @@ abstract contract ERC20Votes is ERC20 {
         view
         returns (uint256)
     {
-        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        require(
+            blockNumber < block.number,
+            "VoteCheckpoints: block not yet mined"
+        );
         return _checkpointsLookup(_checkpoints[account], blockNumber);
     }
 
@@ -177,7 +178,10 @@ abstract contract ERC20Votes is ERC20 {
         view
         returns (uint256)
     {
-        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        require(
+            blockNumber < block.number,
+            "VoteCheckpoints: block not yet mined"
+        );
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
@@ -247,7 +251,7 @@ abstract contract ERC20Votes is ERC20 {
         amount = super._mint(account, amount);
         require(
             totalSupply() <= _maxSupply(),
-            "ERC20Votes: total supply risks overflowing votes"
+            "VoteCheckpoints: total supply risks overflowing votes"
         );
 
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);

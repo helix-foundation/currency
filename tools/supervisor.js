@@ -57,7 +57,7 @@ function req(contract) {
 
 // ### Contract ABIs and Bytecode
 const PolicyABI = req('Policy');
-const ERC20EcoToken = req('ERC20EcoToken');
+const ECO = req('ECO');
 const TimedPoliciesABI = req('TimedPolicies');
 const EcoBalanceStoreABI = req('EcoBalanceStore');
 const PolicyProposalContractABI = req('PolicyProposals');
@@ -171,7 +171,7 @@ class Supervisor {
 
   async getERC20Token() {
     return new web3.eth.Contract(
-      ERC20EcoToken.abi,
+      ECO.abi,
       await this.policy.methods.policyFor(ID_ERC20TOKEN).call(),
       {
         from: this.account,

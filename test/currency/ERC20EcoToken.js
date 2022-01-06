@@ -7,7 +7,7 @@ const { expect } = chai;
 const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
 const Policy = artifacts.require('FakePolicy');
-const ERC20EcoToken = artifacts.require('ERC20EcoToken');
+const ECO = artifacts.require('ECO');
 const MurderousPolicy = artifacts.require('MurderousPolicy');
 const FakeInflation = artifacts.require('FakeInflation');
 const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
@@ -18,7 +18,7 @@ let one;
 
 chai.use(bnChai(BN));
 
-contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
+contract('ECO [@group=1]', ([owner, ...accounts]) => {
   one = toBN(10).pow(toBN(18));
 
   let token;
@@ -31,7 +31,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     const proxy = await ForwardProxy.new(policyInit.address);
     const rootHash = await InflationRootHashProposal.new(proxy.address);
     inflation = await FakeInflation.new();
-    token = await ERC20EcoToken.new(proxy.address, rootHash.address, { from: owner });
+    token = await ECO.new(proxy.address, rootHash.address, { from: owner });
 
     murderer = await MurderousPolicy.new();
     attemptedMurderer = await MurderousPolicy.new();
@@ -469,7 +469,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     it('cannot get the internal votes for an account until the block requestsed has been mined', async () => {
       await expectRevert(
         token.getPastVotes(from, await time.latestBlock(), { from }),
-        'ERC20Votes: block not yet mined',
+        'VoteCheckpoints: block not yet mined',
         token.constructor,
       );
     });
@@ -477,7 +477,7 @@ contract('ERC20EcoToken [@group=1]', ([owner, ...accounts]) => {
     it('cannot get the past supply until the block requestsed has been mined', async () => {
       await expectRevert(
         token.getPastTotalSupply(await time.latestBlock(), { from }),
-        'ERC20Votes: block not yet mined',
+        'VoteCheckpoints: block not yet mined',
         token.constructor,
       );
     });

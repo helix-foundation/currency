@@ -10,7 +10,7 @@ const {
 } = chai;
 
 // const ForwardProxy = artifacts.require('ForwardProxy');
-// const EcoBalanceStore = artifacts.require('ERC20EcoToken');
+// const EcoBalanceStore = artifacts.require('ECO');
 // const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
 const MAX_ACCOUNT_BALANCE = new BN(
@@ -244,7 +244,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
     it('Cannot return future balances', async () => {
       await expectRevert(
         balanceStore.balanceAt(accounts[1], 999999999),
-        'ERC20InflationaryVotes: block not yet mined',
+        'InflationCheckpoints: block not yet mined',
       );
     });
 

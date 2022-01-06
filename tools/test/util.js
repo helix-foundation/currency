@@ -3,7 +3,7 @@
 
 const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
-const ERC20EcoToken = artifacts.require('ERC20EcoToken');
+const ECO = artifacts.require('ECO');
 const ECOx = artifacts.require('ECOx');
 const ECOxLockup = artifacts.require('ECOxLockup');
 const Inflation = artifacts.require('Inflation');
@@ -56,7 +56,7 @@ exports.deployPolicy = async (
   const balanceStoreAd = options.balanceStore._address;
 
   const policy = await Policy.at(policyAd);
-  const eco = await ERC20EcoToken.at(ecoAd);
+  const eco = await ECO.at(ecoAd);
   const inflation = await Inflation.at(inflationAd);
   const vdf = await VDFVerifier.at(vdfAd);
   const ecox = await ECOx.at(ecoxAd);
@@ -69,7 +69,7 @@ exports.deployPolicy = async (
   const faucet = await EcoFaucet.at(faucetAd);
   const cleanup = await Cleanup.at(cleanupAd);
   const unauthedCleanup = await MurderousCleanup.new();
-  const balanceStore = await ERC20EcoToken.at(balanceStoreAd);
+  const balanceStore = await ECO.at(balanceStoreAd);
 
   // await timedPolicies.incrementGeneration();
   // console.log(await ecox.name());
@@ -118,7 +118,7 @@ exports.deployPolicy = async (
 //   const proxy = await ForwardProxy.new(init.address);
 
 //   const rootHash = await RootHashProposal.new(proxy.address);
-//   const token = await ERC20EcoToken.new(proxy.address, rootHash.address);
+//   const token = await ECO.new(proxy.address, rootHash.address);
 //   const ecox = await ECOx.new(proxy.address, totalECOx);
 //   const vdf = await VDFVerifier.new(proxy.address);
 //   const authedCleanup = await Cleanup.new();
