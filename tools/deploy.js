@@ -10,6 +10,13 @@
 // networks.
 
 // ####### Parameters ########
+/*
+ * account: an account is required to be the interim owner of the contracts during the deploy
+ *          and before they are initialized.
+ * trustednodes: the list of addresses to be the initial trustees
+ * production: boolean flag for if the deploy is to chain or should include test contracts
+ * verbose: boolean flag for logging, production overrides this and is always verbose
+ */
 
 // ## Dependencies
 const nick = require('./nicks');
@@ -51,12 +58,12 @@ const ECOxABI = require(`../${importPath}/contracts/ECOx.json`);
 /* eslint-enable import/no-unresolved */
 
 // ## PrepDeploy
-// Pre-compute and sanity-check deployment
+// Pre-compute and sanity-check deployment. Set all relevant parameters.
 async function prepDeploy(options) {
   options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
   const limit = (await web3.eth.getBlock('latest')).gasLimit;
   if (options.production) {
-    options.verbose = true; // product deploy should always be verbose
+    options.verbose = true;
   }
   if (options.verbose) {
     console.log(`verbose deploy: ${options.verbose}`);
@@ -127,7 +134,8 @@ async function prepDeploy(options) {
 // times on the same network.
 //
 // Stages also accumulate and pass along data for use in future stages, such as
-// contract addresses and local objects for reuse.
+// contract addresses and local objects for reuse. This data is stored in the
+// `options` object.
 
 // ### Stage 1
 // In order to keep deployment addresses constant across all networks we use
@@ -142,7 +150,7 @@ async function prepDeploy(options) {
 // multiple additional contracts and initializes storage. Additionally, since
 // the gas price and amount must be set as part of the signed contract data
 // these parameters are fixed at values that allow fast deployment on _any_
-// network (ie they're higher than they need to be).
+// network (i.e. they're higher than they need to be).
 //
 // ![Bootstrap Contract Layout](https://www.lucidchart.com/publicSegments/view/a8a95f91-de31-42cb-a33a-26f797cc31ef/image.png)
 //
@@ -182,7 +190,7 @@ async function deployStage1(options) {
 // the `EcoInitializable` at the 0th reserved address to redirect the address
 // to the new `PolicyInit` instance.
 //
-// Afterwards, we deploy the currency implementation contracts (`ERC20`, `ECOx`).
+// Afterwards, we deploy the currency implementation contracts (`ECO`, `ECOx`).
 // The addresses of the currency implementation contracts are stored for the
 // next stage. We also deploy `InflationRootHashProposal` which is a contract for
 // submitting a Merkel hash of all balances, used in governance.
@@ -197,7 +205,7 @@ async function deployStage2(options) {
   const policyProxyAddress = await options.bootstrap.methods
     .placeholders(0)
     .call({ from: options.account });
-  const erc20ProxyAddress = await options.bootstrap.methods
+  const ecoProxyAddress = await options.bootstrap.methods
     .placeholders(1)
     .call({
       from: options.account,
@@ -248,7 +256,6 @@ async function deployStage2(options) {
   );
 
   // Deploy the root hash
-  //
   if (options.verbose) {
     console.log('deploying Root Hash...');
   }
@@ -271,11 +278,10 @@ async function deployStage2(options) {
   options.rootHashProposal = rootHashProposal;
 
   // Deploy the implementation contracts
-  // ![Deploy the Token Interfaces](https://www.lucidchart.com/publicSegments/view/b528bda8-df21-49fd-8d8e-2e05a8875f58/image.png)
   if (options.verbose) {
-    console.log('deploying the ERC20 implementation contract...');
+    console.log('deploying the ECO implementation contract...');
   }
-  const erc20Impl = await new web3.eth.Contract(ECOABI.abi)
+  const ecoImpl = await new web3.eth.Contract(ECOABI.abi)
     .deploy({
       data: ECOABI.bytecode,
       arguments: [options.policyProxy.options.address, options.rootHashProposal.options.address],
@@ -294,7 +300,7 @@ async function deployStage2(options) {
       data: ECOxABI.bytecode,
       arguments: [
         options.policyProxy.options.address,
-        '1000000000000000000000', // TODO: make this the real value
+        '1000000000000000000000', // TODO: make this a parameter
       ],
     })
     .send({
@@ -303,12 +309,12 @@ async function deployStage2(options) {
       gasPrice: options.gasPrice,
     });
   if (options.verbose) {
-    console.log('binding proxy 1 to the ERC20 implementation contract...');
+    console.log('binding proxy 1 to the ECO implementation contract...');
   }
   await new web3.eth.Contract(
     EcoInitializableABI.abi,
-    erc20ProxyAddress,
-  ).methods['fuseImplementation(address)'](erc20Impl.options.address).send({
+    ecoProxyAddress,
+  ).methods['fuseImplementation(address)'](ecoImpl.options.address).send({
     from: options.account,
     gas: BLOCK_GAS_LIMIT,
     gasPrice: options.gasPrice,
@@ -329,7 +335,7 @@ async function deployStage2(options) {
   // Pass along the local token contract objects
   options.erc20 = new web3.eth.Contract(
     ERC20TokenABI.abi,
-    erc20ProxyAddress,
+    ecoProxyAddress,
   );
   options.ecox = new web3.eth.Contract(
     ECOxABI.abi,
@@ -351,6 +357,8 @@ async function deployStage2(options) {
 // process (`CurrencyTimer`, `TimedPolicies`) which are not cloned, but instead
 // run the generation timing and clone the necessary contracts each cycle.
 //
+// We have a contract for staking ECOx (`ECOxLockup`) to be able to vote.
+//
 // We have a helper contract for random processes that manages a Variable Delay
 // Function (`VDFVerifier`).
 //
@@ -360,7 +368,7 @@ async function deployStage2(options) {
 // We have the template contracts for trustee votes (`CurrencyGovernance`) and
 // the two for community votes on policy, `PolicyVotes`, `PolicyProposals`).
 //
-// We have a contract that tracks our trustee addresses (`TrustedNodes`).
+// We have a contract that manages our trustee addresses (`TrustedNodes`).
 //
 // We also deploy the root policy contract (`Policy`) and the contract for
 // minting the initial distribution of tokens (`EcoTokenInit`).
