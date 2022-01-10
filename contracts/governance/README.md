@@ -137,7 +137,7 @@ of `notifyGenerationIncrease`.
 ##### Events
 ###### PolicyDecisionStarted
 Attributes:
- - `_address` (address) - the address of the `PolicyProposals` contract
+ - `contractAddress` (address) - the address of the `PolicyProposals` contract
    supervising the vote
 
 Indicates the start of a policy vote.
@@ -170,7 +170,7 @@ address to indicate the start of a new vote.
 This function is internal.
 
 #### CurrencyTimer
- - Inherits: `Policed`, `ITimeNotifier`
+ - Inherits: `PolicedUtils`, `ITimeNotifier`, `ILockups`
 
 The `CurrencyTimer` contract is delegated the responsibility of implementing
 the decisions decided on by the trustees in their Currency Governance votes
@@ -395,6 +395,105 @@ and establish an accessible permanent record of the outcome.
  - Can only be called during the `Compute` `stage`.
  - Can only be called once on any given inflation contract.
 
+#### ECOxLockup
+- Inherits: `ERC20Votes`, `PolicedUtils`
+
+Contains the logic for depositing and withdrawing EcoX to/from lockup. The quantity of
+EcoX locked up relative to the total supply (both at a given block number) determine
+an individual's voting power. This contract also maintains a mapping of addresses -->
+the last generation in which that address cast a vote - this is used to determine
+whether or not an address is permitted to withdraw (withdrawal is not permitted until
+two generations after the last vote was cast by the withdrawing address).
+
+##### Events
+
+###### Deposit
+Attributes: 
+  - `source` (address) - The address that a deposit certificate has been issued to
+  - `amount` (uint256) - The amount of ECOx tokens deposited
+
+The Deposit event indicates that ECOx has been locked up, credited to a particular
+address in a particular amount.
+
+###### Withdrawal
+Attributes:
+  - `destination` (address) The address that has made a withdrawal
+  - `amount` (uint256) The amount in basic unit of 10^{-18} (atto) ECOx tokens withdrawn
+
+The Withdrawal event indicates that a withdrawal has been made to a particular address
+in a particular amount
+
+##### deposit
+Arguments:
+  - `_amount` (uint256) - amount of EcoX sender is attempting to deposit
+
+Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract.
+A checkpoint is written to increase totalSupply and the voting balance of msg.sender by
+`_amount` for the current block number. This also results in a Deposit event being emitted.
+
+###### Security Notes
+  - only updates totalSupply and voting power balance if the transfer is successful i.e. if
+  msg.sender has at least `_amount` of EcoX in their balance
+
+##### withdraw
+Arguments:
+  - `_amount` (uint256) - amount of EcoX sender is attempting to withdraw
+
+Transfers EcoX in the amount `_amount` to msg.sender. Ensures that
+A checkpoint is written to decrease totalSupply and the voting balance of msg.sender by
+`_amount` for the current block number. This also results in a Withdrawal event being emitted.
+
+###### Security Notes
+  - Only allows for withdrawal if msg.sender did not vote in current or previous generation.
+  This is to ensure that voters do not make decisions without having 'skin in the game', they
+  cannot unlock and sell their EcoX for at least two generations after their last vote was cast.
+
+##### votingECOx
+Arguments:
+  - `_voter` (address) - address whose voting power is being assessed
+  - `_blocknumber` (uint256) - block number at which voting power is being assessed
+
+Fetches the EcoX voting power of a given address at a given block. This is accomplished by
+binary searching to find the earliest checkpoint taken after the given block number, and
+then getting the balance of the address in that checkpoint.
+
+##### totalVotingECOx
+Arguments:
+  - `_blocknumber` (uint256) - block number at which voting power is being assessed
+
+Fetches the total voting power at a given block. This is accomplished by binary searching to
+find the earliest checkpoint taken after the given block number, and then getting the sum of
+all balances at that checkpoint.
+
+##### recordVote
+Arguments:
+   - `who` (address) - address casting the vote
+
+Sets votingTracker[address] to the current generation. This is used to determine whether or not
+an address can withdraw its locked up EcoX - they are not permitted to do so the generation of
+or immediately after their most recent vote.
+
+###### Security Notes
+  - can only be invoked by the policy proposals contract or the policy votes contract
+
+##### notifyGenerationIncrease
+Arguments: none
+
+When notified of a generation increase, this contract will find the existing
+clone of `CurrencyGovernance` to read the results of the most recent vote.
+If that vote calls for the creation of any new lockups or random inflation
+contracts, those are cloned. New lockups are added to the mapping `lockups`
+which maps the generation they were offered to the address of the lockup.
+The old lockups offered during the previous generation are funded to be able
+to pay out interest, as they are now closed for contributions. Finally the
+new `CurrencyGovernance` contract is cloned. Events are emitted to represent
+the actions taken.
+
+###### Security Notes (this whole thing is probably wrong now?)
+This method cannot be called until the `TimedPolicies` generation has changed
+from the one stored in this contract.
+
+
 #### Inflation
  - Inherits: `PolicedUtils`
 
@@ -421,8 +520,8 @@ reduce the surge of new funds that comes into the economy.
 
 ###### Claimed
 Attributes:
-   - `who` (address) - the address of the winner whose prize was delivered
-   - `sequence` (uint256) - the payout sequence number that was used to verify
+  - `who` (address) - the address of the winner whose prize was delivered
+  - `sequence` (uint256) - the payout sequence number that was used to verify
      that the address did in fact win.
 
 This event is emitted when there is a successful claiming of a prize. It emits

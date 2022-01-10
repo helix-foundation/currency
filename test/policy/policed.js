@@ -47,7 +47,6 @@ contract('Policed [@group=11]', (accounts) => {
       const ids = {
         ID_FAUCET: 'Faucet',
         ID_ERC20TOKEN: 'ERC20Token',
-        ID_BALANCESTORE: 'BalanceStore',
         ID_CLEANUP: 'ContractCleanup',
         ID_TIMED_POLICIES: 'TimedPolicies',
         ID_TRUSTED_NODES: 'TrustedNodes',

@@ -167,7 +167,7 @@ abstract contract VoteCheckpoints is ERC20 {
 
     /**
      * @dev Retrieve the `totalSupply` at the end of `blockNumber`. Note, this value is the sum of all balances.
-     * It is but NOT the sum of all the delegated votes!
+     * It is NOT the sum of all the delegated votes!
      *
      * Requirements:
      *

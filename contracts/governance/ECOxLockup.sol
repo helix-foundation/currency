@@ -19,7 +19,8 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
      */
     event Deposit(address source, uint256 amount);
 
-    /** The Withdrawal event indicates that a withdrawal has been made
+    /** The Withdrawal event indicates that a withdrawal has been made to a particular
+     * address in a particular amount.
      *
      * @param destination The address that has made a withdrawal.
      * @param amount The amount in basic unit of 10^{-18} (atto) ECOx tokens withdrawn.
