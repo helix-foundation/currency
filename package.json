@@ -47,7 +47,7 @@
     "@truffle/debug-utils": "6.0.5",
     "bigint-crypto-utils": "3.0.23",
     "bn-chai": "1.0.1",
-    "chai": "4.3.5",
+    "chai": "4.3.6",
     "concurrently": "6.5.1",
     "coveralls": "3.1.1",
     "depcheck": "1.4.3",
