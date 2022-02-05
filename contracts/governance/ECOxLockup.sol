@@ -23,7 +23,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
      * address in a particular amount.
      *
      * @param destination The address that has made a withdrawal.
-     * @param amount The amount in basic unit of 10^{-18} (atto) ECOx tokens withdrawn.
+     * @param amount The amount in basic unit of 10^{-18} ECOx (weicoX) tokens withdrawn.
      */
     event Withdrawal(address destination, uint256 amount);
 

@@ -2,8 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-// TODO: revert to @optionality.io/clone-factory/contracts/CloneFactory.sol
-// as soon as that repo is 0.5 compatible
+
 import "../clone/CloneFactory.sol";
 import "./Policed.sol";
 import "./ERC1820Client.sol";

@@ -418,7 +418,7 @@ address in a particular amount.
 ###### Withdrawal
 Attributes:
   - `destination` (address) The address that has made a withdrawal
-  - `amount` (uint256) The amount in basic unit of 10^{-18} (atto) ECOx tokens withdrawn
+  - `amount` (uint256) The amount in basic unit of 10^{-18} ECOx (weicoX) tokens withdrawn
 
 The Withdrawal event indicates that a withdrawal has been made to a particular address
 in a particular amount
@@ -931,7 +931,7 @@ Emits the `Sale` event.
  - Can only be called on a cloned contract.
  - Can only be called during the sale period.
  - Transfer permissions are assumed, and must be granted before this method is
-   called. (TODO: is this correct?)
+   called.
 
 ##### withdraw
 Arguments: none

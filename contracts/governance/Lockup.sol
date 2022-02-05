@@ -11,16 +11,13 @@ import "./IGeneration.sol";
  * This provides deposit certificate functionality for the purpose of countering
  * inflationary effects.
  *
- * The contract instance is cloned by the CurrencyGovernance contract when a vote outcome
+ * The contract instance is cloned by the CurrencyTimer contract when a vote outcome
  * mandates the issuance of deposit certificates. It has no special privileges.
  *
  * Deposits can be made and interest will be paid out to those who make
- * deposits. Deposit principal is inaccessible for the fill lockup period, but
- * interest can be withdrawn incrementally at the end of each interest period.
- *
- * Since interest totals are generally not evenly divisible by the number of
- * interest periods the error terms are collected and added to the principal
- * when it is withdrawn at the end of the lockup period.
+ * deposits. Deposit principal is accessable before the interested period
+ * but for a penalty of not retrieving your gained interest as well as an
+ * additional penalty of that same amount.
  */
 contract Lockup is PolicedUtils, TimeUtils {
     /** The Sale event indicates that a deposit certificate has been sold
@@ -33,11 +30,10 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     /** The Withdrawal event indicates that a withdrawal has been made,
      * and records the account that was credited, the amount it was credited
-     * with, and a flag indicating if this is the final withdrawal against
-     * the account's certificate.
+     * with.
      *
      * @param to The address that has made a withdrawal.
-     * @param amount The amount in basic unit of 10^{-18} (atto) ECO tokens withdrawn.
+     * @param amount The amount in basic unit of 10^{-18} ECO (weico) withdrawn.
      */
     event Withdrawal(address to, uint256 amount);
 

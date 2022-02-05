@@ -9,7 +9,7 @@ import "../currency/InflationRootHashProposal.sol";
 import "../currency/EcoBalanceStore.sol";
 import "../governance/CurrencyTimer.sol";
 
-/** @title An ERC20 token interface to the Eco currency syste4m.
+/** @title An ERC20 token interface to the Eco currency system.
  */
 contract ECO is InflationCheckpoints, TimeUtils {
     /* Event to be emitted when InflationRootHashProposalStarted contract spawned.

@@ -7,9 +7,8 @@ import "../utils/TimeUtils.sol";
 import "./VotingPower.sol";
 
 /** @title PolicyVotes
- * This implements the voting and veto phases of the policy decision process.
- * Commit-and-reveal voting is used for the voting phase, and open stake-based
- * voting is used for the veto phase.
+ * This implements the voting and implementation phases of the policy decision process.
+ * Open stake based voting is used for the voting phase.
  */
 contract PolicyVotes is VotingPower, TimeUtils {
     /** The proposal being voted on */
@@ -23,11 +22,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     mapping(address => bool) public yesVote;
 
-    /** Total currency staked in all ongoing votes in basic unit of 10^{-18} (atto) ECO.
+    /** Total currency staked in all ongoing votes in basic unit of 10^{-18} ECO (weico).
      */
     uint256 public totalStake;
 
-    /** Total revealed positive stake in basic unit of 10^{-18} (atto) ECO.
+    /** Total revealed positive stake in basic unit of 10^{-18} ECO (weico).
      */
     uint256 public yesStake;
 
@@ -65,13 +64,12 @@ contract PolicyVotes is VotingPower, TimeUtils {
     // solhint-disable-next-line no-empty-blocks
     constructor(address _policy) VotingPower(_policy) {}
 
-    /** Reveal a ballot supporting specific policies.
+    /** Submit your yes/no support
      *
-     * Commit must have been called during the commitment portion of the voting
-     * phase, and this can only be called during the reveal portion.
+     * Shows whether or not your voting power supports or does not support the vote
      *
-     * Note that not revealing and revealing a no-vote are equivalent for
-     * computing the outcome.
+     * Note Not voting is not equivalent to voting no. Percentage of voted support,
+     * not percentage of total voting power is used to determine the win.
      *
      * @param _vote The vote for the proposal
      */
@@ -140,10 +138,12 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
     /** Execute the proposal if it has enough support.
      *
-     * Can only be called after the reveal phase, and only if the proposal
-     * is rejected. Otherwise, must be called after the veto phase.
-     * If the proposal has been accepted and not vetoed, it
-     * will be enacted by calling the `enacted` functions using `delegatecall`
+     * Can only be called after the voting and the delay phase,
+     * or after the point that more than 50% of the total voting power
+     * has voted in favor of the proposal.
+     *
+     * If the proposal has been accepted, it will be enacted by
+     * calling the `enacted` functions using `delegatecall`
      * from the root policy.
      */
     function execute() external {

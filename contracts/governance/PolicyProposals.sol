@@ -13,18 +13,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /** @title PolicyProposals
  * `PolicyProposals` oversees the proposals phase of the policy decision
- * process. Proposals can be submitted by anyone willing to lock up funds, and
- * submitted proposals can be supported by anyone willing to stake more than the
- * current supporting stake.
+ * process. Proposals can be submitted by anyone willing to put forth funds, and
+ * submitted proposals can be supported by anyone
  *
  * First, during the proposals portion of the proposals phase, proposals can be
- * submitted (for a fee). At the end of the proposals portion, the staking
- * portion occurs, during which additional stake may be put up in support of
- * the submitted proposals in order to get them on the ballot in the voting
- * phase.
+ * submitted (for a fee). This is parallelized with a signal voting process where
+ * support can be distributed and redistributed to proposals after they are submitted.
  *
- * The proposals with the highest stake will make up the ballot during the
- * voting phase.
+ * A proposal that makes it to support above 30% of the total possible support ends this
+ * phase and starts a vote.
  */
 contract PolicyProposals is VotingPower, TimeUtils {
     /** A proposal submitted to the process.
@@ -198,8 +195,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * Can only be called during the staking portion of the proposals phase.
      *
-     * You must be able to increase the stake beyond what is currently staked or
-     * this function will revert.
+     * Your voting strength is added to the supporting stake of the proposal.
      *
      * @param _prop The proposal to support.
      */

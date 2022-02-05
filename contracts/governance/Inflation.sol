@@ -9,34 +9,32 @@ import "../VDF/VDFVerifier.sol";
 import "../currency/InflationRootHashProposal.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/** @title Inflation Process
+/** @title Inflation
  *
- * This contract oversees the currency inflation process and is spawned
- * on demand by the CurrencyGovernance.
+ * This contract oversees the currency random inflation process and is spawned
+ * on demand by the CurrencyTimer.
  */
 contract Inflation is PolicedUtils, TimeUtils {
     // Change this so nodes vote on total_eco and eco_per_ticket, compute
-    // tickets and distribute over 28 days.
-    /** The time period over which inflation pay-out is spread to prevent the
-     * entire quantity from becoming available at once.
+    // tickets and distribute over 28 days (2 generations).
+    /** The time period over which inflation pay-out is spread to prevent
+     *  flooding by spreading out the new tokens.
      */
     uint256 public constant PAYOUT_PERIOD = 28 days;
 
-    /** The per-participant pay-out amount in basic unit of 10^{-18} (atto) ECO selected by the voting process.
+    /** The per-participant pay-out amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
      */
     uint256 public prize;
 
-    /** The computed number of pay-out winners (inflation/prize) in basic unit of 10^{-18} (atto) ECO.
+    /** The computed number of pay-out winners (inflation/prize) in basic unit of 10^{-18} ECO (weico).
      */
     uint256 public winners;
 
-    /** The block number to use as the
-     * reference point when checking if an account holds currency.
+    /** The block number to use as the reference point when checking if an account holds currency.
      */
     uint256 public blockNumber;
 
-    /** The generation to use as the
-     * reference point for inflation policies
+    /** The generation to use as the reference point for inflation policies
      */
     uint256 public generation;
 
@@ -65,8 +63,7 @@ contract Inflation is PolicedUtils, TimeUtils {
     /** Fired when a user claims winnings */
     event Claimed(address indexed who, uint256 sequence);
 
-    /** Emitted when the VDF seed used to provide entropy has been committed to
-     * the contract.
+    /** Emitted when the VDF seed used to provide entropy has been committed to the contract.
      */
     event EntropyVDFSeedCommitted(uint256 seed);
 
@@ -83,7 +80,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         randomVDFDifficulty = _randomDifficulty;
     }
 
-    /** Self-destruct the inflation contract.
+    /** Clean up the inflation contract.
      *
      * Can only be called after all pay-outs
      * have been claimed.

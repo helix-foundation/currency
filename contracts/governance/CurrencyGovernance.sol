@@ -11,9 +11,9 @@ import "../VDF/VDFVerifier.sol";
 
 /** @title Inflation/Deflation Process
  *
- * This contract oversees the currency inflation/deflation process. Trusted
- * nodes vote to create or lock up currency to manage the relative price of
- * Eco tokens.
+ * This contract oversees the voting on the currency inflation/deflation process.
+ * Trusted nodes vote on a policy that is implemented the following generation
+ * to manage the relative price of Eco tokens.
  */
 contract CurrencyGovernance is PolicedUtils, TimeUtils {
     enum Stages {

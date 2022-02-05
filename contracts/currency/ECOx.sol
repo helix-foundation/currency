@@ -9,19 +9,9 @@ import "../governance/Lockup.sol";
 import "../governance/CurrencyTimer.sol";
 import "./ERC20.sol";
 
-/** @title ECOx
- * TODO: Update doc
- * This implements a shared balance store to be used by the ECO network to
- * store token account balances in a way that is sharable across multiple token
- * interface definitions.
+/** @title An ERC20 token interface for ECOx
  *
- * Only pre-authorized interface contract instances are permitted to interact
- * with this contract. These instances are authorized by the balance store
- * contract policy, and their access can be revoked by the policy at any time.
- *
- * This contract does not represent a token by itself! It only makes sense in
- * the context of an interface, presumably implementing a widely accepted token
- * contract standard, ie ERC20.
+ * Contains the conversion mechanism for turning ECOx into ECO.
  */
 contract ECOx is ERC20, PolicedUtils {
     uint8 public constant PRECISION = 100;

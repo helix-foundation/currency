@@ -81,8 +81,6 @@ function prove(x, t, n = defn) {
  * using keccak256 and a key stream counter to expand the key. This is a
  * pseudo-random permutation being used as a counter-based key derivation
  * function.
- *
- * TODO: Get reviewed by cryptographers!
  */
 function expandKey(seed, byteLength) {
   /* Convert the seed to a hex-encoded string representation if it was given in
