@@ -87,14 +87,17 @@ contract PolicyVotes is VotingPower, TimeUtils {
         );
 
         uint256 _oldStake = stake[msg.sender];
+        uint256 _stakeDelta = _amount - _oldStake;
 
         if (_oldStake != 0) {
+            require(
+                yesVote[msg.sender] != _vote,
+                "Your vote has already been recorded"
+            );
             if (yesVote[msg.sender]) {
                 yesStake = yesStake - _oldStake;
                 yesVote[msg.sender] = false;
             }
-            totalStake = totalStake - _oldStake;
-            stake[msg.sender] = 0;
         }
 
         recordVote(msg.sender);
@@ -106,7 +109,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
         }
         stake[msg.sender] = _amount;
 
-        totalStake = totalStake + _amount;
+        totalStake = totalStake + _stakeDelta;
     }
 
     /** Initialize a cloned/proxied copy of this contract.
