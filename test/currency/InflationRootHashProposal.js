@@ -75,11 +75,10 @@ contract('InflationRootHashProposal', () => {
 
   async function verifyOnChain(tree, index, proposer) {
     const a = answer(tree, index);
-    await rootHashProposal.challengeRootHashRequestAccount(proposer, tree.hash, index, {
+    await rootHashProposal.challengeRootHashRequestAccount(proposer, index, {
       from: accounts[1],
     });
     await rootHashProposal.respondToChallenge(
-      tree.hash,
       accounts[1],
       a[1].reverse(),
       a[0].account,
@@ -97,7 +96,6 @@ contract('InflationRootHashProposal', () => {
     try {
       const tx = await rootHashProposal.claimMissingAccount(
         proposer,
-        tree.hash,
         index,
         account,
         {
@@ -242,7 +240,6 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 0;
         const tx = await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -264,7 +261,6 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 0;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -272,7 +268,6 @@ contract('InflationRootHashProposal', () => {
         );
         await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -280,23 +275,10 @@ contract('InflationRootHashProposal', () => {
         ), 'Index already challenged.');
       });
 
-      it('challenge must use the correct root hash', async () => {
-        const requestedIndex = 0;
-        await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
-          accounts[0],
-          '0x9d5b1951ff775a7924a8e49b77085ab214705d291300c4a61b19380368c92114',
-          requestedIndex,
-          {
-            from: accounts[1],
-          },
-        ), 'There is no such hash proposal');
-      });
-
       it('challenge responded successfully', async () => {
         const requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -304,7 +286,6 @@ contract('InflationRootHashProposal', () => {
         );
         const a = answer(tree, 2);
         const tx = await rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[1],
           a[1].reverse(),
           a[0].account,
@@ -407,7 +388,6 @@ contract('InflationRootHashProposal', () => {
         await expectRevert(
           rootHashProposal.claimMissingAccount(
             accounts[2],
-            ct.hash,
             1,
             accounts[1],
             {
@@ -424,7 +404,6 @@ contract('InflationRootHashProposal', () => {
         await expectRevert(
           rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             0,
             {
               from: accounts[0],
@@ -438,7 +417,6 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -448,7 +426,6 @@ contract('InflationRootHashProposal', () => {
         await expectRevert(
           rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             requestedIndex,
             {
               from: accounts[1],
@@ -456,31 +433,12 @@ contract('InflationRootHashProposal', () => {
           ),
           'Index already challenged',
         );
-
-        const a = answer(tree, 2);
-        await expectRevert(
-          rootHashProposal.respondToChallenge(
-            proposedRootHash,
-            accounts[1],
-            a[1].reverse(),
-            a[0].account,
-            new BN(a[0].balance),
-            new BN(a[0]
-              .sum),
-            requestedIndex,
-            {
-              from: accounts[1],
-            },
-          ),
-          'There is no such hash proposal',
-        );
       });
 
       it('submit response to not existing challenge', async () => {
         const requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -489,7 +447,6 @@ contract('InflationRootHashProposal', () => {
         const a = answer(tree, 2);
         await expectRevert(
           rootHashProposal.respondToChallenge(
-            proposedRootHash,
             accounts[1],
             a[1].reverse(),
             a[0].account,
@@ -504,40 +461,11 @@ contract('InflationRootHashProposal', () => {
         );
       });
 
-      it('submit challenge to not existing root hash', async () => {
-        const requestedIndex = 2;
-        await rootHashProposal.challengeRootHashRequestAccount(
-          accounts[0],
-          proposedRootHash,
-          requestedIndex,
-          {
-            from: accounts[1],
-          },
-        );
-        const a = answer(tree, 2);
-        await expectRevert(
-          rootHashProposal.respondToChallenge(
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
-            accounts[1],
-            a[1].reverse(),
-            a[0].account,
-            new BN(a[0].balance),
-            new BN(a[0].sum),
-            requestedIndex,
-            {
-              from: accounts[1],
-            },
-          ),
-          'There is no such hash proposal',
-        );
-      });
-
       it('can\'t challenge index out of number of accounts', async () => {
         const requestedIndex = 2;
         await expectRevert(
           rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             requestedIndex + 400,
             { from: accounts[1] },
           ),
@@ -567,7 +495,6 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -575,7 +502,6 @@ contract('InflationRootHashProposal', () => {
         );
         const a = answer(tree, 2);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[1],
           a[1].reverse(),
           a[0].account,
@@ -608,7 +534,6 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[1],
@@ -617,7 +542,6 @@ contract('InflationRootHashProposal', () => {
 
         const a = answer(tree, 2);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[1],
           a[1].reverse(),
           a[0].account,
@@ -644,7 +568,6 @@ contract('InflationRootHashProposal', () => {
         const requestedIndex = 0;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -652,7 +575,6 @@ contract('InflationRootHashProposal', () => {
         );
         const a = answer(tree, 0);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -686,7 +608,6 @@ contract('InflationRootHashProposal', () => {
         let requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -694,7 +615,6 @@ contract('InflationRootHashProposal', () => {
         );
         let a = answer(tree, requestedIndex);
         const tx = await rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -714,7 +634,6 @@ contract('InflationRootHashProposal', () => {
         requestedIndex = 1;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -722,7 +641,6 @@ contract('InflationRootHashProposal', () => {
         );
         a = answer(tree, requestedIndex);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -756,7 +674,6 @@ contract('InflationRootHashProposal', () => {
         let requestedIndex = 1;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -764,7 +681,6 @@ contract('InflationRootHashProposal', () => {
         );
         let a = answer(tree, requestedIndex);
         const tx = await rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -784,7 +700,6 @@ contract('InflationRootHashProposal', () => {
         requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -792,7 +707,6 @@ contract('InflationRootHashProposal', () => {
         );
         a = answer(tree, requestedIndex);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -821,7 +735,6 @@ contract('InflationRootHashProposal', () => {
         let requestedIndex = 1;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -829,7 +742,6 @@ contract('InflationRootHashProposal', () => {
         );
         let a = answer(tree, requestedIndex);
         const tx = await rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -849,7 +761,6 @@ contract('InflationRootHashProposal', () => {
         requestedIndex = 0;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -857,7 +768,6 @@ contract('InflationRootHashProposal', () => {
         );
         a = answer(tree, requestedIndex);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -885,7 +795,6 @@ contract('InflationRootHashProposal', () => {
         let requestedIndex = 0;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -893,7 +802,6 @@ contract('InflationRootHashProposal', () => {
         );
         let a = answer(tree, 0);
         const tx = await rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -913,7 +821,6 @@ contract('InflationRootHashProposal', () => {
         requestedIndex = 1;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -921,7 +828,6 @@ contract('InflationRootHashProposal', () => {
         );
         a = answer(tree, 1);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -949,7 +855,6 @@ contract('InflationRootHashProposal', () => {
         let requestedIndex = 1;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -957,7 +862,6 @@ contract('InflationRootHashProposal', () => {
         );
         let a = answer(tree, requestedIndex);
         const tx = await rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -977,7 +881,6 @@ contract('InflationRootHashProposal', () => {
         requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[1],
-          proposedRootHash,
           requestedIndex,
           {
             from: accounts[2],
@@ -985,7 +888,6 @@ contract('InflationRootHashProposal', () => {
         );
         a = answer(tree, requestedIndex);
         await expectRevert(rootHashProposal.respondToChallenge(
-          proposedRootHash,
           accounts[2],
           a[1].reverse(),
           a[0].account,
@@ -1007,7 +909,6 @@ contract('InflationRootHashProposal', () => {
         await expectEvent.inTransaction(
           (await rootHashProposal.checkRootHashStatus(
             accounts[0],
-            proposedRootHash,
           )).tx,
           InflationRootHashProposal,
           'RootHashAccepted',
@@ -1022,10 +923,10 @@ contract('InflationRootHashProposal', () => {
           await balanceStore.currentGeneration()) - 1)).toString(10)
           === rootHashProposal.address.toString(10));
 
-        await rootHashProposal.claimFee(accounts[0], proposedRootHash, { from: accounts[0] });
+        await rootHashProposal.claimFee(accounts[0], { from: accounts[0] });
 
         await expectRevert(
-          rootHashProposal.claimFee(accounts[0], proposedRootHash, { from: accounts[1] }),
+          rootHashProposal.claimFee(accounts[0], { from: accounts[1] }),
           'challenger may claim fee on rejected proposal only',
         );
 
@@ -1041,7 +942,6 @@ contract('InflationRootHashProposal', () => {
       //   await expectEvent.inTransaction(
       //     (await rootHashProposal.checkRootHashStatus(
       //       '0x0000000000000000000000000000000000000000',
-      //       proposedRootHash,
       //     )).tx,
       //     InflationRootHashProposal,
       //     'RootHashRejected',
@@ -1058,7 +958,6 @@ contract('InflationRootHashProposal', () => {
         await expectEvent.inTransaction(
           (await rootHashProposal.checkRootHashStatus(
             accounts[0],
-            proposedRootHash,
           )).tx,
           InflationRootHashProposal,
           'RootHashAccepted',
@@ -1075,7 +974,6 @@ contract('InflationRootHashProposal', () => {
 
         await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
-          proposedRootHash,
           0,
           {
             from: accounts[2],
@@ -1083,7 +981,7 @@ contract('InflationRootHashProposal', () => {
         ), 'The root hash accepted, no more actions allowed');
 
         const a = answer(tree, 0);
-        await expectRevert(rootHashProposal.respondToChallenge(proposedRootHash, accounts[2], a[
+        await expectRevert(rootHashProposal.respondToChallenge(accounts[2], a[
           1].reverse(), a[0].account, new BN(a[0].balance), new BN(a[0]
           .sum), 0, {
           from: accounts[1],
@@ -1091,7 +989,6 @@ contract('InflationRootHashProposal', () => {
 
         await expectRevert(rootHashProposal.claimMissingAccount(
           accounts[0],
-          proposedRootHash,
           0,
           accounts[0],
           {
@@ -1113,7 +1010,6 @@ contract('InflationRootHashProposal', () => {
           expect(rhp.lastLiveChallenge.toString(10) === '0').to.be.true;
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             0,
             {
               from: accounts[1],
@@ -1130,7 +1026,6 @@ contract('InflationRootHashProposal', () => {
           await time.increase(3600 * 10);
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             1,
             {
               from: accounts[2],
@@ -1147,7 +1042,6 @@ contract('InflationRootHashProposal', () => {
           await time.increase(3600 * 10);
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             2,
             {
               from: accounts[1],
@@ -1165,7 +1059,6 @@ contract('InflationRootHashProposal', () => {
 
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             0,
             {
               from: accounts[1],
@@ -1179,7 +1072,6 @@ contract('InflationRootHashProposal', () => {
           await time.increase(86400000);
           await expectRevert(
             rootHashProposal.respondToChallenge(
-              proposedRootHash,
               accounts[1],
               a[1].reverse(),
               a[0].account,
@@ -1200,7 +1092,6 @@ contract('InflationRootHashProposal', () => {
 
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             0,
             {
               from: accounts[1],
@@ -1212,7 +1103,6 @@ contract('InflationRootHashProposal', () => {
 
           let a = answer(tree, 0);
           await rootHashProposal.respondToChallenge(
-            proposedRootHash,
             accounts[1],
             a[1].reverse(),
             a[0].account,
@@ -1229,7 +1119,6 @@ contract('InflationRootHashProposal', () => {
 
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             1,
             {
               from: accounts[1],
@@ -1237,7 +1126,6 @@ contract('InflationRootHashProposal', () => {
           );
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             2,
             {
               from: accounts[2],
@@ -1249,7 +1137,6 @@ contract('InflationRootHashProposal', () => {
 
           a = answer(tree, 1);
           await rootHashProposal.respondToChallenge(
-            proposedRootHash,
             accounts[1],
             a[1].reverse(),
             a[0].account,
@@ -1266,7 +1153,6 @@ contract('InflationRootHashProposal', () => {
 
           a = answer(tree, 2);
           await rootHashProposal.respondToChallenge(
-            proposedRootHash,
             accounts[2],
             a[1].reverse(),
             a[0].account,
@@ -1294,7 +1180,6 @@ contract('InflationRootHashProposal', () => {
           );
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             0,
             {
               from: accounts[1],
@@ -1303,7 +1188,6 @@ contract('InflationRootHashProposal', () => {
           await time.increase(3600 * 15);
           expectRevert(rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             1,
             {
               from: accounts[2],
@@ -1311,7 +1195,6 @@ contract('InflationRootHashProposal', () => {
           ), 'Time to submit new challenges is over');
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[0],
-            proposedRootHash,
             1,
             {
               from: accounts[1],
@@ -1319,7 +1202,6 @@ contract('InflationRootHashProposal', () => {
           );
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[1],
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
             0,
             {
               from: accounts[2],
@@ -1362,12 +1244,12 @@ contract('InflationRootHashProposal', () => {
               i])) + 2;
             for (let j = 0; j < allowedAmountOfRequests; j += 1) {
               await rootHashProposal.challengeRootHashRequestAccount(accounts[i
-                + 1], `0x${web3.utils.toBN(proposedRootHash).add(new BN(1 + i)).toString(16)}`, j, {
+                + 1], j, {
                 from: accounts[i + 2],
               });
             }
             expectRevert(rootHashProposal.challengeRootHashRequestAccount(accounts[
-              i + 1], `0x${web3.utils.toBN(proposedRootHash).add(new BN(1 + i)).toString(16)}`, allowedAmountOfRequests, {
+              i + 1], allowedAmountOfRequests, {
               from: accounts[i + 2],
             }), 'Challenger reached maximum amount of allowed challenges');
           }
@@ -1385,7 +1267,6 @@ contract('InflationRootHashProposal', () => {
           for (let i = 0; i < 3; i += 1) {
             await rootHashProposal.challengeRootHashRequestAccount(
               accounts[1],
-              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
               i,
               {
                 from: accounts[2],
@@ -1397,7 +1278,6 @@ contract('InflationRootHashProposal', () => {
           for (let i = 0; i < 3; i += 1) {
             await rootHashProposal.challengeRootHashRequestAccount(
               accounts[1],
-              `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
               i + 3,
               {
                 from: accounts[2],
@@ -1408,7 +1288,6 @@ contract('InflationRootHashProposal', () => {
           await time.increase(3600 * 7);
           await rootHashProposal.challengeRootHashRequestAccount(
             accounts[1],
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
             6,
             {
               from: accounts[2],
@@ -1417,7 +1296,6 @@ contract('InflationRootHashProposal', () => {
           await time.increase(3600 * 3);
           expectRevert(rootHashProposal.challengeRootHashRequestAccount(
             accounts[1],
-            `0x${web3.utils.toBN(proposedRootHash).add(new BN(1)).toString(16)}`,
             7,
             {
               from: accounts[2],

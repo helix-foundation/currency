@@ -152,18 +152,17 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
     modifier challengeConstraintsAreValid(
         address _proposer,
-        bytes32 _rootHash,
         address _challenger,
         uint256 _index
     ) {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         require(
-            _proposer != msg.sender,
+            _proposer != _challenger,
             "Root hash proposer can't challenge its own submission"
         );
         require(
-            proposal.rootHash == _rootHash,
+            proposal.rootHash != bytes32(0),
             "There is no such hash proposal"
         );
         require(
@@ -171,7 +170,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             "The proposal is resolved"
         );
         require(
-            proposal.amountOfAccounts >= _index,
+            proposal.amountOfAccounts > _index,
             "The index have to be within the range of claimed amount of accounts"
         );
         uint256 requestsByChallenger = proposal
@@ -257,22 +256,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *  Challenge requires proposer of the root hash submit proof of the account for requested index
      *
      *  @param _proposer  the roothash proposer address
-     *  @param _challengedRootHash  root hash being challenged
      *  @param _index    index in the merkle tree of the account being challenged
      */
-    function challengeRootHashRequestAccount(
-        address _proposer,
-        bytes32 _challengedRootHash,
-        uint256 _index
-    )
+    function challengeRootHashRequestAccount(address _proposer, uint256 _index)
         external
         hashIsNotAcceptedYet
-        challengeConstraintsAreValid(
-            _proposer,
-            _challengedRootHash,
-            msg.sender,
-            _index
-        )
+        challengeConstraintsAreValid(_proposer, msg.sender, _index)
     {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
@@ -301,7 +290,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         }
         emit RootHashChallengeIndexRequestAdded(
             _proposer,
-            _challengedRootHash,
+            proposal.rootHash,
             msg.sender,
             _index
         );
@@ -313,24 +302,17 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** @notice A special challenge, the challenger can claim that an account is missing
      *
      * @param _proposer         the roothash proposer address
-     * @param _challengedRootHash root hash being challenged
      * @param _index        index in the merkle tree of the account being challenged
      * @param _account      address of the missing account
      */
     function claimMissingAccount(
         address _proposer,
-        bytes32 _challengedRootHash,
         uint256 _index,
         address _account
     )
         external
         hashIsNotAcceptedYet
-        challengeConstraintsAreValid(
-            _proposer,
-            _challengedRootHash,
-            msg.sender,
-            _index
-        )
+        challengeConstraintsAreValid(_proposer, msg.sender, _index)
     {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
@@ -369,16 +351,15 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         emit ChallengeMissingAccountSuccess(
             _proposer,
-            _challengedRootHash,
+            proposal.rootHash,
             msg.sender,
             _account
         );
-        rejectRootHash(_proposer, _challengedRootHash);
+        rejectRootHash(_proposer);
     }
 
     /** @notice Allows to proposer of the root hash respond to a challenge of specific index with proof details
      *
-     *  @param _rootHash         root hash prove submitted for
      *  @param _challenger       address of the submitter of the challenge
      *  @param _proof            the “other nodes” in the merkle tree.
      *  @param _account          address of an account of challenged index in the tree
@@ -387,7 +368,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *  @param _index            index in the merkle tree being answered
      */
     function respondToChallenge(
-        bytes32 _rootHash,
         address _challenger,
         bytes32[] calldata _proof,
         address _account,
@@ -397,11 +377,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     ) external hashIsNotAcceptedYet {
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
-
-        require(
-            proposal.rootHash == _rootHash,
-            "There is no such hash proposal"
-        );
 
         require(
             getTime() < challenge.challengeEnds,
@@ -429,7 +404,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(
             verifyMerkleProof(
                 _proof,
-                _rootHash,
+                proposal.rootHash,
                 keccak256(
                     abi.encodePacked(_account, _claimedBalance, _sum, _index)
                 )
@@ -483,7 +458,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         emit ChallengeResponseVerified(
             msg.sender,
-            _rootHash,
+            proposal.rootHash,
             _challenger,
             _account,
             _claimedBalance,
@@ -499,13 +474,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** @notice Checks  root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
      *  new challenges is over and there is no unanswered challenges, root hash is accepted.
      *
-     *  @param _rootHash    root hash prove submitted for
      *  @param _proposer    the roothash proposer address
      *
      */
-    function checkRootHashStatus(address _proposer, bytes32 _rootHash)
-        external
-    {
+    function checkRootHashStatus(address _proposer) external {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         if (
@@ -514,16 +486,16 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             getTime() > proposal.lastLiveChallenge
         ) {
             if (proposal.amountPendingChallenges == 0) {
-                acceptRootHash(_proposer, _rootHash);
+                acceptRootHash(_proposer);
             } else {
-                rejectRootHash(_proposer, _rootHash);
+                rejectRootHash(_proposer);
             }
         }
 
         if (
             acceptedRootHash != 0 && proposal.status == RootHashStatus.Pending
         ) {
-            rejectRootHash(_proposer, _rootHash);
+            rejectRootHash(_proposer);
         }
     }
 
@@ -543,7 +515,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     ) external view returns (bool) {
         require(
             acceptedRootHash != 0,
-            "Can't claim win before _rootHash established"
+            "Can't claim win before root hash established"
         );
         uint256 balance = getStore().balanceAt(_who, blockNumber);
         return
@@ -558,19 +530,14 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *
      *  @param _who        fee recipient
      *  @param _proposer   the roothash proposer address
-     *  @param _rootHash   root hash sender claims fee for challenges/proposal
      *
      */
-    function claimFeeFor(
-        address _who,
-        address _proposer,
-        bytes32 _rootHash
-    ) public {
+    function claimFeeFor(address _who, address _proposer) public {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         require(
             proposal.status != RootHashStatus.Pending,
-            "Can't claim _fee on pending _root hash proposal"
+            "Can't claim _fee on pending root hash proposal"
         );
 
         require(!proposal.claimed[_who], "fee already claimed");
@@ -579,7 +546,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             require(
                 proposal.status == RootHashStatus.Accepted ||
                     (proposal.status == RootHashStatus.Rejected &&
-                        _rootHash == acceptedRootHash &&
+                        proposal.rootHash == acceptedRootHash &&
                         proposal.totalSum == acceptedTotalSum &&
                         proposal.amountOfAccounts == acceptedAmountOfAccounts),
                 "proposer can't claim fee on not accepted hash"
@@ -607,11 +574,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *          on behalf of the caller (`msg.sender`).
      *
      *  @param _proposer   the roothash proposer address
-     *  @param _rootHash   root hash sender claims fee for challenges/proposal
      *
      */
-    function claimFee(address _proposer, bytes32 _rootHash) external {
-        claimFeeFor(msg.sender, _proposer, _rootHash);
+    function claimFee(address _proposer) external {
+        claimFeeFor(msg.sender, _proposer);
     }
 
     /** @notice Reclaims tokens on the inflation root hash proposal contract.
@@ -630,25 +596,25 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
     /** @notice updates root hash proposal data structure to mark it rejected
      */
-    function rejectRootHash(address _proposer, bytes32 _rootHash) internal {
+    function rejectRootHash(address _proposer) internal {
         rootHashProposals[_proposer].status = RootHashStatus.Rejected;
-        emit RootHashRejected(_proposer, _rootHash);
+        emit RootHashRejected(_proposer, rootHashProposals[_proposer].rootHash);
     }
 
     /** @notice updates root hash proposal data structure  and contract state variables
      *  to mark root hash is accepted
      */
-    function acceptRootHash(address _proposer, bytes32 _rootHash) internal {
+    function acceptRootHash(address _proposer) internal {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         proposal.status = RootHashStatus.Accepted;
-        acceptedRootHash = _rootHash;
+        acceptedRootHash = proposal.rootHash;
         acceptedTotalSum = proposal.totalSum;
         acceptedAmountOfAccounts = proposal.amountOfAccounts;
         feeCollectionEnds = getTime() + FEE_COLLECTION_TIME;
         emit RootHashAccepted(
             _proposer,
-            _rootHash,
+            acceptedRootHash,
             proposal.totalSum,
             proposal.amountOfAccounts
         );

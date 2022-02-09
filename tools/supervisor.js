@@ -360,7 +360,6 @@ class Supervisor {
       const index = parseInt(challengesToRespond[j].index, 10);
       const a = answer(this.rootHashState[rootHashProposal._address].tree, index);
       await rootHashProposal.methods.respondToChallenge(
-        challengesToRespond[j].proposedRootHash,
         challengesToRespond[j].challenger,
         a[1].reverse(),
         a[0].account,
@@ -425,7 +424,6 @@ class Supervisor {
     } else {
       await rootHashProposal.methods.challengeRootHashRequestAccount(
         proposer,
-        proposal.eventParams.proposedRootHash,
         0,
       ).send({ gas: 1000000 });
       return;
@@ -438,13 +436,11 @@ class Supervisor {
       if (lastIndex > 0) {
         await rootHashProposal.methods.challengeRootHashRequestAccount(
           proposer,
-          tree.hash,
           lastIndex - 1,
         ).send({ gas: 1000000 });
       }
       await rootHashProposal.methods.claimMissingAccount(
         proposer,
-        tree.hash,
         lastIndex,
         mine[0].account,
       ).send({ gas: 1000000 });
@@ -460,7 +456,6 @@ class Supervisor {
     }
     await rootHashProposal.methods.challengeRootHashRequestAccount(
       proposer,
-      tree.hash,
       0,
     ).send({ gas: 1000000 });
   }
@@ -704,7 +699,6 @@ class Supervisor {
         } else {
           await rootHash.methods.checkRootHashStatus(
             this.account,
-            this.rootHashState[rootHash._address].tree.hash,
           ).send({ gas: 1000000 });
         }
       } else if (await isAlive(certAddress)) {

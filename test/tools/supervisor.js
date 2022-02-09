@@ -92,7 +92,6 @@ contract('Production Supervisor [@group=10]', (accounts) => {
     });
     await rootHashProposal.challengeRootHashRequestAccount(
       supervisor.account,
-      supervisor.rootHashState[addressRootHashProposal].tree.hash,
       2,
       {
         from: accounts[1],

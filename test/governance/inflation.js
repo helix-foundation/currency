@@ -102,7 +102,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     );
     await time.increase(3600 * 25);
     await expectEvent.inTransaction(
-      (await rootHashProposal.checkRootHashStatus(accounts[0], proposedRootHash)).tx,
+      (await rootHashProposal.checkRootHashStatus(accounts[0])).tx,
       InflationRootHashProposal,
       'RootHashAccepted',
     );

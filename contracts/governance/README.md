@@ -625,7 +625,6 @@ Destructs the `vdfVerifier` and transfers the balance of the contract to the roo
 policy contract. Then selfdestructs the `Inflation` contract.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - If the `seed` is set, can only be called if every ticket has been claimed.
  - Otherwise, can only be called if the contract is completely un-funded.
  - Is public to assure that, when the process is over, anyone can clean up.
@@ -717,7 +716,6 @@ Arguments:
 Configures an InflationRootHashProposal setting a balance store generation for which contract will establish root hash.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Can be run only once (reverts if `generation` is already set) and is called during cloning.
     
 ##### proposeRootHash
@@ -734,7 +732,6 @@ event is then emitted and the fee (`PROPOSER_FEE`) of 20000 ECO is charged
 and stored for the newly proposed root hash proposal.
 
 ###### Security Notes
- - Can only by called on a cloned contract.
  - New proposals only allowed before root hash is accepted.
  - Only one proposal per proposer.
  - The proposed hash must have at least one account.
@@ -742,13 +739,11 @@ and stored for the newly proposed root hash proposal.
 ##### challengeRootHashRequestAccount
 Arguments:
   - `_proposer`           (address) - the roothash proposer address
-  - `_challengedRootHash` (bytes32) - root hash being challenged
   - `_requestedIndex`     (uint256) - index in the Merkle tree of the account being challenged
 
 Allows to challenge previously proposed root hash. Challenge requires proposer of the root hash submit proof of the account for requested index. Creates a record of the challenge in the `challenges` property of the proposal struct and sets the challenge status to pending. The challenge is given 1 day to be responded to. A `RootHashChallengeIndexRequestAdded` event is then emitted and the fee of 500 ECO (`CHALLENGE_FEE`) is charged and stored for the challenged root hash proposal.
 
 ###### Security Notes
- - Can only be called on a cloned contract
  - You cannot challenge your own proposal (same challenger address as proposer)
  - The root hash challenged must match the one in the proposal
  - The status of the challenged root hash must be Pending
@@ -765,7 +760,6 @@ Allows to challenge previously proposed root hash. Challenge requires proposer o
 ##### claimMissingAccount
 Arguments:
   - `_proposer`           (address) - the roothash proposer address
-  - `_challengedRootHash` (bytes32) - root hash being challenged
   - `_index`              (uint256) - index in the Merkle tree of the account being challenged
   - `_account`            (address) - address of the missing account
 
@@ -774,7 +768,6 @@ A special challenge, the challenger can claim that an account is missing, which 
 and account(X) > A > account(x-1), then the proposal is rejected and a `ChallengeMissingAccountSuccess` event is emitted.
 
 ###### Security Notes
- - Can only be called on a cloned contract
  - You cannot challenge your own proposal (same challenger address as proposer)
  - The root hash challenged must match the one in the proposal
  - The status of the challenged root hash must be Pending
@@ -791,7 +784,6 @@ and account(X) > A > account(x-1), then the proposal is rejected and a `Challeng
     
 ##### respondToChallenge
 Arguments:
-  - `_rootHash`       (bytes32)   - root hash prove submitted for
   - `_challenger`     (address)   - address of the submitter of the challenge
   - `_proof`          (bytes32[]) - the “other nodes” in the Merkle tree.
   - `_account`        (address)   - address of an account of challenged index in the tree
@@ -805,7 +797,6 @@ as resolved on refutation and a `ChallengeResponseVerified` event is emitted. Th
 is given 1 hour more of challenge times in which to submit any additional challenges, if able.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - The root hash must exist.
  - Can only be called if the root hash is not yet accepted.
  - Only proposer of the root hash can respond to a challenge.
@@ -819,15 +810,12 @@ is given 1 hour more of challenge times in which to submit any additional challe
 
 ##### checkRootHashStatus
 Arguments:
- -`_proposer` (address) - the roothash proposer address
- -`_rootHash` (bytes32) - root hash being checked
+ -`_proposer` (address) - the root hash proposer's address
 
 Checks root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
 new challenges is over and there is no unanswered challenges, root hash is accepted.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
- - The `_rootHash` specified must be an actually proposed one.
 
 ##### verifyClaimSubmission
 Arguments:
@@ -841,14 +829,12 @@ contract to make sure that the account claiming is doing so in a way that matche
 the root hash proposal.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Contract can verify accounts after correct root hash was determined
 
 ##### claimFeeFor
 Arguments:
  -`_who`      (address) - fee recipient
  -`_proposer` (address) - the roothash proposer address
- -`_rootHash` (bytes32) - root hash being checked
 
 Allows to claim fee.
 If root hash is successful the proposer gets the proposer fee back + all the challenge fees.
@@ -856,20 +842,17 @@ If the proposed root hash is rejected, proposer fee is distributed among the cha
 The challengers also have their staked challenge returned in full.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Fees are distributed after root hash has been accepted or rejected
  - The address being claimed for must either be a proposer or challenger, given the end state of the proposal.
  
 ##### claimFee
 Arguments:
  -`_proposer` (address) - the roothash proposer address
- -`_rootHash` (uint256) - root hash being checked
 
 Allows to claim fee on behalf of the caller (`msg.sender`).
 See claimFeeFor
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - `msg.sender` must correctly be a proposer or challenger given the end state of the proposal.
 
 ##### destruct
@@ -878,7 +861,6 @@ Arguments: none
 Self-destructs the inflation root hash proposal contract.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Can only be called after the end fee collection period.
  - Any ECO deposited to the contract is transferred to the policy.
 
@@ -928,7 +910,6 @@ are not possible until after the end of the sale period.
 Emits the `Sale` event.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Can only be called during the sale period.
  - Transfer permissions are assumed, and must be granted before this method is
    called.
@@ -948,7 +929,6 @@ Identical to `withdrawFor` on behalf of the caller (`msg.sender`), allowing for
 deposits to be withdrawn early.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - The calling address must have made a deposit.
 
 ##### withdrawFor
@@ -959,7 +939,6 @@ Identical to `withdraw` except may not be withdrawn early, but may be executed
 for any address with a valid deposit.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - May only be called after the lockup period has ended.
  - `_owner` must have made a deposit.
  - Transfers are always made to the account of `_owner`.
@@ -982,7 +961,6 @@ Arguments: none
 Sends all tokens back to the root policy and self-destructs the contract.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Can only be called after every deposit has been withdrawn.
  - Cannot be called during the sale period.
 
@@ -1121,7 +1099,6 @@ must be done before calling `registerProposal`. If the proposal does not get vot
 on then the caller will receive a refund of 800 ECO (`REFUND_IF_LOST`).
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Requires payment to call, to prevent abuse.
  - You cannot propose the 0 address.
  - A proposal can only be registered once.
@@ -1181,7 +1158,6 @@ Self-destructs the contract, freeing all storage. Any ECO held is transferred to
 the root policy contract.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Can only be called after all proposals have been refunded.
  - Can only be called after the proposal time, to disallow early exits.
  - Removes itself from the policy.
@@ -1214,7 +1190,6 @@ Configures a policy vote, setting the policy to be voted on, the times that
 the voting ends, and the generation to use for voting power calculation.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Is called atomically with instantiation.
  - Can only be called once, checks that the `voteEnds` time hasn't been set.
 
@@ -1243,7 +1218,6 @@ permissions from the contract, transfers any tokens to the root policy, and
 then self-destructs. Emits a `VoteCompleted` event.
 
 ###### Security Notes
- - Can only be called on a cloned contract.
  - Enacted proposals can do anything they like. They're run in the context of
    the root policy using `delegatecall`, allowing them to use `delegatecall` on
    behalf of any managed contract.
