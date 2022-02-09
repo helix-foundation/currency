@@ -287,22 +287,13 @@ contract('PolicyVotes [@group=8]', (accounts) => {
       });
 
       context('is not PolicyVotes', () => {
-        let tx;
-        beforeEach(async () => {
+        it('reverts', async () => {
           await policy.testDirectSet('PolicyVotes', policy.address);
           await time.increase(3600 * 24 * 4.1);
-          tx = await proxiedPolicyVotes.execute();
-        });
-
-        it('does not enact the policies', async () => {
-          assert.equal(
-            await util.policyFor(policy, adoptedPolicyIdHash),
-            0,
+          await expectRevert(
+            proxiedPolicyVotes.execute(),
+            'This contract no longer has authorization to enact the vote',
           );
-        });
-
-        it('emits the VoteCompleted event', async () => {
-          await expectEvent.inLogs(tx.logs, 'VoteCompleted', { result: '2' });
         });
       });
 

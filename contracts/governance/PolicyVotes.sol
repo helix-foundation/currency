@@ -163,10 +163,12 @@ contract PolicyVotes is VotingPower, TimeUtils {
             );
         }
 
-        if (policyFor(ID_POLICY_VOTES) != address(this)) {
-            // This contract no longer has authorization to enact the vote
-            _res = Result.Failed;
-        } else if (_requiredStake == 0) {
+        require(
+            policyFor(ID_POLICY_VOTES) == address(this),
+            "This contract no longer has authorization to enact the vote"
+        );
+
+        if (_requiredStake == 0) {
             // Nobody voted
             _res = Result.Failed;
         } else if (yesStake <= _requiredStake) {
