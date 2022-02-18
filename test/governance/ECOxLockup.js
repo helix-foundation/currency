@@ -60,7 +60,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     await time.advanceBlock();
   });
 
-  describe('called early', () => {
+  describe('notifyGenerationIncrease called early', () => {
     it('reverts', async () => {
       await expectRevert(
         ecoXLockup.notifyGenerationIncrease(),
@@ -74,6 +74,22 @@ contract('ecoXLockup [@group=12]', (accounts) => {
       await expectRevert(
         ecoXLockup.recordVote(alice),
         'Must be a voting contract to call',
+      );
+    });
+  });
+
+  describe('disabled ERC20 functionality', () => {
+    it('reverts on transfer', async () => {
+      await expectRevert(
+        ecoXLockup.transfer(alice, 1000),
+        'sECOx is non-transferrable',
+      );
+    });
+
+    it('reverts on transferFrom', async () => {
+      await expectRevert(
+        ecoXLockup.transferFrom(alice, bob, 1000),
+        'sECOx is non-transferrable',
       );
     });
   });

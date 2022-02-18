@@ -107,6 +107,18 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
         currentGeneration = _new;
     }
 
+    function transfer(address, uint256) public pure override returns (bool) {
+        revert("sECOx is non-transferrable");
+    }
+
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) public pure override returns (bool) {
+        revert("sECOx is non-transferrable");
+    }
+
     function getToken() private view returns (IERC20) {
         return IERC20(policyFor(ID_ECOX));
     }
