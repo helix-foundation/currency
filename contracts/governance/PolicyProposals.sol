@@ -43,6 +43,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
     }
 
     /** The set of proposals under consideration.
+     * maps from addresses of proposals to structs containing with info and
+     * the staking data (struct defined above)
      */
     mapping(address => Props) public proposals;
 

@@ -179,10 +179,6 @@ the decisions decided on by the trustees in their Currency Governance votes
 `bordaImpl`, `inflationImpl`, and `lockupImpl`, respectively.
 
 ##### Events
-###### CurrencyGovernanceDecisionStarted
-Attributes:
- - `contractAddress` (address) - the address of the `CurrencyGovernance` contract
-   supervising the vote
 
 Indicates the start of a currency governance vote.
 

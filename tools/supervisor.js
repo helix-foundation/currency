@@ -297,11 +297,6 @@ class Supervisor {
     }
 
     const lastStamp = this.timedPoliciesEventStamp;
-    (await currencytimer.getPastEvents('CurrencyGovernanceDecisionStarted', { fromBlock: lastStamp, toBlock: this.blockNumber }))
-      .map((event) => event.returnValues[0])
-      .forEach((event) => {
-        this.currencyAddresses.add(event);
-      });
     (await timedpolicies.getPastEvents('PolicyDecisionStarted', { fromBlock: lastStamp, toBlock: this.blockNumber }))
       .map((event) => event.returnValues[0])
       .forEach((event) => {

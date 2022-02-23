@@ -34,7 +34,6 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
     mapping(uint256 => address) public override lockups;
     mapping(address => bool) public isLockup;
 
-    event CurrencyGovernanceDecisionStarted(address contractAddress);
     event InflationStarted(address indexed addr);
     event LockupOffered(address indexed addr);
 
