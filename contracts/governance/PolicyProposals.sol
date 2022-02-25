@@ -64,6 +64,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     bool public proposalSelected;
 
+    /** selected proposal awaiting configuration before voting
+     */
+    address public proposalToConfigure;
+
     /** The minimum cost to register a proposal.
      */
     uint256 public constant COST_REGISTER = 1000000000000000000000;
@@ -97,17 +101,23 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     event ProposalAdded(address proposer, address proposalAddress);
 
-    /** An event indicating that proposals have been accepted for voting
-     *
-     * @param contractAddress The address of the PolicyVotes contract instance.
-     */
-    event VotingStarted(address contractAddress);
-
     /** An event indicating that proposal have been supported by stake.
      *
      * @param proposalAddress The address of the PolicyVotes contract instance that was supported
      */
     event ProposalSupported(address supporter, address proposalAddress);
+
+    /** An event indicating a proposal has reached its support threshold
+     *
+     * @param proposalAddress The address of the PolicyVotes contract instance.
+     */
+    event SupportThresholdReached(address proposalAddress);
+
+    /** An event indicating that proposals have been accepted for voting
+     *
+     * @param contractAddress The address of the PolicyVotes contract instance.
+     */
+    event VotingStarted(address contractAddress);
 
     /** An event indicating that proposal fee was partially refunded.
      *
@@ -211,6 +221,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             policyFor(ID_POLICY_PROPOSALS) == address(this),
             "Proposal contract no longer active"
         );
+        require(!proposalSelected, "A proposal has already been selected");
         require(
             getTime() < proposalEnds,
             "Proposals may no longer be supported because the registration period has ended"
@@ -235,25 +246,36 @@ contract PolicyProposals is VotingPower, TimeUtils {
         emit ProposalSupported(msg.sender, _prop);
 
         if (_p.totalstake > (_total * 30) / 100) {
-            PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
-            pv.configure(address(_prop));
-
-            SimplePolicySetter sps = SimplePolicySetter(
-                SimplePolicySetter(simplePolicyImpl).clone(
-                    ID_POLICY_VOTES,
-                    address(pv)
-                )
-            );
-            Policy(policy).internalCommand(address(sps));
-
+            emit SupportThresholdReached(_prop);
             proposalSelected = true;
-            emit VotingStarted(address(pv));
-
-            delete proposals[address(_prop)];
-            totalproposals = totalproposals - 1;
-
-            Policy(policy).removeSelf(ID_POLICY_PROPOSALS);
+            proposalToConfigure = _prop;
         }
+    }
+
+    function deployProposalVoting() external {
+        require(proposalSelected, "no proposal has been selected");
+        require(
+            proposalToConfigure != address(0),
+            "voting has already been deployed"
+        );
+        address votingProposal = proposalToConfigure;
+        delete proposalToConfigure;
+
+        PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
+        pv.configure(address(votingProposal));
+
+        SimplePolicySetter sps = SimplePolicySetter(
+            SimplePolicySetter(simplePolicyImpl).clone(
+                ID_POLICY_VOTES,
+                address(pv)
+            )
+        );
+        Policy(policy).internalCommand(address(sps));
+
+        emit VotingStarted(address(pv));
+
+        delete proposals[address(votingProposal)];
+        totalproposals = totalproposals - 1;
     }
 
     /** Refund the fee for a proposal that was not selected.
@@ -289,6 +311,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
     }
 
     /** Reclaim tokens after end time
+     * only callable if all proposals are refunded
      */
     function destruct() external {
         require(

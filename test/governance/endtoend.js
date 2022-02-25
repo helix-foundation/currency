@@ -115,6 +115,7 @@ contract('Production Policy Change [@group=4]', (accounts) => {
 
     await policyProposals.support(backdoor.address, { from: accounts[2] });
     await policyProposals.support(makerich.address, { from: accounts[2] });
+    await policyProposals.deployProposalVoting({ from: accounts[1] });
   });
 
   it('Transitions from proposing to voting', async () => {

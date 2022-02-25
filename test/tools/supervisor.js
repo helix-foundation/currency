@@ -172,6 +172,8 @@ contract('Production Supervisor [@group=10]', (accounts) => {
     await policyProposals.support(makerich.address, { from: accounts[2] });
 
     await policyProposals.support(makerich.address, { from: accounts[0] });
+
+    await policyProposals.deployProposalVoting({ from: accounts[1] });
   });
 
   it('Transitions from proposing to voting', async () => {

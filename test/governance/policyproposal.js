@@ -11,6 +11,7 @@ const {
   expectEvent, expectRevert, constants, time,
 } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants');
 const util = require('../../tools/test/util');
 
 const { BN, toBN } = web3.utils;
@@ -307,6 +308,28 @@ contract('PolicyProposals [@group=7]', (accounts) => {
     });
   });
 
+  describe('deployProposalVoting', () => {
+    let policyProposals;
+    let testProposal;
+
+    it('reverts if proposal not selected', async () => {
+      policyProposals = await makeProposals();
+      testProposal = await Empty.new(1);
+
+      await token.approve(
+        policyProposals.address,
+        await policyProposals.COST_REGISTER(),
+      );
+
+      await policyProposals.registerProposal(testProposal.address);
+
+      await expectRevert(
+        policyProposals.deployProposalVoting({ from: alice }),
+        'no proposal has been selected',
+      );
+    });
+  });
+
   describe('success', () => {
     let policyProposals;
     let testProposal;
@@ -326,7 +349,8 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
     context('when still holds the policy role and proposals made', () => {
       it('emits the VotingStarted event', async () => {
-        const result = await policyProposals.support(testProposal.address, { from: charlie });
+        await policyProposals.support(testProposal.address, { from: charlie });
+        const result = await policyProposals.deployProposalVoting();
 
         await expectEvent.inTransaction(
           result.tx,
@@ -335,15 +359,43 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         );
       });
 
-      it('gives up the PolicyProposals role', async () => {
+      it('rejects support if proposal is chosen', async () => {
         await policyProposals.support(testProposal.address, { from: charlie });
 
-        assert.notEqual(
-          await util.policyFor(
-            policy,
-            web3.utils.soliditySha3('PolicyProposals'),
-          ),
-          policyProposals.address,
+        await expectRevert(
+          policyProposals.support(testProposal.address),
+          'A proposal has already been selected',
+        );
+      });
+
+      it('rejects support if deployed', async () => {
+        await policyProposals.support(testProposal.address, { from: charlie });
+        await policyProposals.deployProposalVoting();
+
+        await expectRevert(
+          policyProposals.support(testProposal.address),
+          'A proposal has already been selected',
+        );
+      });
+
+      it('deletes proposalToConfigure', async () => {
+        await policyProposals.support(testProposal.address, { from: charlie });
+        const proposalToConfigure = await policyProposals.proposalToConfigure();
+
+        await policyProposals.deployProposalVoting();
+        const zeroAddress = await policyProposals.proposalToConfigure();
+
+        expect(proposalToConfigure).to.not.equal(zeroAddress);
+        expect(zeroAddress).to.equal(ZERO_ADDRESS);
+      });
+
+      it('cannot double deploy', async () => {
+        await policyProposals.support(testProposal.address, { from: charlie });
+        await policyProposals.deployProposalVoting();
+
+        await expectRevert(
+          policyProposals.deployProposalVoting(),
+          'voting has already been deployed',
         );
       });
     });
@@ -399,6 +451,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       beforeEach(async () => {
         await policyProposals.support(testProposal.address, { from: alice });
         await policyProposals.support(testProposal2.address, { from: charlie });
+        await policyProposals.deployProposalVoting({ from: charlie });
       });
 
       it('tries to refund selected policy, reverts', async () => {
@@ -532,6 +585,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
         await policyProposals.support(testProposal.address);
         await policyProposals.support(testProposal2.address, { from: charlie });
+        await policyProposals.deployProposalVoting({ from: charlie });
 
         await policyProposals.refund(testProposal.address);
 

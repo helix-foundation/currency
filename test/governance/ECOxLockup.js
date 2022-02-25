@@ -184,7 +184,8 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
     context('bob supports a proposal into a vote', () => {
       beforeEach(async () => {
-        const tx = await proposals.support(testProposal.address, { from: bob });
+        await proposals.support(testProposal.address, { from: bob });
+        const tx = await proposals.deployProposalVoting({ from: bob });
 
         const votesAddress = tx.logs.find((t) => t.event === 'VotingStarted').args.contractAddress;
         votes = await PolicyVotes.at(votesAddress);

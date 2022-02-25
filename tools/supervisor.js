@@ -65,13 +65,13 @@ const PolicyVotesContractABI = req('PolicyVotes');
 const TrustedNodesABI = req('TrustedNodes');
 const VDFVerifierABI = req('VDFVerifier');
 const CurrencyGovernanceABI = req('CurrencyGovernance');
-const CurrencyTimerABI = req('CurrencyTimer');
+// const CurrencyTimerABI = req('CurrencyTimer');
 const InflationABI = req('Inflation');
 const LockupContractABI = req('Lockup');
 const InflationRootHashProposal = req('InflationRootHashProposal');
 
 const ID_TIMEDPOLICIES = web3.utils.soliditySha3('TimedPolicies');
-const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
+// const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
 const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
 const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
 
@@ -269,11 +269,11 @@ class Supervisor {
       { from: this.account },
     );
 
-    const currencytimer = new web3.eth.Contract(
-      CurrencyTimerABI.abi,
-      await this.policy.methods.policyFor(ID_CURRENCY_TIMER).call(),
-      { from: this.account },
-    );
+    // const currencyTimer = new web3.eth.Contract(
+    //   CurrencyTimerABI.abi,
+    //   await this.policy.methods.policyFor(ID_CURRENCY_TIMER).call(),
+    //   { from: this.account },
+    // );
 
     if (await timedpolicies.methods.nextGenerationStart().call() < this.timeStamp) {
       logger.info('Increasing Balance generation');

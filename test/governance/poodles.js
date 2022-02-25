@@ -134,6 +134,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
     await policyProposals.support(makePoodle.address, { from: alice });
     await policyProposals.support(makePoodle.address, { from: bob });
+    await policyProposals.deployProposalVoting({ from: bob });
   });
 
   it('Transitions from proposing to voting', async () => {

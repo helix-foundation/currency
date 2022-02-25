@@ -6,13 +6,13 @@ specify how the currency is to be managed, and how the software and processes
 themselves are over-seen.
 
 ## Table of Contents
- - [Security](#security)
- - [Background](#background)
- - [Install](#install)
- - [Usage](#usage)
- - [API](#api)
- - [Contributing](#contributing)
- - [License](#license)
+  - [Security](#security)
+  - [Background](#background)
+  - [Install](#install)
+  - [Usage](#usage)
+  - [API](#api)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Security
 The security of the governance contracts is built on a list of trustees.
@@ -31,8 +31,8 @@ The `TimedPolicies` contract implements the governmental schedule, and
 instantiates (by cloning) the appropriate contracts as well as notifying each
 other contract each time the cycle resets. There are two distinct types of
 periodic votes:
- - Monetary Policy Decisions (managed by trustees)
- - General Policy Decisions (open to every currency holder)
+  - Monetary Policy Decisions (managed by trustees)
+  - General Policy Decisions (open to every currency holder)
 
 Each type of periodic vote has different methods of coming to a decision.
 However, both votes are set to the global Generation Cycle of 14 days.
@@ -119,7 +119,7 @@ moving on to the periodic voting processes themselves.
 
 ### Timing
 #### TimedPolicies
- - Inherits: `Policed`
+  - Inherits: `Policed`
 
 The `TimedPolicies` contract manages the time-based recurring processes that
 form the governance system. Existing processes that are activated by this
@@ -137,8 +137,8 @@ of `notifyGenerationIncrease`.
 ##### Events
 ###### PolicyDecisionStarted
 Attributes:
- - `contractAddress` (address) - the address of the `PolicyProposals` contract
-   supervising the vote
+  - `contractAddress` (address) - the address of the `PolicyProposals` contract
+    supervising the vote
 
 Indicates the start of a policy vote.
 
@@ -170,7 +170,7 @@ address to indicate the start of a new vote.
 This function is internal.
 
 #### CurrencyTimer
- - Inherits: `PolicedUtils`, `ITimeNotifier`, `ILockups`
+  - Inherits: `PolicedUtils`, `ITimeNotifier`, `ILockups`
 
 The `CurrencyTimer` contract is delegated the responsibility of implementing
 the decisions decided on by the trustees in their Currency Governance votes
@@ -180,18 +180,16 @@ the decisions decided on by the trustees in their Currency Governance votes
 
 ##### Events
 
-Indicates the start of a currency governance vote.
-
 ###### InflationStarted
 Attributes:
- - `addr` (address) - the address of the `Inflation` contract facilitating
-   the distribution of random inflation.
+  - `addr` (address) - the address of the `Inflation` contract facilitating
+    the distribution of random inflation.
 
 Indicates the start of a random inflation decision.
 
 ###### LockupOffered
 Attributes:
- - `addr` (address) - the address of the `Lockup` contract being offered
+  - `addr` (address) - the address of the `Lockup` contract being offered
 
 Indicates the start of a lockup offering.
 
@@ -214,7 +212,7 @@ from the one stored in this contract.
 
 ### Currency Governance Decisions
 #### CurrencyGovernance
- - Inherits: `PolicedUtils`
+  - Inherits: `PolicedUtils`
 
 This is the trustee monetary policy decision-making contract. It acts as a venue
 to both propose and vote on policy decisions. It is cloned for use by the
@@ -257,17 +255,17 @@ proposal.
 
 ###### VoteRevealed
 Attributes:
- - `_voter` (indexed address) - the address of the participant that cast the
-   ballot
- - `votes` (address[]) - the ordered ballot of ranked proposals (by their proposer
-   addresses)
+  - `_voter` (indexed address) - the address of the participant that cast the
+    ballot
+  - `votes` (address[]) - the ordered ballot of ranked proposals (by their proposer
+    addresses)
 
 Indicates that an inflation/deflation vote participant has revealed their vote,
 and creates a permanent record of a vote.
 
 ###### VoteResults
 Attributes:
- - `winner` (address) the address of the trustee to propose the winning proposal
+  - `winner` (address) the address of the trustee to propose the winning proposal
 
 Indicates the end of an inflation/deflation vote, and acts as a permanent record
 of an outcome.
@@ -280,17 +278,17 @@ progress to the next stage.
 
 ##### propose
 Arguments:
- - `_randomInflationWinners` (uint256) - the number of random inflation prizes
-   to be offered,
- - `_randomInflationPrize` (uint256) - the quantity (in 10^-18 inflated ECO)
-   to be given as prize,
- - `_lockupDuration` (uint256) - the minimum duration a user of a lockup must
-   wait for their interest,
- - `_lockupInterest` (uint256) - the "percentage" of interest to be added,
-   stored as a 9 digit fixed point number (i.e. 1_000_000_000 = 100%),
- - `_inflationMultiplier` (uint256) - the multiplier with which to scale the
-   ECO currency by, stored as an 18 digit fixed point number (i.e.
-   1_050_000_000_000_000_000 => 1 ECO -> 1.05 ECO or 5% inflation)
+  - `_randomInflationWinners` (uint256) - the number of random inflation prizes
+    to be offered,
+  - `_randomInflationPrize` (uint256) - the quantity (in 10^-18 inflated ECO)
+    to be given as prize,
+  - `_lockupDuration` (uint256) - the minimum duration a user of a lockup must
+    wait for their interest,
+  - `_lockupInterest` (uint256) - the "percentage" of interest to be added,
+    stored as a 9 digit fixed point number (i.e. 1_000_000_000 = 100%),
+  - `_inflationMultiplier` (uint256) - the multiplier with which to scale the
+    ECO currency by, stored as an 18 digit fixed point number (i.e.
+    1_050_000_000_000_000_000 => 1 ECO -> 1.05 ECO or 5% inflation)
 
 This function allows the trustee to submit their proposal for how the monetary
 policy levers should be set for the following generation. This data is stored
@@ -315,7 +313,7 @@ Can only be called during the `Propose` `stage`. Can only be called on a cloned
 
 ##### commit
 Arguments:
- - `_commitment` (bytes32) - a commitment to a particular vote ballot (to use for
+  - `_commitment` (bytes32) - a commitment to a particular vote ballot (to use for
    verification in the future)
 
 Commit a trusted node to a particular vote without revealing information about
@@ -345,13 +343,13 @@ checking each possible vote. The trustee must keep the seed to be able to reveal
 their vote successfully. 
 
 ###### Security Notes
- - Can only be called by trustees.
- - Can only be called during the `Commit` `stage` of the voting process.
+  - Can only be called by trustees.
+  - Can only be called during the `Commit` `stage` of the voting process.
 
 ##### reveal
 Arguments:
- - `_votes` (address[]) - the submitted ballot to match to the hash commit
- - `_seed` (bytes32) - the seed used to create the hash commit
+  - `_votes` (address[]) - the submitted ballot to match to the hash commit
+  - `_seed` (bytes32) - the seed used to create the hash commit
 
 Reveals a ballot that was previously committed to. This is called during the
 reveal phase of the voting process and is used to record the votes of all the
@@ -374,11 +372,11 @@ invalid proposals (see `propose`/`unpropose`) or ones that vote for the same
 proposal multiple times.
 
 ###### Security Notes
- - Can only be called by accounts that have previously committed to a ballot by
-   calling `commit` (and therefore are a trusted node).
- - The parameters must, when hashed together, match the value provided to the
-   `commit` method during the commit phase.
- - Can only be called during the reveal phase.
+  - Can only be called by accounts that have previously committed to a ballot by
+    calling `commit` (and therefore are a trusted node).
+  - The parameters must, when hashed together, match the value provided to the
+    `commit` method during the commit phase.
+  - Can only be called during the reveal phase.
 
 ##### compute
 Arguments: none
@@ -388,11 +386,11 @@ Sets the `winner` to be whatever the current `leader` is. Sets the `stage` to
 and establish an accessible permanent record of the outcome.
 
 ###### Security Notes
- - Can only be called during the `Compute` `stage`.
- - Can only be called once on any given inflation contract.
+  - Can only be called during the `Compute` `stage`.
+  - Can only be called once on any given inflation contract.
 
 #### ECOxLockup
-- Inherits: `ERC20Votes`, `PolicedUtils`
+  - Inherits: `ERC20Votes`, `PolicedUtils`
 
 Contains the logic for depositing and withdrawing EcoX to/from lockup. The quantity of
 EcoX locked up relative to the total supply (both at a given block number) determine
@@ -429,7 +427,7 @@ A checkpoint is written to increase totalSupply and the voting balance of msg.se
 
 ###### Security Notes
   - only updates totalSupply and voting power balance if the transfer is successful i.e. if
-  msg.sender has at least `_amount` of EcoX in their balance
+    msg.sender has at least `_amount` of EcoX in their balance
 
 ##### withdraw
 Arguments:
@@ -441,8 +439,8 @@ A checkpoint is written to decrease totalSupply and the voting balance of msg.se
 
 ###### Security Notes
   - Only allows for withdrawal if msg.sender did not vote in current or previous generation.
-  This is to ensure that voters do not make decisions without having 'skin in the game', they
-  cannot unlock and sell their EcoX for at least two generations after their last vote was cast.
+    This is to ensure that voters do not make decisions without having 'skin in the game', they
+    cannot unlock and sell their EcoX for at least two generations after their last vote was cast.
 
 ##### votingECOx
 Arguments:
@@ -463,7 +461,7 @@ all balances at that checkpoint.
 
 ##### recordVote
 Arguments:
-   - `who` (address) - address casting the vote
+  - `who` (address) - address casting the vote
 
 Sets votingTracker[address] to the current generation. This is used to determine whether or not
 an address can withdraw its locked up EcoX - they are not permitted to do so the generation of
@@ -491,7 +489,7 @@ from the one stored in this contract.
 
 
 #### Inflation
- - Inherits: `PolicedUtils`
+  - Inherits: `PolicedUtils`
 
 This contract holds and executes the payouts in the result of a Random Inflation
 process, triggered by a `CurrenceGovernance` vote (see above). The random payout
@@ -518,7 +516,7 @@ reduce the surge of new funds that comes into the economy.
 Attributes:
   - `who` (address) - the address of the winner whose prize was delivered
   - `sequence` (uint256) - the payout sequence number that was used to verify
-     that the address did in fact win.
+    that the address did in fact win.
 
 This event is emitted when there is a successful claiming of a prize. It emits
 after the transfer of funds, so it is a marker that the payout was successful.
@@ -548,11 +546,11 @@ This function is called by `CurrencyTimer` after it has cloned and funded the
 inputs as well as the start of the payout period to the current time.
 
 ###### Security Notes
- - Can't be called twice (can't be called if `winners` is already set).
- - Can only be called on a cloned `Inflation` contract.
- - Reverts if the contract has not been sufficiently funded for operation.
- - As it is called as part of the function call that creates the contract it
-   cannot be hijacked.
+  - Can't be called twice (can't be called if `winners` is already set).
+  - Can only be called on a cloned `Inflation` contract.
+  - Reverts if the contract has not been sufficiently funded for operation.
+  - As it is called as part of the function call that creates the contract it
+    cannot be hijacked.
 
 ##### commitEntropyVDFSeed
 Arguments: none
@@ -561,9 +559,9 @@ Finds a probable prime near the blockhash (at run time) to use as the seed for
 the VDF (`entropyVDFSeed`). Emits `EntropyVDFSeedCommitted` when successful.
 
 ###### Security Notes
- - Cannot be run once the `entropyVDFSeed` has been set
- - Might run out of gas if there is not a prime near the blockhash, but can just
-   be rerun in that case.
+  - Cannot be run once the `entropyVDFSeed` has been set
+  - Might run out of gas if there is not a prime near the blockhash, but can just
+    be rerun in that case.
 
 ##### submitEntropyVDF
 Arguments:
@@ -575,11 +573,11 @@ Sets the `seed` variable for determining the random inflation and emits
 sufficient random difficulty (see the [VDF Readme](../VDF/README.md) for more details).
 
 ###### Security Notes
- - Uses `entropyVDFSeed` and therefore cannot be run unless `commitEntropyVDFSeed`
-   has successfully run.
- - Will likely be unsuccessful on firsts attempt if the `vdfVerifier` does not
-   approve the input value.
- - Once run successfully, it cannot be run again (reverts if `seed` is already set).
+  - Uses `entropyVDFSeed` and therefore cannot be run unless `commitEntropyVDFSeed`
+    has successfully run.
+  - Will likely be unsuccessful on firsts attempt if the `vdfVerifier` does not
+    approve the input value.
+  - Once run successfully, it cannot be run again (reverts if `seed` is already set).
 
 ##### claimFor
 Arguments:
@@ -596,14 +594,14 @@ after the transfer has been made. The staggering of payouts over the payout
 period is indexed by the `_sequence` variable which runs from 0 up to `winners`.
 
 ###### Security Notes
- - Cannot be called until the `InflationRootHashProposal` has accepted the root
-   hash for the previous generation snapshot.
- - Can be called by anyone so that the gas fee does not need to be paid by the
-   winning address.
- - Winners are indexed by `_sequence` and not by addresses. This means that it
-   is not impossible for the same address to win more than one prize, which is
-   a consequence of the intentional choice of weighting of random chance by the
-   balance at each address. However a `_sequence` cannot be claimed twice.
+  - Cannot be called until the `InflationRootHashProposal` has accepted the root
+    hash for the previous generation snapshot.
+  - Can be called by anyone so that the gas fee does not need to be paid by the
+    winning address.
+  - Winners are indexed by `_sequence` and not by addresses. This means that it
+    is not impossible for the same address to win more than one prize, which is
+    a consequence of the intentional choice of weighting of random chance by the
+    balance at each address. However a `_sequence` cannot be claimed twice.
 
 ##### claim
 Arguments:
@@ -621,12 +619,13 @@ Destructs the `vdfVerifier` and transfers the balance of the contract to the roo
 policy contract. Then selfdestructs the `Inflation` contract.
 
 ###### Security Notes
- - If the `seed` is set, can only be called if every ticket has been claimed.
- - Otherwise, can only be called if the contract is completely un-funded.
- - Is public to assure that, when the process is over, anyone can clean up.
+  - If the `seed` is set, can only be called if every ticket has been claimed.
+  - Otherwise, can only be called if the contract is completely un-funded.
+  - Is public to assure that, when the process is over, anyone can clean up.
 
 #### InflationRootHashProposal
- - Inherits: `PolicedUtils`
+  - Inherits: `PolicedUtils`
+
 To distribute Inflation rewards we need to establish winners of the "Inflation lottery". Inflation contract responsible to generate "winning tickets". While InflationRootHashProposal helps to establish which user holds what ticket.
 
 We assume that all users would always obtain tickets. Then, when claiming a reward, the user simply posts a proof stating that “if all users had gotten tickets, then I would have had ticket numbers from X to Y”; and if that range overlaps a winning ticket number, they get paid.
@@ -652,67 +651,67 @@ To achieve it we need to establish a correct root hash for every generation. Sin
 ##### Events
 ###### RootHashChallengeIndexRequestAdded
 Attributes:
- - `proposer` (address) - proposer of the root hash being challenged
- - `challenger` (address) - address of the submitter of the challenge
- - `rootHash` (bytes32) - root hash being challenged
- - `index` (uint256) - which index of the tree proposer required to prove
+  - `proposer` (address) - proposer of the root hash being challenged
+  - `challenger` (address) - address of the submitter of the challenge
+  - `rootHash` (bytes32) - root hash being challenged
+  - `index` (uint256) - which index of the tree proposer required to prove
 
 Indicates that the root hash is challenged and proposer required to respond with the proof of a specific index.
 
 ###### ChallengeResponseVerified
 Attributes:
- - `proposer` (address) - the address responding to the challenge.
- - `proposedRootHash` (bytes32) - root hash being challenged
- - `challenger` (address) - address of the submitter of the challenge
- - `account` (address) - address of the account being challenged
- - `balance` (uint256) - balance at generation of the account being challenged
- - `sum` (uint256) - cumulative sum of the account being challenged
- - `index` (uint256) - index in the Merkle tree of the account being challenged
+  - `proposer` (address) - the address responding to the challenge.
+  - `proposedRootHash` (bytes32) - root hash being challenged
+  - `challenger` (address) - address of the submitter of the challenge
+  - `account` (address) - address of the account being challenged
+  - `balance` (uint256) - balance at generation of the account being challenged
+  - `sum` (uint256) - cumulative sum of the account being challenged
+  - `index` (uint256) - index in the Merkle tree of the account being challenged
 
 Indicates that submitted response to a challenge was successfully verified.
 
 ###### RootHashProposed
 Attributes:
- - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
- - `totalSum` (uint256) - total cumulative sum of all the balances (sum of the last node + its balance) 
- - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree
- - `proposer` (address) - address of the proposer of the root hash
+  - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
+  - `totalSum` (uint256) - total cumulative sum of all the balances (sum of the last node + its balance) 
+  - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree
+  - `proposer` (address) - address of the proposer of the root hash
 
 Indicates that the new root hash proposal was submitted to the system
 
 ###### RootHashRejected
 Attributes:
- - `proposedRootHash` (bytes32) - the rejected root hash
- - `proposer` (address) - address of the proposer of rejected root hash
+  - `proposedRootHash` (bytes32) - the rejected root hash
+  - `proposer` (address) - address of the proposer of rejected root hash
 
 Indicates that root hash was proved to be wrong or timed out on unanswered challenged and been rejected
 
 ###### RootHashAccepted
 Attributes:
- - `proposedRootHash` (bytes32) - the accepted root hash
- - `totalSum` (uint256) - total cumulative sum of all the balances of this proposal
- - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree of this proposal
- - `proposer` (address) - address of the proposer of accepted root hash
+  - `proposedRootHash` (bytes32) - the accepted root hash
+  - `totalSum` (uint256) - total cumulative sum of all the balances of this proposal
+  - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree of this proposal
+  - `proposer` (address) - address of the proposer of accepted root hash
 
 Indicates that a new root hash proposal was accepted by the system, now winners can claim inflation rewards
 
 ###### ChallengeMissingAccountSuccess
 Attributes:
- - `proposer` (address) - the roothash proposal address
- - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
- - `challenger` (address) - address of the submitter of the challenge
- - `missingAccount` (address) - address of the account being claimed missing
+  - `proposer` (address) - the roothash proposal address
+  - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
+  - `challenger` (address) - address of the submitter of the challenge
+  - `missingAccount` (address) - address of the account being claimed missing
 
 Indicates that a missing account challenge was successful, challenged root hash will be rejected
 
 ##### configure
 Arguments:
- - `_generation` (uint256) - A balance store generation the contract will establish root hash for
+  - `_generation` (uint256) - A balance store generation the contract will establish root hash for
 
 Configures an InflationRootHashProposal setting a balance store generation for which contract will establish root hash.
 
 ###### Security Notes
- - Can be run only once (reverts if `generation` is already set) and is called during cloning.
+  - Can be run only once (reverts if `generation` is already set) and is called during cloning.
     
 ##### proposeRootHash
 Arguments:
@@ -728,9 +727,9 @@ event is then emitted and the fee (`PROPOSER_FEE`) of 20000 ECO is charged
 and stored for the newly proposed root hash proposal.
 
 ###### Security Notes
- - New proposals only allowed before root hash is accepted.
- - Only one proposal per proposer.
- - The proposed hash must have at least one account.
+  - New proposals only allowed before root hash is accepted.
+  - Only one proposal per proposer.
+  - The proposed hash must have at least one account.
 
 ##### challengeRootHashRequestAccount
 Arguments:
@@ -740,18 +739,18 @@ Arguments:
 Allows to challenge previously proposed root hash. Challenge requires proposer of the root hash submit proof of the account for requested index. Creates a record of the challenge in the `challenges` property of the proposal struct and sets the challenge status to pending. The challenge is given 1 day to be responded to. A `RootHashChallengeIndexRequestAdded` event is then emitted and the fee of 500 ECO (`CHALLENGE_FEE`) is charged and stored for the challenged root hash proposal.
 
 ###### Security Notes
- - You cannot challenge your own proposal (same challenger address as proposer)
- - The root hash challenged must match the one in the proposal
- - The status of the challenged root hash must be Pending
- - The index being challenged must be in the number of accounts in the proposal
- - Only 2 log N + 2 challenges are allowed per challenger where N is the number
-   of accounts proposed.
- - New challenges are only allowed before root hash is accepted
- - New challengers can submit a challenge 24 hours after root hash was proposed.
- - The challenger may then submit additional challenges within the challenge
-   response window of other challenges they have open. However, this does not
-   increase the challenge window.
- - Indices can only be challenged once per proposal.
+  - You cannot challenge your own proposal (same challenger address as proposer)
+  - The root hash challenged must match the one in the proposal
+  - The status of the challenged root hash must be Pending
+  - The index being challenged must be in the number of accounts in the proposal
+  - Only 2 log N + 2 challenges are allowed per challenger where N is the number
+    of accounts proposed.
+  - New challenges are only allowed before root hash is accepted
+  - New challengers can submit a challenge 24 hours after root hash was proposed.
+  - The challenger may then submit additional challenges within the challenge
+    response window of other challenges they have open. However, this does not
+    increase the challenge window.
+  - Indices can only be challenged once per proposal.
 
 ##### claimMissingAccount
 Arguments:
@@ -764,19 +763,19 @@ A special challenge, the challenger can claim that an account is missing, which 
 and account(X) > A > account(x-1), then the proposal is rejected and a `ChallengeMissingAccountSuccess` event is emitted.
 
 ###### Security Notes
- - You cannot challenge your own proposal (same challenger address as proposer)
- - The root hash challenged must match the one in the proposal
- - The status of the challenged root hash must be Pending
- - The index being challenged must be in the number of accounts in the proposal
- - The account being claimed to be missing must have a balance
- - Only 2 log N + 2 challenges are allowed per challenger where N is the number
-   of accounts proposed.
- - New challenges are only allowed before root hash is accepted
- - New challengers can submit a challenge 24 hours after root hash was proposed.
- - The challenger may then submit additional challenges within the challenge
-   response window of other challenges they have open.
- - The proposal must have had the adjacent indices challenged.
- - Indices can only be challenged once per proposal.
+  - You cannot challenge your own proposal (same challenger address as proposer)
+  - The root hash challenged must match the one in the proposal
+  - The status of the challenged root hash must be Pending
+  - The index being challenged must be in the number of accounts in the proposal
+  - The account being claimed to be missing must have a balance
+  - Only 2 log N + 2 challenges are allowed per challenger where N is the number
+    of accounts proposed.
+  - New challenges are only allowed before root hash is accepted
+  - New challengers can submit a challenge 24 hours after root hash was proposed.
+  - The challenger may then submit additional challenges within the challenge
+    response window of other challenges they have open.
+  - The proposal must have had the adjacent indices challenged.
+  - Indices can only be challenged once per proposal.
     
 ##### respondToChallenge
 Arguments:
@@ -793,20 +792,20 @@ as resolved on refutation and a `ChallengeResponseVerified` event is emitted. Th
 is given 1 hour more of challenge times in which to submit any additional challenges, if able.
 
 ###### Security Notes
- - The root hash must exist.
- - Can only be called if the root hash is not yet accepted.
- - Only proposer of the root hash can respond to a challenge.
- - The challenge must exist.
- - The challenge response time must not be over.
- - The account must have the claimed balance.
- - The Merkle proof must verify correctly
- - If the index is 0, the cumulative `_sum` must be zero
- - The left and right neighbors of the challenged index must be consistent
-   with the proof of this index.
+  - The root hash must exist.
+  - Can only be called if the root hash is not yet accepted.
+  - Only proposer of the root hash can respond to a challenge.
+  - The challenge must exist.
+  - The challenge response time must not be over.
+  - The account must have the claimed balance.
+  - The Merkle proof must verify correctly
+  - If the index is 0, the cumulative `_sum` must be zero
+  - The left and right neighbors of the challenged index must be consistent
+    with the proof of this index.
 
 ##### checkRootHashStatus
 Arguments:
- -`_proposer` (address) - the root hash proposer's address
+  - `_proposer` (address) - the root hash proposer's address
 
 Checks root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
 new challenges is over and there is no unanswered challenges, root hash is accepted.
@@ -825,12 +824,12 @@ contract to make sure that the account claiming is doing so in a way that matche
 the root hash proposal.
 
 ###### Security Notes
- - Contract can verify accounts after correct root hash was determined
+  - Contract can verify accounts after correct root hash was determined
 
 ##### claimFeeFor
 Arguments:
- -`_who`      (address) - fee recipient
- -`_proposer` (address) - the roothash proposer address
+  - `_who`      (address) - fee recipient
+  - `_proposer` (address) - the roothash proposer address
 
 Allows to claim fee.
 If root hash is successful the proposer gets the proposer fee back + all the challenge fees.
@@ -838,18 +837,18 @@ If the proposed root hash is rejected, proposer fee is distributed among the cha
 The challengers also have their staked challenge returned in full.
 
 ###### Security Notes
- - Fees are distributed after root hash has been accepted or rejected
- - The address being claimed for must either be a proposer or challenger, given the end state of the proposal.
+  - Fees are distributed after root hash has been accepted or rejected
+  - The address being claimed for must either be a proposer or challenger, given the end state of the proposal.
  
 ##### claimFee
 Arguments:
- -`_proposer` (address) - the roothash proposer address
+  - `_proposer` (address) - the roothash proposer address
 
 Allows to claim fee on behalf of the caller (`msg.sender`).
 See claimFeeFor
 
 ###### Security Notes
- - `msg.sender` must correctly be a proposer or challenger given the end state of the proposal.
+  - `msg.sender` must correctly be a proposer or challenger given the end state of the proposal.
 
 ##### destruct
 Arguments: none
@@ -857,11 +856,11 @@ Arguments: none
 Self-destructs the inflation root hash proposal contract.
 
 ###### Security Notes
- - Can only be called after the end fee collection period.
- - Any ECO deposited to the contract is transferred to the policy.
+  - Can only be called after the end fee collection period.
+  - Any ECO deposited to the contract is transferred to the policy.
 
 #### Lockup
- - Inherits: `PolicedUtils`
+  - Inherits: `PolicedUtils`
 
 Provides deposit certificate functionality, used to slow down the rate of
 spending. Is a template contract that is cloned and initialized when it is
@@ -880,21 +879,21 @@ multiplication and truncated division.
 ##### Events
 ###### Sale
 Attributes:
- - `to` (address) - the address that a certificate was sold/issued to
- - `amount` (uint256) - the amount of tokens deposited in the certificate
+  - `to` (address) - the address that a certificate was sold/issued to
+  - `amount` (uint256) - the amount of tokens deposited in the certificate
 
 Indicates the sale of a deposit certificate.
 
 ###### Withdrawal
 Attributes:
- - `to` (address) - the address withdrawing from the certificate
- - `amount` (uint256) - the amount of tokens withdrawn
+  - `to` (address) - the address withdrawing from the certificate
+  - `amount` (uint256) - the amount of tokens withdrawn
 
 Indicates the withdrawal of funds from a deposit certificate.
 
 ##### deposit
 Arguments:
- - `_amount` (uint256) - the amount to deposit
+  - `_amount` (uint256) - the amount to deposit
 
 Withdraws funds from the caller's balance and issues a deposit certificate in
 return. The transfer from the caller's balance must be approved before this
@@ -906,9 +905,9 @@ are not possible until after the end of the sale period.
 Emits the `Sale` event.
 
 ###### Security Notes
- - Can only be called during the sale period.
- - Transfer permissions are assumed, and must be granted before this method is
-   called.
+  - Can only be called during the sale period.
+  - Transfer permissions are assumed, and must be granted before this method is
+    called.
 
 ##### withdraw
 Arguments: none
@@ -925,19 +924,19 @@ Identical to `withdrawFor` on behalf of the caller (`msg.sender`), allowing for
 deposits to be withdrawn early.
 
 ###### Security Notes
- - The calling address must have made a deposit.
+  - The calling address must have made a deposit.
 
 ##### withdrawFor
 Arguments:
- - `_owner` (address) - the address of the account to withdraw on behalf of
+  - `_owner` (address) - the address of the account to withdraw on behalf of
 
 Identical to `withdraw` except may not be withdrawn early, but may be executed
 for any address with a valid deposit.
 
 ###### Security Notes
- - May only be called after the lockup period has ended.
- - `_owner` must have made a deposit.
- - Transfers are always made to the account of `_owner`.
+  - May only be called after the lockup period has ended.
+  - `_owner` must have made a deposit.
+  - Transfers are always made to the account of `_owner`.
 
 ##### mintNeeded
 Arguments: none
@@ -957,11 +956,11 @@ Arguments: none
 Sends all tokens back to the root policy and self-destructs the contract.
 
 ###### Security Notes
- - Can only be called after every deposit has been withdrawn.
- - Cannot be called during the sale period.
+  - Can only be called after every deposit has been withdrawn.
+  - Cannot be called during the sale period.
 
 #### TrustedNodes
- - Inherits: `PolicedUtils`
+  - Inherits: `PolicedUtils`
 
 Provides a registry of trustees, and allows the root policy contract to
 grant or revoke trust. The nodes are stored in the array `trustedNodes` along
@@ -987,13 +986,13 @@ Emitted by the `distrust` function.
 
 ##### trust
 Arguments:
- - `_node` (address) - the node to grant trust to
+  - `_node` (address) - the node to grant trust to
 
 Grants trust to a node.
 
 ##### distrust
 Arguments:
- - `_node` (address) - the node to revoke trust in
+  - `_node` (address) - the node to revoke trust in
 
 Revokes trust in a node.
 
@@ -1005,7 +1004,7 @@ Returns the length of `trustedNodes` minus 1 which is the current number of trus
 ### Policy Decisions
 
 #### VotingPower
- - Inherits: `PolicedUtils`
+  - Inherits: `PolicedUtils`
 
 This contract is for `PolicyProposals` and `PolicyVotes` inherit the functionality
 for computing voting power for any address. The voting power calculation is such
@@ -1024,8 +1023,8 @@ Arguments:
 Computes and returns the voting power for the address.
 
 ###### Security Notes
- - Fails if lockups newer than the specified generation are submitted.
- - Fails if specified a lockup when none existed for that generation.
+  - Fails if lockups newer than the specified generation are submitted.
+  - Fails if specified a lockup when none existed for that generation.
 
 ##### totalVotingPower
 Arguments:
@@ -1034,7 +1033,7 @@ Arguments:
 Computes the voting power using the `totalSupplyAt` for ECO and ECOx.
 
 #### PolicyProposals
- - Inherits: `VotingPower`
+  - Inherits: `VotingPower`
 
 This contract controls the first half of the policy voting process where users
 submit and support proposed changes to the codebase. Proposals are submitted at
@@ -1061,12 +1060,6 @@ Attributes:
 
 Emitted on successful submission of a new proposal.
 
-###### VotingStarted
-Attributes:
-  - `contractAddress` (address) - the address of the proposal being voted on
-
-Emitted once a proposal has reached sufficient support and voting has been started.
-
 ###### ProposalSupported
 Attributes:
   - `supporter` (address) - the address that supported the proposal
@@ -1074,6 +1067,19 @@ Attributes:
 
 Emitted when `support` is successfully called. Helps external systems keep tabs
 on the supporting process.
+
+##### SupportThresholdReached
+Attributes:
+  - `proposalAddress` (address) - the address of the proposal that reached the threshold
+
+Emitted when a proposal crosses the support threshold and is ready to be voted on.
+Indicates that deployProposalVoting can and should now be called.
+
+###### VotingStarted
+Attributes:
+  - `contractAddress` (address) - the address of the `PolicyVotes` contract, overseeing the vote.
+
+Emitted once a proposal has reached sufficient support and voting has been started.
 
 ###### ProposalRefunded
 Attributes:
@@ -1083,7 +1089,7 @@ Emitted when an unsuccessful proposer recoups a part of their fee.
 
 ##### registerProposal
 Arguments:
- - `_prop` (address) - the address of the proposal contract
+  - `_prop` (address) - the address of the proposal contract
 
 Register a new proposal for community review. Registration is necessary but does not
 guarantee a vote for its implementation. The proposal is stored in `allProposals`
@@ -1095,9 +1101,9 @@ must be done before calling `registerProposal`. If the proposal does not get vot
 on then the caller will receive a refund of 800 ECO (`REFUND_IF_LOST`).
 
 ###### Security Notes
- - Requires payment to call, to prevent abuse.
- - You cannot propose the 0 address.
- - A proposal can only be registered once.
+  - Requires payment to call, to prevent abuse.
+  - You cannot propose the 0 address.
+  - A proposal can only be registered once.
 
 ##### allProposalAddresses
 Arguments: none
@@ -1106,9 +1112,9 @@ Returns the array `allProposals` that lists the addresses of all submitted propo
 
 ##### support
 Arguments:
- - `_prop` (address) - the proposal to support
- - `_lockupGenerations` (uint256[]) - an array of the different generations the voter
-   has locked up tokens, used to calculate voting power
+  - `_prop` (address) - the proposal to support
+  - `_lockupGenerations` (uint256[]) - an array of the different generations the voter
+    has locked up tokens, used to calculate voting power
 
 The `support` method allows currency holders to indicate their support for a
 proposal. The caller's voting power (see `VotingPower` but is approximately
@@ -1118,34 +1124,48 @@ the user's balance and is not locked up. The balance snapshot will suffice,
 see `GenerationStore` (in the [currency](../currency/README.md) section) for more detail.
 
 If this causes the proposal to reach the 30% threshold of total voting power
-required for a vote, this function immediately starts the voting process.
+required for a vote, this function emits SupportThresholdReached, indicating that
+deployProposalVoting is ready to be called. 
+
+###### Security Notes
+  - Can only be called during the staking period.
+  - Can only be called by an account that held tokens at the last checkpoint.
+  - Must be provided the address of a registered proposal.
+  - Can only be called once for each proposal by any given account.
+  - Cannot be called if a vote is triggered as the contract is no longer privileged.
+  - The call to `votingPower` will fail if the user lies on `_lockupGenerations`
+
+##### deployProposalVoting
+Arguments: none
+
+Deploys the proposal voting contract. Caller pays the gas cost for deployment.
+Will revert if called before a proposal reaches the support threshold.
 It configures the `PolicyVotes` contract for the specific proposal, creates
 a cloned copy of the contract for voting, removes the proposal to be voted on
 from its own store (the submitter is not able to get a refund), emits a
 `VotingStarted` event, and finally removes the `PolicyProposals` contract
 from having any policy permissions, ending the proposing process and making
-room for the next one at the start of the next generation.
+room for the next one at the start of the next generation. 
 
 ###### Security Notes
- - Can only be called during the staking period.
- - Can only be called by an account that held tokens at the last checkpoint.
- - Must be provided the address of a registered proposal.
- - Can only be called once for each proposal by any given account.
- - Cannot be called if a vote is triggered as the contract is no longer privileged.
- - The call to `votingPower` will fail if the user lies on `_lockupGenerations`
+  - Can only be called if a proposal has passed the support threshold but has
+    not yet been moved to voting. 
+  - Does not take any inputs, can only deploy the voting contract for the previously
+    selected voting contract. 
+  - Cannot be called more than once within the same cycle. 
 
 ##### refund
 Arguments:
- - `_prop` (address) - the proposal to refund the fee for
+  - `_prop` (address) - the proposal to refund the fee for
 
 Partially refunds (80%) the fee for the registration of a proposal that did not
 make it to voting. Emits a `ProposalRefunded` event.
 
 ###### Security Notes
- - Can only be called after the proposal time.
- - Always issues the refund to the original proposer. Regardless of who calls.
- - Can only be called once per proposal.
- - Cannot be called for the zero address.
+  - Can only be called after the proposal time.
+  - Always issues the refund to the original proposer. Regardless of who calls.
+  - Can only be called once per proposal.
+  - Cannot be called for the zero address.
 
 ##### destruct
 Arguments: none
@@ -1154,12 +1174,12 @@ Self-destructs the contract, freeing all storage. Any ECO held is transferred to
 the root policy contract.
 
 ###### Security Notes
- - Can only be called after all proposals have been refunded.
- - Can only be called after the proposal time, to disallow early exits.
- - Removes itself from the policy.
+  - Can only be called after all proposals have been refunded.
+  - Can only be called after the proposal time, to disallow early exits.
+  - Removes itself from the policy.
 
 #### PolicyVotes
- - Inherits: `VotingPower`
+  - Inherits: `VotingPower`
 
  Basically, lets you vote.
 
@@ -1180,30 +1200,30 @@ Emitted when an address votes.
 
 ##### configure
 Arguments:
- - `_proposal` (address) - the address of the proposal to vote on
+  - `_proposal` (address) - the address of the proposal to vote on
 
 Configures a policy vote, setting the policy to be voted on, the times that
 the voting ends, and the generation to use for voting power calculation.
 
 ###### Security Notes
- - Is called atomically with instantiation.
- - Can only be called once, checks that the `voteEnds` time hasn't been set.
+  - Is called atomically with instantiation.
+  - Can only be called once, checks that the `voteEnds` time hasn't been set.
 
 ##### vote
 Arguments:
- - `_vote` (bool) - the vote to submit, `true` to pass the proposal, `false` to fail
- - `_lockupGenerations` (uint256[]) - an array of the different generations the voter
-   has locked up tokens, used to calculate voting power
+  - `_vote` (bool) - the vote to submit, `true` to pass the proposal, `false` to fail
+  - `_lockupGenerations` (uint256[]) - an array of the different generations the voter
+    has locked up tokens, used to calculate voting power
 
 Records the caller's vote, weighted by their voting power. Records the voting power of
 the caller in `totalStake` and in `yesStake` if the voter voted yes. Records yes votes
 in the mapping `yesVote` which maps addresses to votes. Emits a `PolicyVoteCast` event.
 
 ###### Security Notes
- - Cannot be called if the voting period is over
- - Fails if the user has no voting power to vote with
- - May be called again, with a different value of `_vote` to change the vote
- - The call to `votingPower` will fail if the user lies on `_lockupGenerations`
+  - Cannot be called if the voting period is over
+  - Fails if the user has no voting power to vote with
+  - May be called again, with a different value of `_vote` to change the vote
+  - The call to `votingPower` will fail if the user lies on `_lockupGenerations`
 
 
 ##### execute
@@ -1214,11 +1234,11 @@ permissions from the contract, transfers any tokens to the root policy, and
 then self-destructs. Emits a `VoteCompleted` event.
 
 ###### Security Notes
- - Enacted proposals can do anything they like. They're run in the context of
-   the root policy using `delegatecall`, allowing them to use `delegatecall` on
-   behalf of any managed contract.
- - Can only be called before the voting period ends if the yes votes have already
-   reached a majority.
+  - Enacted proposals can do anything they like. They're run in the context of
+    the root policy using `delegatecall`, allowing them to use `delegatecall` on
+    behalf of any managed contract.
+  - Can only be called before the voting period ends if the yes votes have already
+    reached a majority.
 
 ## Contributing
 See the [main README](../../README.md).

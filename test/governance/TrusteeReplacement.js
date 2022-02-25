@@ -131,6 +131,7 @@ contract('Governance Trustee Change [@group=9]', (accounts) => {
   it('Adds stake to proposals to ensure thati it goes to a vote', async () => {
     await policyProposals.support(trusteeReplacement.address, { from: alice });
     await policyProposals.support(trusteeReplacement.address, { from: bob });
+    await policyProposals.deployProposalVoting({ from: bob });
   });
 
   it('Transitions from proposing to voting', async () => {
