@@ -259,6 +259,23 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         );
       });
 
+      it('has the correct data in allProposalData', async () => {
+        await policyProposals.support(testProposal.address, { from: alice });
+        await policyProposals.support(testProposal2.address, { from: bob });
+
+        const proposal1 = await policyProposals.proposals(testProposal.address);
+        const proposal2 = await policyProposals.proposals(testProposal2.address);
+
+        const proposalData = await policyProposals.allProposalData();
+
+        expect(proposal1[0]).to.equal(proposalData[0][0]);
+        expect(proposal1[1]).to.equal(proposalData[0][1]);
+        expect(proposal1[2]).to.eq.BN(proposalData[0][2]);
+        expect(proposal2[0]).to.equal(proposalData[1][0]);
+        expect(proposal2[1]).to.equal(proposalData[1][1]);
+        expect(proposal2[2]).to.eq.BN(proposalData[1][2]);
+      });
+
       it('does not allow staking twice', async () => {
         await policyProposals.support(testProposal.address);
         await expectRevert(

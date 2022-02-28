@@ -26,7 +26,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract PolicyProposals is VotingPower, TimeUtils {
     /** A proposal submitted to the process.
      */
-    struct Props {
+    struct Prop {
         /* The address of the proposing account.
          */
         address proposer;
@@ -36,23 +36,23 @@ contract PolicyProposals is VotingPower, TimeUtils {
         /* The amount of tokens staked in support of this proposal.
          */
         uint256 totalstake;
-        /* A record of which addresses have already staked in support of the
-         * proposal.
-         */
-        mapping(address => bool) staked;
     }
+
+    /* A record of which addresses have already staked in support of each proposal
+     */
+    mapping(address => mapping(address => bool)) public staked;
 
     /** The set of proposals under consideration.
      * maps from addresses of proposals to structs containing with info and
      * the staking data (struct defined above)
      */
-    mapping(address => Props) public proposals;
+    mapping(address => Prop) public proposals;
 
     /** The total number of proposals made.
      */
     uint256 public totalproposals;
 
-    /** A list of all proposals made.
+    /** A list of the addresses of all proposals made.
      */
     address[] public allProposals;
 
@@ -166,6 +166,17 @@ contract PolicyProposals is VotingPower, TimeUtils {
         return allProposals;
     }
 
+    /** A list of all proposed policies
+     */
+    function allProposalData() public view returns (Prop[] memory) {
+        Prop[] memory proposalData = new Prop[](totalproposals);
+        for (uint256 index = 0; index < totalproposals; index++) {
+            proposalData[index] = proposals[allProposals[index]];
+        }
+
+        return proposalData;
+    }
+
     /** Submit a proposal.
      *
      * You must approve the policy proposals contract to withdraw the required
@@ -177,7 +188,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      * @param _prop The address of the proposal to submit.
      */
     function registerProposal(address _prop) external {
-        Props storage _p = proposals[_prop];
+        Prop storage _p = proposals[_prop];
 
         require(_prop != address(0), "The proposal address can't be 0");
 
@@ -215,7 +226,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         uint256 _amount = votingPower(msg.sender, blockNumber);
         uint256 _total = totalVotingPower(blockNumber);
 
-        Props storage _p = proposals[address(_prop)];
+        Prop storage _p = proposals[address(_prop)];
 
         require(
             policyFor(ID_POLICY_PROPOSALS) == address(this),
@@ -235,12 +246,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "The supported proposal is not registered"
         );
         require(
-            !_p.staked[msg.sender],
+            !staked[_p.proposal][msg.sender],
             "You may not stake in support of a proposal if you have already staked"
         );
 
         _p.totalstake = _p.totalstake + _amount;
-        _p.staked[msg.sender] = true;
+        staked[_p.proposal][msg.sender] = true;
 
         recordVote(msg.sender);
         emit ProposalSupported(msg.sender, _prop);
@@ -294,7 +305,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         require(_prop != address(0), "The proposal address can't be 0");
 
-        Props storage _p = proposals[_prop];
+        Prop storage _p = proposals[_prop];
         require(
             _p.proposal == _prop,
             "The provided proposal address is not valid"
