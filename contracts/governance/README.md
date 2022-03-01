@@ -1068,6 +1068,14 @@ Attributes:
 Emitted when `support` is successfully called. Helps external systems keep tabs
 on the supporting process.
 
+###### ProposalUnsupported
+Attributes:
+  - `unsupporter` (address) - the address that supported the proposal
+  - `proposalAddress` (address) - the address of the proposal being supported
+
+Emitted when `unsupport` is successfully called. Helps external systems keep tabs
+on the supporting process.
+
 ##### SupportThresholdReached
 Attributes:
   - `proposalAddress` (address) - the address of the proposal that reached the threshold
@@ -1113,19 +1121,16 @@ Returns the array `allProposals` that lists the addresses of all submitted propo
 ##### support
 Arguments:
   - `_prop` (address) - the proposal to support
-  - `_lockupGenerations` (uint256[]) - an array of the different generations the voter
-    has locked up tokens, used to calculate voting power
 
 The `support` method allows currency holders to indicate their support for a
 proposal. The caller's voting power (see `VotingPower` but is approximately
 understood as their balance at the end of the last generation) is added to
 the total supporting stake for the proposal. The support is not withdrawn from
-the user's balance and is not locked up. The balance snapshot will suffice,
-see `GenerationStore` (in the [currency](../currency/README.md) section) for more detail.
+the user's balance and is not locked up.
 
 If this causes the proposal to reach the 30% threshold of total voting power
-required for a vote, this function emits SupportThresholdReached, indicating that
-deployProposalVoting is ready to be called. 
+required for a vote, this function emits `SupportThresholdReached`, indicating that
+`deployProposalVoting` is ready to be called. 
 
 ###### Security Notes
   - Can only be called during the staking period.
@@ -1133,7 +1138,18 @@ deployProposalVoting is ready to be called.
   - Must be provided the address of a registered proposal.
   - Can only be called once for each proposal by any given account.
   - Cannot be called if a vote is triggered as the contract is no longer privileged.
-  - The call to `votingPower` will fail if the user lies on `_lockupGenerations`
+
+##### unsupport
+Arguments:
+  - `_prop` (address) - the proposal to support
+
+This function withdraws a user's support from a proposal if they have previously supported it. This cannot be called to bring a proposal that has passed the 30% threshold down below that threshold as it cannot be called if voting has been triggered.
+
+###### Security Notes
+  - Can only be called during the staking period.
+  - Can only be called if support was previously given.
+  - Must be provided the address of a registered proposal.
+  - Cannot be called if a vote is triggered as the contract is no longer privileged.
 
 ##### deployProposalVoting
 Arguments: none
@@ -1212,8 +1228,6 @@ the voting ends, and the generation to use for voting power calculation.
 ##### vote
 Arguments:
   - `_vote` (bool) - the vote to submit, `true` to pass the proposal, `false` to fail
-  - `_lockupGenerations` (uint256[]) - an array of the different generations the voter
-    has locked up tokens, used to calculate voting power
 
 Records the caller's vote, weighted by their voting power. Records the voting power of
 the caller in `totalStake` and in `yesStake` if the voter voted yes. Records yes votes
@@ -1223,7 +1237,6 @@ in the mapping `yesVote` which maps addresses to votes. Emits a `PolicyVoteCast`
   - Cannot be called if the voting period is over
   - Fails if the user has no voting power to vote with
   - May be called again, with a different value of `_vote` to change the vote
-  - The call to `votingPower` will fail if the user lies on `_lockupGenerations`
 
 
 ##### execute

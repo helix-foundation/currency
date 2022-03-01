@@ -107,6 +107,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     event ProposalSupported(address supporter, address proposalAddress);
 
+    /** An event indicating that support has been removed from a proposal.
+     *
+     * @param proposalAddress The address of the PolicyVotes contract instance that was supported
+     */
+    event ProposalUnsupported(address unsupporter, address proposalAddress);
+
     /** An event indicating a proposal has reached its support threshold
      *
      * @param proposalAddress The address of the PolicyVotes contract instance.
@@ -223,11 +229,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
      * @param _prop The proposal to support.
      */
     function support(address _prop) external {
-        uint256 _amount = votingPower(msg.sender, blockNumber);
-        uint256 _total = totalVotingPower(blockNumber);
-
-        Prop storage _p = proposals[address(_prop)];
-
         require(
             policyFor(ID_POLICY_PROPOSALS) == address(this),
             "Proposal contract no longer active"
@@ -237,6 +238,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
             getTime() < proposalEnds,
             "Proposals may no longer be supported because the registration period has ended"
         );
+
+        uint256 _amount = votingPower(msg.sender, blockNumber);
+        uint256 _total = totalVotingPower(blockNumber);
+
+        Prop storage _p = proposals[address(_prop)];
+
         require(
             _amount > 0,
             "In order to support a proposal you must stake a non-zero amount of tokens"
@@ -247,7 +254,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         );
         require(
             !staked[_p.proposal][msg.sender],
-            "You may not stake in support of a proposal if you have already staked"
+            "You may not stake in support of a proposal twice"
         );
 
         _p.totalstake = _p.totalstake + _amount;
@@ -261,6 +268,31 @@ contract PolicyProposals is VotingPower, TimeUtils {
             proposalSelected = true;
             proposalToConfigure = _prop;
         }
+    }
+
+    function unsupport(address _prop) external {
+        require(
+            policyFor(ID_POLICY_PROPOSALS) == address(this),
+            "Proposal contract no longer active"
+        );
+        require(!proposalSelected, "A proposal has already been selected");
+        require(
+            getTime() < proposalEnds,
+            "Proposals may no longer be supported because the registration period has ended"
+        );
+
+        uint256 _amount = votingPower(msg.sender, blockNumber);
+        Prop storage _p = proposals[address(_prop)];
+
+        require(
+            staked[_p.proposal][msg.sender],
+            "You have not staked this proposal"
+        );
+
+        _p.totalstake = _p.totalstake - _amount;
+        staked[_p.proposal][msg.sender] = false;
+
+        emit ProposalUnsupported(msg.sender, _prop);
     }
 
     function deployProposalVoting() external {

@@ -280,7 +280,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         await policyProposals.support(testProposal.address);
         await expectRevert(
           policyProposals.support(testProposal.address),
-          'may not stake in support of a proposal if you have already staked',
+          'You may not stake in support of a proposal twice',
         );
       });
 
@@ -321,6 +321,101 @@ contract('PolicyProposals [@group=7]', (accounts) => {
           policyProposals.support(testProposal.address),
           'registration period has ended',
         );
+      });
+    });
+  });
+
+  describe('unsupport', () => {
+    let policyProposals;
+    let testProposal;
+    let testProposal2;
+
+    beforeEach(async () => {
+      policyProposals = await makeProposals();
+      testProposal = await Empty.new(1);
+      testProposal2 = await Empty.new(1);
+
+      await token.approve(
+        policyProposals.address,
+        await policyProposals.COST_REGISTER(),
+      );
+
+      await policyProposals.registerProposal(testProposal.address);
+
+      await token.approve(
+        policyProposals.address,
+        await policyProposals.COST_REGISTER(),
+      );
+
+      await policyProposals.registerProposal(testProposal2.address);
+
+      await policyProposals.support(testProposal.address);
+    });
+
+    context('after the registration period', () => {
+      beforeEach(async () => {
+        await time.increase(3600 * 240 + 1);
+      });
+
+      it('reverts', async () => {
+        await expectRevert(
+          policyProposals.unsupport(testProposal.address),
+          'Proposals may no longer be supported because the registration period has ended',
+        );
+      });
+    });
+
+    context('when unsupporting an unsupported proposal', () => {
+      it('reverts', async () => {
+        await expectRevert(
+          policyProposals.unsupport(testProposal2.address),
+          'You have not staked this proposal',
+        );
+      });
+    });
+
+    context('during the staking period', () => {
+      it('allows unstaking', async () => {
+        const tx = await policyProposals.unsupport(testProposal.address);
+        await expectEvent.inTransaction(
+          tx.tx,
+          policyProposals.constructor,
+          'ProposalUnsupported',
+          { unsupporter: alice, proposalAddress: testProposal.address },
+        );
+      });
+
+      it('subtracts the correct stake amount', async () => {
+        const preUnsupportStake = toBN(
+          (await policyProposals.proposals(testProposal.address))[2],
+        );
+
+        await policyProposals.unsupport(testProposal.address);
+
+        const postUnsupportStake = toBN(
+          (await policyProposals.proposals(testProposal.address))[2],
+        );
+
+        expect(postUnsupportStake).to.eq.BN(
+          preUnsupportStake.sub(toBN(10).pow(toBN(18)).muln(5000)),
+        );
+      });
+
+      it('can be indicisive if you want', async () => {
+        await policyProposals.unsupport(testProposal.address);
+        await policyProposals.support(testProposal.address);
+        await policyProposals.unsupport(testProposal.address);
+        await policyProposals.support(testProposal.address);
+        await policyProposals.unsupport(testProposal.address);
+        await policyProposals.support(testProposal.address);
+        await policyProposals.unsupport(testProposal.address);
+        await policyProposals.support(testProposal.address);
+
+        const supportedStake = toBN(
+          (await policyProposals.proposals(testProposal.address))[2],
+        );
+
+        expect(supportedStake).to.eq.BN(toBN(10).pow(toBN(18)).muln(5000));
       });
     });
   });
@@ -385,6 +480,15 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         );
       });
 
+      it('rejects unsupport if proposal is chosen', async () => {
+        await policyProposals.support(testProposal.address, { from: charlie });
+
+        await expectRevert(
+          policyProposals.unsupport(testProposal.address),
+          'A proposal has already been selected',
+        );
+      });
+
       it('rejects support if deployed', async () => {
         await policyProposals.support(testProposal.address, { from: charlie });
         await policyProposals.deployProposalVoting();
@@ -425,7 +529,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       it('rejects support', async () => {
         await expectRevert(
           policyProposals.support(testProposal.address),
-          'no longer active',
+          'Proposal contract no longer active',
+        );
+      });
+
+      it('rejects unsupport', async () => {
+        await expectRevert(
+          policyProposals.unsupport(testProposal.address),
+          'Proposal contract no longer active',
         );
       });
     });
