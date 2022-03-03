@@ -65,8 +65,13 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       { type: 'address', value: x[2] },
     );
 
+    const proposedInflationMult = toBN('1100000000000000000');
+    const aliceBal = toBN(1000000000);
+
     beforeEach(async () => {
-      await borda.propose(10, 20, 30, 40, toBN('1000000000000000000'), { from: bob });
+      await faucet.mint(alice, aliceBal, { from: charlie });
+
+      await borda.propose(10, 20, 30, 40, proposedInflationMult, { from: bob });
       await time.increase(3600 * 24 * 10.1);
 
       const alicevote = [web3.utils.randomHex(32), alice, [bob]];
@@ -89,6 +94,14 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       ).to.not.eq.BN(borda.address);
     });
 
+    it('Emitted NewCurrencyGovernance event correctly', async () => {
+      const [evt] = await currencyTimer.getPastEvents('NewCurrencyGovernance');
+      const gov = evt.args.addr;
+      expect(
+        await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      ).to.eq.BN(gov);
+    });
+
     it('has inflation', async () => {
       const [evt] = await currencyTimer.getPastEvents('InflationStarted');
       const infl = await Inflation.at(evt.args.addr);
@@ -109,6 +122,14 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       await time.increase(3600 * 24 * 14.1);
       await timedPolicies.incrementGeneration();
       expect(await token.balanceOf(lockup.address)).to.eq.BN(1000000040);
+    });
+
+    it('has new inflation', async () => {
+      const [evt] = await token.getPastEvents('NewInflationMultiplier');
+      expect(evt.args.inflationMultiplier).to.eq.BN(proposedInflationMult);
+      const newAliceBal = await token.balanceOf(alice);
+      const inflationDigits = await token.INITIAL_INFLATION_MULTIPLIER();
+      expect(newAliceBal).to.eq.BN((aliceBal * inflationDigits) / proposedInflationMult);
     });
   });
 });

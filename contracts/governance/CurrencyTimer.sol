@@ -36,6 +36,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
 
     event InflationStarted(address indexed addr);
     event LockupOffered(address indexed addr);
+    event NewCurrencyGovernance(address indexed addr);
 
     constructor(
         address _policy,
@@ -98,6 +99,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
                 )
             );
             Policy(policy).internalCommand(address(sps));
+            emit NewCurrencyGovernance(_clone);
         }
 
         if (_randomInflationWinners > 0 && _randomInflationPrize > 0) {

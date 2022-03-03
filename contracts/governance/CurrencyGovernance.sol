@@ -52,6 +52,29 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     uint256 public votingEnds;
     uint256 public revealEnds;
 
+    event ProposalCreated(
+        address trusteeAddress,
+        uint256 _randomInflationWinners,
+        uint256 _randomInflationPrize,
+        uint256 _lockupDuration,
+        uint256 _lockupInterest,
+        uint256 _inflationMultiplier
+    );
+
+    /** Fired when the voting stage begins.
+     * Triggered by updateStage().
+     */
+    event VotingStarted();
+
+    /** Fired when a trustee casts a vote.
+     */
+    event VoteCast(address trustee);
+
+    /** Fired when the reveal stage begins.
+     * Triggered by updateStage().
+     */
+    event RevealStarted();
+
     /** Fired when a vote is revealed, to create a voting history for all
      * participants. Records the voter, as well as all of the parameters of
      * the vote cast.
@@ -73,8 +96,10 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 time = getTime();
         if (stage == Stages.Propose && time >= proposalEnds) {
             stage = Stages.Commit;
+            emit VotingStarted();
         } else if (stage == Stages.Commit && time >= votingEnds) {
             stage = Stages.Reveal;
+            emit RevealStarted();
         } else if (stage == Stages.Reveal && time >= revealEnds) {
             stage = Stages.Compute;
         }
@@ -106,6 +131,15 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         p.lockupDuration = _lockupDuration;
         p.lockupInterest = _lockupInterest;
         p.inflationMultiplier = _inflationMultiplier;
+
+        emit ProposalCreated(
+            msg.sender,
+            _randomInflationWinners,
+            _randomInflationPrize,
+            _lockupDuration,
+            _lockupInterest,
+            _inflationMultiplier
+        );
     }
 
     function unpropose() external atStage(Stages.Propose) {
@@ -118,6 +152,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         atStage(Stages.Commit)
     {
         commitments[msg.sender] = _commitment;
+        emit VoteCast(msg.sender);
     }
 
     function reveal(bytes32 _seed, address[] calldata _votes)

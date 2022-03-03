@@ -180,6 +180,12 @@ the decisions decided on by the trustees in their Currency Governance votes
 
 ##### Events
 
+###### NewCurrencyGovernance
+Attributes:
+  `addr` (address) - the address of the new CurrencyGovernance contract.
+
+Indicates the location of the new CurrencyGovernance contract.
+
 ###### InflationStarted
 Attributes:
   - `addr` (address) - the address of the `Inflation` contract facilitating
@@ -253,9 +259,44 @@ proposal.
 
 ##### Events
 
+###### ProposalCreated
+Attributes:
+  - `trusteeAddress` (address) - address of the trustee that created this proposal.
+  - `_randomInflationWinners` (uint256) - number of random inflation winners for this
+    proposal.
+  - `_randomInflationPrize` (uint256) - total prize to be awarded to randomInflation
+    winners.
+  - `_lockupDuration` (uint256) - duration of lockup period.
+  - `_lockupInterest` (uint256) - interest earned by keeping funds locked up for the
+    full lockup period.
+  - `_inflationMultiplier` (uint256) - new inflation multiplier to be applied to all
+    balances.
+
+Indicates that a new proposal has been created, with arguments corresponding to 
+intended new values for monetary policy levers.
+
+###### VotingStarted
+Attributes: None
+
+Indicates that the stage has been updated to Commit, and proposals will no longer
+be accepted.
+
+###### VoteCast
+Attributes:
+  - `trustee` (address) - the trustee who cast this vote.
+
+Indicates that a vote has been cast, and the trustee who cast it. Reveals nothing
+about the content of the vote. 
+
+###### RevealStarted
+Attributes: None
+
+Indicates that the stage has been updated to Reveal, and commits will no longer
+be accepted.
+
 ###### VoteRevealed
 Attributes:
-  - `_voter` (indexed address) - the address of the participant that cast the
+  - `_voter` (indexed address) - the address of the trustee that cast the
     ballot
   - `votes` (address[]) - the ordered ballot of ranked proposals (by their proposer
     addresses)
@@ -269,6 +310,13 @@ Attributes:
 
 Indicates the end of an inflation/deflation vote, and acts as a permanent record
 of an outcome.
+
+###### NewInflationMultiplier
+Attributes:
+  - `inflationMultiplier` (uint256) - the inflation multiplier for the newly
+    accepted proposal.
+
+Indicates the inflation multiplier for the newly accepted proposal. 
 
 ##### updateStage
 Arguments: none

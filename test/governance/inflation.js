@@ -81,7 +81,12 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       .address)).getPastEvents('allEvents', {
       fromBlock: 'latest',
       toBlock: 'latest',
-    }))[0].returnValues.inflationRootHashProposalContract;
+    }))[1].returnValues.inflationRootHashProposalContract;
+    // console.log(await (new web3.eth.Contract(balanceStore.abi, balanceStore
+    //   .address)).getPastEvents('allEvents', {
+    //   fromBlock: 'latest',
+    //   toBlock: 'latest',
+    // }));
     tree = getTree(map);
     proposedRootHash = tree.hash;
 

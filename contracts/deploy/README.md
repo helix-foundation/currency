@@ -81,11 +81,11 @@ From in `truffle develop`:
 ```javascript
 // Load the transaction data
 txdata = require('./bootstrap-truffle.json')
-// Fund the account that will run the transaction
-gasCost = web3.toBigNumber(txdata.tx.gasPrice).times(web3.toBigNumber(txdata.tx.gasLimit))
-web3.eth.sendTransaction({from:web3.eth.accounts[0],to:txdata.from,value:gasCost})
+// Fund the account that will run the transaction via the first test account
+gasCost = web3.utils.toBN(txdata.tx.gasPrice).mul(web3.toBN(txdata.tx.gasLimit))
+await web3.eth.sendTransaction({from:(await web3.eth.getAccounts())[0],to:txdata.from,value:gasCost})
 // Run the transaction
-web3.eth.sendRawTransaction(txdata.raw)
+web3.eth.sendSignedTransaction(txdata.raw)
 ```
 
 ## API

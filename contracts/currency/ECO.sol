@@ -19,6 +19,11 @@ contract ECO is InflationCheckpoints, TimeUtils {
         uint256 indexed generation
     );
 
+    /** Fired when a proposal with a new inflation multiplier is selected and passed.
+     * Used to calculate new values for the rebased token.
+     */
+    event NewInflationMultiplier(uint256 inflationMultiplier);
+
     /* Current generation of the balance store. */
     uint256 public currentGeneration;
 
@@ -86,6 +91,8 @@ contract ECO is InflationCheckpoints, TimeUtils {
             if (winner != address(0)) {
                 uint256 _inflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
                 (, , , , , _inflationMultiplier) = bg.proposals(winner);
+                // TODO: add event here for showing that inflation multiplier was updated
+                emit NewInflationMultiplier(_inflationMultiplier);
 
                 // updates the inflation value
                 uint256 _newInflationMultiplier = (_linearInflationCheckpoints[

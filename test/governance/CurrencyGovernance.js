@@ -10,7 +10,7 @@ const { expect } = chai;
 
 const { BN, toBN } = web3.utils;
 const {
-  expectRevert, time,
+  expectEvent, expectRevert, time,
 } = require('@openzeppelin/test-helpers');
 
 const util = require('../../tools/test/util');
@@ -70,6 +70,17 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       const p = await borda.proposals(bob);
       expect(p.valid).to.be.false;
     });
+
+    it('Emits ProposalCreated event when proposal is created', async () => {
+      await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
+      const [evt] = await borda.getPastEvents('ProposalCreated');
+      expect(evt.args.trusteeAddress).to.eq.BN(bob);
+      expect(evt.args._randomInflationWinners).to.eq.BN(33);
+      expect(evt.args._randomInflationPrize).to.eq.BN(34);
+      expect(evt.args._lockupDuration).to.eq.BN(35);
+      expect(evt.args._lockupInterest).to.eq.BN(36);
+      expect(evt.args._inflationMultiplier).to.eq.BN('1000000000000000000');
+    });
   });
 
   describe('Voting phase', () => {
@@ -80,6 +91,15 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       await time.increase(3600 * 24 * 10.1);
     });
 
+    it('Emits VotingStarted when stage is updated to Commit', async () => {
+      const result = await borda.updateStage();
+      await expectEvent.inTransaction(
+        result.tx,
+        borda,
+        'VotingStarted',
+      );
+    });
+
     it('Doesn\'t allow non-trustee to vote', async () => {
       await expectRevert(borda.commit(web3.utils.randomHex(32)), 'Only trusted nodes can call this method');
     });
@@ -87,10 +107,32 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
     it('Allows trustees to vote', async () => {
       await borda.commit(web3.utils.randomHex(32), { from: bob });
     });
+
+    it('Emits VoteCast event when commit is called', async () => {
+      const result = await borda.commit(web3.utils.randomHex(32), { from: dave });
+      await expectEvent.inTransaction(
+        result.tx,
+        borda,
+        'VoteCast',
+        { trustee: dave },
+      );
+    });
   });
 
   describe('Reveal phase', () => {
     const hash = (x) => web3.utils.soliditySha3({ type: 'bytes32', value: x[0] }, { type: 'address', value: x[1] }, { type: 'address', value: x[2] });
+
+    it('Emits RevealStarted when stage is updated to Reveal', async () => {
+      await time.increase(3600 * 24 * 10.1);
+      await borda.updateStage();
+      await time.increase(3600 * 24 * 3);
+      const result = await borda.updateStage();
+      await expectEvent.inTransaction(
+        result.tx,
+        borda,
+        'RevealStarted',
+      );
+    });
 
     it('Cannot reveal without voting', async () => {
       await time.increase(3600 * 24 * 10.1);
@@ -131,6 +173,21 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       await borda.commit(hash([seed, bob, [bob]]), { from: bob });
       await time.increase(3600 * 24 * 3);
       await expectRevert(borda.reveal(seed, [charlie], { from: bob }), 'Commitment mismatch');
+    });
+
+    it('Emits VoteRevealed when vote is correctly revealed', async () => {
+      const seed = web3.utils.randomHex(32);
+      await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+      await time.increase(3600 * 24 * 10.1);
+      await borda.commit(hash([seed, bob, [bob]]), { from: bob });
+      await time.increase(3600 * 24 * 3);
+      const result = await borda.reveal(seed, [bob], { from: bob });
+      await expectEvent.inTransaction(
+        result.tx,
+        borda,
+        'VoteRevealed',
+        { voter: bob, votes: [bob] },
+      );
     });
 
     it('Allows reveals of correct votes', async () => {
@@ -209,6 +266,18 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
           // await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
           await borda.reveal(davevote[0], davevote[2], { from: dave });
         });
+        it('Emits VoteResults', async () => {
+          await time.increase(3600 * 24 * 1);
+          await borda.updateStage();
+          const result = await borda.compute();
+          await expectEvent.inTransaction(
+            result.tx,
+            borda,
+            'VoteResults',
+            { winner: bob },
+          );
+        });
+
         it('Picks a winner', async () => {
           await time.increase(3600 * 24 * 1);
           await borda.updateStage();
