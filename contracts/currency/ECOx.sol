@@ -152,7 +152,8 @@ contract ECOx is ERC20, PolicedUtils {
 
     function mint(address _to, uint256 _value) external {
         require(
-            msg.sender == policyFor(ID_FAUCET),
+            msg.sender == policyFor(ID_FAUCET) ||
+                msg.sender == policyFor(ID_ECO_LABS),
             "Caller not authorized to mint tokens"
         );
 

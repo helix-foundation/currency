@@ -5,6 +5,7 @@ pragma solidity ^0.8.9;
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "../currency/EcoBalanceStore.sol";
+import "../currency/ECOx.sol";
 
 /** @title EcoTokenInit
  *
@@ -24,7 +25,7 @@ contract EcoTokenInit is PolicedUtils {
      *
      * @param _store The address of the balance store to mint tokens in.
      */
-    function initializeAndFuse(address _store) external {
+    function initializeAndFuse(address _store, address _storeX) external {
         // EcoBalanceStore(_store).mint(
         //     0x79599DE87c2000b6aF219B37f7941E1Ab9b8E2d2,
         //     1000000000000000000000
@@ -125,7 +126,7 @@ contract EcoTokenInit is PolicedUtils {
         //     0x877A2456190f077D583abC081431092F5c72fEB3,
         //     50000000000000000000000
         // );
-        Policy(policy).removeSelf(ID_CURRENCY_GOVERNANCE);
+        Policy(policy).removeSelf(ID_ECO_LABS);
 
         selfdestruct(payable(address(uint160(policy))));
     }

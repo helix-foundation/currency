@@ -45,7 +45,7 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
         tokenHash,
         await token.ID_CLEANUP(),
         UNKNOWN_POLICY_ID,
-        await token.ID_CURRENCY_GOVERNANCE(),
+        await token.ID_ECO_LABS(),
       ],
       [
         token.address,

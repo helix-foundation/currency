@@ -639,7 +639,7 @@ async function deployStage3(options) {
     });
   options.initContract = initContract;
   // Temporarily using this identifier to be allowed to do initial minting
-  identifiers.push(web3.utils.soliditySha3('CurrencyGovernance'));
+  identifiers.push(web3.utils.soliditySha3('EcoLabs'));
   addresses.push(initContract.options.address);
 
   const trustedvotereward = '1000'; // TODO: make this the real value
@@ -748,11 +748,11 @@ async function deployStage4(options) {
     console.log(
       `minting initial coins using ${options.initContract.options.address} ${
         options.balanceStore.options.address
-      }...`,
+      } ${options.ecox.options.address}...`,
     );
   }
   await options.initContract.methods
-    .initializeAndFuse(options.balanceStore.options.address)
+    .initializeAndFuse(options.balanceStore.options.address, options.ecox.options.address)
     .send({
       from: options.account,
       gas: BLOCK_GAS_LIMIT,

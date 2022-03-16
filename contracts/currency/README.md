@@ -271,7 +271,7 @@ Arguments:
  - `_to` (address) - the address receiving the minted tokens
  - `_value` (uint256) - the amount of ECOx to mint
 
-Only callable by `ID_FAUCET` for tests.
+Only callable by `ID_FAUCET` for tests or `ID_ECO_LABS` for initial minting.
 
 ##### Security Notes:
  - While it is possible to configure a policy proposal to call this function, it is not intended so no concessions have been made to ease this process and the proposal must masquerade as `ID_FAUCET`.

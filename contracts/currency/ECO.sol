@@ -47,9 +47,9 @@ contract ECO is InflationCheckpoints, TimeUtils {
 
     function mint(address _to, uint256 _value) external {
         require(
-            msg.sender == policyFor(ID_CURRENCY_GOVERNANCE) ||
-                msg.sender == policyFor(ID_CURRENCY_TIMER) ||
+            msg.sender == policyFor(ID_CURRENCY_TIMER) ||
                 msg.sender == policyFor(ID_ECOX) ||
+                msg.sender == policyFor(ID_ECO_LABS) ||
                 msg.sender == policyFor(ID_FAUCET),
             "Caller not authorized to mint tokens"
         );
