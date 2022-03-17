@@ -130,11 +130,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _proposal The proposal to vote on.
      */
-    function configure(address _proposal) external {
+    function configure(address _proposal, uint256 _cutoffBlockNumber) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
-        blockNumber = block.number;
+        blockNumber = _cutoffBlockNumber;
 
         proposal = _proposal;
     }

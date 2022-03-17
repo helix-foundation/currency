@@ -305,7 +305,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         delete proposalToConfigure;
 
         PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
-        pv.configure(address(votingProposal));
+        pv.configure(address(votingProposal), blockNumber);
 
         SimplePolicySetter sps = SimplePolicySetter(
             SimplePolicySetter(simplePolicyImpl).clone(

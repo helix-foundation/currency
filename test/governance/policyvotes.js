@@ -65,11 +65,11 @@ contract('PolicyVotes [@group=8]', (accounts) => {
     context('when called on a proxied instance', () => {
       context('that has not been configured', () => {
         it('succeeds', async () => {
-          await proxiedPolicyVotes.configure(proposal);
+          await proxiedPolicyVotes.configure(proposal, (await time.latestBlock()));
         });
 
         it('sets the veto end time', async () => {
-          await proxiedPolicyVotes.configure(proposal);
+          await proxiedPolicyVotes.configure(proposal, (await time.latestBlock()));
 
           assert.notEqual(
             (await proxiedPolicyVotes.voteEnds()).toString(),
@@ -80,12 +80,12 @@ contract('PolicyVotes [@group=8]', (accounts) => {
 
       context('that has already been configured', () => {
         beforeEach(async () => {
-          await proxiedPolicyVotes.configure(proposal);
+          await proxiedPolicyVotes.configure(proposal, (await time.latestBlock()));
         });
 
         it('reverts', async () => {
           await expectRevert(
-            proxiedPolicyVotes.configure(proposal),
+            proxiedPolicyVotes.configure(proposal, (await time.latestBlock())),
             'has already been configured',
           );
         });
@@ -105,7 +105,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
 
     context('when the contract is configured', () => {
       beforeEach(async () => {
-        await proxiedPolicyVotes.configure(proposal);
+        await proxiedPolicyVotes.configure(proposal, (await time.latestBlock()));
       });
 
       context('after the commitment period', () => {
@@ -223,7 +223,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
     const votesPolicyIdHash = web3.utils.soliditySha3('PolicyVotes');
 
     beforeEach(async () => {
-      await proxiedPolicyVotes.configure(proposal);
+      await proxiedPolicyVotes.configure(proposal, (await time.latestBlock()));
     });
 
     context('when no one votes', () => {
