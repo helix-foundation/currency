@@ -58,7 +58,7 @@
     "eslint-plugin-import": "2.25.4",
     "eslint-plugin-mocha": "10.0.3",
     "nyc": "15.1.0",
-    "prettier": "2.6.0",
+    "prettier": "2.6.1",
     "prettier-plugin-solidity": "1.0.0-beta.19",
     "solhint": "3.3.7",
     "solhint-plugin-eco": "0.1.0",
