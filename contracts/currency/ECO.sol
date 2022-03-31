@@ -57,6 +57,15 @@ contract ECO is InflationCheckpoints, TimeUtils {
         _mint(_to, _value);
     }
 
+    function burn(address _from, uint256 _value) external {
+        require(
+            msg.sender == _from || msg.sender == policyFor(ID_CURRENCY_TIMER),
+            "Caller not authorized to burn tokens"
+        );
+
+        _burn(_from, _value);
+    }
+
     function _afterTokenTransfer(
         address from,
         address to,

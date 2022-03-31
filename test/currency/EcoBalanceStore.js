@@ -147,7 +147,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
         );
       });
 
-      it('should not increase the balance when minting coins', async () => {
+      it('should not increase the balance when reverting minting coins', async () => {
         const startBalance = await balanceStore.balance(accounts[1]);
         await expectRevert.unspecified(balanceStore.mint(accounts[1], 1000, meta));
         const endBalance = await balanceStore.balance(accounts[1]);
@@ -155,12 +155,51 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
         expect(endBalance).to.eq.BN(startBalance);
       });
 
-      it('should not increase the supply when minting coins', async () => {
+      it('should not increase the supply when reverting minting coins', async () => {
         const startSupply = await balanceStore.balance(accounts[1]);
         await expectRevert.unspecified(balanceStore.mint(accounts[1], 1000, meta));
         const endSupply = await balanceStore.balance(accounts[1]);
 
         expect(endSupply).to.eq.BN(startSupply);
+      });
+    });
+  });
+
+  describe('Burnable', () => {
+    const burnAmount = new BN(1000);
+
+    context('for yourself', () => {
+      const meta = {
+        from: accounts[1],
+      };
+
+      it('should succeed with a balance', async () => {
+        await faucet.mint(accounts[1], burnAmount);
+        const preBalance = await balanceStore.balance(accounts[1]);
+        await balanceStore.burn(accounts[1], burnAmount, meta);
+        const postBalance = await balanceStore.balance(accounts[1]);
+        expect(preBalance - postBalance).to.eq.BN(burnAmount);
+      });
+
+      it('should decrease total supply', async () => {
+        await faucet.mint(accounts[1], burnAmount);
+        const preSupply = await balanceStore.totalSupply();
+        await balanceStore.burn(accounts[1], burnAmount, meta);
+        const postSupply = await balanceStore.totalSupply();
+        expect(preSupply - postSupply).to.eq.BN(burnAmount);
+      });
+    });
+
+    context('for another user', () => {
+      const meta = {
+        from: accounts[2],
+      };
+
+      it('sound revert', async () => {
+        await expectRevert(
+          balanceStore.burn(accounts[1], burnAmount, meta),
+          'not authorized',
+        );
       });
     });
   });

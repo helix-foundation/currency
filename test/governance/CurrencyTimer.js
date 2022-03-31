@@ -49,11 +49,18 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
     );
   });
 
-  describe('called early', () => {
-    it('reverts', async () => {
+  describe('reverts', () => {
+    it('cannot be called early', async () => {
       await expectRevert(
         currencyTimer.notifyGenerationIncrease(),
         'Generation has not increased',
+      );
+    });
+
+    it('cannot call lockupWithdrawal', async () => {
+      await expectRevert(
+        currencyTimer.lockupWithdrawal(alice, 10000, false, { from: alice }),
+        'Not authorized to call this function',
       );
     });
   });
@@ -118,10 +125,9 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       await faucet.mint(charlie, 1000000000, { from: charlie });
       await token.approve(lockup.address, 1000000000, { from: charlie });
       await lockup.deposit(1000000000, { from: charlie });
+      expect(await token.balanceOf(lockup.address)).to.eq.BN(1000000000);
 
-      await time.increase(3600 * 24 * 14.1);
-      await timedPolicies.incrementGeneration();
-      expect(await token.balanceOf(lockup.address)).to.eq.BN(1000000040);
+      expect(await currencyTimer.isLockup(lockup.address)).to.be.true;
     });
 
     it('has new inflation', async () => {

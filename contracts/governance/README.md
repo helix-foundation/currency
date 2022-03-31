@@ -859,6 +859,7 @@ Checks root hash proposal. If time is out and there is unanswered challenges pro
 new challenges is over and there is no unanswered challenges, root hash is accepted.
 
 ###### Security Notes
+  - The `_rootHash` specified must be an actually proposed one.
 
 ##### verifyClaimSubmission
 Arguments:
@@ -943,28 +944,20 @@ Indicates the withdrawal of funds from a deposit certificate.
 Arguments:
   - `_amount` (uint256) - the amount to deposit
 
-Withdraws funds from the caller's balance and issues a deposit certificate in
-return. The transfer from the caller's balance must be approved before this
-method is called.
+Transfers funds from the caller's balance to this contract and records the deposited amount. The transfer from the caller's balance must be approved before this method is called. Does not effect the users' or their delegates' voting amount
 
-Can be called multiple times to increase the amount deposited, but withdrawals
-are not possible until after the end of the sale period.
+Can be called multiple times to increase the amount deposited, but withdrawals are not possible until after the end of the sale period.
 
 Emits the `Sale` event.
 
 ###### Security Notes
   - Can only be called during the sale period.
-  - Transfer permissions are assumed, and must be granted before this method is
-    called.
+  - Transfer permissions are assumed, and must be granted before this method is called.
 
 ##### withdraw
 Arguments: none
 
-If called after the end of the lockup period, transfer the initial deposit
-amount plus the promised interest earned to the deposit holder. If called
-before the end of the lockup period, transfer the initial deposit amount minus
-the promised interest earned (as a penalty for early withdrawal) to the deposit
-holder.
+If called after the end of the lockup period, transfer the initial deposit amount then calls to `CurrencyTimer` to mint the promised interest earned to the deposit holder. If called before the end of the lockup period, transfer the initial deposit amount then calls to `CurrencyTimer` to burn the promised interest earned (as a penalty for early withdrawal) for the deposit holder.
 
 Emits the `Withdrawal` event.
 
@@ -973,24 +966,19 @@ deposits to be withdrawn early.
 
 ###### Security Notes
   - The calling address must have made a deposit.
+  - `CurrencyTimer` is delegated the responsibity of giving interest or burning the penalty to not effect delegation.
 
 ##### withdrawFor
 Arguments:
   - `_owner` (address) - the address of the account to withdraw on behalf of
 
 Identical to `withdraw` except may not be withdrawn early, but may be executed
-for any address with a valid deposit.
+for any address with a valid deposit that has waited the full period.
 
 ###### Security Notes
   - May only be called after the lockup period has ended.
   - `_owner` must have made a deposit.
   - Transfers are always made to the account of `_owner`.
-
-##### mintNeeded
-Arguments: none
-
-Returns the amount of tokens required to be minted and transferred to this
-contract so that it can fulfill the interest on all deposits.
 
 ##### selling
 Arguments: none

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../governance/IGeneration.sol";
+import "./CurrencyTimer.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "./IGeneration.sol";
@@ -84,14 +84,6 @@ contract Lockup is PolicedUtils, TimeUtils {
         interest = _interest;
     }
 
-    function mintNeeded() external view returns (uint256) {
-        return
-            totalDeposit +
-            (totalDeposit * interest) /
-            BILLION -
-            getToken().balanceOf(address(this));
-    }
-
     function doWithdrawal(address _owner, bool _allowEarly) internal {
         uint256 _amount = depositBalances[_owner];
 
@@ -107,14 +99,14 @@ contract Lockup is PolicedUtils, TimeUtils {
         totalDeposit = totalDeposit - _amount;
         uint256 _delta = (_amount * interest) / BILLION;
 
-        if (early) {
-            _amount = _amount - _delta;
-        } else {
-            _amount = _amount + _delta;
-        }
-
         getToken().transfer(_owner, _amount);
-        emit Withdrawal(_owner, _amount);
+        getTimer().lockupWithdrawal(_owner, _delta, early);
+
+        if (early) {
+            emit Withdrawal(_owner, _amount - _delta);
+        } else {
+            emit Withdrawal(_owner, _amount + _delta);
+        }
     }
 
     function selling() public view returns (bool) {
@@ -141,5 +133,9 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     function getToken() private view returns (IERC20) {
         return IERC20(policyFor(ID_ERC20TOKEN));
+    }
+
+    function getTimer() private view returns (CurrencyTimer) {
+        return CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
     }
 }

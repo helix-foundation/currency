@@ -229,6 +229,17 @@ This function enforces that only the permissioned contracts can call it. Functio
 ##### Security Notes:
  - the only accepted policies are `ID_CURRENCY_GOVERNANCE`, `ID_CURRENCY_TIMER`, `ID_ECOX`, and `ID_FAUCET` (tests only). See the [Policy Readme](../policy/README.md) for more details on how this is enforced.
 
+#### burn
+Arguments:
+ - `_from` (address) - the address supplying the burned tokens
+ - `_value` (uint256) - the amount of ECO to burn
+
+This function enforces that only `_from` or a permissioned contracts can call it. Functionality of the `_burn` function from `ERC20` is overridden so that delegated voting power is updated and checkpoints are written.
+
+##### Security Notes:
+ - users can only burn their own tokens (not other users')
+ - the only accepted policy that can burn users' tokens are `ID_CURRENCY_TIMER`. See the [Policy Readme](../policy/README.md) for more details on how this is enforced. This is done to enact a penalty for early withdrawal of lockups.
+
 #### notifyGenerationIncrease
 Arguments: none
 

@@ -7,6 +7,8 @@ import "./InflationRootHashProposal.sol";
 interface EcoBalanceStore {
     function mint(address, uint256) external;
 
+    function burn(address, uint256) external;
+
     function inflationRootHashProposalImpl()
         external
         view

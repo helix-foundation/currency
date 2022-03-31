@@ -115,18 +115,27 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
             emit InflationStarted(_clone);
         }
 
-        Lockup lockup = Lockup(lockups[_old]);
-        if (address(lockup) != address(0)) {
-            getStore().mint(address(lockup), lockup.mintNeeded());
-        }
-
         if (_lockupDuration > 0 && _lockupInterest > 0) {
-            lockup = Lockup(
+            Lockup lockup = Lockup(
                 Lockup(lockupImpl).clone(_lockupDuration, _lockupInterest)
             );
             emit LockupOffered(address(lockup));
             lockups[_new] = address(lockup);
             isLockup[address(lockup)] = true;
+        }
+    }
+
+    function lockupWithdrawal(
+        address _withdrawer,
+        uint256 _amount,
+        bool _penalty
+    ) external {
+        require(isLockup[msg.sender], "Not authorized to call this function");
+
+        if (_penalty) {
+            getStore().burn(_withdrawer, _amount);
+        } else {
+            getStore().mint(_withdrawer, _amount);
         }
     }
 
