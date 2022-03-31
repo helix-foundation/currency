@@ -15,6 +15,7 @@
     "lint:prettier": "prettier --check 'contracts/**/*.sol'",
     "build": "truffle compile",
     "test": "(echo | truffle develop &) && sleep 5 && truffle test --network=develop",
+    "debug": "(echo | truffle develop &) && sleep 5 && truffle test --stacktrace --network=develop",
     "trufkill": "lsof -t -i:8545 | xargs kill -9",
     "coverage:js": "(echo | truffle develop &) && sleep 5 && npx nyc --reporter=html --reporter=text --reporter=lcov --include 'tools/**.js' --report-dir coverage-nyc truffle test --network=develop",
     "coverage:sol": "IS_COVERAGE=1 truffle run coverage",

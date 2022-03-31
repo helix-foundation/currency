@@ -1,19 +1,28 @@
 /* eslint no-bitwise: 0 */
 /* eslint no-param-reassign: 0 */
 /* eslint no-await-in-loop: 0 */
+/* eslint prefer-destructuring: 0 */
 
 /*
  * Takes an array of sorted items and recursively builds an merkle tree
  */
 
-// eslint-disable-next-line camelcase
 function arrayToTree(items, min, max) {
+  let index;
+  let sum;
   if (min === max) {
+    if (items[min][0] === 0) {
+      index = 0;
+      sum = 0;
+    } else {
+      index = min;
+      sum = items[min][2];
+    }
     return {
       account: items[min][0],
       balance: items[min][1],
-      sum: items[min][2],
-      index: min,
+      sum,
+      index,
       hash: web3.utils.soliditySha3({
         t: 'bytes20',
         v: items[min][0].toString(),
@@ -25,16 +34,15 @@ function arrayToTree(items, min, max) {
         v: items[min][2],
       }, {
         t: 'uint256',
-        v: min,
+        v: index,
       }),
     };
   }
   const spread = Math.floor((max - min) / 2);
   const a = arrayToTree(items, min, min + spread);
   const b = arrayToTree(items, max - spread, max);
-  const params = web3.utils.toBN(a.hash).lt(web3.utils.toBN(b.hash)) ? [a.hash, b.hash] : [b.hash, a
-    .hash,
-  ];
+  const params = [a.hash, b.hash];
+  // web3.utils.toBN(a.hash).lt(web3.utils.toBN(b.hash)) ? [a.hash, b.hash] : [b.hash, a.hash];
   return {
     left: a,
     right: b,

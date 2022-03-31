@@ -272,7 +272,7 @@ contract('InflationRootHashProposal', () => {
           {
             from: accounts[1],
           },
-        ), 'Index already challenged.');
+        ), 'Index already challenged');
       });
 
       it('challenge responded successfully', async () => {
@@ -311,7 +311,37 @@ contract('InflationRootHashProposal', () => {
         );
       });
 
-      it('catches cheats', async () => {
+      it('cannot re-challenge after successful response', async () => {
+        const requestedIndex = 2;
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          requestedIndex,
+          {
+            from: accounts[1],
+          },
+        );
+        const a = answer(tree, 2);
+        await rootHashProposal.respondToChallenge(
+          accounts[1],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
+            from: accounts[0],
+          },
+        );
+        await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
+          accounts[0],
+          requestedIndex,
+          {
+            from: accounts[1],
+          },
+        ), 'requested index already responded');
+      });
+
+      it('catches balance cheats', async () => {
         const cheat = new Map(map);
         const cheatBalance = new BN('200000000000000000000000000');
         cheat.set(accounts[3], cheatBalance);
@@ -353,7 +383,7 @@ contract('InflationRootHashProposal', () => {
         await expectRevert(
           rootHashProposal.proposeRootHash(
             proposedRootHash,
-            200,
+            new BN('200000000000000000000000000'),
             0,
             {
               from: accounts[2],
@@ -364,7 +394,7 @@ contract('InflationRootHashProposal', () => {
 
         txProposal = await rootHashProposal.proposeRootHash(
           proposedRootHash,
-          200,
+          new BN('200000000000000000000000000'),
           2,
           {
             from: accounts[2],
@@ -374,7 +404,7 @@ contract('InflationRootHashProposal', () => {
         await expectRevert(
           rootHashProposal.proposeRootHash(
             proposedRootHash,
-            200,
+            new BN('200000000000000000000000000'),
             2,
             {
               from: accounts[2],
@@ -435,7 +465,7 @@ contract('InflationRootHashProposal', () => {
         );
       });
 
-      it('submit response to not existing challenge', async () => {
+      it('does not accept response to not existing challenge', async () => {
         const requestedIndex = 2;
         await rootHashProposal.challengeRootHashRequestAccount(
           accounts[0],
@@ -461,7 +491,18 @@ contract('InflationRootHashProposal', () => {
         );
       });
 
-      it('can\'t challenge index out of number of accounts', async () => {
+      it('does not accept challenge to nonexistent proposal', async () => {
+        const requestedIndex = 2;
+        await expectRevert(rootHashProposal.challengeRootHashRequestAccount(
+          accounts[5],
+          requestedIndex,
+          {
+            from: accounts[1],
+          },
+        ), 'There is no such hash proposal');
+      });
+
+      it('does not accept challenge for index greater than number of accounts', async () => {
         const requestedIndex = 2;
         await expectRevert(
           rootHashProposal.challengeRootHashRequestAccount(
@@ -587,11 +628,12 @@ contract('InflationRootHashProposal', () => {
         ), 'cumulative sum does not starts from 0');
       });
 
-      it('fail running sum middle index', async () => {
+      it('fail running sum right index', async () => {
         map = new Map([
           [accounts[0], await balanceStore.balance(accounts[0])],
           [accounts[1], await balanceStore.balance(accounts[1])],
           [accounts[2], await balanceStore.balance(accounts[2])],
+          [accounts[3], await balanceStore.balance(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 300000]);
@@ -599,7 +641,7 @@ contract('InflationRootHashProposal', () => {
         txProposal = await rootHashProposal.proposeRootHash(
           proposedRootHash,
           totalSum,
-          amountOfAccounts,
+          amountOfAccounts + 1,
           {
             from: accounts[1],
           },
@@ -653,11 +695,12 @@ contract('InflationRootHashProposal', () => {
         ), 'Right neighbor sum verification failed');
       });
 
-      it('fail running sum last index', async () => {
+      it('fail running sum left index', async () => {
         map = new Map([
           [accounts[0], await balanceStore.balance(accounts[0])],
           [accounts[1], await balanceStore.balance(accounts[1])],
           [accounts[2], await balanceStore.balance(accounts[2])],
+          [accounts[3], await balanceStore.balance(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 500]);
@@ -665,7 +708,7 @@ contract('InflationRootHashProposal', () => {
         await rootHashProposal.proposeRootHash(
           proposedRootHash,
           totalSum,
-          amountOfAccounts,
+          amountOfAccounts + 1,
           {
             from: accounts[1],
           },
@@ -717,6 +760,46 @@ contract('InflationRootHashProposal', () => {
             from: accounts[1],
           },
         ), 'Left neighbor sum verification failed');
+      });
+
+      it('fail total sum, last index', async () => {
+        map = new Map([
+          [accounts[0], await balanceStore.balance(accounts[0])],
+          [accounts[1], await balanceStore.balance(accounts[1])],
+          [accounts[2], await balanceStore.balance(accounts[2])],
+        ]);
+        rootHashProposal = await getRootHash();
+        tree = getTree(map, [2, 500]);
+        proposedRootHash = tree.hash;
+        await rootHashProposal.proposeRootHash(
+          proposedRootHash,
+          totalSum,
+          amountOfAccounts,
+          {
+            from: accounts[1],
+          },
+        );
+
+        const requestedIndex = 2;
+        await rootHashProposal.challengeRootHashRequestAccount(
+          accounts[1],
+          requestedIndex,
+          {
+            from: accounts[2],
+          },
+        );
+        const a = answer(tree, requestedIndex);
+        await expectRevert(rootHashProposal.respondToChallenge(
+          accounts[2],
+          a[1].reverse(),
+          a[0].account,
+          new BN(a[0].balance),
+          new BN(a[0].sum),
+          requestedIndex,
+          {
+            from: accounts[1],
+          },
+        ), 'cumulative sum does not match total sum');
       });
 
       it('fail account order first index', async () => {
@@ -934,6 +1017,17 @@ contract('InflationRootHashProposal', () => {
         await rootHashProposal.destruct();
       });
 
+      it('cannot destruct before fee collection period ends', async () => {
+        await time.increase(86401);
+        await rootHashProposal.checkRootHashStatus(
+          accounts[0],
+        );
+        await expectRevert(
+          rootHashProposal.destruct(),
+          'contract might be destructed after fee collection period is over',
+        );
+      });
+
       // TODO
       // it('fails', async () => {
       //   await time.increase(86401);
@@ -995,6 +1089,86 @@ contract('InflationRootHashProposal', () => {
             from: accounts[1],
           },
         ), 'The root hash accepted, no more actions allowed');
+      });
+    });
+
+    context('incorrect claimMissingAccount', () => {
+      it('cannot claim a fake account', async () => {
+        const requestedIndex = 2;
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          requestedIndex,
+          accounts[9],
+          {
+            from: accounts[1],
+          },
+        ), 'Missing account does not exist');
+      });
+
+      it('must challenge before a claim', async () => {
+        const requestedIndex = 2;
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          requestedIndex,
+          accounts[2],
+          {
+            from: accounts[1],
+          },
+        ), 'Submit Index Request first');
+      });
+
+      it('must challenge left side to claim', async () => {
+        const requestedIndex = 2;
+        expect(await verifyOnChain(tree, 0, accounts[0]));
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          requestedIndex,
+          accounts[2],
+          {
+            from: accounts[1],
+          },
+        ), 'Left _index is not resolved');
+      });
+
+      it('must challenge right side to claim', async () => {
+        const requestedIndex = 0;
+        expect(await verifyOnChain(tree, 2, accounts[0]));
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          requestedIndex,
+          accounts[2],
+          {
+            from: accounts[1],
+          },
+        ), 'Right _index is not resolved');
+      });
+
+      it('left side must be less to claim', async () => {
+        const requestedIndex = 2;
+        expect(await verifyOnChain(tree, 1, accounts[0]));
+        expect(await verifyOnChain(tree, 2, accounts[0]));
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          requestedIndex,
+          tree.left.left.account,
+          {
+            from: accounts[1],
+          },
+        ), 'Missing account claim failed');
+      });
+
+      it('right side must be greater to claim', async () => {
+        const requestedIndex = 1;
+        expect(await verifyOnChain(tree, 0, accounts[0]));
+        expect(await verifyOnChain(tree, 1, accounts[0]));
+        await expectRevert(rootHashProposal.claimMissingAccount(
+          accounts[0],
+          requestedIndex,
+          tree.right.left.account,
+          {
+            from: accounts[1],
+          },
+        ), 'Missing account claim failed');
       });
     });
 
@@ -1320,7 +1494,7 @@ contract('InflationRootHashProposal', () => {
           accounts[i - 1],
           tmp,
         );
-        totalSum.add(tmp);
+        totalSum.iadd(tmp);
       }
       rootHashProposal = await getRootHash();
 
@@ -1336,7 +1510,7 @@ contract('InflationRootHashProposal', () => {
 
       const bigMap = new Map(list);
       const cheatMap = new Map(bigMap);
-      cheatMap.set(accounts[4], new BN('80000000000000000000000000'));
+      cheatMap.set(accounts[4], new BN('100000000000000000000000000'));
       cheatMap.set(accounts[5], new BN('10000000000000000000000000'));
 
       const bigt = getTree(bigMap);
