@@ -167,6 +167,19 @@ library BigNumber {
         return _base.value.length;
     }
 
+    /** @notice Obtain minimal length (in bytes) of BigNumber instance
+     *
+     * @param _base BigNumber instance
+     * @return Size (in bytes) of minimal BigNumber instance
+     */
+    function minimalByteLength(Instance memory _base)
+        internal
+        pure
+        returns (uint256)
+    {
+        return asBytes(_base).length;
+    }
+
     /** @notice Perform modular exponentiation of BigNumber instance
      * @param _base Base number
      * @param _exponent Exponent

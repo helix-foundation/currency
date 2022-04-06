@@ -73,6 +73,10 @@ contract('VDFVerifier [@group=6]', ([account]) => {
         await expectRevert(instanceVDFVerifier.start(bnHex(xbn), t, bnHex(toBN(2)), { gas: 6000000 }), 'The secret (y) must be at least 512 bit long');
       });
 
+      it.only('Does not allow Y between 32 and 64 bytes', async () => {
+        await expectRevert(instanceVDFVerifier.start(bnHex(xbn), t, bnHex(toBN(2).pow(toBN(504)).subn(1)), { gas: 6000000 }), 'The secret (y) must be at least 512 bit long');
+      });
+
       it('Does not allow X < 2', async () => {
         await expectRevert(instanceVDFVerifier.start(bnHex(toBN(1)), t, bnHex(n.subn(1)), { gas: 6000000 }), 'The commitment (x) must be > 1');
       });

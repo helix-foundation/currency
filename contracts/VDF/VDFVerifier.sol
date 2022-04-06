@@ -85,7 +85,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
         require(_x > 1, "The commitment (x) must be > 1");
 
         require(
-            y.byteLength() >= 64,
+            y.minimalByteLength() >= 64,
             "The secret (y) must be at least 512 bit long"
         );
         require(BigNumber.cmp(y, n) == -1, "y must be less than N");
