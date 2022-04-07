@@ -43,8 +43,8 @@ contract('PolicyVotes [@group=8]', (accounts) => {
 
     await initInflation.mint(balanceStore.address, alice, toBN(10).pow(toBN(18)).muln(5000));
     await initInflation.mint(balanceStore.address, bob, toBN(10).pow(toBN(18)).muln(5000));
-    await initInflation.mint(balanceStore.address, charlie, toBN(10).pow(toBN(18)).muln(5000));
-    await initInflation.mint(balanceStore.address, dave, toBN(10).pow(toBN(18)).muln(5000));
+    await initInflation.mint(balanceStore.address, charlie, toBN(10).pow(toBN(18)).muln(5200));
+    await initInflation.mint(balanceStore.address, dave, toBN(10).pow(toBN(18)).muln(4800));
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
 
@@ -242,7 +242,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
         );
 
         await proxiedPolicyVotes.vote(
-          true,
+          false,
           { from: dave },
         );
       });
@@ -300,10 +300,6 @@ contract('PolicyVotes [@group=8]', (accounts) => {
       context('when no policy wins', () => {
         let tx;
         beforeEach(async () => {
-          await proxiedPolicyVotes.vote(
-            false,
-            { from: bob },
-          );
           await proxiedPolicyVotes.vote(
             false,
             { from: alice },

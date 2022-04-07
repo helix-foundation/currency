@@ -156,7 +156,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
         Result _res;
 
-        if (yesStake <= _total / 2) {
+        if (yesStake < _total / 2) {
             require(
                 _time > voteEnds + ENACTION_DELAY,
                 "Majority support required for early enaction"
@@ -168,10 +168,10 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "This contract no longer has authorization to enact the vote"
         );
 
-        if (_requiredStake == 0) {
+        if (totalStake == 0) {
             // Nobody voted
             _res = Result.Failed;
-        } else if (yesStake <= _requiredStake) {
+        } else if (yesStake < _requiredStake) {
             // Not enough yes votes
             _res = Result.Rejected;
         } else {
