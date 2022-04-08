@@ -348,7 +348,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
         delete proposals[_prop];
         totalproposals = totalproposals - 1;
 
-        getToken().transfer(receiver, REFUND_IF_LOST);
+        require(
+            getToken().transfer(receiver, REFUND_IF_LOST),
+            "Transfer Failed"
+        );
 
         emit ProposalRefunded(receiver);
     }
@@ -366,9 +369,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         Policy(policy).removeSelf(ID_POLICY_PROPOSALS);
 
-        getToken().transfer(
-            address(uint160(policy)),
-            getToken().balanceOf(address(this))
+        require(
+            getToken().transfer(
+                address(uint160(policy)),
+                getToken().balanceOf(address(this))
+            ),
+            "Transfer Failed"
         );
     }
 

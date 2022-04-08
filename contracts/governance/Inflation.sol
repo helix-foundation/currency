@@ -100,9 +100,12 @@ contract Inflation is PolicedUtils, TimeUtils {
             }
         }
 
-        getToken().transfer(
-            address(uint160(policy)),
-            getToken().balanceOf(address(this))
+        require(
+            getToken().transfer(
+                address(uint160(policy)),
+                getToken().balanceOf(address(this))
+            ),
+            "Transfer Failed"
         );
     }
 
@@ -253,7 +256,7 @@ contract Inflation is PolicedUtils, TimeUtils {
             "The provided address does not hold a winning ticket."
         );
 
-        getToken().transfer(_who, prize);
+        require(getToken().transfer(_who, prize), "Transfer Failed");
 
         emit Claimed(_who, _sequence);
     }

@@ -60,7 +60,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
 
         _burn(_destination, _amount);
 
-        getToken().transfer(_destination, _amount);
+        require(getToken().transfer(_destination, _amount), "Transfer Failed");
 
         emit Withdrawal(_destination, _amount);
     }

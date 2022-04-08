@@ -99,7 +99,7 @@ contract Lockup is PolicedUtils, TimeUtils {
         totalDeposit = totalDeposit - _amount;
         uint256 _delta = (_amount * interest) / BILLION;
 
-        getToken().transfer(_owner, _amount);
+        require(getToken().transfer(_owner, _amount), "Transfer Failed");
         getTimer().lockupWithdrawal(_owner, _delta, early);
 
         if (early) {
@@ -122,7 +122,10 @@ contract Lockup is PolicedUtils, TimeUtils {
     ) private {
         require(selling(), "Deposits can only be made during sale window");
 
-        getToken().transferFrom(_payer, address(this), _amount);
+        require(
+            getToken().transferFrom(_payer, address(this), _amount),
+            "Transfer Failed"
+        );
 
         totalDeposit = totalDeposit + _amount;
         depositBalances[_who] = depositBalances[_who] + _amount;

@@ -183,9 +183,12 @@ contract PolicyVotes is VotingPower, TimeUtils {
         emit VoteCompleted(_res);
         Policy(policy).removeSelf(ID_POLICY_VOTES);
 
-        getToken().transfer(
-            address(uint160(policy)),
-            getToken().balanceOf(address(this))
+        require(
+            getToken().transfer(
+                address(uint160(policy)),
+                getToken().balanceOf(address(this))
+            ),
+            "Transfer Failed"
         );
     }
 

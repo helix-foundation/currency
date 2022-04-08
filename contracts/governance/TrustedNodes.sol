@@ -113,7 +113,10 @@ contract TrustedNodes is PolicedUtils {
 
         votingRecord[msg.sender] = 0;
 
-        ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward);
+        require(
+            ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward),
+            "Transfer Failed"
+        );
         emit VotingRewardRedeemed(msg.sender, _reward);
     }
 

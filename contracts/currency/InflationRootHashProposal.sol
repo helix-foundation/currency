@@ -678,7 +678,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
                         proposal.amountOfAccounts == acceptedAmountOfAccounts),
                 "proposer can't claim fee on not accepted hash"
             );
-            getToken().transfer(_who, proposal.stakedAmount);
+            require(
+                getToken().transfer(_who, proposal.stakedAmount),
+                "Transfer Failed"
+            );
         } else {
             require(
                 proposal.challenges[_who].initialized &&
@@ -692,7 +695,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
                 (proposal.stakedAmount *
                     proposal.challenges[msg.sender].amountOfRequests) /
                 proposal.totalChallenges;
-            getToken().transfer(_who, amount);
+            require(getToken().transfer(_who, amount), "Transfer Failed");
         }
         proposal.claimed[_who] = true;
     }
@@ -715,9 +718,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             feeCollectionEnds != 0 && getTime() > feeCollectionEnds,
             "contract might be destructed after fee collection period is over"
         );
-        getToken().transfer(
-            address(uint160(policy)),
-            getToken().balanceOf(address(this))
+        require(
+            getToken().transfer(
+                address(uint160(policy)),
+                getToken().balanceOf(address(this))
+            ),
+            "Transfer Failed"
         );
     }
 
@@ -834,7 +840,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         address _proposal,
         uint256 _fee
     ) internal {
-        getToken().transferFrom(_submitter, address(this), _fee);
+        require(
+            getToken().transferFrom(_submitter, address(this), _fee),
+            "Transfer Failed"
+        );
         rootHashProposals[_proposal].stakedAmount =
             rootHashProposals[_proposal].stakedAmount +
             _fee;
