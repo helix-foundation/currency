@@ -24,10 +24,6 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     uint256 public nextGenerationStart;
     bytes32[] public notificationHashes;
 
-    function getNotificationHashesLength() external view returns (uint256) {
-        return notificationHashes.length;
-    }
-
     /** The on-chain address for the policy proposal process contract. The
      * contract is cloned for every policy decision process.
      */
@@ -68,13 +64,14 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         policyProposalImpl = TimedPolicies(_self).policyProposalImpl();
         simplePolicyImpl = TimedPolicies(_self).simplePolicyImpl();
         internalGeneration = TimedPolicies(_self).internalGeneration();
-        for (
-            uint256 i = 0;
-            i < TimedPolicies(_self).getNotificationHashesLength();
-            ++i
-        ) {
-            notificationHashes.push(TimedPolicies(_self).notificationHashes(i));
+        bytes32[] memory hashes = TimedPolicies(_self).getNotificationHashes();
+        for (uint256 i = 0; i < hashes.length; ++i) {
+            notificationHashes.push(hashes[i]);
         }
+    }
+
+    function getNotificationHashes() public view returns (bytes32[] memory) {
+        return notificationHashes;
     }
 
     function incrementGeneration() external {

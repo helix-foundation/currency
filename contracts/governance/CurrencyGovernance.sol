@@ -97,10 +97,12 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         if (stage == Stages.Propose && time >= proposalEnds) {
             stage = Stages.Commit;
             emit VotingStarted();
-        } else if (stage == Stages.Commit && time >= votingEnds) {
+        }
+        if (stage == Stages.Commit && time >= votingEnds) {
             stage = Stages.Reveal;
             emit RevealStarted();
-        } else if (stage == Stages.Reveal && time >= revealEnds) {
+        }
+        if (stage == Stages.Reveal && time >= revealEnds) {
             stage = Stages.Compute;
         }
     }

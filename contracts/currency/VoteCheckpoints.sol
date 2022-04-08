@@ -208,7 +208,7 @@ abstract contract VoteCheckpoints is ERC20 {
 
         // Early exit if this is a request for the most recent value or we have no checkpoints
         if (ckpts.length == 0) return 0;
-        if (blockNumber > ckpts[ckpts.length - 1].fromBlock)
+        if (blockNumber >= ckpts[ckpts.length - 1].fromBlock)
             return ckpts[ckpts.length - 1].value;
 
         uint256 high = ckpts.length;
