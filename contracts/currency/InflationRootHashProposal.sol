@@ -297,7 +297,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             */
 
             require(
-                2**((requestsByChallenger - 2) / 2) < proposal.amountOfAccounts,
+                2**(requestsByChallenger - 2) < (proposal.amountOfAccounts)**2,
                 "Challenger reached maximum amount of allowed challenges"
             );
         }
