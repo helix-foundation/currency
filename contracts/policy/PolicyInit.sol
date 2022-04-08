@@ -21,14 +21,13 @@ contract PolicyInit is Policy {
      * @param _keys The identifiers for associated governance contracts.
      * @param _values The addresses of associated governance contracts (must
      *                align with _keys).
-     * @param _tokenResolvers Identifiers for token contracts
+     * //param _tokenResolvers Identifiers for the token contracts
      */
     function fusedInit(
         address _policy,
         bytes32[] calldata _setters,
         bytes32[] calldata _keys,
-        address[] calldata _values,
-        bytes32[] calldata _tokenResolvers
+        address[] calldata _values //, bytes32[] calldata _tokenResolvers
     ) external {
         require(
             _keys.length == _values.length,
@@ -47,30 +46,31 @@ contract PolicyInit is Policy {
             );
         }
 
-        for (uint256 i = 0; i < _tokenResolvers.length; ++i) {
-            PolicedUtils a = PolicedUtils(
-                ERC1820REGISTRY.getInterfaceImplementer(
-                    address(this),
-                    _tokenResolvers[i]
-                )
-            );
-            for (uint256 j = 0; j < _tokenResolvers.length; ++j) {
-                PolicedUtils b = PolicedUtils(
-                    ERC1820REGISTRY.getInterfaceImplementer(
-                        address(this),
-                        _tokenResolvers[j]
-                    )
-                );
+        // PolicedUtils[] memory resolverAddresses = new PolicedUtils[](_tokenResolvers.length);
+        // for (uint256 i = 0; i < _tokenResolvers.length; ++i) {
+        //     resolverAddresses[i] = PolicedUtils(
+        //         ERC1820REGISTRY.getInterfaceImplementer(
+        //             address(this),
+        //             _tokenResolvers[i]
+        //         )
+        //     );
+        // }
 
-                a.setExpectedInterfaceSet(address(b));
-                ERC1820REGISTRY.setInterfaceImplementer(
-                    address(b),
-                    _tokenResolvers[i],
-                    address(a)
-                );
-            }
-            a.setExpectedInterfaceSet(address(0));
-        }
+        // for (uint256 i = 0; i < _tokenResolvers.length; ++i) {
+        //     PolicedUtils a = resolverAddresses[i];
+
+        //     for (uint256 j = 0; j < _tokenResolvers.length; ++j) {
+        //         PolicedUtils b = resolverAddresses[j];
+
+        //         a.setExpectedInterfaceSet(address(b));
+        //         ERC1820REGISTRY.setInterfaceImplementer(
+        //             address(b),
+        //             _tokenResolvers[i],
+        //             address(a)
+        //         );
+        //     }
+        //     a.setExpectedInterfaceSet(address(0));
+        // }
     }
 
     /** Initialize the contract (replaces constructor)

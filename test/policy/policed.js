@@ -32,7 +32,7 @@ contract('Policed [@group=11]', (accounts) => {
       [testPolicyIdentifierHash],
       [testPolicyIdentifierHash],
       [commander.address],
-      [testPolicyIdentifierHash],
+      // [testPolicyIdentifierHash],
     );
 
     policy = await PolicyTestPolicy.at(forwardProxy.address);

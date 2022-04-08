@@ -53,7 +53,7 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
         attemptedMurderer.address,
         inflation.address,
       ],
-      [tokenHash],
+      // [tokenHash],
     );
   });
 

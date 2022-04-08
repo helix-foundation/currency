@@ -37,7 +37,7 @@ contract('PolicyInit [@group=11]', () => {
     context('with mismatched key/value array lengths', () => {
       it('reverts', async () => {
         await expectRevert(
-          proxied.fusedInit(policy.address, [], [], [policy.address], []),
+          proxied.fusedInit(policy.address, [], [], [policy.address]),
           '_keys and _values must correspond exactly (length)',
         );
       });
@@ -45,7 +45,7 @@ contract('PolicyInit [@group=11]', () => {
 
     context('with matching key/value array lengths', () => {
       it('allows empty array parameters', async () => {
-        await proxied.fusedInit(policy.address, [], [], [], []);
+        await proxied.fusedInit(policy.address, [], [], []);
       });
 
       it('sets the specified interface addresses in ERC1820', async () => {
@@ -56,7 +56,6 @@ contract('PolicyInit [@group=11]', () => {
           [],
           [interfaceName],
           [allPolicy.address],
-          [],
         );
 
         assert.equal(

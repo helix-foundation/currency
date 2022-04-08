@@ -387,7 +387,7 @@ async function deployStage3(options) {
   const setters = [];
   const identifiers = [];
   const addresses = [];
-  const tokenResolvers = [];
+  // const tokenResolvers = [];
 
   if (options.verbose) {
     console.log('deploying policy helper contracts...');
@@ -705,7 +705,7 @@ async function deployStage3(options) {
   // our policy initialization action.
   identifiers.push(web3.utils.soliditySha3('ERC20Token'));
   addresses.push(options.erc20.options.address);
-  tokenResolvers.push(web3.utils.soliditySha3('ERC20Token'));
+  // tokenResolvers.push(web3.utils.soliditySha3('ERC20Token'));
 
   identifiers.push(web3.utils.soliditySha3('ECOx'));
   addresses.push(options.ecox.options.address);
@@ -726,7 +726,7 @@ async function deployStage3(options) {
       setters,
       identifiers,
       addresses,
-      tokenResolvers,
+      // tokenResolvers,
     )
     .send({
       from: options.account,
