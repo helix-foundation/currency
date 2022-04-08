@@ -273,10 +273,9 @@ library BigNumber {
         if (_a.value.length == 0x0) return _b;
         if (_b.value.length == 0x0) return _a;
         bytes memory value;
-        int256 compare = cmp(_a, _b);
 
-        if (compare >= 0x0) {
-            //a>=b
+        // innerAdd only needs to know the longer byteLength
+        if (byteLength(_a) >= byteLength(_b)) {
             value = innerAdd(_a.value, _b.value);
         } else {
             value = innerAdd(_b.value, _a.value);

@@ -4,7 +4,7 @@ const BigNum = artifacts.require('BigNum');
 const chai = require('chai');
 const bnChai = require('bn-chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
-const { isCoverage } = require('../../tools/test/coverage');
+// const { isCoverage } = require('../../tools/test/coverage');
 
 const { BN, toBN } = web3.utils;
 const { expect } = chai;
@@ -14,11 +14,8 @@ chai.use(bnChai(BN));
 contract('BigNumber [@group=3]', () => {
   let bignum;
 
-  beforeEach(async function skipOnCoverage() {
+  beforeEach(async () => {
     bignum = await BigNum.new();
-    if (await isCoverage()) {
-      this.skip();
-    }
   });
 
   describe('Input', () => {
@@ -35,8 +32,12 @@ contract('BigNumber [@group=3]', () => {
       assert.equal(await bignum.fromUint(1), '0x01');
     });
 
-    it('Matches 0', async () => {
+    it('Matches uint 0', async () => {
       assert.equal(await bignum.fromUint(0), null);
+    });
+
+    it('Matches byte 0', async () => {
+      assert.equal(await bignum.fromBytes('0x'), null);
     });
   });
 
