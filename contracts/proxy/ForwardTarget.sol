@@ -42,7 +42,12 @@ contract ForwardTarget {
      *              forwarded to).
      */
     function initialize(address _self) public virtual onlyConstruction {
-        setImplementation(address(ForwardTarget(_self).implementation()));
+        address _implAddress = address(ForwardTarget(_self).implementation());
+        require(
+            _implAddress != address(0),
+            "initialization failure: nothing to implement"
+        );
+        setImplementation(_implAddress);
     }
 
     /** Get the address of the proxy target contract.
