@@ -53,6 +53,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
     function withdraw(uint256 _amount) external {
         address _destination = msg.sender;
 
+        // generation indexing starts at 1000 so this will succeed for new addreses
         require(
             votingTracker[_destination] < currentGeneration - 1,
             "Must not vote in the generation on or before withdrawing"
