@@ -68,7 +68,7 @@
     "truffle": "5.4.10"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.5.0",
+    "@openzeppelin/contracts": "4.6.0",
     "@openzeppelin/test-helpers": "^0.5.10",
     "abi-decoder": "^2.3.0",
     "async-mutex": "^0.3.0",
