@@ -6,6 +6,8 @@ const Inflation = artifacts.require('Inflation');
 const VDFVerifier = artifacts.require('VDFVerifier');
 const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
 
+const { web3 } = require('@openzeppelin/test-helpers/src/setup');
+
 const {
   toBN,
   BN,
@@ -16,6 +18,7 @@ const {
   time,
 } = require('@openzeppelin/test-helpers');
 
+const bigintCryptoUtils = require('bigint-crypto-utils');
 const util = require('../../tools/test/util');
 const {
   prove,
@@ -134,6 +137,19 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     return [answer(tree, index), index, winner];
   }
 
+  async function getPrimeDistance() {
+    const block = await web3.eth.getBlock('latest');
+    const baseNum = web3.utils.toBN(block.hash);
+
+    for (let i = 0; i < 1000; i++) {
+      if (await bigintCryptoUtils.isProbablyPrime(BigInt(baseNum.addn(i).toString()), 30)) {
+        return i;
+      }
+    }
+    await time.advanceBlock();
+    return getPrimeDistance();
+  }
+
   beforeEach(async () => {
     ({
       policy,
@@ -215,7 +231,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     it('emits the EntropyVDFSeedCommitted event', async () => {
       //      time.increase(3600 * 24 * 2);
 
-      const tx = await inflation.commitEntropyVDFSeed();
+      const tx = await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
       await expectEvent.inTransaction(
         tx.tx,
@@ -227,10 +243,10 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     it('reverts when called twice', async () => {
       //      time.increase(3600 * 24 * 2);
 
-      await inflation.commitEntropyVDFSeed();
+      await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
       await expectRevert(
-        inflation.commitEntropyVDFSeed(),
+        inflation.commitEntropyVDFSeed(await getPrimeDistance()),
         'seed has already been set',
       );
     });
@@ -247,7 +263,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     it('reverts when the VDF isn\'t proven', async () => {
       //      await time.increase(3600 * 24 * 2);
 
-      await inflation.commitEntropyVDFSeed();
+      await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
       await expectRevert(
         inflation.submitEntropyVDF(bnHex(toBN(1))),
@@ -261,7 +277,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       beforeEach(async () => {
         //        await time.increase(3600 * 24 * 2);
 
-        await inflation.commitEntropyVDFSeed();
+        await inflation.commitEntropyVDFSeed(await getPrimeDistance());
         let u;
         const vdfseed = toBN(await inflation.entropyVDFSeed());
         const t = await inflation.randomVDFDifficulty();
@@ -296,7 +312,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
   describe('claim', () => {
     beforeEach(async () => {
-      await inflation.commitEntropyVDFSeed();
+      await inflation.commitEntropyVDFSeed(await getPrimeDistance());
     });
 
     context('but before the VDF is complete', () => {
@@ -464,7 +480,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
     context('after the results are computed', () => {
       beforeEach(async () => {
-        await inflation.commitEntropyVDFSeed();
+        await inflation.commitEntropyVDFSeed(await getPrimeDistance());
       });
 
       context('with VDF, basic flow', () => {

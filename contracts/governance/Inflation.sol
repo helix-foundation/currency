@@ -22,6 +22,10 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     uint256 public constant PAYOUT_PERIOD = 28 days;
 
+    /** The bound on how much more than the uint256 previous blockhash can a submitted prime be
+     */
+    uint256 public constant PRIME_BOUND = 1000;
+
     /** The per-participant pay-out amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
      */
     uint256 public prize;
@@ -130,8 +134,11 @@ contract Inflation is PolicedUtils, TimeUtils {
      *
      * Can only be called after results are computed and the registration
      * period has ended. The VDF seed can only be set once.
+     *
+     * @param _distance uint256 the distance from the last blockhash as uint256 and
+     *                  the prime number to commit
      */
-    function commitEntropyVDFSeed() external {
+    function commitEntropyVDFSeed(uint256 _distance) external {
         require(entropyVDFSeed == 0, "The VDF seed has already been set");
 
         /* While the block hash is entirely predictable and manipulatable,
@@ -140,20 +147,26 @@ contract Inflation is PolicedUtils, TimeUtils {
          * done inside the block creation time, ensuring that miners can't
          * manipulate the outcome.
          * In order to discourage precomputation attacks, we require the
-         * VDF input to be prime. Note that this may run out of gas if
-         * there are no primes near the starting point. If that happens, try
-         * again.
+         * VDF input to be prime.
          */
-        uint256 x = uint256(blockhash(block.number - 1)) | 1;
+        uint256 _bhash = uint256(blockhash(block.number - 1));
+        uint256 _capDistance = type(uint256).max - _bhash;
+        uint256 _bound = _capDistance >= PRIME_BOUND
+            ? PRIME_BOUND
+            : _capDistance;
+        require(_distance < _bound, "suggested prime is out of bounds");
 
-        while (
-            ((x % 3) == 0) ||
-            (x % 5 == 0) ||
-            (x % 7 == 0) ||
-            !vdfVerifier.isProbablePrime(x, 10)
-        ) {
-            x = x + 2;
-        }
+        uint256 x = _bhash + _distance;
+
+        require(
+            !(x % 3 == 0) &&
+                !(x % 5 == 0) &&
+                !(x % 7 == 0) &&
+                !(x % 11 == 0) &&
+                !(x % 13 == 0) &&
+                vdfVerifier.isProbablePrime(x, 10),
+            "distance does not point to prime number, either the block has progressed or distance is wrong"
+        );
 
         entropyVDFSeed = x;
 
