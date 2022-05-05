@@ -318,37 +318,47 @@ async function deployStage2(options) {
     });
 
   // bind proxies
-  if (options.verbose) {
-    console.log(
-      'binding proxy 1 to the ECO token contract...',
+  try {
+    if (options.verbose) {
+      console.log(
+        'binding proxy 1 to the ECO token contract...',
+        ecoProxyAddress,
+        ecoImpl.options.address,
+      );
+    }
+    await new web3.eth.Contract(
+      EcoInitializableABI.abi,
       ecoProxyAddress,
-      ecoImpl.options.address,
-    );
+    ).methods['fuseImplementation(address)'](ecoImpl.options.address).send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
   }
-  await new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    ecoProxyAddress,
-  ).methods['fuseImplementation(address)'](ecoImpl.options.address).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
+  catch {
+    console.log("proxy 1 already bound");
+  }
 
-  if (options.verbose) {
-    console.log(
-      'binding proxy 2 to the ECOx token contract...',
+  try {
+    if (options.verbose) {
+      console.log(
+        'binding proxy 2 to the ECOx token contract...',
+        ecoxProxyAddress,
+        ecoxImpl.options.address,
+      );
+    }
+    await new web3.eth.Contract(
+      EcoInitializableABI.abi,
       ecoxProxyAddress,
-      ecoxImpl.options.address,
-    );
+    ).methods['fuseImplementation(address)'](ecoxImpl.options.address).send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
   }
-  await new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    ecoxProxyAddress,
-  ).methods['fuseImplementation(address)'](ecoxImpl.options.address).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
+  catch {
+    console.log("proxy 2 already bound");
+  }
 
   // distribute the initial tokens
   if (options.verbose) {
@@ -453,13 +463,18 @@ async function deployStage3(options) {
     EcoInitializableABI.abi,
     options.policyProxyAddress,
   );
-  await ecoInitPolicyProxy.methods['fuseImplementation(address)'](
-    policyInit.options.address,
-  ).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
+  try {
+    await ecoInitPolicyProxy.methods['fuseImplementation(address)'](
+      policyInit.options.address,
+    ).send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
+  }
+  catch {
+    console.log("proxy 0 already bound");
+  }
 
   options.policyProxy = new web3.eth.Contract(
     options.correctPolicyABI.abi,
@@ -653,14 +668,19 @@ async function deployStage3(options) {
       options.currencyTimerImpl.options.address,
     );
   }
-  await new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    currencyTimerProxyAddress,
-  ).methods['fuseImplementation(address)'](currencyTimerImpl.options.address).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
+  try {
+    await new web3.eth.Contract(
+      EcoInitializableABI.abi,
+      currencyTimerProxyAddress,
+    ).methods['fuseImplementation(address)'](currencyTimerImpl.options.address).send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
+  }
+  catch {
+    console.log("proxy 3 already bound");
+  }
   options.currencyTimer = new web3.eth.Contract(
     CurrencyTimerContractABI.abi,
     currencyTimerProxyAddress,
@@ -712,14 +732,19 @@ async function deployStage3(options) {
   const policyVotesIdentifierHash = web3.utils.soliditySha3(
     'PolicyVotes',
   );
-  await new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    timedPoliciesProxyAddress,
-  ).methods['fuseImplementation(address)'](timedPoliciesImpl.options.address).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
+  try {
+    await new web3.eth.Contract(
+      EcoInitializableABI.abi,
+      timedPoliciesProxyAddress,
+    ).methods['fuseImplementation(address)'](timedPoliciesImpl.options.address).send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
+  }
+  catch {
+    console.log("proxy 4 already bound");
+  }
   options.timedPolicies = new web3.eth.Contract(
     TimedPoliciesABI.abi,
     timedPoliciesProxyAddress,
@@ -772,14 +797,19 @@ async function deployStage3(options) {
       trustedNodesImpl.options.address,
     );
   }
-  await new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    trustedNodesProxyAddress,
-  ).methods['fuseImplementation(address)'](trustedNodesImpl.options.address).send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  });
+  try {
+    await new web3.eth.Contract(
+      EcoInitializableABI.abi,
+      trustedNodesProxyAddress,
+    ).methods['fuseImplementation(address)'](trustedNodesImpl.options.address).send({
+      from: options.account,
+      gas: BLOCK_GAS_LIMIT,
+      gasPrice: options.gasPrice,
+    });
+  }
+  catch {
+    console.log("proxy 5 already bound");
+  }
   options.trustedNodes = new web3.eth.Contract(
     TrustedNodesABI.abi,
     trustedNodesProxyAddress,
