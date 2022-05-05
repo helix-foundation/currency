@@ -318,14 +318,14 @@ async function deployStage2(options) {
     });
 
   // bind proxies
+  if (options.verbose) {
+    console.log(
+      'binding proxy 1 to the ECO token contract...',
+      ecoProxyAddress,
+      ecoImpl.options.address,
+    );
+  }
   try {
-    if (options.verbose) {
-      console.log(
-        'binding proxy 1 to the ECO token contract...',
-        ecoProxyAddress,
-        ecoImpl.options.address,
-      );
-    }
     await new web3.eth.Contract(
       EcoInitializableABI.abi,
       ecoProxyAddress,
@@ -339,14 +339,14 @@ async function deployStage2(options) {
     console.log("proxy 1 already bound");
   }
 
+  if (options.verbose) {
+    console.log(
+      'binding proxy 2 to the ECOx token contract...',
+      ecoxProxyAddress,
+      ecoxImpl.options.address,
+    );
+  }
   try {
-    if (options.verbose) {
-      console.log(
-        'binding proxy 2 to the ECOx token contract...',
-        ecoxProxyAddress,
-        ecoxImpl.options.address,
-      );
-    }
     await new web3.eth.Contract(
       EcoInitializableABI.abi,
       ecoxProxyAddress,
