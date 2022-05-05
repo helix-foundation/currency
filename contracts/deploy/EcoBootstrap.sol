@@ -20,7 +20,7 @@ contract EcoBootstrap is Ownable {
     EcoInitializable[] public placeholders;
 
     /** @dev Number of placeholder contracts to deploy */
-    uint256 internal constant NUM_PLACEHOLDERS = 20;
+    uint256 public constant NUM_PLACEHOLDERS = 20;
 
     /** Reserve new addresses for future use.
      *

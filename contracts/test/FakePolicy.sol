@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "./TestPolicy.sol";
-import "../../contracts/currency/EcoBalanceStore.sol";
+import "../../contracts/currency/IECO.sol";
 
 /** @title FakePolicy
  * A policy contract used to test various policy actions/permissions.
@@ -24,7 +24,7 @@ contract FakePolicy is TestPolicy {
      * @param _amount The quantity of tokens to mint.
      */
     function mint(
-        EcoBalanceStore _store,
+        IECO _store,
         address _owner,
         uint256 _amount
     ) public {

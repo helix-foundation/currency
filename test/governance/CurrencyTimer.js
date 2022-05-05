@@ -28,7 +28,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
   const charlie = accounts[2];
   let counter = 0;
   let policy;
-  let token;
+  let eco;
   let timedPolicies;
   let currencyTimer;
   let borda;
@@ -37,11 +37,11 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
   beforeEach(async () => {
     ({
       policy,
-      token,
+      eco,
       timedPolicies,
       currencyTimer,
       faucet,
-    } = await util.deployPolicy(accounts[counter], { trustees: [alice, bob, charlie] }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [alice, bob, charlie] }));
     counter += 1;
 
     borda = await CurrencyGovernance.at(
@@ -114,27 +114,27 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       const infl = await Inflation.at(evt.args.addr);
       expect(await infl.prize()).to.eq.BN(20);
       expect(await infl.winners()).to.eq.BN(10);
-      expect(await token.balanceOf(infl.address)).to.eq.BN(200);
+      expect(await eco.balanceOf(infl.address)).to.eq.BN(200);
     });
 
     it('has lockup', async () => {
       const [evt] = await currencyTimer.getPastEvents('LockupOffered');
       const lockup = await Lockup.at(evt.args.addr);
-      expect(await token.balanceOf(lockup.address)).to.eq.BN(0);
+      expect(await eco.balanceOf(lockup.address)).to.eq.BN(0);
 
       await faucet.mint(charlie, 1000000000, { from: charlie });
-      await token.approve(lockup.address, 1000000000, { from: charlie });
+      await eco.approve(lockup.address, 1000000000, { from: charlie });
       await lockup.deposit(1000000000, { from: charlie });
-      expect(await token.balanceOf(lockup.address)).to.eq.BN(1000000000);
+      expect(await eco.balanceOf(lockup.address)).to.eq.BN(1000000000);
 
       expect(await currencyTimer.isLockup(lockup.address)).to.be.true;
     });
 
     it('has new inflation', async () => {
-      const [evt] = await token.getPastEvents('NewInflationMultiplier');
+      const [evt] = await eco.getPastEvents('NewInflationMultiplier');
       expect(evt.args.inflationMultiplier).to.eq.BN(proposedInflationMult);
-      const newAliceBal = await token.balanceOf(alice);
-      const inflationDigits = await token.INITIAL_INFLATION_MULTIPLIER();
+      const newAliceBal = await eco.balanceOf(alice);
+      const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER();
       expect(newAliceBal).to.eq.BN((aliceBal * inflationDigits) / proposedInflationMult);
     });
   });

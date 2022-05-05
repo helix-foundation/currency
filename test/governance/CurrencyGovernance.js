@@ -36,7 +36,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       trustedNodes,
       faucet,
       ecox,
-    } = await util.deployPolicy(accounts[counter], { trustees: [bob, charlie, dave] }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob, charlie, dave] }));
     counter += 1;
 
     const originalBorda = await CurrencyGovernance.new(policy.address);

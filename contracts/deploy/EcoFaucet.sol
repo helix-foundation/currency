@@ -3,7 +3,7 @@
 pragma solidity ^0.8.9;
 
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
+import "../currency/IECO.sol";
 import "../currency/ECOx.sol";
 
 /** @title EcoFaucet
@@ -17,7 +17,7 @@ contract EcoFaucet is PolicedUtils {
     constructor(address _policy) PolicedUtils(_policy) {}
 
     function mint(address _who, uint256 _amount) external {
-        EcoBalanceStore(policyFor(ID_ERC20TOKEN)).mint(_who, _amount);
+        IECO(policyFor(ID_ECO)).mint(_who, _amount);
     }
 
     function mintx(address _who, uint256 _amount) external {

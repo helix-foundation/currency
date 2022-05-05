@@ -10,7 +10,7 @@ const {
 } = chai;
 
 // const ForwardProxy = artifacts.require('ForwardProxy');
-// const EcoBalanceStore = artifacts.require('ECO');
+// const IECO = artifacts.require('ECO');
 // const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
 const MAX_ACCOUNT_BALANCE = new BN(
@@ -25,8 +25,8 @@ const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
 
-contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
-  let balanceStore;
+contract('IECO [@group=5]', (unsortedAccounts) => {
+  let eco;
   let faucet;
   const accounts = Array.from(unsortedAccounts);
   accounts.sort((a, b) => Number(a - b));
@@ -35,9 +35,8 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
   beforeEach('global setup', async () => {
     ({
-      // token,
       timedPolicies,
-      balanceStore,
+      eco,
       // currencyTimer,
       faucet,
     } = await util.deployPolicy(accounts[counter]));
@@ -50,16 +49,16 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
   describe('Decimals', () => {
     it('returns the right number', async () => {
-      const balanceStoreDecimals = (await balanceStore.decimals()).toNumber();
-      // assert.equal(await balanceStore.decimals(), 18, 'wrong number');
-      expect(balanceStoreDecimals).to.equal(18, 'no');
+      const ecoDecimals = (await eco.decimals()).toNumber();
+      // assert.equal(await eco.decimals(), 18, 'wrong number');
+      expect(ecoDecimals).to.equal(18, 'no');
     });
   });
 
   // describe('Initializable', () => {
   //   it('should not allow calling initialize on the base contract', async () => {
   //     await expectRevert(
-  //       balanceStore.initialize(balanceStore.address),
+  //       eco.initialize(eco.address),
   //       'Can only be called during initialization',
   //     );
   //   });
@@ -68,14 +67,14 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
   //     let proxiedBalanceStore;
 
   //     beforeEach(async () => {
-  //       proxiedBalanceStore = await EcoBalanceStore.at(
-  //         (await ForwardProxy.new(balanceStore.address)).address,
+  //       proxiedBalanceStore = await IECO.at(
+  //         (await ForwardProxy.new(eco.address)).address,
   //       );
   //     });
 
   //     it('should not allow calling initialize on the proxy', async () => {
   //       await expectRevert(
-  //         proxiedBalanceStore.initialize(balanceStore.address),
+  //         proxiedBalanceStore.initialize(eco.address),
   //         'Can only be called during initialization',
   //       );
   //     });
@@ -86,25 +85,25 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
     const mintAmount = new BN(1000);
 
     it('should start with 0 balance', async () => {
-      const balance = await balanceStore.balance(accounts[0]);
+      const balance = await eco.balance(accounts[0]);
 
       expect(balance).to.be.zero;
     });
 
     it('should start with 0 token supply', async () => {
-      const tokenSupply = await balanceStore.tokenSupply();
+      const tokenSupply = await eco.tokenSupply();
       expect(tokenSupply).to.be.zero;
     });
 
     context('for the inflation policy', () => {
       context('below MAX_ACCOUNT_BALANCE', async () => {
         it('should increase the balance when minting coins', async () => {
-          const startBalance = await balanceStore.balance(accounts[0]);
+          const startBalance = await eco.balance(accounts[0]);
           await faucet.mint(
             accounts[0],
             mintAmount,
           );
-          const endBalance = await balanceStore.balance(accounts[0]);
+          const endBalance = await eco.balance(accounts[0]);
 
           expect(endBalance.sub(startBalance)).to.eq.BN(mintAmount);
         });
@@ -112,12 +111,12 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
         it(
           'should increase the overall token supply when minting coins',
           async () => {
-            const startSupply = await balanceStore.tokenSupply();
+            const startSupply = await eco.tokenSupply();
             await faucet.mint(
               accounts[1],
               mintAmount,
             );
-            const endSupply = await balanceStore.tokenSupply();
+            const endSupply = await eco.tokenSupply();
 
             expect(endSupply.sub(startSupply)).to.eq.BN(mintAmount);
           },
@@ -142,23 +141,23 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
       it('should revert when minting coins', async () => {
         await expectRevert(
-          balanceStore.mint(accounts[1], 1000, meta),
+          eco.mint(accounts[1], 1000, meta),
           'not authorized',
         );
       });
 
       it('should not increase the balance when reverting minting coins', async () => {
-        const startBalance = await balanceStore.balance(accounts[1]);
-        await expectRevert.unspecified(balanceStore.mint(accounts[1], 1000, meta));
-        const endBalance = await balanceStore.balance(accounts[1]);
+        const startBalance = await eco.balance(accounts[1]);
+        await expectRevert.unspecified(eco.mint(accounts[1], 1000, meta));
+        const endBalance = await eco.balance(accounts[1]);
 
         expect(endBalance).to.eq.BN(startBalance);
       });
 
       it('should not increase the supply when reverting minting coins', async () => {
-        const startSupply = await balanceStore.balance(accounts[1]);
-        await expectRevert.unspecified(balanceStore.mint(accounts[1], 1000, meta));
-        const endSupply = await balanceStore.balance(accounts[1]);
+        const startSupply = await eco.balance(accounts[1]);
+        await expectRevert.unspecified(eco.mint(accounts[1], 1000, meta));
+        const endSupply = await eco.balance(accounts[1]);
 
         expect(endSupply).to.eq.BN(startSupply);
       });
@@ -175,17 +174,17 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
       it('should succeed with a balance', async () => {
         await faucet.mint(accounts[1], burnAmount);
-        const preBalance = await balanceStore.balance(accounts[1]);
-        await balanceStore.burn(accounts[1], burnAmount, meta);
-        const postBalance = await balanceStore.balance(accounts[1]);
+        const preBalance = await eco.balance(accounts[1]);
+        await eco.burn(accounts[1], burnAmount, meta);
+        const postBalance = await eco.balance(accounts[1]);
         expect(preBalance - postBalance).to.eq.BN(burnAmount);
       });
 
       it('should decrease total supply', async () => {
         await faucet.mint(accounts[1], burnAmount);
-        const preSupply = await balanceStore.totalSupply();
-        await balanceStore.burn(accounts[1], burnAmount, meta);
-        const postSupply = await balanceStore.totalSupply();
+        const preSupply = await eco.totalSupply();
+        await eco.burn(accounts[1], burnAmount, meta);
+        const postSupply = await eco.totalSupply();
         expect(preSupply - postSupply).to.eq.BN(burnAmount);
       });
     });
@@ -197,7 +196,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
       it('sound revert', async () => {
         await expectRevert(
-          balanceStore.burn(accounts[1], burnAmount, meta),
+          eco.burn(accounts[1], burnAmount, meta),
           'not authorized',
         );
       });
@@ -218,14 +217,14 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       let originalGeneration;
 
       beforeEach(async () => {
-        originalGeneration = (await balanceStore.currentGeneration()).toNumber();
+        originalGeneration = (await eco.currentGeneration()).toNumber();
         await time.increase(31557600 / 10);
       });
 
       it('allows incrementing generations', async () => {
         await timedPolicies.incrementGeneration();
         assert.equal(
-          (await balanceStore.currentGeneration()).toNumber(),
+          (await eco.currentGeneration()).toNumber(),
           originalGeneration + 1,
         );
       });
@@ -234,7 +233,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
     context('when generation has not increased', () => {
       it('reverts when call notifyGenerationIncrease', async () => {
         await expectRevert(
-          balanceStore.notifyGenerationIncrease(),
+          eco.notifyGenerationIncrease(),
           'Generation has not increased',
         );
       });
@@ -250,8 +249,8 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
         await faucet.mint(testAccount, new BN(1000));
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
-        originalGeneration = (await balanceStore.currentGeneration()).toNumber();
-        initialBalance = await balanceStore.balanceAt(
+        originalGeneration = (await eco.currentGeneration()).toNumber();
+        initialBalance = await eco.balanceAt(
           accounts[1],
           blockNumber,
         );
@@ -261,13 +260,13 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       });
 
       it('reports a generation other than the original', async () => {
-        expect(await balanceStore.currentGeneration())
+        expect(await eco.currentGeneration())
           .to.not.eq.BN(originalGeneration);
       });
 
       it('uses the last-updated block number for old balances', async () => {
         expect(
-          await balanceStore.balanceAt(
+          await eco.balanceAt(
             testAccount,
             (await time.latestBlock()) - 1,
           ),
@@ -275,14 +274,14 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       });
 
       it('uses the last-updated block number as the balance', async () => {
-        expect(await balanceStore.balance(testAccount))
+        expect(await eco.balance(testAccount))
           .to.be.eq.BN(initialBalance);
       });
     });
 
     it('Cannot return future balances', async () => {
       await expectRevert(
-        balanceStore.balanceAt(accounts[1], 999999999),
+        eco.balanceAt(accounts[1], 999999999),
         'InflationCheckpoints: block not yet mined',
       );
     });
@@ -296,7 +295,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
         await faucet.mint(testAccount, new BN(1000));
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
-        initialBalance = await balanceStore.balanceAt(
+        initialBalance = await eco.balanceAt(
           testAccount,
           blockNumber,
         );
@@ -311,7 +310,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
       });
 
       it('preserves orignal balance', async () => {
-        expect(await balanceStore.balanceAt(testAccount, blockNumber))
+        expect(await eco.balanceAt(testAccount, blockNumber))
           .to.eq.BN(initialBalance);
       });
 
@@ -321,7 +320,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
         beforeEach(async () => {
           intermediateBlockNumber = await time.latestBlock();
-          intermediateBalance = await balanceStore.balance(testAccount);
+          intermediateBalance = await eco.balance(testAccount);
 
           // 12 months pass...
           for (let i = 0; i <= 12; i += 1) {
@@ -334,7 +333,7 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
 
         it('preserves orignal balance', async () => {
           expect(
-            await balanceStore.balanceAt(
+            await eco.balanceAt(
               testAccount,
               intermediateBlockNumber,
             ),
@@ -365,13 +364,13 @@ contract('EcoBalanceStore [@group=5]', (unsortedAccounts) => {
           }
 
           for (let i = 0; i < 3; i += 1) {
-            const account1Balance = await balanceStore.balanceAt(
+            const account1Balance = await eco.balanceAt(
               testAccount1,
               checkPoints[i],
             );
             expect(account1Balance).to.eq.BN(testAccount1Balances[i]);
 
-            const account2Balance = await balanceStore.balanceAt(
+            const account2Balance = await eco.balanceAt(
               testAccount2,
               checkPoints[i],
             );

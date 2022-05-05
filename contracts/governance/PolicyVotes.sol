@@ -195,6 +195,6 @@ contract PolicyVotes is VotingPower, TimeUtils {
     /** Get the associated ERC20 token address.
      */
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 }

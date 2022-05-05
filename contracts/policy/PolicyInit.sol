@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "./Policy.sol";
 import "./PolicedUtils.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /** @title Policy initialization contract
  *
@@ -11,7 +12,7 @@ import "./PolicedUtils.sol";
  * construction as the target of a proxy. It sets up permissions for other
  * contracts and makes future initialization impossible.
  */
-contract PolicyInit is Policy {
+contract PolicyInit is Policy, Ownable {
     /** Initialize and fuse future initialization of a policy contract
      *
      * @param _policy The address of the policy contract to replace this one.
@@ -28,7 +29,7 @@ contract PolicyInit is Policy {
         bytes32[] calldata _setters,
         bytes32[] calldata _keys,
         address[] calldata _values //, bytes32[] calldata _tokenResolvers
-    ) external {
+    ) external onlyOwner {
         require(
             _keys.length == _values.length,
             "_keys and _values must correspond exactly (length)"
@@ -45,37 +46,11 @@ contract PolicyInit is Policy {
                 _values[i]
             );
         }
-
-        // PolicedUtils[] memory resolverAddresses = new PolicedUtils[](_tokenResolvers.length);
-        // for (uint256 i = 0; i < _tokenResolvers.length; ++i) {
-        //     resolverAddresses[i] = PolicedUtils(
-        //         ERC1820REGISTRY.getInterfaceImplementer(
-        //             address(this),
-        //             _tokenResolvers[i]
-        //         )
-        //     );
-        // }
-
-        // for (uint256 i = 0; i < _tokenResolvers.length; ++i) {
-        //     PolicedUtils a = resolverAddresses[i];
-
-        //     for (uint256 j = 0; j < _tokenResolvers.length; ++j) {
-        //         PolicedUtils b = resolverAddresses[j];
-
-        //         a.setExpectedInterfaceSet(address(b));
-        //         ERC1820REGISTRY.setInterfaceImplementer(
-        //             address(b),
-        //             _tokenResolvers[i],
-        //             address(a)
-        //         );
-        //     }
-        //     a.setExpectedInterfaceSet(address(0));
-        // }
     }
 
-    /** Initialize the contract (replaces constructor)
-     *
-     * See the documentation for Policy to understand this.
+    constructor() Ownable() {}
+
+    /** Initialize the contract on a proxy
      *
      * @param _self The address of the original contract deployment (as opposed
      *              to the address of the proxy contract, which takes the place
@@ -83,5 +58,6 @@ contract PolicyInit is Policy {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
+        _transferOwnership(Ownable(_self).owner());
     }
 }

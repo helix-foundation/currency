@@ -47,13 +47,31 @@ contract TrustedNodes is PolicedUtils {
         address[] memory _initial,
         uint256 _voteReward
     ) PolicedUtils(_policy) {
-        _trust(address(0));
+        voteReward = _voteReward;
 
+        _trust(address(0));
         for (uint256 i = 0; i < _initial.length; ++i) {
             _trust(_initial[i]);
         }
+    }
 
-        voteReward = _voteReward;
+    /** Initialize the storage context using parameters copied from the
+     * original contract (provided as _self).
+     *
+     * Can only be called once, during proxy initialization.
+     *
+     * @param _self The original contract address.
+     */
+    function initialize(address _self) public override onlyConstruction {
+        super.initialize(_self);
+        voteReward = TrustedNodes(_self).voteReward();
+
+        uint256 _numTrustees = TrustedNodes(_self).numTrustees();
+        uint256 _cohort = TrustedNodes(_self).cohort();
+
+        for (uint256 i = 0; i <= _numTrustees; ++i) {
+            _trust(TrustedNodes(_self).trustedNodes(_cohort, i));
+        }
     }
 
     /** Grant trust to a node.

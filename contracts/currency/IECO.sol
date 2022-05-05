@@ -2,22 +2,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./InflationRootHashProposal.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface EcoBalanceStore {
+interface IECO is IERC20 {
     function mint(address, uint256) external;
 
     function burn(address, uint256) external;
-
-    function inflationRootHashProposalImpl()
-        external
-        view
-        returns (InflationRootHashProposal);
-
-    function rootHashAddressPerGeneration(uint256)
-        external
-        view
-        returns (InflationRootHashProposal);
 
     function currentGeneration() external view returns (uint256);
 

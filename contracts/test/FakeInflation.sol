@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../../contracts/currency/EcoBalanceStore.sol";
+import "../../contracts/currency/IECO.sol";
 import "./TestPolicy.sol";
 
 /** @title FakeInflation
@@ -10,7 +10,7 @@ import "./TestPolicy.sol";
  */
 contract FakeInflation is TestPolicy {
     function mint(
-        EcoBalanceStore _store,
+        IECO _store,
         address _account,
         uint256 _amount
     ) public {

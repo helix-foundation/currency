@@ -15,7 +15,7 @@ chai.use(bnChai(BN));
 
 contract('VotingPower [@group=2]', (accounts) => {
   let policy;
-  let token;
+  let eco;
   let faucet;
   let timedPolicies;
   let proposals;
@@ -35,13 +35,12 @@ contract('VotingPower [@group=2]', (accounts) => {
     one = toBN(10).pow(toBN(18));
     ({
       policy,
-      token,
+      eco,
       faucet,
       timedPolicies,
       ecox,
       ecoXLockup,
-    } = await util.deployPolicy(accounts[counter], { trustees: [bob] }));
-    counter += 1;
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
 
     await faucet.mint(alice, one.muln(5000));
     await faucet.mint(bob, one.muln(5000));
@@ -50,9 +49,9 @@ contract('VotingPower [@group=2]', (accounts) => {
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
 
-    await faucet.mintx(alice, one.muln(400));
-    await faucet.mintx(bob, one.muln(400));
-    await faucet.mintx(charlie, one.muln(200));
+    await ecox.transfer(alice, one.muln(400), { from: accounts[counter] });
+    await ecox.transfer(bob, one.muln(400), { from: accounts[counter] });
+    await ecox.transfer(charlie, one.muln(200), { from: accounts[counter] });
 
     // calculated from the above variables
     totalPower = '54365636569180904707205';
@@ -66,6 +65,8 @@ contract('VotingPower [@group=2]', (accounts) => {
     proposals = await PolicyProposals.at(
       await util.policyFor(policy, web3.utils.soliditySha3('PolicyProposals')),
     );
+
+    counter += 1;
   });
 
   context('with nothing locked up', () => {
@@ -107,7 +108,7 @@ contract('VotingPower [@group=2]', (accounts) => {
   context('by delegating', () => {
     describe('only ECO power', () => {
       it('Has the right power for bob after alice delegates here votes to him', async () => {
-        await token.delegate(bob, { from: alice });
+        await eco.delegate(bob, { from: alice });
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
         expect(await proposals.votingPower(bob, blockNumber)).to.eq.BN(one.muln(10000));
@@ -151,7 +152,7 @@ contract('VotingPower [@group=2]', (accounts) => {
     // describe('After alice converts to ECO', async () => {
     //   beforeEach(async () => {
     //     await ecox.exchange(one.muln(100), { from: alice });
-    //     generation = await balanceStore.currentGeneration();
+    //     generation = await eco.currentGeneration();
     //     await time.increase(3600 * 24 * 14 + 1);
     //     await timedPolicies.incrementGeneration();
 
@@ -160,12 +161,12 @@ contract('VotingPower [@group=2]', (accounts) => {
 
     //   it('Has the right balances for alice', async () => {
     //     expect(await ecox.balanceOf(alice)).to.eq.BN(one.muln(200));
-    //     expect(await token.balanceOf(alice)).to.eq.BN(toBN('9428055163203396678421'));
+    //     expect(await eco.balanceOf(alice)).to.eq.BN(toBN('9428055163203396678421'));
     //   });
 
     //   it('Had the right balance on the previous generation', async () => {
     //     expect(await ecox.balanceAt(alice, generation)).to.eq.BN(one.muln(300));
-    //     expect(await balanceStore.balanceAt(alice, generation)).to.eq.BN(
+    //     expect(await eco.balanceAt(alice, generation)).to.eq.BN(
     //      toBN('7103418361512952496234')
     //     );
     //   });

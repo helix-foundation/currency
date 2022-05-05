@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./EcoBalanceStore.sol";
+import "./IECO.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "../governance/Lockup.sol";
@@ -18,17 +18,29 @@ contract ECOx is ERC20, PolicedUtils {
 
     uint256 public initialSupply;
 
-    constructor(address _policy, uint256 _initialSupply)
-        ERC20("Eco-X", "ECOx")
-        PolicedUtils(_policy)
-    {
+    // the address of the contract for initial distribution
+    address public distributor;
+
+    constructor(
+        address _policy,
+        address _distributor,
+        uint256 _initialSupply
+    ) ERC20("Eco-X", "ECOx") PolicedUtils(_policy) {
         initialSupply = _initialSupply;
+        distributor = _distributor;
     }
 
-    function initialize(address _self) public override onlyConstruction {
+    function initialize(address _self)
+        public
+        virtual
+        override
+        onlyConstruction
+    {
         super.initialize(_self);
         copyTokenMetadata(_self);
         initialSupply = ECOx(_self).initialSupply();
+        address _distributor = ECOx(_self).distributor();
+        _mint(_distributor, initialSupply);
     }
 
     function ecoValueOf(uint256 _ecoXValue) public view returns (uint256) {
@@ -42,8 +54,9 @@ contract ECOx is ERC20, PolicedUtils {
         view
         returns (uint256)
     {
-        uint256 _ecoSupplyAt = EcoBalanceStore(address(getToken()))
-            .totalSupplyAt(_blockNumber);
+        uint256 _ecoSupplyAt = IECO(address(getToken())).totalSupplyAt(
+            _blockNumber
+        );
 
         return computeValue(_ecoXValue, _ecoSupplyAt);
     }
@@ -147,7 +160,7 @@ contract ECOx is ERC20, PolicedUtils {
 
         _burn(msg.sender, _ecoXValue);
 
-        EcoBalanceStore(address(getToken())).mint(msg.sender, eco);
+        IECO(address(getToken())).mint(msg.sender, eco);
     }
 
     function mint(address _to, uint256 _value) external {
@@ -161,6 +174,6 @@ contract ECOx is ERC20, PolicedUtils {
     }
 
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 }

@@ -24,24 +24,22 @@ contract('PolicyProposals [@group=7]', (accounts) => {
   const dave = accounts[3];
   let counter = 0;
   let policy;
-  let token;
-  let balanceStore;
+  let eco;
   let initInflation;
   let timedPolicies;
 
   beforeEach(async () => {
     ({
       policy,
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
     } = await util.deployPolicy(accounts[counter]));
     counter += 1;
 
-    await initInflation.mint(balanceStore.address, alice, toBN(10).pow(toBN(18)).muln(5000));
-    await initInflation.mint(balanceStore.address, bob, toBN(10).pow(toBN(18)).muln(5000));
-    await initInflation.mint(balanceStore.address, charlie, toBN(10).pow(toBN(18)).muln(10000));
+    await initInflation.mint(eco.address, alice, toBN(10).pow(toBN(18)).muln(5000));
+    await initInflation.mint(eco.address, bob, toBN(10).pow(toBN(18)).muln(5000));
+    await initInflation.mint(eco.address, charlie, toBN(10).pow(toBN(18)).muln(10000));
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
   });
@@ -85,7 +83,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
       context('when the fee is pre-approved', () => {
         beforeEach(async () => {
-          await token.approve(
+          await eco.approve(
             policyProposals.address,
             await policyProposals.COST_REGISTER(),
           );
@@ -133,14 +131,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
       context('when the proposal has already been registered', () => {
         beforeEach(async () => {
-          await token.approve(
+          await eco.approve(
             policyProposals.address,
             await policyProposals.COST_REGISTER(),
           );
 
           await policyProposals.registerProposal(testProposal.address);
 
-          await token.approve(
+          await eco.approve(
             policyProposals.address,
             await policyProposals.COST_REGISTER(),
           );
@@ -156,7 +154,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
       context('when a different proposal has already been selected', () => {
         beforeEach(async () => {
-          await token.approve(
+          await eco.approve(
             policyProposals.address,
             await policyProposals.COST_REGISTER(),
           );
@@ -165,7 +163,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
           await policyProposals.support(testProposal.address, { from: charlie });
 
-          await token.approve(
+          await eco.approve(
             policyProposals.address,
             await policyProposals.COST_REGISTER(),
           );
@@ -204,14 +202,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       testProposal = await Empty.new(1);
       testProposal2 = await Empty.new(1);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
 
       await policyProposals.registerProposal(testProposal.address);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
@@ -335,14 +333,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       testProposal = await Empty.new(1);
       testProposal2 = await Empty.new(1);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
 
       await policyProposals.registerProposal(testProposal.address);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
@@ -428,7 +426,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       policyProposals = await makeProposals();
       testProposal = await Empty.new(1);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
@@ -450,7 +448,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       policyProposals = await makeProposals();
       testProposal = await Empty.new(1);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
@@ -551,14 +549,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       testProposal = await Empty.new(1);
       testProposal2 = await Empty.new(2);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
 
       await policyProposals.registerProposal(testProposal.address);
 
-      await token.approve(
+      await eco.approve(
         policyProposals.address,
         await policyProposals.COST_REGISTER(),
       );
@@ -629,13 +627,13 @@ contract('PolicyProposals [@group=7]', (accounts) => {
       it('transfers the refund tokens', async () => {
         const refundAmount = toBN(await policyProposals.REFUND_IF_LOST());
         const preRefundBalance = toBN(
-          await token.balanceOf(alice),
+          await eco.balanceOf(alice),
         );
 
         await policyProposals.refund(testProposal.address);
 
         assert(
-          toBN(await token.balanceOf(alice))
+          toBN(await eco.balanceOf(alice))
             .sub(preRefundBalance)
             .eq(refundAmount),
         );
@@ -678,7 +676,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         testProposal = await Empty.new(1);
         testProposal2 = await Empty.new(2);
 
-        await token.approve(
+        await eco.approve(
           policyProposals.address,
           await policyProposals.COST_REGISTER(),
         );
@@ -691,25 +689,25 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         await time.increase(3600 * 240 + 1);
         await policyProposals.refund(testProposal.address);
 
-        const balancePPBefore = await token.balanceOf(policyProposals.address);
-        const balancePolicyBefore = await token.balanceOf(policy.address);
+        const balancePPBefore = await eco.balanceOf(policyProposals.address);
+        const balancePolicyBefore = await eco.balanceOf(policy.address);
         await policyProposals.destruct();
-        const balancePPAfter = await token.balanceOf(policyProposals.address);
-        const balancePolicyAfter = await token.balanceOf(policy.address);
+        const balancePPAfter = await eco.balanceOf(policyProposals.address);
+        const balancePolicyAfter = await eco.balanceOf(policy.address);
         expect(balancePolicyAfter.toString()
                === toBN(balancePolicyBefore + balancePPBefore).toString());
         expect(balancePPAfter.toNumber() === 0);
       });
 
       it('succeeds if proposal selected ahead of time', async () => {
-        await token.approve(
+        await eco.approve(
           policyProposals.address,
           await policyProposals.COST_REGISTER(),
         );
 
         await policyProposals.registerProposal(testProposal2.address);
 
-        const charlieBalance = token.balanceOf(charlie);
+        const charlieBalance = eco.balanceOf(charlie);
 
         await policyProposals.support(testProposal.address);
         await policyProposals.support(testProposal2.address, { from: charlie });
@@ -719,7 +717,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
         await policyProposals.destruct();
 
-        const balancePPAfter = await token.balanceOf(policyProposals.address);
+        const balancePPAfter = await eco.balanceOf(policyProposals.address);
         expect(balancePPAfter.toNumber() === charlieBalance);
       });
     });
@@ -729,7 +727,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         policyProposals = await makeProposals();
         testProposal = await Empty.new(1);
 
-        await token.approve(
+        await eco.approve(
           policyProposals.address,
           await policyProposals.COST_REGISTER(),
         );

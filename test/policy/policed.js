@@ -46,7 +46,7 @@ contract('Policed [@group=11]', (accounts) => {
     it('matches keccak256 of identifiers', async () => {
       const ids = {
         ID_FAUCET: 'Faucet',
-        ID_ERC20TOKEN: 'ERC20Token',
+        ID_ECO: 'ECO',
         ID_CLEANUP: 'ContractCleanup',
         ID_TIMED_POLICIES: 'TimedPolicies',
         ID_TRUSTED_NODES: 'TrustedNodes',

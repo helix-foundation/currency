@@ -24,7 +24,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
   const charlie = accounts[2];
   let counter = 0;
   let policy;
-  let token;
+  let eco;
   let faucet;
   let timedPolicies;
   let proposals;
@@ -38,12 +38,12 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     one = toBN(10).pow(toBN(18));
     ({
       policy,
-      token,
+      eco,
       faucet,
       timedPolicies,
       ecox,
       ecoXLockup,
-    } = await util.deployPolicy(accounts[counter], { trustees: [bob] }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
     counter += 1;
 
     await faucet.mint(alice, one.muln(5000));
@@ -132,7 +132,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
       testProposal = await Empty.new(1);
 
-      await token.approve(
+      await eco.approve(
         proposals.address,
         await proposals.COST_REGISTER(),
       );

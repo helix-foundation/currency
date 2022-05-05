@@ -29,8 +29,7 @@ const { toBN } = web3.utils;
 
 contract('Production Policy Change [@group=4]', (accounts) => {
   let policy;
-  let balanceStore;
-  let token;
+  let eco;
   let timedPolicies;
   let makerich;
   let backdoor;
@@ -41,8 +40,7 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   it('Deploys the production system', async () => {
     ({
       policy,
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
     } = await util.deployPolicy(accounts[0]));
@@ -53,10 +51,10 @@ contract('Production Policy Change [@group=4]', (accounts) => {
     /* Until we have some idea how initial distribution is done, this *does* use
      *a test-function
      */
-    await initInflation.mint(balanceStore.address, accounts[1], stake);
-    await initInflation.mint(balanceStore.address, accounts[2], stake);
-    await initInflation.mint(balanceStore.address, accounts[3], stake);
-    await initInflation.mint(balanceStore.address, accounts[4], stake);
+    await initInflation.mint(eco.address, accounts[1], stake);
+    await initInflation.mint(eco.address, accounts[2], stake);
+    await initInflation.mint(eco.address, accounts[3], stake);
+    await initInflation.mint(eco.address, accounts[4], stake);
   });
 
   it('Waits a generation', async () => {
@@ -73,9 +71,9 @@ contract('Production Policy Change [@group=4]', (accounts) => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
-    const tokenHash = web3.utils.soliditySha3('ERC20Token');
-    const pf = await policy.policyFor(tokenHash);
-    const erc = await util.policyFor(policy, tokenHash);
+    const ecoHash = web3.utils.soliditySha3('ECO');
+    const pf = await policy.policyFor(ecoHash);
+    const erc = await util.policyFor(policy, ecoHash);
     if (await isCoverage()) {
       return;
     }
@@ -91,7 +89,7 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Accepts new proposals', async () => {
-    await token.approve(
+    await eco.approve(
       policyProposals.address,
       await policyProposals.COST_REGISTER(),
       { from: accounts[1] },
@@ -100,7 +98,7 @@ contract('Production Policy Change [@group=4]', (accounts) => {
       from: accounts[1],
     });
 
-    await token.approve(
+    await eco.approve(
       policyProposals.address,
       await policyProposals.COST_REGISTER(),
       { from: accounts[2] },
@@ -156,6 +154,6 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Celebrates accounts[5]', async () => {
-    assert.equal((await token.balanceOf.call(accounts[5])).toString(), 1000000);
+    assert.equal((await eco.balanceOf.call(accounts[5])).toString(), 1000000);
   });
 });

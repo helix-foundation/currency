@@ -16,7 +16,10 @@ contract('TrustedNodes [@group=7]', (accounts) => {
   let counter = 0;
 
   beforeEach(async () => {
-    ({ policy, trustedNodes } = await util.deployPolicy(accounts[counter], { trustees: [bob] }));
+    ({ policy, trustedNodes } = await util.deployPolicy(
+      accounts[counter],
+      { trustednodes: [bob] },
+    ));
     counter++;
   });
 

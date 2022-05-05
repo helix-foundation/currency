@@ -135,7 +135,7 @@ contract Lockup is PolicedUtils, TimeUtils {
     }
 
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 
     function getTimer() private view returns (CurrencyTimer) {
