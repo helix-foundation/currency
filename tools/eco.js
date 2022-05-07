@@ -249,7 +249,7 @@ async function closeTest() {
     await initUsers();
     await deployEco();
     await findPolicy();
-    await startExpress();
+    // await startExpress();
     await supervise();
     await closeTest();
   } catch (e) {
