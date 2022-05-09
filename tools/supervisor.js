@@ -25,23 +25,23 @@ function req(contract) {
 
 // ### Contract ABIs and Bytecode
 const PolicyABI = req('Policy');
-// const ECO = req('ECO');
-// const TimedPoliciesABI = req('TimedPolicies');
-// const EcoBalanceStoreABI = req('EcoBalanceStore');
-// const PolicyProposalContractABI = req('PolicyProposals');
-// const PolicyVotesContractABI = req('PolicyVotes');
-// const TrustedNodesABI = req('TrustedNodes');
-// const VDFVerifierABI = req('VDFVerifier');
-// const CurrencyGovernanceABI = req('CurrencyGovernance');
-// // const CurrencyTimerABI = req('CurrencyTimer');
-// const InflationABI = req('Inflation');
-// const LockupContractABI = req('Lockup');
-// const InflationRootHashProposal = req('InflationRootHashProposal');
+const ECO = req('ECO');
+const TimedPoliciesABI = req('TimedPolicies');
+const EcoBalanceStoreABI = req('EcoBalanceStore');
+const PolicyProposalContractABI = req('PolicyProposals');
+const PolicyVotesContractABI = req('PolicyVotes');
+const TrustedNodesABI = req('TrustedNodes');
+const VDFVerifierABI = req('VDFVerifier');
+const CurrencyGovernanceABI = req('CurrencyGovernance');
+// const CurrencyTimerABI = req('CurrencyTimer');
+const InflationABI = req('Inflation');
+const LockupContractABI = req('Lockup');
+const InflationRootHashProposal = req('InflationRootHashProposal');
 
-// const ID_TIMEDPOLICIES = web3.utils.soliditySha3('TimedPolicies');
-// // const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
-// const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
-// const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
+const ID_TIMEDPOLICIES = web3.utils.soliditySha3('TimedPolicies');
+// const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
+const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
+const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
 
 // const { toBN } = web3.utils;
 
@@ -55,10 +55,20 @@ class Supervisor {
     this.policyVotesAddressesExecuted = new Set();
     this.currencyAddresses = new Set();
     this.account = account;
+    this.timedPolicies = 0;
   }
 
   async updateGeneration() {
     print('generation updated');
+  }
+
+  async catchup() {
+    this.eco = new ethers.Contract(await this.policy.methods.policyFor(ID_E))
+    this.timedPolicies = new ethers.Contract(await this.policy.methods.policyFor(ID_TIMEDPOLICIES).call(),
+      { from: this.account },
+    );
+
+
   }
 
   async processBlock() {
@@ -74,6 +84,9 @@ class Supervisor {
   static async start(options = {}) {
     const supervisor = await new Supervisor(options.root, options.account)
     console.log('STARTED');
+    if (!currentGenerationStart) {
+      await catchup();
+    }
     provider.on("block", (num) => {
       supervisor.processBlock();
     })
@@ -81,39 +94,6 @@ class Supervisor {
   }
 
 
-}
-
-
-
-
-async function run() {
-  // logger.info(`Running supervisor with options ${JSON.stringify(options)}`);
-
-  provider.on("block", (blockNumber) => {
-		processBlock();
-	});
-
-  // const policyaddr = options.root;
-
-  // logger.info(`policyaddr: ${policyaddr}`);
-
-  // const s = new Supervisor(policyaddr, options.account);
-
-  // logger.info('Subscribing to newBlockHeaders');
-  // web3.eth.subscribe('newBlockHeaders', (error) => {
-  //   if (error) {
-  //     logger.error(error);
-  //   }
-  // }).on('data', async (header) => {
-  //   logger.info(`subscribed ${header.number} ${header.timestamp}`);
-  //   await s.processBlock();
-  // }).on('error', async (e) => {
-  //   logger.info(`Subscription returned error ${e}`);
-  //   process.exit(1);
-  // });
-
-  // // Run initial catch-up
-  // await s.processAllBlocks();
 }
 
 
