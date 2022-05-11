@@ -5,8 +5,9 @@ pragma solidity ^0.8.9;
 /* solhint-disable no-inline-assembly */
 
 /** @title Target for ForwardProxy and EcoInitializable */
-contract ForwardTarget {
+abstract contract ForwardTarget {
     // Must match definition in ForwardProxy
+    // keccak256(abi.encodePacked("com.eco.ForwardProxy.target"))
     uint256 private constant IMPLEMENTATION_SLOT =
         0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4;
 
@@ -19,13 +20,6 @@ contract ForwardTarget {
     }
 
     constructor() {
-        require(
-            IMPLEMENTATION_SLOT ==
-                uint256(
-                    keccak256(abi.encodePacked("com.eco.ForwardProxy.target"))
-                ),
-            "IMPLEMENTATION_SLOT hash mismatch"
-        );
         setImplementation(address(this));
     }
 
@@ -53,18 +47,16 @@ contract ForwardTarget {
     /** Get the address of the proxy target contract.
      */
     function implementation() public view returns (address _impl) {
-        uint256 _sslot = IMPLEMENTATION_SLOT;
         assembly {
-            _impl := sload(_sslot)
+            _impl := sload(IMPLEMENTATION_SLOT)
         }
     }
 
     /** @notice Set new implementation */
     function setImplementation(address _impl) internal {
         require(implementation() != _impl, "Implementation already matching");
-        uint256 _sslot = IMPLEMENTATION_SLOT;
         assembly {
-            sstore(_sslot, _impl)
+            sstore(IMPLEMENTATION_SLOT, _impl)
         }
     }
 }
