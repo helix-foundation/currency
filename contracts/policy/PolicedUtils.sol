@@ -120,6 +120,10 @@ contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
      * increasing the code size of the instantiating contract.
      */
     function clone() public virtual returns (address) {
+        require(
+            implementation() == address(this),
+            "This method cannot be called on clones"
+        );
         address _clone = createClone(address(this));
         PolicedUtils(_clone).initialize(address(this));
         return _clone;
