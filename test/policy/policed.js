@@ -161,6 +161,6 @@ contract('Policed [@group=11]', (accounts) => {
   it('Clones should not be cloneable', async () => {
     await testPoliced.cloneMe();
     const clone = await DummyPoliced.at(await testPoliced.c());
-    await expectRevert(clone.cloneMe(), "This method cannot be called on clones");
+    await expectRevert(clone.cloneMe(), 'This method cannot be called on clones');
   });
 });
