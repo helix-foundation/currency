@@ -56,13 +56,44 @@ class Supervisor {
     this.currencyAddresses = new Set();
     this.account = account;
     this.timedPolicies = 0;
+    this.currentGenerationBlock = 0;
   }
 
   async updateGeneration() {
+    this.currentGenerationBlock = this.blockNumber
     print('generation updated');
   }
 
+  async updateContracts() {
+    //called the block after generation update
+    //fetches all the new contract addresses from the registry
+    this.eco = new ethers.Contract(await this.policy.methods.policyFor(ID_ERC20TOKEN).call(),
+      { from: this.account }
+    );
+    this.timedPolicies = new ethers.Contract(await this.policy.methods.policyFor(ID_TIMEDPOLICIES).call(),
+      { from: this.account },
+    );
+    this.currencyGovernance = new ethers.Contract(await this.policy.methods.policyFor(ID_CURRENCY_GOVERNANCE).call(),
+      { from: this.account },
+    );
+    this.policyProposals = new ethers.Contract(await this.policy.methods.policyFor(ID_POLICY_PROPOSALS).call(),
+      { from: this.account },
+    );
+
+  }
+
+  async manageCommunityGovernance() {
+
+  }
+
+  async manageCurrencyGovernance() {
+
+  }
+
+  async 
+
   async catchup() {
+    updateContracts();
     this.eco = new ethers.Contract(await this.policy.methods.policyFor(ID_E))
     this.timedPolicies = new ethers.Contract(await this.policy.methods.policyFor(ID_TIMEDPOLICIES).call(),
       { from: this.account },
@@ -74,11 +105,18 @@ class Supervisor {
   async processBlock() {
     let block = await provider.getBlock('latest');
     this.blockNumber = block.number;
-    // this.timestamp = block.timestamp;
-    // if (timestamp < nextGenerationStart) {
-    //   updateGeneration();
-    // }
+    this.timestamp = block.timestamp;
+    if (timestamp > nextGenerationStart) {
+      updateGeneration();
+    };
+    if (this.currentGenerationBlock == this.blockNumber - 1) {
+      updateContracts();
+    }
+    manageCurrencyGovernance();
+    manageCommunityGovernance();
+
     console.log(this.blockNumber);
+
   }
 
   static async start(options = {}) {
