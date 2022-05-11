@@ -334,9 +334,8 @@ async function deployStage2(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  }
-  catch {
-    console.log("proxy 1 already bound");
+  } catch (error) {
+    console.log('proxy 1 already bound');
   }
 
   if (options.verbose) {
@@ -355,9 +354,8 @@ async function deployStage2(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  }
-  catch {
-    console.log("proxy 2 already bound");
+  } catch (error) {
+    console.log('proxy 2 already bound');
   }
 
   // distribute the initial tokens
@@ -471,9 +469,8 @@ async function deployStage3(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  }
-  catch {
-    console.log("proxy 0 already bound");
+  } catch (error) {
+    console.log('proxy 0 already bound');
   }
 
   options.policyProxy = new web3.eth.Contract(
@@ -677,9 +674,8 @@ async function deployStage3(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  }
-  catch {
-    console.log("proxy 3 already bound");
+  } catch (error) {
+    console.log('proxy 3 already bound');
   }
   options.currencyTimer = new web3.eth.Contract(
     CurrencyTimerContractABI.abi,
@@ -741,9 +737,8 @@ async function deployStage3(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  }
-  catch {
-    console.log("proxy 4 already bound");
+  } catch (error) {
+    console.log('proxy 4 already bound');
   }
   options.timedPolicies = new web3.eth.Contract(
     TimedPoliciesABI.abi,
@@ -806,9 +801,8 @@ async function deployStage3(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  }
-  catch {
-    console.log("proxy 5 already bound");
+  } catch (error) {
+    console.log('proxy 5 already bound');
   }
   options.trustedNodes = new web3.eth.Contract(
     TrustedNodesABI.abi,
