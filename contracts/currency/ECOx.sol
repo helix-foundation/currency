@@ -67,9 +67,24 @@ contract ECOx is ERC20, PolicedUtils {
         returns (uint256)
     {
         require(initialSupply > 0, "initial supply not set");
-        uint256 _preciseRatio = (_ecoXValue << PRECISION) / initialSupply;
+        uint256 _preciseRatio = safeLeftShift(_ecoXValue, PRECISION) /
+            initialSupply;
 
         return (generalExp(_preciseRatio, PRECISION) * _ecoSupply) >> PRECISION;
+    }
+
+    function safeLeftShift(uint256 value, uint8 shift)
+        internal
+        pure
+        returns (uint256)
+    {
+        require(shift < 256, "shift amount too large");
+        uint256 _result = value << shift;
+        require(
+            _result >> shift == value,
+            "value too large, shift out of bounds"
+        );
+        return _result;
     }
 
     /**
