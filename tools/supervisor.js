@@ -86,6 +86,7 @@ class Supervisor {
       await this.timedPolicies.incrementGeneration(, { from: this.account });
       this.currentGenerationStart = this.timestamp;
       this.nextGenerationStart = this.currentGenerationStart + 14*24*3600*1000;
+      this.currentGenerationBlock = this.blockNumber;
     };
 
   }
