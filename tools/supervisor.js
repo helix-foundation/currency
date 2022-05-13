@@ -149,27 +149,29 @@ class Supervisor {
 
   async manageCurrencyGovernance() {
     //updates the stage of the currency governance process
+
+    //can be more granular about this, the logging might be ugly, but is this ok wrt gas cost
+    
+    if (await this.currencyGovernance.updateStage()) {
+      await this.currencyGovernance.compute();
+    }
+
   }
 
   async manageRandomInflation() {
-
   }
 
   async catchup() {
     await updateContracts();
-    //get full tx history
-
+    await getTxHistory();
   }
 
   async getTxHistory() {
+
     const map = {};
 
-    (await this.eco.queryFilter("Transfer", 0, this.blockNumber)).forEach((event) => {
-
-    })
-
     // const token = await this.getERC20Token();
-    (await eco.getPastEvents('Transfer', {
+    (await eco.queryFilter('Transfer', {
       fromBlock: 0,
       toBlock: 'latest',
     })).forEach((event) => {
@@ -183,7 +185,8 @@ class Supervisor {
         map[params.to] = map[params.to].add(toBN(params.value));
       }
     });
-    return map;
+
+    // return map;
   }
 
 
