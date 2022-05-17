@@ -109,7 +109,7 @@ the other contracts needed for specific votes and outcomes.
 
 The `TimedPolicies` contract will clone the referenced contracts as needed, and
 grant the clones the relevant permissions. See `startInflation` for an example.
-It will also notify all other `ITimeNotifier` contracts each time a generation
+It will also notify all other `IGenerationIncrease` contracts each time a generation
 increases, coordinating the switchover to each subsequent generation.
 
 ## API
@@ -123,13 +123,13 @@ moving on to the periodic voting processes themselves.
 
 The `TimedPolicies` contract manages the time-based recurring processes that
 form the governance system. Existing processes that are activated by this
-inherit from the interface `ITimeNotifier` to have the function 
+inherit from the interface `IGenerationIncrease` to have the function 
 `notifyGenerationIncrease` which is called by this contract. The policy
 voting contract is directly cloned from this contract.
 
 ##### Process Overview
 This contract holds and maintains an array `notificationHashes` which contains
-the ERC1820 keys for the different `ITimeNotifier` contracts. This is set on
+the ERC1820 keys for the different `IGenerationIncrease` contracts. This is set on
 construction. When the generation increase is triggered, this contract looks
 up the addresses for each of these contracts and calls their implementation
 of `notifyGenerationIncrease`.
@@ -170,7 +170,7 @@ address to indicate the start of a new vote.
 This function is internal.
 
 #### CurrencyTimer
-  - Inherits: `PolicedUtils`, `ITimeNotifier`, `ILockups`
+  - Inherits: `PolicedUtils`, `IGenerationIncrease`, `ILockups`
 
 The `CurrencyTimer` contract is delegated the responsibility of implementing
 the decisions decided on by the trustees in their Currency Governance votes

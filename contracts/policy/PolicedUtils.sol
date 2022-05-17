@@ -11,53 +11,53 @@ import "./ERC1820Client.sol";
  *
  * See documentation for Policed to understand what a policed contract is.
  */
-contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
+abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
     // keccak256("Faucet")
-    bytes32 public constant ID_FAUCET =
+    bytes32 internal constant ID_FAUCET =
         0x93824b3fb91a9a455e79c6bb5ad7a2acaedbf7fea80464761d7d892aa7853d5e;
 
     // keccak256("ECO")
-    bytes32 public constant ID_ECO =
+    bytes32 internal constant ID_ECO =
         0xe0391e627a5766ef56109c7c98e0542c6e96a116720d7c626119be5b67e1813d;
 
     // keccak256("ContractCleanup")
-    bytes32 public constant ID_CLEANUP =
+    bytes32 internal constant ID_CLEANUP =
         0x1b74fc1bde1302df3d2e3f68112fbbf0ccbb287053160042e61d82481bb6e178;
 
     // keccak256("TimedPolicies")
-    bytes32 public constant ID_TIMED_POLICIES =
+    bytes32 internal constant ID_TIMED_POLICIES =
         0xae30bfb87dec2bd0c16be9790f95842d84f58dc70b0a8f6ed22e9556176a7b19;
 
     // keccak256("TrustedNodes")
-    bytes32 public constant ID_TRUSTED_NODES =
+    bytes32 internal constant ID_TRUSTED_NODES =
         0x0e3d3f2b74f96e5fd24f23acf8b4b352d4e1d0d0ed45271f4e44aa64f98b2284;
 
     // keccak256("PolicyProposals")
-    bytes32 public constant ID_POLICY_PROPOSALS =
+    bytes32 internal constant ID_POLICY_PROPOSALS =
         0x331e3a11698d428947c09d6cfecc92b2ccbc4a527e4e795d850152babfaff37a;
 
     // keccak256("PolicyVotes")
-    bytes32 public constant ID_POLICY_VOTES =
+    bytes32 internal constant ID_POLICY_VOTES =
         0x65474dbc3934a157baaaa893dea8c73453f0cc9c47a4f857047e8f0c8b54888f;
 
     // keccak256("EcoLabs")
-    bytes32 public constant ID_ECO_LABS =
+    bytes32 internal constant ID_ECO_LABS =
         0x5f9af78bb9888a64eda8686df832be8039fe2a08c41dd13a3e0a34cadf714265;
 
     // keccak256("CurrencyGovernance")
-    bytes32 public constant ID_CURRENCY_GOVERNANCE =
+    bytes32 internal constant ID_CURRENCY_GOVERNANCE =
         0xe4ee44a5d338a8b2452cc9552ec014656668eaacb55683101b7e1c2b167e5225;
 
     // keccak256("CurrencyTimer")
-    bytes32 public constant ID_CURRENCY_TIMER =
+    bytes32 internal constant ID_CURRENCY_TIMER =
         0xe01e721169f17f30d0c130781195719ceba11f26f44578668ffd8462c7c1ebe9;
 
     // keccak256("ECOx")
-    bytes32 public constant ID_ECOX =
+    bytes32 internal constant ID_ECOX =
         0xe10ab6c94f1da69921a0ca1c1b96b4fc339699153931c9bfd565e91f44c19b0b;
 
     // keccak256("ECOxLockup")
-    bytes32 public constant ID_ECOXLOCKUP =
+    bytes32 internal constant ID_ECOXLOCKUP =
         0xdf849ae066ce5ea7a01105f3db8539dd51779b4506741de6731ef32f7f4daa18;
 
     address internal expectedInterfaceSet;
@@ -78,7 +78,7 @@ contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
     {
         require(
             _addr == policy || _addr == expectedInterfaceSet,
-            "Only the policy or interface contract may call this function."
+            "Only the policy or interface contract can set the interface."
         );
         return ERC1820_ACCEPT_MAGIC;
     }

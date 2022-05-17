@@ -51,7 +51,7 @@ contract('Lockup [@group=3]', (accounts) => {
     counter += 1;
 
     borda = await CurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
     await borda.propose(10, 20, 30, 40, toBN('1000000000000000000'), { from: bob });

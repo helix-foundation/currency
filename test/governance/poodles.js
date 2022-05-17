@@ -76,7 +76,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
 
   it('Checks that the current governance contract is not poodles', async () => {
     poodleBorda = await PoodleCurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
     await expectRevert.unspecified(
@@ -168,7 +168,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
 
   it('Checks that the new governance contract is poodles', async () => {
     poodleBorda = await PoodleCurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
     const poodles = await poodleBorda.provePoodles();
     expect(poodles).to.be.true;

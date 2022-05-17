@@ -41,7 +41,7 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     uint256 public duration;
 
-    uint256 public constant BILLION = 1_000_000_000;
+    uint256 public constant BILLION = 1e9;
 
     uint256 public interest;
 

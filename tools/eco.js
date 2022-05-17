@@ -26,7 +26,7 @@ function loadConfig(fileNamePath) {
   return JSON.parse(fs.readFileSync(path.resolve(__dirname, `./${fileNamePath}`)));
 }
 
-const PolicedUtilsABI = reqArtifact('PolicedUtils');
+const ECOABI = reqArtifact('ECO');
 const PolicyABI = reqArtifact('Policy');
 const EcoFaucetABI = reqArtifact('EcoFaucet');
 
@@ -242,7 +242,7 @@ async function deployEco() {
     options = await deployGovernance(options);
 
     if (options.devmode) {
-      const eco = new web3.eth.Contract(PolicedUtilsABI.abi, options.eco);
+      const eco = new web3.eth.Contract(ECOABI.abi, options.eco);
       const policy = new web3.eth.Contract(PolicyABI.abi, await eco.methods.policy().call());
       const faucetaddr = await policy.methods.policyFor(web3.utils.soliditySha3('Faucet')).call();
       const faucet = new web3.eth.Contract(EcoFaucetABI.abi, faucetaddr);
@@ -259,7 +259,7 @@ async function deployEco() {
 
 async function findPolicy() {
   if (options.eco && options.deployGovernance) {
-    const root = new web3.eth.Contract(PolicedUtilsABI.abi, options.eco.options.address);
+    const root = new web3.eth.Contract(ECOABI.abi, options.eco.options.address);
     options.policy = await root.methods.policy().call();
     console.log(`Policy at ${options.policy}`);
   }

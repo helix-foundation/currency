@@ -4,7 +4,7 @@ pragma solidity ^0.8.9;
 /** @title TimeUtils
  * Utility class for time, allowing easy unit testing.
  */
-contract TimeUtils {
+abstract contract TimeUtils {
     /** Determine the current time as perceived by the policy timing contract.
      *
      * Used extensively in testing, but also useful in production for

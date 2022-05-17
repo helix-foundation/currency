@@ -64,6 +64,9 @@ const ECOxABI = require(`../${importPath}/contracts/ECOx.json`);
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
+  // we currently require 6 proxies for deployment
+  options.numPlaceholders = '6';
+
   options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
   if (options.production) {
     options.verbose = true;
@@ -163,7 +166,7 @@ async function deployStage1(options) {
           '0x1234',
           bootstrapGas,
           bootstrapGasCost,
-          web3.eth.abi.encodeParameter('address', options.account),
+          web3.eth.abi.encodeParameters(['address', 'uint8'], [options.account, options.numPlaceholders]),
         ),
       ),
     ),
@@ -213,15 +216,16 @@ async function deployStage1(options) {
   const bootstrapInterface = new web3.eth.Contract(
     EcoBootstrapABI.abi,
     stage1.to,
+    options.numPlaceholders,
   );
 
   // Index bootstrap placeholders for future use
-  options.bootstrap.NUM_PLACEHOLDERS = await bootstrapInterface.methods
-    .NUM_PLACEHOLDERS()
-    .call({ from: options.account });
+  // options.bootstrap.NUM_PLACEHOLDERS = await bootstrapInterface.methods
+  //   .NUM_PLACEHOLDERS()
+  //   .call({ from: options.account });
 
   options.bootstrap.placeholders = [];
-  for (let i = 0; i < options.bootstrap.NUM_PLACEHOLDERS; i++) {
+  for (let i = 0; i < options.numPlaceholders; i++) {
     /* eslint-disable no-await-in-loop */
     options.bootstrap.placeholders.push(await bootstrapInterface.methods
       .placeholders(i)

@@ -154,7 +154,7 @@ Arguments:
 Sets the delegate for the `msg.sender` from its current delegate to `delegatee`. Moves voting power equal to balance of `msg.sender` from the previous delegate to `delegatee`. Emits a `DelegateChanged` and a `DelegateVotesChanged` event.
 
 ### InflationCheckpoints
- - Inherits: `VoteCheckpoints`, `PolicedUtils`, `ITimeNotifier`
+ - Inherits: `VoteCheckpoints`, `PolicedUtils`, `IGenerationIncrease`
 
 This contract takes the functionality outlined in `VoteCheckpoints` and adds the effects of inflation. The multiplier for inflation is stored in its own checkpoints array that functions the same as the voting power checkpoints in `VoteCheckpoints` except the inflation multiplier is stored instead of the balances. The initial value of the multiplier is stored in the constant `INITIAL_INFLATION_MULTIPLIER` and is 10e18.
 

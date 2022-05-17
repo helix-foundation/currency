@@ -43,7 +43,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
     counter += 1;
 
     // borda = await CurrencyGovernance.at(
-    //   await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+    //   await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     // );
   });
 

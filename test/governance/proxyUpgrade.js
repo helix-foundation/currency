@@ -25,6 +25,7 @@ const {
   time,
 } = require('@openzeppelin/test-helpers');
 
+const { web3 } = require('@openzeppelin/test-helpers/src/setup');
 const util = require('../../tools/test/util');
 const { isCoverage } = require('../../tools/test/coverage');
 
@@ -78,7 +79,7 @@ contract('Proxy Policy Change [@group=9]', (accounts) => {
 
   it('Checks that the current trusted nodes contract is not poodles', async () => {
     poodleCheck = await PoodleTrustedNodes.at(
-      await util.policyFor(policy, await timedPolicies.ID_TRUSTED_NODES()),
+      await util.policyFor(policy, web3.utils.soliditySha3('TrustedNodes')),
     );
     // the contract at ID_TRUSTED_NODES is not poodles so it does not have this function
     await expectRevert.unspecified(
@@ -174,7 +175,7 @@ contract('Proxy Policy Change [@group=9]', (accounts) => {
   });
 
   it('Checks that the address has not changed', async () => {
-    const trustNodesHash = await timedPolicies.ID_TRUSTED_NODES();
+    const trustNodesHash = web3.utils.soliditySha3('TrustedNodes');
     const retryPoodleCheckAddress = await util.policyFor(policy, trustNodesHash);
     expect(retryPoodleCheckAddress).to.equal(poodleCheck.address);
   });

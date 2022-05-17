@@ -8,7 +8,7 @@ import "../proxy/ForwardTarget.sol";
  *
  * A policed contract is any contract managed by a policy.
  */
-contract Policed is ForwardTarget, IERC1820Implementer {
+abstract contract Policed is ForwardTarget, IERC1820Implementer {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 

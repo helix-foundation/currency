@@ -155,7 +155,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     await initInflation.mint(eco.address, accounts[2], accountsBalances[2]);
 
     governance = await CurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
     const bob = accounts[1];

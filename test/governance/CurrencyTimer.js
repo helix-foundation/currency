@@ -45,7 +45,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
     counter += 1;
 
     borda = await CurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
   });
 
@@ -97,7 +97,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
 
     it('changed borda', async () => {
       expect(
-        await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+        await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
       ).to.not.eq.BN(borda.address);
     });
 
@@ -105,7 +105,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       const [evt] = await currencyTimer.getPastEvents('NewCurrencyGovernance');
       const gov = evt.args.addr;
       expect(
-        await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+        await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
       ).to.eq.BN(gov);
     });
 

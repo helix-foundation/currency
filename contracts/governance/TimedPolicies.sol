@@ -5,7 +5,7 @@ import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "./SimplePolicySetter.sol";
 import "../utils/TimeUtils.sol";
-import "./ITimeNotifier.sol";
+import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
 
 /** @title TimedPolicies
@@ -84,11 +84,11 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         internalGeneration++;
 
         for (uint256 i = 0; i < notificationHashes.length; ++i) {
-            ITimeNotifier notifier = ITimeNotifier(
+            IGenerationIncrease notified = IGenerationIncrease(
                 Policy(policy).policyFor(notificationHashes[i])
             );
             // require(address(notifier) != address(0), "Broken state");
-            notifier.notifyGenerationIncrease();
+            notified.notifyGenerationIncrease();
         }
 
         startPolicyProposal();

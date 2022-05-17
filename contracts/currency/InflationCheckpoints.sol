@@ -3,7 +3,7 @@
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../currency/VoteCheckpoints.sol";
-import "../governance/ITimeNotifier.sol";
+import "../governance/IGenerationIncrease.sol";
 import "../policy/PolicedUtils.sol";
 
 /** @title InflationCheckpoints
@@ -14,10 +14,9 @@ import "../policy/PolicedUtils.sol";
 abstract contract InflationCheckpoints is
     VoteCheckpoints,
     PolicedUtils,
-    ITimeNotifier
+    IGenerationIncrease
 {
-    uint256 public constant INITIAL_INFLATION_MULTIPLIER =
-        1_000_000_000_000_000_000;
+    uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
     Checkpoint[] internal _linearInflationCheckpoints;
 

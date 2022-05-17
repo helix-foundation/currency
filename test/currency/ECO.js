@@ -41,9 +41,9 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
       [],
       [
         ecoHash,
-        await eco.ID_CLEANUP(),
+        web3.utils.soliditySha3('ContractCleanup'),
         UNKNOWN_POLICY_ID,
-        await eco.ID_ECO_LABS(),
+        web3.utils.soliditySha3('EcoLabs'),
       ],
       [
         eco.address,

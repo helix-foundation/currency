@@ -8,7 +8,7 @@ import "./CurrencyGovernance.sol";
 import "./SimplePolicySetter.sol";
 import "../currency/InflationRootHashProposal.sol";
 import "../utils/TimeUtils.sol";
-import "./ITimeNotifier.sol";
+import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
 import "./Lockup.sol";
 import "./Inflation.sol";
@@ -18,7 +18,7 @@ import "./ILockups.sol";
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
+contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     /** The on-chain address for the currency voting contract. This contract is
      * cloned for each new currency vote.
      */
