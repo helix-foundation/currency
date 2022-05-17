@@ -3,8 +3,10 @@
 /* eslint-disable no-console */
 
 const Web3 = require('web3');
+const ethers = require('ethers');
 
 global.web3 = new Web3();
+let ethersProvider;
 
 const commandLineArgs = require('command-line-args');
 const fs = require('fs');
@@ -99,7 +101,7 @@ async function initWeb3() {
     const serverAddr = '0.0.0.0';
     const serverPort = 8545;
     /* eslint-disable global-require, import/no-extraneous-dependencies */
-    options.ganacheServer = ganache.server({ default_balance_ether: 1000000 });
+    options.ganacheServer = ganache.server({ default_balance_ether: 1000000, blockTime: .25 });
     options.ganacheServer.listen(serverPort, serverAddr, (err) => {
       if (err) {
         console.log(err);
@@ -109,6 +111,7 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
+    ethersProvider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
   } else {
     global.web3 = new Web3(options.webrpc || defaultRpc);
   }
@@ -140,7 +143,9 @@ async function initUsers() {
       account = a.address;
     }
   } else {
-    [account] = await web3.eth.getAccounts();
+    // [account] = await web3.eth.getAccounts();
+    let signer = await ethersProvider.getSigner();
+    account = await signer.getAddress();
   }
   if (!account) {
     // Use fallback account
@@ -149,12 +154,14 @@ async function initUsers() {
     account = a.address;
   }
 
-  const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
+  // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
+  const balance = ethersProvider.getBalance(account);
   if (balance < 1) {
     throw Error(`Deployment account (${account}) should have at least 1 Ether, has only ${balance}`);
   }
 
   // Verify account works
+  console.log(account);
   await web3.eth.sendTransaction({
     from: account,
     to: account,
@@ -163,9 +170,11 @@ async function initUsers() {
   });
 
   options.account = account;
+
 }
 
 async function deployEco() {
+
   if (options.deploy) {
     const trustednodes = [];
     if (options.trustednode) {
@@ -223,6 +232,7 @@ async function supervise() {
     } else {
       await Supervisor.start({
         root: options.policy,
+        account: options.account,
       });
     }
   }
@@ -248,6 +258,7 @@ async function closeTest() {
     await initWeb3();
     await initUsers();
     await deployEco();
+    console.log( 'OYOYOY' + options.account);
     await findPolicy();
     // await startExpress();
     await supervise();

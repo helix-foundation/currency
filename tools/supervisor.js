@@ -34,7 +34,7 @@ function req(contract) {
   }
 }
 
-### Contract ABIs and Bytecode
+//Contract ABIs and Bytecode
 const PolicyABI = req('Policy');
 const ECO = req('ECO');
 const TimedPoliciesABI = req('TimedPolicies');
@@ -48,7 +48,7 @@ const InflationABI = req('Inflation');
 const LockupContractABI = req('Lockup');
 const InflationRootHashProposal = req('InflationRootHashProposal');
 
-const ID_TIMEDPOLICIES = web3.utils.soliditySha3('TimedPolicies');
+const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
 const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
 const ID_CURRENCY_GOVERNANCE = web3.utils.soliditySha3('CurrencyGovernance');
 const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
@@ -62,7 +62,7 @@ const { toBN } = web3.utils;
 class Supervisor {
   constructor(policyAddr, account) {
     // this.policy = new web3.eth.Contract(PolicyABI.abi, policyAddr);
-    this.policy = new ethers.Contract(policyAddr, PolicyABI.abi);
+    this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.account);
     // this.policyDecisionAddresses = new Set();
     // this.policyVotesAddressesExecuted = new Set();
     // this.currencyAddresses = new Set();
@@ -83,7 +83,7 @@ class Supervisor {
 
   async updateGeneration() {
     if (this.timestamp > this.nextGenerationStart) {
-      await this.timedPolicies.incrementGeneration(, { from: this.account });
+      await this.timedPolicies.incrementGeneration({ from: this.account });
       this.currentGenerationStart = this.timestamp;
       this.nextGenerationStart = this.currentGenerationStart + 14*24*3600*1000;
       this.currentGenerationBlock = this.blockNumber;
@@ -94,30 +94,38 @@ class Supervisor {
   async updateContracts() {
     //called the block after generation update
     //fetches all the new contract addresses from the registry
-    this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMEDPOLICIES),
-      TimedPoliciesABI,
-      this.account,
-    );
-    this.currencyTimer = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_TIMER),
-      CurrencyTimerABI,
-      this.account
-    );
-    this.policyProposals = new ethers.Contract(await this.policy.policyFor(ID_POLICY_PROPOSALS),
-      PolicyProposalsABI,
-      this.account,
-    );
-    this.eco = new ethers.Contract(await this.policy.policyFor(ID_ERC20TOKEN),
-      ECO,
-      this.account,
-    );
-    this.currencyGovernance = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
-      CurrencyGovernanceABI,
-      this.account,
-    );
-    this.randomInflation = new ethers.Contract(await currencyTimer.inflationImpl(),
-      InflationABI,
-      this.account
-    );
+    console.log('about to call policyFor!');
+    let bal = await provider.getBalance(this.account);
+    console.log(this.account + ':' + ethers.utils.formatEther(bal));
+    const timedPoliciesAddress = await this.policy.policyFor(ID_TIMED_POLICIES);
+    console.log('timedpolicies address is ' + timedPoliciesAddress);
+
+
+    // this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
+    //   TimedPoliciesABI,
+    //   this.account,
+    // );
+    // console.log(this.timedPolicies.address);
+    // this.currencyTimer = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_TIMER),
+    //   CurrencyTimerABI,
+    //   this.account
+    // );
+    // this.policyProposals = new ethers.Contract(await this.policy.policyFor(ID_POLICY_PROPOSALS),
+    //   PolicyProposalsABI,
+    //   this.account,
+    // );
+    // this.eco = new ethers.Contract(await this.policy.policyFor(ID_ERC20TOKEN),
+    //   ECO,
+    //   this.account,
+    // );
+    // this.currencyGovernance = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
+    //   CurrencyGovernanceABI,
+    //   this.account,
+    // );
+    // this.randomInflation = new ethers.Contract(await currencyTimer.inflationImpl(),
+    //   InflationABI,
+    //   this.account
+    // );
     
   }
 
@@ -125,7 +133,7 @@ class Supervisor {
     if (await !this.policyProposals.proposalSelected() && this.timestamp < await this.policyProposals.proposalEnds()) {
       let events = this.policyProposals.queryFilter("SupportThresholdReached", "latest");
       if (len(events) == 1) {
-        await this.policyProposals.deployProposalVoting(, { from: this.account });
+        await this.policyProposals.deployProposalVoting({ from: this.account });
         //this is probably wrong, how do i get the policy votes address from the event emitted by the deploy? 
         this.policyVotes = new ethers.Contract(await this.policy.policyFor(ID_POLICY_VOTES),
           PolicyVotesABI,
@@ -163,8 +171,21 @@ class Supervisor {
   }
 
   async catchup() {
-    await updateContracts();
-    await getTxHistory();
+
+    await this.updateContracts();
+
+    // await getTxHistory();
+
+    //set initial generation information
+    const latestBlock = await provider.getBlock('latest');
+    await this.timedPolicies.queryFilter('PolicyDecisionStarted', {
+      fromBlock: latestBlock.number - 20,
+      toBlock:  latestBlock.number,
+    }).forEach((event) => {
+      console.log('got a PolicyDecisionStarted event at block ' + event.blockNumber);
+    })
+
+
   }
 
   async getTxHistory() {
@@ -172,7 +193,7 @@ class Supervisor {
     const map = {};
 
     // const token = await this.getERC20Token();
-    (await eco.queryFilter('Transfer', {
+    (await this.eco.queryFilter('Transfer', {
       fromBlock: 0,
       toBlock: 'latest',
     })).forEach((event) => {
@@ -220,15 +241,17 @@ class Supervisor {
     const supervisor = await new Supervisor(options.root, options.account)
     console.log('STARTED');
 
-    // provider.on("block", (num) => {
-    //   supervisor.processBlock();
+    supervisor.catchup();
+
+    provider.on("block", (num) => {
+      // supervisor.processBlock();
+      console.log(num);
       
-    // })
-    const txfilter = p
-    provider.on("Transfer",)
+    })
+    // provider.on("Transfer",)
 
 
-    console.log(`policy address is: ${supervisor.policy.address}`)
+    // console.log(`policy address is: ${supervisor.policy.address}`)
   }
 
 
