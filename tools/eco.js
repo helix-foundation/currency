@@ -143,9 +143,9 @@ async function initUsers() {
       account = a.address;
     }
   } else {
-    // [account] = await web3.eth.getAccounts();
-    let signer = await ethersProvider.getSigner();
-    account = await signer.getAddress();
+    console.log("WHOOP");
+    options.signer = await ethersProvider.getSigner();
+    account = await options.signer.getAddress();
   }
   if (!account) {
     // Use fallback account
@@ -155,7 +155,7 @@ async function initUsers() {
   }
 
   // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
-  const balance = ethersProvider.getBalance(account);
+  const balance = await ethersProvider.getBalance(account);
   if (balance < 1) {
     throw Error(`Deployment account (${account}) should have at least 1 Ether, has only ${balance}`);
   }
@@ -170,6 +170,7 @@ async function initUsers() {
   });
 
   options.account = account;
+  console.log(options.account);
 
 }
 
@@ -227,7 +228,7 @@ async function startExpress() {
 async function supervise() {
   if (options.supervise) {
     if (options.selftest) {
-      const supervisor = new Supervisor(options.policy, options.account);
+      const supervisor = new Supervisor(options.policy, options.signer);
       await supervisor.processAllBlocks();
     } else {
       await Supervisor.start({
