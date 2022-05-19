@@ -83,7 +83,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     proposedRootHash = tree.hash;
 
     for (let i = 0; i < 3; i += 1) {
-      eco.approve(addressRootHashProposal, await eco.balance(accounts[i]), {
+      eco.approve(addressRootHashProposal, await eco.balanceOf(accounts[i]), {
         from: accounts[i],
       });
     }

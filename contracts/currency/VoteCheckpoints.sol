@@ -29,50 +29,22 @@ abstract contract VoteCheckpoints is ERC20 {
         keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
-    mapping(address => Checkpoint[]) private _checkpoints;
+    mapping(address => Checkpoint[]) public checkpoints;
     Checkpoint[] private _totalSupplyCheckpoints;
 
     /**
      * @dev Emitted when an account changes their delegate.
      */
-    event DelegateChanged(
-        address indexed delegator,
-        address indexed fromDelegate,
-        address indexed toDelegate
-    );
+    event ChangeDelegate(address indexed delegator, address indexed toDelegate);
 
     /**
      * @dev Emitted when a token transfer or delegate change results in changes to an account's voting power.
      */
-    event DelegateVotesChanged(
-        address indexed delegate,
-        uint256 previousBalance,
-        uint256 newBalance
-    );
+    event ChangeDelegateVotes(address indexed delegate, uint256 newBalance);
 
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
     {}
-
-    function totalSupply() public view override returns (uint256) {
-        return tokenSupply();
-    }
-
-    function balanceOf(address account) public view override returns (uint256) {
-        return balance(account);
-    }
-
-    /** Access function to determine the token balance held by some address.
-     */
-    function balance(address _owner) public view virtual returns (uint256) {
-        return _balances[_owner];
-    }
-
-    /** Returns the total (inflation corrected) token supply
-     */
-    function tokenSupply() public view virtual returns (uint256) {
-        return _totalSupply;
-    }
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */
@@ -106,18 +78,6 @@ abstract contract VoteCheckpoints is ERC20 {
     }
 
     /**
-     * @dev Get the `pos`-th checkpoint for `account`.
-     */
-    function checkpoints(address account, uint32 pos)
-        public
-        view
-        virtual
-        returns (Checkpoint memory)
-    {
-        return _checkpoints[account][pos];
-    }
-
-    /**
      * @dev Get number of checkpoints for `account`.
      */
     function numCheckpoints(address account)
@@ -126,14 +86,22 @@ abstract contract VoteCheckpoints is ERC20 {
         virtual
         returns (uint32)
     {
-        // Casting error not feasible here
-        return uint32(_checkpoints[account].length);
+        require(
+            checkpoints[account].length <= type(uint32).max,
+            "number of checkpoints cannot be casted safely"
+        );
+        return uint32(checkpoints[account].length);
     }
 
     /**
      * @dev Get the address `account` is currently delegating to. Defaults to the account address itself if none specified
      */
-    function delegates(address account) public view virtual returns (address) {
+    function getDelegate(address account)
+        public
+        view
+        virtual
+        returns (address)
+    {
         address _voter = _delegates[account];
         return _voter == address(0) ? account : _voter;
     }
@@ -142,8 +110,8 @@ abstract contract VoteCheckpoints is ERC20 {
      * @dev Gets the current votes balance for `account`
      */
     function getVotes(address account) public view returns (uint256) {
-        uint256 pos = _checkpoints[account].length;
-        return pos == 0 ? 0 : _checkpoints[account][pos - 1].value;
+        uint256 pos = checkpoints[account].length;
+        return pos == 0 ? 0 : checkpoints[account][pos - 1].value;
     }
 
     /**
@@ -162,7 +130,7 @@ abstract contract VoteCheckpoints is ERC20 {
             blockNumber < block.number,
             "VoteCheckpoints: block not yet mined"
         );
-        return _checkpointsLookup(_checkpoints[account], blockNumber);
+        return _checkpointsLookup(checkpoints[account], blockNumber);
     }
 
     /**
@@ -207,14 +175,15 @@ abstract contract VoteCheckpoints is ERC20 {
         // the same.
 
         // Early exit if this is a request for the most recent value or we have no checkpoints
-        if (ckpts.length == 0) return 0;
-        if (blockNumber >= ckpts[ckpts.length - 1].fromBlock)
-            return ckpts[ckpts.length - 1].value;
+        uint256 ckptsLength = ckpts.length;
+        if (ckptsLength == 0) return 0;
+        Checkpoint memory lastCkpt = ckpts[ckptsLength - 1];
+        if (blockNumber >= lastCkpt.fromBlock) return lastCkpt.value;
 
-        uint256 high = ckpts.length;
+        uint256 high = ckptsLength;
         uint256 low = 0;
         while (low < high) {
-            uint256 mid = (low & high) + (low ^ high) / 2;
+            uint256 mid = low + ((high - low) >> 1);
             if (ckpts[mid].fromBlock > blockNumber) {
                 high = mid;
             } else {
@@ -276,27 +245,27 @@ abstract contract VoteCheckpoints is ERC20 {
     /**
      * @dev Move voting power when tokens are transferred.
      *
-     * Emits a {DelegateVotesChanged} event.
+     * Emits a {ChangeDelegateVotes} event.
      */
     function _afterTokenTransfer(
         address from,
         address to,
         uint256 amount
     ) internal virtual override {
-        _moveVotingPower(delegates(from), delegates(to), amount);
+        _moveVotingPower(getDelegate(from), getDelegate(to), amount);
     }
 
     /**
      * @dev Change delegation for `delegator` to `delegatee`.
      *
-     * Emits events {DelegateChanged} and {DelegateVotesChanged}.
+     * Emits events {ChangeDelegate} and {ChangeDelegateVotes}.
      */
     function _delegate(address delegator, address delegatee) internal virtual {
-        address currentDelegate = delegates(delegator);
+        address currentDelegate = getDelegate(delegator);
         uint256 delegatorBalance = _balances[delegator];
         _delegates[delegator] = delegatee;
 
-        emit DelegateChanged(delegator, currentDelegate, delegatee);
+        emit ChangeDelegate(delegator, delegatee);
 
         _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
     }
@@ -308,21 +277,21 @@ abstract contract VoteCheckpoints is ERC20 {
     ) private {
         if (src != dst && amount > 0) {
             if (src != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(
-                    _checkpoints[src],
+                uint256 newWeight = _writeCheckpoint(
+                    checkpoints[src],
                     _subtract,
                     amount
                 );
-                emit DelegateVotesChanged(src, oldWeight, newWeight);
+                emit ChangeDelegateVotes(src, newWeight);
             }
 
             if (dst != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(
-                    _checkpoints[dst],
+                uint256 newWeight = _writeCheckpoint(
+                    checkpoints[dst],
                     _add,
                     amount
                 );
-                emit DelegateVotesChanged(dst, oldWeight, newWeight);
+                emit ChangeDelegateVotes(dst, newWeight);
             }
         }
     }
@@ -331,13 +300,9 @@ abstract contract VoteCheckpoints is ERC20 {
         Checkpoint[] storage ckpts,
         function(uint256, uint256) view returns (uint256) op,
         uint256 delta
-    ) internal returns (uint256 oldWeight, uint256 newWeight) {
-        uint256 pos = ckpts.length;
-        oldWeight = pos == 0 ? 0 : ckpts[pos - 1].value;
-        newWeight = op(oldWeight, delta);
-
+    ) internal returns (uint256) {
         require(
-            newWeight <= type(uint224).max,
+            delta <= type(uint224).max,
             "newWeight cannot be casted safely"
         );
         require(
@@ -345,8 +310,36 @@ abstract contract VoteCheckpoints is ERC20 {
             "block number cannot be casted safely"
         );
 
-        if (pos > 0 && ckpts[pos - 1].fromBlock == block.number) {
-            ckpts[pos - 1].value = uint224(newWeight);
+        uint256 pos = ckpts.length;
+
+        /* if there are no checkpoints, just write the value
+         * This part assumes that an account would never exist with a balance but without checkpoints.
+         * This function cannot be called directly, so there's no malicious way to exploit the fact that
+         * the op is not checked and assumed to be add or replace.
+         */
+        if (pos == 0) {
+            ckpts.push(
+                Checkpoint({
+                    fromBlock: uint32(block.number),
+                    value: uint224(delta)
+                })
+            );
+            return delta;
+        }
+
+        // else, we iterate on the existing checkpoints as per usual
+        Checkpoint storage newestCkpt = ckpts[pos - 1];
+
+        uint256 oldWeight = newestCkpt.value;
+        uint256 newWeight = op(oldWeight, delta);
+
+        require(
+            newWeight <= type(uint224).max,
+            "newWeight cannot be casted safely"
+        );
+
+        if (newestCkpt.fromBlock == block.number) {
+            newestCkpt.value = uint224(newWeight);
         } else {
             ckpts.push(
                 Checkpoint({
@@ -355,6 +348,7 @@ abstract contract VoteCheckpoints is ERC20 {
                 })
             );
         }
+        return newWeight;
     }
 
     function _add(uint256 a, uint256 b) internal pure returns (uint256) {

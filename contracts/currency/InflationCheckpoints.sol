@@ -78,7 +78,7 @@ abstract contract InflationCheckpoints is
 
     /** Access function to determine the token balance held by some address.
      */
-    function balance(address _owner) public view override returns (uint256) {
+    function balanceOf(address _owner) public view override returns (uint256) {
         uint256 _linearInflation = _checkpointsLookup(
             _linearInflationCheckpoints,
             block.number
@@ -88,7 +88,7 @@ abstract contract InflationCheckpoints is
 
     /** Returns the total (inflation corrected) token supply
      */
-    function tokenSupply() public view override returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         uint256 _linearInflation = _checkpointsLookup(
             _linearInflationCheckpoints,
             block.number

@@ -143,7 +143,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     context('basic token and checkpoints data', async () => {
       // Confirm the internal balance method works
       it('can get the balance', async () => {
-        expect(await ecoXLockup.balance(alice)).to.eq.BN(await ecoXLockup.balanceOf(alice));
+        expect(await ecoXLockup.balanceOf(alice)).to.eq.BN(await ecoXLockup.balanceOf(alice));
       });
 
       it('Can get the past total supply', async () => {

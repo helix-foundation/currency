@@ -168,7 +168,7 @@ contract('InflationRootHashProposal', () => {
     const [event] = (await currencyTimer.getPastEvents('InflationRootHashProposalStarted'));
     const addressRootHashProposal = event.args.inflationRootHashProposalContract;
     for (let i = 0; i < 10; i += 1) {
-      eco.approve(addressRootHashProposal, (await eco.balance(accounts[i])).mul(
+      eco.approve(addressRootHashProposal, (await eco.balanceOf(accounts[i])).mul(
         web3.utils.toBN(100),
       ), {
         from: accounts[i],
@@ -628,10 +628,10 @@ contract('InflationRootHashProposal', () => {
 
       it('fail running sum right index', async () => {
         map = new Map([
-          [accounts[0], await eco.balance(accounts[0])],
-          [accounts[1], await eco.balance(accounts[1])],
-          [accounts[2], await eco.balance(accounts[2])],
-          [accounts[3], await eco.balance(accounts[2])],
+          [accounts[0], await eco.balanceOf(accounts[0])],
+          [accounts[1], await eco.balanceOf(accounts[1])],
+          [accounts[2], await eco.balanceOf(accounts[2])],
+          [accounts[3], await eco.balanceOf(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 300000]);
@@ -695,10 +695,10 @@ contract('InflationRootHashProposal', () => {
 
       it('fail running sum left index', async () => {
         map = new Map([
-          [accounts[0], await eco.balance(accounts[0])],
-          [accounts[1], await eco.balance(accounts[1])],
-          [accounts[2], await eco.balance(accounts[2])],
-          [accounts[3], await eco.balance(accounts[2])],
+          [accounts[0], await eco.balanceOf(accounts[0])],
+          [accounts[1], await eco.balanceOf(accounts[1])],
+          [accounts[2], await eco.balanceOf(accounts[2])],
+          [accounts[3], await eco.balanceOf(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 500]);
@@ -762,9 +762,9 @@ contract('InflationRootHashProposal', () => {
 
       it('fail total sum, last index', async () => {
         map = new Map([
-          [accounts[0], await eco.balance(accounts[0])],
-          [accounts[1], await eco.balance(accounts[1])],
-          [accounts[2], await eco.balance(accounts[2])],
+          [accounts[0], await eco.balanceOf(accounts[0])],
+          [accounts[1], await eco.balanceOf(accounts[1])],
+          [accounts[2], await eco.balanceOf(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 500]);
@@ -1396,7 +1396,7 @@ contract('InflationRootHashProposal', () => {
             );
             eco.approve(
               rootHashProposal.address,
-              await eco.balance(accounts[i]),
+              await eco.balanceOf(accounts[i]),
               {
                 from: accounts[i],
               },
@@ -1499,7 +1499,7 @@ contract('InflationRootHashProposal', () => {
       for (let i = 0; i < amountOfAccounts; i += 1) {
         eco.approve(
           rootHashProposal.address,
-          await eco.balance(accounts[i]),
+          await eco.balanceOf(accounts[i]),
           {
             from: accounts[i],
           },
@@ -1553,7 +1553,7 @@ contract('InflationRootHashProposal', () => {
 
         rootHashProposal = await getRootHash();
         for (let i = 0; i < amountOfAccounts; i += 1) {
-          eco.approve(rootHashProposal.address, await eco.balance(accounts[
+          eco.approve(rootHashProposal.address, await eco.balanceOf(accounts[
             i]), {
             from: accounts[i],
           });

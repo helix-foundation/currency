@@ -85,25 +85,25 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
     const mintAmount = new BN(1000);
 
     it('should start with 0 balance', async () => {
-      const balance = await eco.balance(accounts[0]);
+      const balance = await eco.balanceOf(accounts[0]);
 
       expect(balance).to.be.zero;
     });
 
     it('should start with 0 token supply', async () => {
-      const tokenSupply = await eco.tokenSupply();
-      expect(tokenSupply).to.be.zero;
+      const totalSupply = await eco.totalSupply();
+      expect(totalSupply).to.be.zero;
     });
 
     context('for the inflation policy', () => {
       context('below MAX_ACCOUNT_BALANCE', async () => {
         it('should increase the balance when minting coins', async () => {
-          const startBalance = await eco.balance(accounts[0]);
+          const startBalance = await eco.balanceOf(accounts[0]);
           await faucet.mint(
             accounts[0],
             mintAmount,
           );
-          const endBalance = await eco.balance(accounts[0]);
+          const endBalance = await eco.balanceOf(accounts[0]);
 
           expect(endBalance.sub(startBalance)).to.eq.BN(mintAmount);
         });
@@ -111,12 +111,12 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
         it(
           'should increase the overall token supply when minting coins',
           async () => {
-            const startSupply = await eco.tokenSupply();
+            const startSupply = await eco.totalSupply();
             await faucet.mint(
               accounts[1],
               mintAmount,
             );
-            const endSupply = await eco.tokenSupply();
+            const endSupply = await eco.totalSupply();
 
             expect(endSupply.sub(startSupply)).to.eq.BN(mintAmount);
           },
@@ -147,17 +147,17 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
       });
 
       it('should not increase the balance when reverting minting coins', async () => {
-        const startBalance = await eco.balance(accounts[1]);
+        const startBalance = await eco.balanceOf(accounts[1]);
         await expectRevert.unspecified(eco.mint(accounts[1], 1000, meta));
-        const endBalance = await eco.balance(accounts[1]);
+        const endBalance = await eco.balanceOf(accounts[1]);
 
         expect(endBalance).to.eq.BN(startBalance);
       });
 
       it('should not increase the supply when reverting minting coins', async () => {
-        const startSupply = await eco.balance(accounts[1]);
+        const startSupply = await eco.balanceOf(accounts[1]);
         await expectRevert.unspecified(eco.mint(accounts[1], 1000, meta));
-        const endSupply = await eco.balance(accounts[1]);
+        const endSupply = await eco.balanceOf(accounts[1]);
 
         expect(endSupply).to.eq.BN(startSupply);
       });
@@ -174,9 +174,9 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
 
       it('should succeed with a balance', async () => {
         await faucet.mint(accounts[1], burnAmount);
-        const preBalance = await eco.balance(accounts[1]);
+        const preBalance = await eco.balanceOf(accounts[1]);
         await eco.burn(accounts[1], burnAmount, meta);
-        const postBalance = await eco.balance(accounts[1]);
+        const postBalance = await eco.balanceOf(accounts[1]);
         expect(preBalance - postBalance).to.eq.BN(burnAmount);
       });
 
@@ -274,7 +274,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
       });
 
       it('uses the last-updated block number as the balance', async () => {
-        expect(await eco.balance(testAccount))
+        expect(await eco.balanceOf(testAccount))
           .to.be.eq.BN(initialBalance);
       });
     });
@@ -320,7 +320,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
 
         beforeEach(async () => {
           intermediateBlockNumber = await time.latestBlock();
-          intermediateBalance = await eco.balance(testAccount);
+          intermediateBalance = await eco.balanceOf(testAccount);
 
           // 12 months pass...
           for (let i = 0; i <= 12; i += 1) {

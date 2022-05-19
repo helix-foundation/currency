@@ -46,43 +46,19 @@ The currency contracts are intended for deployment on the Ethereum blockchain, u
 
  #### Events
 
- ##### DelegateChanged
+ ##### ChangeDelegate
  Attributes:
   - `delegator` (address) - the address that is changing its delegate
-  - `fromDelegate` (address) - the previous delegate
   - `toDelegate` (address) - the new delegate for the address
 
 This event is emitted by the `delegate` function to provide a record of the change of delegation.
 
-##### DelegateVotesChanged
+##### ChangeDelegateVotes
 Attributes:
  - `delegate` (address) - the delegate whose voting power has changed
- - `previousBalance` (uint256) - the previous voting balance
  - `newBalance` (uint256) - the new voting balance after the change
 
 This event is emitted when delegation is changed or when a transfer occurs to show the change in voting power. This is most relevant in the second case when the `delegate` is not the address recieving/sending the transfer.
-
-#### totalSupply
-Arguments: none
-
-This function returns the total ECO in circulation. Is an alias of `tokenSupply`.
-
-#### tokenSupply
-Arguments: none
-
-This function returns the total ECO in circulation as stored in the `_totalSupply` variable from `ERC20`. Is overridden in the child contract to account for inflation.
-
-#### balanceOf
-Arguments:
- - `account` (address) - the address for which to get the balance
-
-This function returns the amount of ECO attributed to the address. Is an alias of the function `balance` which is overidden in the child contract.
-
-#### balance
-Arguments:
- - `account` (address) - the address for which to get the balance
-
-This function returns the amount of ECO attributed to the address in the `_balances` mapping from `ERC20`. Is overidden in the child contract to account for inflation.
 
 #### totalSupplyAt
 Arguments:
@@ -122,22 +98,15 @@ This function looks up the value in the checkpoint for user balance that occurs 
  - Reverts if `blockNumber` is >= the current block number.
  - If no checkpoint is found before the requested block number, 0 is returned.
 
-#### checkpoints
-Arguments:
- - `account` (address) - the address for which you're accessing the checkpoint
- - `pos` (uint32) - the position in the list of checkpoints for the account
-
-Returns the checkpoint for `account` at the position specified. Made for ease of access to the mapping, `_checkpoints`.
-
 #### numCheckpoints
 Arguments:
  - `account` (address) - the address for which to return the number of checkpoints
 
-Returns the length of the checkpoint array for `account` cast as a uint32. Made for ease of access to the mapping, `_checkpoints`.
+Returns the length of the checkpoint array for `account` cast as a uint32. Made for ease of access to the mapping, `checkpoints`.
 
-#### delegates
+#### getDelegate
 Arguments:
- - `account` (address) - the address to look up delegates for
+ - `account` (address) - the address to look up the delegate for
 
 Returns the current delegate for `account`. If the `account` is its own delegate (i.e. a delegate has not been set), `account` will be returned. Note that this applies to using this function for an acconut that's completely unused as each account is its own delegate by default.
 
@@ -151,7 +120,7 @@ Returns the most recent checkpoint for `account`.
 Arguments:
  - `delegatee` (address) - the address that the sender is delegating to
 
-Sets the delegate for the `msg.sender` from its current delegate to `delegatee`. Moves voting power equal to balance of `msg.sender` from the previous delegate to `delegatee`. Emits a `DelegateChanged` and a `DelegateVotesChanged` event.
+Sets the delegate for the `msg.sender` from its current delegate to `delegatee`. Moves voting power equal to balance of `msg.sender` from the previous delegate to `delegatee`. Emits a `ChangeDelegate` and a `ChangeDelegateVotes` event.
 
 ### InflationCheckpoints
  - Inherits: `VoteCheckpoints`, `PolicedUtils`, `IGenerationIncrease`
@@ -168,11 +137,11 @@ Returns the value of the inflation multiplier at the earliest checkpoint before 
  - Reverts if `blockNumber` is >= the current block number.
  - If no checkpoint is found before the requested block number, 0 is returned. However, construction writes a checkpoint with the initial multiplier so it will only return zero if a block number before the launch of the currency is used.
 
-#### balance
+#### balanceOf
 Arguments:
  - `account` (address) - the address for which to get the balance
 
-Overrides the `balance` function in `VoteCheckpoints` to account for inflation. The uninflated value stored in the `ERC20` store is divided by the most recent inflation multiplier to the current block when the function is called.
+Overrides the `balanceOf` function in `ERC20` to account for inflation. The uninflated value stored in the `ERC20` store is divided by the most recent inflation multiplier to the current block when the function is called.
 
 ##### Security Notes
  - the division is done via deterministic integer division with truncation
@@ -188,10 +157,10 @@ Overrides the `balanceAt` function in `VoteCheckpoints` to account for inflation
  - This is not the same as the user's balance at the time. This is used purely for looking at snapshotted voting power and accounts for the delegation decisions of the `account` address.
  - the division is done via deterministic integer division with truncation
 
-#### tokenSupply
+#### totalSupply
 Arguments: none
 
-Overrides the `tokenSupply` function in `VoteCheckpoints` to account for inflation. The uninflated value stored in the `ERC20` store is divided by the most recent inflation multiplier to the current block when the function is called.
+Overrides the `totalSupply` function in `ERC20` to account for inflation. The uninflated value stored in the `ERC20` store is divided by the most recent inflation multiplier to the current block when the function is called.
 
 ##### Security Notes
  - the division is done via deterministic integer division with truncation

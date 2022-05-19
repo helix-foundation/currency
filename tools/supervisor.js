@@ -251,7 +251,7 @@ class Supervisor {
       },
     );
     const eco = await this.getERC20Token();
-    const balance = await eco.methods.balance(this.account).call();
+    const balance = await eco.methods.balanceOf(this.account).call();
     eco.methods.approve(addressRootHashProposal, balance).send({ gas: 1000000 });
 
     await rootHashProposal.methods.proposeRootHash(
