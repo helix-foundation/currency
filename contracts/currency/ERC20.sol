@@ -403,8 +403,8 @@ contract ERC20 {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _beforeTokenTransfer(
-        address,
-        address,
+        address from,
+        address to,
         uint256 amount
     ) internal virtual returns (uint256) {
         return amount;
