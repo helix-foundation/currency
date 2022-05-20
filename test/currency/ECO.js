@@ -3,72 +3,93 @@ const chai = require('chai');
 const { BN, toBN } = web3.utils;
 const bnChai = require('bn-chai');
 
-const { expect } = chai;
-const PolicyInit = artifacts.require('PolicyInit');
-const ForwardProxy = artifacts.require('ForwardProxy');
-const Policy = artifacts.require('FakePolicy');
-const ECO = artifacts.require('ECO');
-const MurderousPolicy = artifacts.require('MurderousPolicy');
-const FakeInflation = artifacts.require('FakeInflation');
-const { expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
-const UNKNOWN_POLICY_ID = web3.utils.soliditySha3('AttemptedMurder');
+const { expect } = chai;
+const { expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const util = require('../../tools/test/util');
+
 let one;
 
 chai.use(bnChai(BN));
 
-contract('ECO [@group=1]', ([owner, ...accounts]) => {
+contract('ECO [@group=1]', (accounts) => {
   one = toBN(10).pow(toBN(18));
 
   let eco;
-  let inflation;
-  let murderer;
-  let attemptedMurderer;
+  let faucet;
+  let policy;
+  let timedPolicies;
+  let proposedInflationMult;
+  let inflationBlockNumber;
+
+  let counter = 0;
 
   beforeEach(async () => {
-    const policyInit = await PolicyInit.new();
-    const proxy = await ForwardProxy.new(policyInit.address);
-    inflation = await FakeInflation.new();
-    eco = await ECO.new(proxy.address, owner, 0, { from: owner });
+    const bob = accounts[2];
+    const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000;
+    const digits10to19 = Math.floor(Math.random() * 10000000000);
+    proposedInflationMult = `${digits10to19}${digits1to9}`;
+    // console.log(digits10to19, digits1to9, proposedInflationMult);
 
-    murderer = await MurderousPolicy.new();
-    attemptedMurderer = await MurderousPolicy.new();
+    ({
+      eco,
+      faucet,
+      policy,
+      timedPolicies,
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
 
-    const ecoHash = web3.utils.soliditySha3('ECO');
-
-    await (await PolicyInit.at(proxy.address)).fusedInit(
-      (await Policy.new()).address,
-      [],
-      [
-        ecoHash,
-        web3.utils.soliditySha3('ContractCleanup'),
-        UNKNOWN_POLICY_ID,
-        web3.utils.soliditySha3('EcoLabs'),
-      ],
-      [
-        eco.address,
-        murderer.address,
-        attemptedMurderer.address,
-        inflation.address,
-      ],
+    // enact a random amount of linear inflation for all tests
+    const borda = await CurrencyGovernance.at(
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
+
+    await borda.propose(0, 0, 0, 0, new BN(proposedInflationMult), { from: bob });
+    await time.increase(3600 * 24 * 10.1);
+
+    const bobvote = [web3.utils.randomHex(32), bob, [bob]];
+    const bobvotehash = web3.utils.soliditySha3(
+      { type: 'bytes32', value: bobvote[0] },
+      { type: 'address', value: bobvote[1] },
+      { type: 'address', value: bobvote[2] },
+    );
+    await borda.commit(bobvotehash, { from: bob });
+    await time.increase(3600 * 24 * 3);
+    await borda.reveal(bobvote[0], bobvote[2], { from: bob });
+    await time.increase(3600 * 24 * 1);
+    await borda.updateStage();
+    await borda.compute();
+    await time.increase(3600 * 24 * 1);
+    await timedPolicies.incrementGeneration();
+    await time.advanceBlock();
+    inflationBlockNumber = await time.latestBlock();
+    await time.advanceBlock();
+    await time.advanceBlock();
+
+    // console.log((await eco.getPastLinearInflation(inflationBlockNumber)).toString())
+
+    counter += 1;
   });
 
   describe('total supply', () => {
+    const amount = one.muln(100);
+
     beforeEach(async () => {
-      await inflation.mint(eco.address, accounts[1], new BN(100));
+      await faucet.mint(accounts[1], amount);
     });
 
     it('returns the total amount of tokens', async () => {
       const supply = await eco.totalSupply();
 
-      expect(supply).to.eq.BN(100);
+      expect(supply).to.eq.BN(amount);
     });
   });
 
   describe('balanceOf', () => {
+    const amount = one.muln(100);
+
     beforeEach(async () => {
-      await inflation.mint(eco.address, accounts[1], new BN(100));
+      await faucet.mint(accounts[1], amount);
     });
 
     context('when the requrested account has no tokens', () => {
@@ -83,16 +104,16 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
       it('returns the correct balance', async () => {
         const balance = await eco.balanceOf(accounts[1]);
 
-        expect(balance).to.eq.BN(100);
+        expect(balance).to.eq.BN(amount);
       });
     });
   });
 
   describe('transfer', () => {
-    const amount = new BN(100);
+    const amount = one.muln(1000);
 
     beforeEach(async () => {
-      await inflation.mint(eco.address, accounts[1], amount);
+      await faucet.mint(accounts[1], amount);
     });
 
     context('when the sender doesn\'t have enough balance', () => {
@@ -149,13 +170,72 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
     });
   });
 
+  describe('burn', () => {
+    const amount = one.muln(1000);
+
+    beforeEach(async () => {
+      await faucet.mint(accounts[1], amount);
+    });
+
+    context('when the sender doesn\'t have enough balance', () => {
+      const meta = { from: accounts[2] };
+      it('reverts', async () => {
+        await expectRevert(
+          eco.burn(accounts[2], amount, meta),
+          'ERC20: burn amount exceeds balance',
+          eco.constructor,
+        );
+      });
+    });
+
+    context('when the sender is not the burning address', () => {
+      const meta = { from: accounts[2] };
+      it('reverts', async () => {
+        await expectRevert(
+          eco.burn(accounts[1], amount, meta),
+          'Caller not authorized to burn tokens',
+          eco.constructor,
+        );
+      });
+    });
+
+    context('when the sender has enough balance', () => {
+      const meta = { from: accounts[1] };
+
+      it('reduces the sender\'s balance', async () => {
+        const startBalance = await eco.balanceOf(accounts[1]);
+        await eco.burn(accounts[1], amount, meta);
+        const endBalance = await eco.balanceOf(accounts[1]);
+
+        expect(endBalance.add(amount)).to.eq.BN(startBalance);
+      });
+
+      it('reduces totalsupply', async () => {
+        const startSupply = await eco.totalSupply();
+        await eco.burn(accounts[1], amount, meta);
+        const endSupply = await eco.totalSupply();
+
+        expect(startSupply.sub(amount)).to.eq.BN(endSupply);
+      });
+
+      it('emits a Transfer event', async () => {
+        const result = await eco.burn(accounts[1], amount, meta);
+        await expectEvent.inTransaction(
+          result.tx,
+          eco.constructor,
+          'Transfer',
+        );
+      });
+    });
+  });
+
   describe('approve/allowance', () => {
     const spender = accounts[2];
 
     context('when the source address has enough balance', () => {
       const from = accounts[1];
       const meta = { from };
-      const amount = new BN(100);
+      const amount = one.muln(1000);
 
       it('emits an Approval event', async () => {
         const result = await eco.approve(spender, amount, meta);
@@ -208,7 +288,7 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
     context('when the source address does not have enough balance', () => {
       const [, from] = accounts;
       const meta = { from };
-      const amount = new BN(1000);
+      const amount = one.muln(1000);
 
       it('emits an Approval event', async () => {
         const result = await eco.approve(spender, amount, meta);
@@ -250,14 +330,14 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
 
   describe('transferFrom', () => {
     const [, from, to, authorized, unauthorized] = accounts;
-    const balance = new BN(1000);
-    const allowance = new BN(100);
+    const balance = one.muln(1000);
+    const allowance = one.muln(100);
     const allowanceParts = [
-      new BN(10), new BN(50), new BN(40),
+      one.muln(10), one.muln(50), one.muln(40),
     ];
 
     beforeEach(async () => {
-      await inflation.mint(eco.address, from, balance);
+      await faucet.mint(from, balance);
       await eco.approve(authorized, allowance, { from });
     });
 
@@ -276,7 +356,7 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
       context('above the allowance', () => {
         it('reverts', async () => {
           await expectRevert(
-            eco.transferFrom(from, to, allowance.add(new BN(10)), meta),
+            eco.transferFrom(from, to, allowance.add(one.muln(10)), meta),
             'ERC20: transfer amount exceeds allowance.',
           );
         });
@@ -420,15 +500,18 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
   });
 
   describe('Events from BalanceStore', () => {
+    const amount = one.muln(1000);
+
     it('emits Transfer when minting', async () => {
-      const tx = await inflation.mint(eco.address, accounts[1], new BN(100));
-      await expectEvent.inTransaction(tx.tx, eco.constructor, 'Transfer', { from: '0x0000000000000000000000000000000000000000', to: accounts[1], value: '100' });
+      const tx = await faucet.mint(accounts[1], amount);
+      await expectEvent.inTransaction(tx.tx, eco.constructor, 'Transfer', { from: '0x0000000000000000000000000000000000000000', to: accounts[1], value: amount.toString() });
     });
 
     it('emits Transfer when burning', async () => {
-      await inflation.mint(eco.address, accounts[1], new BN(100));
-      const tx = await eco.transfer('0x0000000000000000000000000000000000000001', new BN(10), { from: accounts[1] });
-      await expectEvent.inTransaction(tx.tx, eco.constructor, 'Transfer', { to: '0x0000000000000000000000000000000000000001', from: accounts[1], value: '10' });
+      await faucet.mint(accounts[1], amount);
+      const burnAmount = one.muln(100);
+      const tx = await eco.burn(accounts[1], burnAmount, { from: accounts[1] });
+      await expectEvent.inTransaction(tx.tx, eco.constructor, 'Transfer', { to: '0x0000000000000000000000000000000000000000', from: accounts[1], value: burnAmount.toString() });
     });
   });
 
@@ -441,16 +524,19 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
 
   describe('Checkpoint data', () => {
     const [, from] = accounts;
-    const balance = new BN(1000);
+    const deposit = one.muln(1000);
+    const balance = deposit.muln(2);
 
     beforeEach(async () => {
-      await inflation.mint(eco.address, from, balance);
-      await inflation.mint(eco.address, from, balance);
+      await faucet.mint(from, deposit);
+      await faucet.mint(from, deposit);
     });
 
+    // fixes here
     it('can get a checkpoint value', async () => {
+      const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
       const checkpoint = await eco.checkpoints(from, 1);
-      expect(checkpoint.value).to.be.eq.BN(one.muln(2000));
+      expect(checkpoint.value).to.be.eq.BN(inflationMult.mul(balance));
     });
 
     it('can get the number of checkpoints', async () => {
@@ -459,8 +545,9 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
     });
 
     it('can get the internal votes for an account', async () => {
+      const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
       const votes = await eco.getVotes(from);
-      expect(votes).to.be.eq.BN(one.muln(2000));
+      expect(votes).to.be.eq.BN(inflationMult.mul(balance));
     });
 
     it('cannot get the internal votes for an account until the block requestsed has been mined', async () => {
@@ -482,12 +569,12 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
 
   describe('increase and decrease allowance', () => {
     const [, from, authorized] = accounts;
-    const balance = new BN(1000);
-    const allowanceAmount = new BN(100);
-    const increment = new BN(10);
+    const balance = one.muln(1000);
+    const allowanceAmount = one.muln(100);
+    const increment = one.muln(10);
 
     beforeEach(async () => {
-      await inflation.mint(eco.address, from, balance);
+      await faucet.mint(from, balance);
       await eco.approve(authorized, allowanceAmount, { from });
     });
 
@@ -503,7 +590,7 @@ contract('ECO [@group=1]', ([owner, ...accounts]) => {
       it('decreases the allowance', async () => {
         await eco.decreaseAllowance(authorized, increment, { from });
         const allowance = await eco.allowance(from, authorized);
-        expect(allowance).to.be.eq.BN(allowanceAmount - increment);
+        expect(allowance).to.be.eq.BN(allowanceAmount.sub(increment));
       });
 
       it('cant decreases the allowance into negative values', async () => {

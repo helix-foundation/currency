@@ -76,7 +76,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
     const aliceBal = toBN(1000000000);
 
     beforeEach(async () => {
-      await faucet.mint(alice, aliceBal, { from: charlie });
+      await faucet.mint(alice, aliceBal);
 
       await borda.propose(10, 20, 30, 40, proposedInflationMult, { from: bob });
       await time.increase(3600 * 24 * 10.1);
