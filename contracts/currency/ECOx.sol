@@ -14,9 +14,10 @@ import "./ERC20.sol";
  * Contains the conversion mechanism for turning ECOx into ECO.
  */
 contract ECOx is ERC20, PolicedUtils {
+    // bits of precision used in the exponentiation approximation
     uint8 public constant PRECISION = 100;
 
-    uint256 public initialSupply;
+    uint256 public immutable initialSupply;
 
     // the address of the contract for initial distribution
     address public distributor;
@@ -26,6 +27,11 @@ contract ECOx is ERC20, PolicedUtils {
         address _distributor,
         uint256 _initialSupply
     ) ERC20("Eco-X", "ECOx") PolicedUtils(_policy) {
+        require(
+            _initialSupply > 0 && _initialSupply <= type(uint256).max,
+            "initial supply not properly set"
+        );
+
         initialSupply = _initialSupply;
         distributor = _distributor;
     }
@@ -38,7 +44,6 @@ contract ECOx is ERC20, PolicedUtils {
     {
         super.initialize(_self);
         copyTokenMetadata(_self);
-        initialSupply = ECOx(_self).initialSupply();
         address _distributor = ECOx(_self).distributor();
         _mint(_distributor, initialSupply);
     }
@@ -66,7 +71,6 @@ contract ECOx is ERC20, PolicedUtils {
         view
         returns (uint256)
     {
-        require(initialSupply > 0, "initial supply not set");
         uint256 _preciseRatio = safeLeftShift(_ecoXValue, PRECISION) /
             initialSupply;
 

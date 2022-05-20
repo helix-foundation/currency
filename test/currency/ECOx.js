@@ -65,10 +65,9 @@ contract('ECOx', (accounts) => {
   });
 
   it('fails if initialSupply == 0', async () => {
-    const newEcoX = await ECOx.new(policy.address, charlie, 0);
     await expectRevert(
-      newEcoX.ecoValueOf(200),
-      'initial supply not set',
+      ECOx.new(policy.address, charlie, 0),
+      'initial supply not properly set',
     );
   });
 
