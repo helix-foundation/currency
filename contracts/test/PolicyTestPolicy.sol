@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "../../contracts/policy/ERC1820Client.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";

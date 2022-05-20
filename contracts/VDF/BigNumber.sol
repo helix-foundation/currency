@@ -25,7 +25,7 @@ SOFTWARE.
 // Originated from https://github.com/zcoinofficial/solidity-BigNumber
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 // solhint-disable no-inline-assembly, no-empty-blocks, function-max-lines
 
