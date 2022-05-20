@@ -46,7 +46,7 @@
   "homepage": "https://github.com/eco/currency#readme",
   "devDependencies": {
     "@openzeppelin/gsn-helpers": "0.2.4",
-    "@truffle/debug-utils": "6.0.21",
+    "@truffle/debug-utils": "6.0.23",
     "bigint-crypto-utils": "3.0.24",
     "bn-chai": "1.0.1",
     "chai": "4.3.6",
