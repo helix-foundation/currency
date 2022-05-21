@@ -67,7 +67,10 @@ async function parseFlags(options) {
   // we currently require 6 proxies for deployment
   options.numPlaceholders = '6';
 
-  options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
+  if (!options.gasPrice) {
+    options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
+  }
+
   if (options.production) {
     options.verbose = true;
   }
@@ -146,11 +149,16 @@ async function deployStage1(options) {
       throw Error(`Gas limit (${BLOCK_GAS_LIMIT}) too high compared to block limit (${limit}); unlikely to succeed in deploying`);
     }
     bootstrapGasCost = web3.utils.toWei(web3.utils.toBN(80), 'gwei');
-    bootstrapGas = 4538418;
+    // bootstrapGas = 4538418; // old estimate, included 20 proxies
+    bootstrapGas = 1526410;
   } else {
     BLOCK_GAS_LIMIT = limit;
     bootstrapGasCost = options.gasPrice;
-    bootstrapGas = BLOCK_GAS_LIMIT;
+    // bootstrapGas = BLOCK_GAS_LIMIT; // try the real gas amount in test to keep it current
+    bootstrapGas = 1526410;
+    if (process.env.IS_COVERAGE === '1') {
+      bootstrapGas = limit;
+    }
   }
 
   if (options.verbose) {
