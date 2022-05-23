@@ -59,7 +59,7 @@ function req(contract) {
 const PolicyABI = req('Policy');
 const ECO = req('ECO');
 const TimedPoliciesABI = req('TimedPolicies');
-const EcoBalanceStoreABI = req('EcoBalanceStore');
+const IECOABI = req('IECO');
 const PolicyProposalContractABI = req('PolicyProposals');
 const PolicyVotesContractABI = req('PolicyVotes');
 const TrustedNodesABI = req('TrustedNodes');
@@ -73,7 +73,7 @@ const InflationRootHashProposal = req('InflationRootHashProposal');
 const ID_TIMEDPOLICIES = web3.utils.soliditySha3('TimedPolicies');
 // const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
 const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
-const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
+const ID_ECO = web3.utils.soliditySha3('ECO');
 
 const { toBN } = web3.utils;
 
@@ -161,8 +161,8 @@ class Supervisor {
 
   async getBalanceStore() {
     return new web3.eth.Contract(
-      EcoBalanceStoreABI.abi,
-      await this.policy.methods.policyFor(ID_ERC20TOKEN).call(),
+      IECOABI.abi,
+      await this.policy.methods.policyFor(ID_ECO).call(),
       {
         from: this.account,
       },
@@ -172,7 +172,7 @@ class Supervisor {
   async getERC20Token() {
     return new web3.eth.Contract(
       ECO.abi,
-      await this.policy.methods.policyFor(ID_ERC20TOKEN).call(),
+      await this.policy.methods.policyFor(ID_ECO).call(),
       {
         from: this.account,
       },
@@ -181,8 +181,8 @@ class Supervisor {
 
   async constructAccountsMap() {
     const map = {};
-    const token = await this.getERC20Token();
-    (await token.getPastEvents('Transfer', {
+    const eco = await this.getERC20Token();
+    (await eco.getPastEvents('Transfer', {
       fromBlock: 0,
       toBlock: 'latest',
     })).forEach((event) => {
@@ -250,9 +250,9 @@ class Supervisor {
         from: this.account,
       },
     );
-    const token = await this.getERC20Token();
-    const balance = await token.methods.balance(this.account).call();
-    token.methods.approve(addressRootHashProposal, balance).send({ gas: 1000000 });
+    const eco = await this.getERC20Token();
+    const balance = await eco.methods.balanceOf(this.account).call();
+    eco.methods.approve(addressRootHashProposal, balance).send({ gas: 1000000 });
 
     await rootHashProposal.methods.proposeRootHash(
       tree.hash,
@@ -277,12 +277,12 @@ class Supervisor {
 
     if (await timedpolicies.methods.nextGenerationStart().call() < this.timeStamp) {
       logger.info('Increasing Balance generation');
-      const token = await this.getERC20Token();
+      const eco = await this.getERC20Token();
       const { tree, accounts, sums } = await this.constructTreeData();
       await timedpolicies.methods.incrementGeneration().send({ gas: 4000000 });
 
       // TODO: This violates one-transaction-per-pass, allowing third party to break supervisor
-      const pastEvents = await token.getPastEvents('allEvents', {
+      const pastEvents = await eco.getPastEvents('allEvents', {
         fromBlock: 'latest',
         toBlock: 'latest',
       });

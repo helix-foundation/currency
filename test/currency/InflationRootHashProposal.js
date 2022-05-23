@@ -35,11 +35,11 @@ chai.use(bnChai(BN));
 
 contract('InflationRootHashProposal', () => {
   let rootHashProposal;
-  let balanceStore;
   let initInflation;
   let txProposal;
   let timedPolicies;
-  let token;
+  let currencyTimer;
+  let eco;
   let accounts;
   let counter = 0;
   let currAcc;
@@ -62,10 +62,10 @@ contract('InflationRootHashProposal', () => {
   beforeEach('global setup', async () => {
     currAcc = accounts[counter];
     ({
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
+      currencyTimer,
       rootHashProposal,
     } = await util.deployPolicy(currAcc));
     counter += 1;
@@ -165,12 +165,10 @@ contract('InflationRootHashProposal', () => {
       await time.increase(31557600 / 10);
       txProposal = await timedPolicies.incrementGeneration();
     }
-    const addressRootHashProposal = (await balanceStore.getPastEvents('allEvents', {
-      fromBlock: 'latest',
-      toBlock: 'latest',
-    }))[0].returnValues.inflationRootHashProposalContract;
+    const [event] = (await currencyTimer.getPastEvents('InflationRootHashProposalStarted'));
+    const addressRootHashProposal = event.args.inflationRootHashProposalContract;
     for (let i = 0; i < 10; i += 1) {
-      token.approve(addressRootHashProposal, (await balanceStore.balance(accounts[i])).mul(
+      eco.approve(addressRootHashProposal, (await eco.balanceOf(accounts[i])).mul(
         web3.utils.toBN(100),
       ), {
         from: accounts[i],
@@ -192,17 +190,17 @@ contract('InflationRootHashProposal', () => {
         [accounts[2], new BN('150000000000000000000000000')],
       ]);
       await initInflation.mint(
-        balanceStore.address,
+        eco.address,
         accounts[0],
         new BN('50000000000000000000000000'),
       );
       await initInflation.mint(
-        balanceStore.address,
+        eco.address,
         accounts[1],
         new BN('100000000000000000000000000'),
       );
       await initInflation.mint(
-        balanceStore.address,
+        eco.address,
         accounts[2],
         new BN('150000000000000000000000000'),
       );
@@ -518,7 +516,7 @@ contract('InflationRootHashProposal', () => {
     context('verify challenge white box testing', async () => {
       it('fail balance check', async () => {
         await initInflation.mint(
-          balanceStore.address,
+          eco.address,
           accounts[2],
           new BN('150000000000000000000000000'),
         );
@@ -557,7 +555,7 @@ contract('InflationRootHashProposal', () => {
 
       it('fail merkle proof', async () => {
         await initInflation.mint(
-          balanceStore.address,
+          eco.address,
           accounts[2],
           new BN('150000000000000000000000000'),
         );
@@ -630,10 +628,10 @@ contract('InflationRootHashProposal', () => {
 
       it('fail running sum right index', async () => {
         map = new Map([
-          [accounts[0], await balanceStore.balance(accounts[0])],
-          [accounts[1], await balanceStore.balance(accounts[1])],
-          [accounts[2], await balanceStore.balance(accounts[2])],
-          [accounts[3], await balanceStore.balance(accounts[2])],
+          [accounts[0], await eco.balanceOf(accounts[0])],
+          [accounts[1], await eco.balanceOf(accounts[1])],
+          [accounts[2], await eco.balanceOf(accounts[2])],
+          [accounts[3], await eco.balanceOf(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 300000]);
@@ -697,10 +695,10 @@ contract('InflationRootHashProposal', () => {
 
       it('fail running sum left index', async () => {
         map = new Map([
-          [accounts[0], await balanceStore.balance(accounts[0])],
-          [accounts[1], await balanceStore.balance(accounts[1])],
-          [accounts[2], await balanceStore.balance(accounts[2])],
-          [accounts[3], await balanceStore.balance(accounts[2])],
+          [accounts[0], await eco.balanceOf(accounts[0])],
+          [accounts[1], await eco.balanceOf(accounts[1])],
+          [accounts[2], await eco.balanceOf(accounts[2])],
+          [accounts[3], await eco.balanceOf(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 500]);
@@ -764,9 +762,9 @@ contract('InflationRootHashProposal', () => {
 
       it('fail total sum, last index', async () => {
         map = new Map([
-          [accounts[0], await balanceStore.balance(accounts[0])],
-          [accounts[1], await balanceStore.balance(accounts[1])],
-          [accounts[2], await balanceStore.balance(accounts[2])],
+          [accounts[0], await eco.balanceOf(accounts[0])],
+          [accounts[1], await eco.balanceOf(accounts[1])],
+          [accounts[2], await eco.balanceOf(accounts[2])],
         ]);
         rootHashProposal = await getRootHash();
         tree = getTree(map, [2, 500]);
@@ -987,8 +985,8 @@ contract('InflationRootHashProposal', () => {
     context('accept and reject root hash', () => {
       it('succeeds', async () => {
         await time.increase(86401);
-        expect((await balanceStore.rootHashAddressPerGeneration((
-          await balanceStore.currentGeneration()) - 1)).toString(10) === '0');
+        expect((await currencyTimer.rootHashAddressPerGeneration((
+          await eco.currentGeneration()) - 1)).toString(10) === '0');
         await expectEvent.inTransaction(
           (await rootHashProposal.checkRootHashStatus(
             accounts[0],
@@ -1002,8 +1000,8 @@ contract('InflationRootHashProposal', () => {
             amountOfAccounts: amountOfAccounts.toString(),
           },
         );
-        expect((await balanceStore.rootHashAddressPerGeneration((
-          await balanceStore.currentGeneration()) - 1)).toString(10)
+        expect((await currencyTimer.rootHashAddressPerGeneration((
+          await eco.currentGeneration()) - 1)).toString(10)
           === rootHashProposal.address.toString(10));
 
         await rootHashProposal.claimFee(accounts[0], { from: accounts[0] });
@@ -1031,8 +1029,8 @@ contract('InflationRootHashProposal', () => {
       // TODO
       // it('fails', async () => {
       //   await time.increase(86401);
-      //   expect((await balanceStore.rootHashAddressPerGeneration((
-      //     await balanceStore.currentGeneration()) - 1)).toString(10) === '0');
+      //   expect((await currencyTimer.rootHashAddressPerGeneration((
+      //     await eco.currentGeneration()) - 1)).toString(10) === '0');
       //   await expectEvent.inTransaction(
       //     (await rootHashProposal.checkRootHashStatus(
       //       '0x0000000000000000000000000000000000000000',
@@ -1392,13 +1390,13 @@ contract('InflationRootHashProposal', () => {
 
           for (let i = 0; i < 8; i += 1) {
             await initInflation.mint(
-              balanceStore.address,
+              eco.address,
               accounts[i],
               new BN('10000000000000000000000000000000000000'),
             );
-            token.approve(
+            eco.approve(
               rootHashProposal.address,
-              await balanceStore.balance(accounts[i]),
+              await eco.balanceOf(accounts[i]),
               {
                 from: accounts[i],
               },
@@ -1490,7 +1488,7 @@ contract('InflationRootHashProposal', () => {
         tmp = (new BN('10000000000000000000000000')).mul(web3.utils.toBN(i));
         list.push([accounts[i - 1], tmp]);
         await initInflation.mint(
-          balanceStore.address,
+          eco.address,
           accounts[i - 1],
           tmp,
         );
@@ -1499,9 +1497,9 @@ contract('InflationRootHashProposal', () => {
       rootHashProposal = await getRootHash();
 
       for (let i = 0; i < amountOfAccounts; i += 1) {
-        token.approve(
+        eco.approve(
           rootHashProposal.address,
-          await balanceStore.balance(accounts[i]),
+          await eco.balanceOf(accounts[i]),
           {
             from: accounts[i],
           },
@@ -1546,7 +1544,7 @@ contract('InflationRootHashProposal', () => {
           ));
           list.push([accounts[2 * i], tmp]);
           await initInflation.mint(
-            balanceStore.address,
+            eco.address,
             accounts[2 * i],
             tmp,
           );
@@ -1555,7 +1553,7 @@ contract('InflationRootHashProposal', () => {
 
         rootHashProposal = await getRootHash();
         for (let i = 0; i < amountOfAccounts; i += 1) {
-          token.approve(rootHashProposal.address, await balanceStore.balance(accounts[
+          eco.approve(rootHashProposal.address, await eco.balanceOf(accounts[
             i]), {
             from: accounts[i],
           });

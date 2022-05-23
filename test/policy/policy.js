@@ -5,7 +5,7 @@ const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
 const FakeCommander = artifacts.require('FakeCommander');
 const RevertingAction = artifacts.require('RevertingAction');
-const DummyPoliced = artifacts.require('DummyPoliced');
+const DummyPolicedUtils = artifacts.require('DummyPolicedUtils');
 
 const {
   expect,
@@ -89,7 +89,7 @@ contract('Policy [@group=11]', () => {
 
       it('reverts', async () => {
         const revertingAction = await RevertingAction.new(policy.address);
-        const policed = await DummyPoliced.new(policy.address);
+        const policed = await DummyPolicedUtils.new(policy.address);
 
         await expectRevert(
           commander.command(policed.address, revertingAction.address),

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "./PolicyProposals.sol";
 import "./CurrencyGovernance.sol";
 import "./SimplePolicySetter.sol";
+import "../currency/InflationRootHashProposal.sol";
 import "../utils/TimeUtils.sol";
-import "./ITimeNotifier.sol";
+import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
 import "./Lockup.sol";
 import "./Inflation.sol";
@@ -17,7 +18,7 @@ import "./ILockups.sol";
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
+contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     /** The on-chain address for the currency voting contract. This contract is
      * cloned for each new currency vote.
      */
@@ -27,6 +28,10 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
     address public lockupImpl;
 
     address public simplePolicyImpl;
+
+    address public inflationRootHashProposalImpl;
+
+    mapping(uint256 => address) public rootHashAddressPerGeneration;
 
     /* Current generation of the balance store. */
     uint256 public currentGeneration;
@@ -38,17 +43,26 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
     event LockupOffered(address indexed addr);
     event NewCurrencyGovernance(address indexed addr);
 
+    /* Event to be emitted when InflationRootHashProposalStarted contract spawned.
+     */
+    event InflationRootHashProposalStarted(
+        address inflationRootHashProposalContract,
+        uint256 indexed generation
+    );
+
     constructor(
         address _policy,
         address _borda,
         address _inflation,
         address _lockup,
-        address _simplepolicy
+        address _simplepolicy,
+        address _inflationRootHashProposal
     ) PolicedUtils(_policy) {
         bordaImpl = _borda;
         inflationImpl = _inflation;
         lockupImpl = _lockup;
         simplePolicyImpl = _simplepolicy;
+        inflationRootHashProposalImpl = _inflationRootHashProposal;
     }
 
     function initialize(address _self) public override onlyConstruction {
@@ -58,6 +72,8 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
         inflationImpl = CurrencyTimer(_self).inflationImpl();
         lockupImpl = CurrencyTimer(_self).lockupImpl();
         simplePolicyImpl = CurrencyTimer(_self).simplePolicyImpl();
+        inflationRootHashProposalImpl = CurrencyTimer(_self)
+            .inflationRootHashProposalImpl();
     }
 
     function notifyGenerationIncrease() external override {
@@ -102,7 +118,22 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
             emit NewCurrencyGovernance(_clone);
         }
 
+        // new root hash
+        // better tests could allow this to only need to be done in the next if statement
+        rootHashAddressPerGeneration[_old] = InflationRootHashProposal(
+            inflationRootHashProposalImpl
+        ).clone();
+        InflationRootHashProposal(rootHashAddressPerGeneration[_old]).configure(
+                block.number
+            );
+
+        emit InflationRootHashProposalStarted(
+            rootHashAddressPerGeneration[_old],
+            _old
+        );
+
         if (_randomInflationWinners > 0 && _randomInflationPrize > 0) {
+            // new inflation contract
             address _clone = Inflation(inflationImpl).clone();
             getStore().mint(
                 _clone,
@@ -141,7 +172,7 @@ contract CurrencyTimer is PolicedUtils, ITimeNotifier, ILockups {
 
     /** Get the associated balance store address.
      */
-    function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_ERC20TOKEN));
+    function getStore() private view returns (IECO) {
+        return IECO(policyFor(ID_ECO));
     }
 }

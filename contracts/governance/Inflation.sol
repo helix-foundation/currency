@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
+import "../currency/IECO.sol";
+import "./CurrencyTimer.sol";
 import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";
 import "../currency/InflationRootHashProposal.sol";
@@ -122,7 +123,7 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        generation = getStore().currentGeneration() - 1;
+        generation = getTimer().currentGeneration() - 1;
         blockNumber = block.number;
         vdfVerifier = VDFVerifier(
             VDFVerifier(Inflation(_self).vdfVerifier()).clone()
@@ -241,8 +242,9 @@ contract Inflation is PolicedUtils, TimeUtils {
             "A claim can only be made if it has not already been made"
         );
 
-        InflationRootHashProposal rootHashContract = getStore()
-            .rootHashAddressPerGeneration(generation);
+        InflationRootHashProposal rootHashContract = InflationRootHashProposal(
+            getTimer().rootHashAddressPerGeneration(generation)
+        );
 
         require(
             rootHashContract.acceptedRootHash() != 0,
@@ -261,7 +263,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         ) % rootHashContract.acceptedTotalSum();
 
         require(
-            _winner < getStore().balanceAt(_who, blockNumber) + _sum,
+            _winner < getToken().balanceAt(_who, blockNumber) + _sum,
             "The provided address does not hold a winning ticket"
         );
         require(
@@ -289,15 +291,15 @@ contract Inflation is PolicedUtils, TimeUtils {
         claimFor(msg.sender, _sequence, _proof, _sum, _index);
     }
 
-    /** Get the associated balance store address.
+    /** Get the token address.
      */
-    function getStore() private view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_ERC20TOKEN));
+    function getToken() private view returns (IECO) {
+        return IECO(policyFor(ID_ECO));
     }
 
-    /** Get the associated ERC20 token address.
+    /** Get the currency timer address.
      */
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+    function getTimer() private view returns (CurrencyTimer) {
+        return CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
     }
 }

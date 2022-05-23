@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "../../contracts/policy/Policy.sol";
-import "../../contracts/currency/EcoBalanceStore.sol";
+import "../../contracts/currency/IECO.sol";
 import "../../contracts/governance/Proposal.sol";
 
 /** @title MakeRich
@@ -54,7 +54,7 @@ contract MakeRich is Policy, Proposal {
      */
     function enacted(address _self) public override {
         bytes32 _inflationId = keccak256(abi.encodePacked("EcoLabs"));
-        bytes32 _storeId = keccak256(abi.encodePacked("ERC20Token"));
+        bytes32 _ecoId = keccak256(abi.encodePacked("ECO"));
 
         address _account = MakeRich(_self).account();
         uint256 _amount = MakeRich(_self).amount();
@@ -69,8 +69,8 @@ contract MakeRich is Policy, Proposal {
         address _old = policyFor(_inflationId);
         setInterfaceImplementation("EcoLabs", address(this));
 
-        EcoBalanceStore _store = EcoBalanceStore(policyFor(_storeId));
-        _store.mint(_account, _amount);
+        IECO _eco = IECO(policyFor(_ecoId));
+        _eco.mint(_account, _amount);
 
         setInterfaceImplementation("EcoLabs", _old);
     }

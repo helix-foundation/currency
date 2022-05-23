@@ -1,8 +1,8 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./EcoBalanceStore.sol";
+import "./IECO.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "../governance/Lockup.sol";
@@ -14,21 +14,38 @@ import "./ERC20.sol";
  * Contains the conversion mechanism for turning ECOx into ECO.
  */
 contract ECOx is ERC20, PolicedUtils {
+    // bits of precision used in the exponentiation approximation
     uint8 public constant PRECISION = 100;
 
-    uint256 public initialSupply;
+    uint256 public immutable initialSupply;
 
-    constructor(address _policy, uint256 _initialSupply)
-        ERC20("Eco-X", "ECOx")
-        PolicedUtils(_policy)
-    {
+    // the address of the contract for initial distribution
+    address public distributor;
+
+    constructor(
+        address _policy,
+        address _distributor,
+        uint256 _initialSupply
+    ) ERC20("Eco-X", "ECOx") PolicedUtils(_policy) {
+        require(
+            _initialSupply > 0 && _initialSupply <= type(uint256).max,
+            "initial supply not properly set"
+        );
+
         initialSupply = _initialSupply;
+        distributor = _distributor;
     }
 
-    function initialize(address _self) public override onlyConstruction {
+    function initialize(address _self)
+        public
+        virtual
+        override
+        onlyConstruction
+    {
         super.initialize(_self);
         copyTokenMetadata(_self);
-        initialSupply = ECOx(_self).initialSupply();
+        address _distributor = ECOx(_self).distributor();
+        _mint(_distributor, initialSupply);
     }
 
     function ecoValueOf(uint256 _ecoXValue) public view returns (uint256) {
@@ -42,8 +59,9 @@ contract ECOx is ERC20, PolicedUtils {
         view
         returns (uint256)
     {
-        uint256 _ecoSupplyAt = EcoBalanceStore(address(getToken()))
-            .totalSupplyAt(_blockNumber);
+        uint256 _ecoSupplyAt = IECO(address(getToken())).totalSupplyAt(
+            _blockNumber
+        );
 
         return computeValue(_ecoXValue, _ecoSupplyAt);
     }
@@ -53,10 +71,24 @@ contract ECOx is ERC20, PolicedUtils {
         view
         returns (uint256)
     {
-        require(initialSupply > 0, "initial supply not set");
-        uint256 _preciseRatio = (_ecoXValue << PRECISION) / initialSupply;
+        uint256 _preciseRatio = safeLeftShift(_ecoXValue, PRECISION) /
+            initialSupply;
 
         return (generalExp(_preciseRatio, PRECISION) * _ecoSupply) >> PRECISION;
+    }
+
+    function safeLeftShift(uint256 value, uint8 shift)
+        internal
+        pure
+        returns (uint256)
+    {
+        require(shift < 256, "shift amount too large");
+        uint256 _result = value << shift;
+        require(
+            _result >> shift == value,
+            "value too large, shift out of bounds"
+        );
+        return _result;
     }
 
     /**
@@ -147,7 +179,7 @@ contract ECOx is ERC20, PolicedUtils {
 
         _burn(msg.sender, _ecoXValue);
 
-        EcoBalanceStore(address(getToken())).mint(msg.sender, eco);
+        IECO(address(getToken())).mint(msg.sender, eco);
     }
 
     function mint(address _to, uint256 _value) external {
@@ -161,6 +193,6 @@ contract ECOx is ERC20, PolicedUtils {
     }
 
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 }

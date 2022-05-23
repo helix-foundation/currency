@@ -34,26 +34,27 @@ const { trace } = require('./trace');
 
 exports.deployPolicy = async (
   account,
-  { trustees = [] } = {},
+  { trustednodes = [] } = { trustednodes: [] },
   production = false,
   verbose = false,
 ) => {
-  const options = await Deploy.deploy(account, trustees, production, verbose);
+  const options = await Deploy.deploy({
+    account, trustednodes, production, verbose, test: true,
+  });
 
   const policyAd = options.policyProxy._address;
-  const ecoAd = options.erc20._address;
+  const ecoAd = options.eco._address;
   const inflationAd = options.inflationContract._address;
   const vdfAd = options.vdfContract._address;
   const ecoxAd = options.ecox._address;
   const rootHashProposalAd = options.rootHashProposal._address;
   const timedPoliciesAd = options.timedPolicies._address;
-  const trustedNodesAd = options.trustedNodesContract._address;
-  const currencyTimerAd = options.currencyTimerContract._address;
+  const trustedNodesAd = options.trustedNodes._address;
+  const currencyTimerAd = options.currencyTimer._address;
   const lockupAd = options.depositCertificatesContract._address;
   const ecoXLockupAd = options.ecoXLockupContract._address;
   const faucetAd = options.faucetContract._address;
   const cleanupAd = options.cleanupContract._address;
-  const balanceStoreAd = options.balanceStore._address;
 
   const policy = await Policy.at(policyAd);
   const eco = await ECO.at(ecoAd);
@@ -69,7 +70,6 @@ exports.deployPolicy = async (
   const faucet = await EcoFaucet.at(faucetAd);
   const cleanup = await Cleanup.at(cleanupAd);
   const unauthedCleanup = await MurderousCleanup.new();
-  const balanceStore = await ECO.at(balanceStoreAd);
 
   // await timedPolicies.incrementGeneration();
   // console.log(await ecox.name());
@@ -83,8 +83,7 @@ exports.deployPolicy = async (
 
   return {
     policy,
-    balanceStore,
-    token: eco,
+    eco,
     initInflation,
     inflation,
     vdf,
@@ -100,122 +99,6 @@ exports.deployPolicy = async (
     unauthedCleanup,
   };
 };
-
-// exports.deployPolicy = async ({ trustees = [] } = {}) => {
-//   const timedPoliciesIdentifierHash = web3.utils.soliditySha3('TimedPolicies');
-//   const policyProposalsIdentifierHash = web3.utils.soliditySha3('PolicyProposals');
-//   const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
-//   const tokenHash = web3.utils.soliditySha3('ERC20Token');
-//   const ecoxHash = web3.utils.soliditySha3('ECOx');
-//   const ecoXLockupHash = web3.utils.soliditySha3('ECOxLockup');
-//   const trustedNodesHash = web3.utils.soliditySha3('TrustedNodes');
-//   const faucetHash = web3.utils.soliditySha3('Faucet');
-//   const currencyTimerHash = web3.utils.soliditySha3('CurrencyTimer');
-//   const cleanupHash = web3.utils.soliditySha3('ContractCleanup');
-//   const unknownPolicyIDHash = web3.utils.soliditySha3('bobingy');
-
-//   const init = await PolicyInit.new();
-//   const proxy = await ForwardProxy.new(init.address);
-
-//   const rootHash = await RootHashProposal.new(proxy.address);
-//   const token = await ECO.new(proxy.address, rootHash.address);
-//   const ecox = await ECOx.new(proxy.address, totalECOx);
-//   const vdf = await VDFVerifier.new(proxy.address);
-//   const authedCleanup = await Cleanup.new();
-//   const unauthedCleanup = await Cleanup.new();
-
-//   const inflation = await Inflation.new(proxy.address, vdf.address, 2);
-//   const trustedNodes = await TrustedNodes.new(proxy.address, trustees, 1000);
-//   const faucet = await EcoFaucet.new(proxy.address);
-//   const borda = await CurrencyGovernance.new(proxy.address);
-//   const lockup = await Lockup.new(proxy.address);
-//   const ecoxlockup = await ECOxLockup.new(proxy.address);
-
-//   const policySetter = await SimplePolicySetter.new();
-
-//   const policyVotes = await PolicyVotes.new(proxy.address);
-//   const policyProposals = await PolicyProposals.new(
-//     proxy.address,
-//     policyVotes.address,
-//     policySetter.address,
-//   );
-
-//   const currencyTimer = await CurrencyTimer.new(
-//     proxy.address,
-//     borda.address,
-//     inflation.address,
-//     lockup.address,
-//     policySetter.address,
-//   );
-
-//   const timedPolicies = await TimedPolicies.new(
-//     proxy.address,
-//     policyProposals.address,
-//     policySetter.address,
-//     [tokenHash, currencyTimerHash, ecoXLockupHash],
-//   );
-
-//   await (await PolicyInit.at(proxy.address)).fusedInit(
-//     (await Policy.new()).address,
-//     [
-//       timedPoliciesIdentifierHash,
-//       policyProposalsIdentifierHash,
-//       policyVotesIdentifierHash,
-//       currencyTimerHash,
-//       cleanupHash,
-//     ],
-//     [
-//       tokenHash,
-//       ecoxHash,
-//       timedPoliciesIdentifierHash,
-//       trustedNodesHash,
-//       faucetHash,
-//       currencyTimerHash,
-//       ecoXLockupHash,
-//       cleanupHash,
-//       unknownPolicyIDHash,
-//     ],
-//     [
-//       token.address,
-//       ecox.address,
-//       timedPolicies.address,
-//       trustedNodes.address,
-//       faucet.address,
-//       currencyTimer.address,
-//       ecoxlockup.address,
-//       authedCleanup.address,
-//       unauthedCleanup.address,
-//     ],
-//     [tokenHash],
-//   );
-
-//   await timedPolicies.incrementGeneration();
-
-//   const initInflation = {
-//     mint: async (store, account, balance) => {
-//       await faucet.mint(account, balance);
-//     },
-//   };
-
-//   return {
-//     policy: (await Policy.at(proxy.address)),
-//     balanceStore: token,
-//     token,
-//     initInflation,
-//     inflation,
-//     vdf,
-//     ecox,
-//     rootHash,
-//     timedPolicies,
-//     trustedNodes,
-//     currencyTimer,
-//     lockup,
-//     ecoxlockup,
-//     faucet,
-//     authedCleanup,
-//     unauthedCleanup,
-//   };
-// };
 
 exports.policyFor = async (policy, hash) => {
   const erc1820 = await singletons.ERC1820Registry();

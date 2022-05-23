@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "../proxy/ForwardTarget.sol";
@@ -8,7 +8,7 @@ import "../proxy/ForwardTarget.sol";
  *
  * A policed contract is any contract managed by a policy.
  */
-contract Policed is ForwardTarget, IERC1820Implementer {
+abstract contract Policed is ForwardTarget, IERC1820Implementer {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 

@@ -31,8 +31,7 @@ const {
 
 contract('Inflation [@group=6]', (unsortedAccounts) => {
   let policy;
-  let token;
-  let balanceStore;
+  let eco;
   let governance;
   let initInflation;
   let addressRootHashProposal;
@@ -78,23 +77,13 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   );
 
   async function configureInflationRootHash() {
-    //   await time.increase(3600 * 24 * 40);
-    //   await timedPolicies.incrementGeneration();
-    addressRootHashProposal = (await (new web3.eth.Contract(balanceStore.abi, balanceStore
-      .address)).getPastEvents('allEvents', {
-      fromBlock: 'latest',
-      toBlock: 'latest',
-    }))[1].returnValues.inflationRootHashProposalContract;
-    // console.log(await (new web3.eth.Contract(balanceStore.abi, balanceStore
-    //   .address)).getPastEvents('allEvents', {
-    //   fromBlock: 'latest',
-    //   toBlock: 'latest',
-    // }));
+    const [event] = (await currencyTimer.getPastEvents('InflationRootHashProposalStarted'));
+    addressRootHashProposal = event.args.inflationRootHashProposalContract;
     tree = getTree(map);
     proposedRootHash = tree.hash;
 
     for (let i = 0; i < 3; i += 1) {
-      token.approve(addressRootHashProposal, await balanceStore.balance(accounts[i]), {
+      eco.approve(addressRootHashProposal, await eco.balanceOf(accounts[i]), {
         from: accounts[i],
       });
     }
@@ -153,21 +142,20 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   beforeEach(async () => {
     ({
       policy,
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
       currencyTimer,
       inflation,
-    } = await util.deployPolicy(accounts[counter], { trustees: accounts.slice(1, 5) }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: accounts.slice(1, 5) }));
     counter += 1;
 
-    await initInflation.mint(balanceStore.address, accounts[0], accountsBalances[0]);
-    await initInflation.mint(balanceStore.address, accounts[1], accountsBalances[1]);
-    await initInflation.mint(balanceStore.address, accounts[2], accountsBalances[2]);
+    await initInflation.mint(eco.address, accounts[0], accountsBalances[0]);
+    await initInflation.mint(eco.address, accounts[1], accountsBalances[1]);
+    await initInflation.mint(eco.address, accounts[2], accountsBalances[2]);
 
     governance = await CurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
     const bob = accounts[1];
@@ -434,7 +422,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
         const updatedMap = new Map();
         beforeEach(async () => {
           for (let i = 0; i < 3; i += 1) {
-            updatedMap.set(accounts[i], await token.balanceOf.call(accounts[
+            updatedMap.set(accounts[i], await eco.balanceOf.call(accounts[
               i]));
           }
           const [a, index, winner] = await getClaimParameters(inflation, 0);
@@ -455,7 +443,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
               from: winner,
             });
             assert.equal(
-              (await token.balanceOf.call(winner)).toString(),
+              (await eco.balanceOf.call(winner)).toString(),
               updatedMap.get(winner).toString(),
               'Should get an inflation',
             );
@@ -512,7 +500,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
           await inflation.destruct();
 
           assert.equal(
-            (await token.balanceOf(inflation.address)).toString(),
+            (await eco.balanceOf(inflation.address)).toString(),
             0,
           );
         });
@@ -593,7 +581,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
             it('has no leftover tokens', async () => {
               assert.equal(
-                (await token.balanceOf(inflation.address))
+                (await eco.balanceOf(inflation.address))
                   .toString(),
                 0,
               );

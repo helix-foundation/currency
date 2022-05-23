@@ -1,11 +1,11 @@
 const PolicyTestPolicy = artifacts.require('PolicyTestPolicy');
-const DummyPoliced = artifacts.require('DummyPoliced');
+const DummyPolicedUtils = artifacts.require('DummyPolicedUtils');
 const DummyInflation = artifacts.require('DummyInflation');
 const Policer = artifacts.require('Policer');
 const FakeCommander = artifacts.require('FakeCommander');
 const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
-const Policed = artifacts.require('Policed');
+const DummyPoliced = artifacts.require('DummyPoliced');
 const RegistrationAttemptContract = artifacts.require(
   'RegistrationAttemptContract',
 );
@@ -37,7 +37,7 @@ contract('Policed [@group=11]', (accounts) => {
 
     policy = await PolicyTestPolicy.at(forwardProxy.address);
 
-    testPoliced = await DummyPoliced.new(policy.address);
+    testPoliced = await DummyPolicedUtils.new(policy.address);
     await policy.setLabel('Dummy', testPoliced.address);
     policer = await Policer.new(policy.address);
   });
@@ -46,7 +46,7 @@ contract('Policed [@group=11]', (accounts) => {
     it('matches keccak256 of identifiers', async () => {
       const ids = {
         ID_FAUCET: 'Faucet',
-        ID_ERC20TOKEN: 'ERC20Token',
+        ID_ECO: 'ECO',
         ID_CLEANUP: 'ContractCleanup',
         ID_TIMED_POLICIES: 'TimedPolicies',
         ID_TRUSTED_NODES: 'TrustedNodes',
@@ -59,14 +59,14 @@ contract('Policed [@group=11]', (accounts) => {
         ID_ECOXLOCKUP: 'ECOxLockup',
       };
       await Promise.all(Object.entries(ids).map(async ([key, value]) => {
-        assert.equal(await commander[key](), web3.utils.soliditySha3(value), `${key} != keccak(${value})`);
+        assert.equal(await commander[`GET_${key}`](), web3.utils.soliditySha3(value), `${key} != keccak(${value})`);
       }));
     });
 
     it('rejects ERC1820 calls from non-policy objects', async () => {
       await expectRevert(
         testPoliced.canImplementInterfaceForAddress('0x1234', testPoliced.address),
-        'Only the policy or interface contract may call this function',
+        'Only the policy or interface contract can set the interface.',
       );
     });
 
@@ -78,14 +78,14 @@ contract('Policed [@group=11]', (accounts) => {
 
       await expectRevert(
         registrationAttemptContract.register(),
-        'Only the policy or interface contract may call this function',
+        'Only the policy or interface contract can set the interface.',
       );
     });
   });
 
   describe('Policed', () => {
     it('only allows ERC1820 registration for the root policy', async () => {
-      const testRawPoliced = await Policed.new(policy.address);
+      const testRawPoliced = await DummyPoliced.new(policy.address);
       const registrationAttemptContract = await RegistrationAttemptContract.new(
         testRawPoliced.address,
         'CurrencyGovernance',
@@ -93,12 +93,12 @@ contract('Policed [@group=11]', (accounts) => {
 
       await expectRevert(
         registrationAttemptContract.register(),
-        'contract only implements interfaces for the policy contract',
+        'This contract only implements interfaces for the policy contract.',
       );
     });
 
     it('responds to canImplementInterfaceForAddress', async () => {
-      const testRawPoliced = await Policed.new(policy.address);
+      const testRawPoliced = await DummyPoliced.new(policy.address);
       await testRawPoliced.canImplementInterfaceForAddress('0x00', policy.address);
     });
   });
@@ -151,10 +151,16 @@ contract('Policed [@group=11]', (accounts) => {
 
   it('Should be cloneable', async () => {
     await testPoliced.cloneMe();
-    const clone = await DummyPoliced.at(await testPoliced.c());
+    const clone = await DummyPolicedUtils.at(await testPoliced.c());
     assert.equal(
       (await testPoliced.value()).toString(),
       (await clone.value()).toString(),
     );
+  });
+
+  it('Clones should not be cloneable', async () => {
+    await testPoliced.cloneMe();
+    const clone = await DummyPolicedUtils.at(await testPoliced.c());
+    await expectRevert(clone.cloneMe(), 'This method cannot be called on clones');
   });
 });

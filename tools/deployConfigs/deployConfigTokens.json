@@ -1,0 +1,34 @@
+{
+  "webrpc": "https://kovan.infura.io/v3/da99ebc8c0964bb8bb757b6f8cc40f1f",
+  "deployTokens": true,
+  "deployGovernance": false,
+  "from": "0x8015fcce39df92bf6a86956ead88e78ad73925cc8f42c8730830b0ba3fac26be",
+  "initialECO": [
+    {
+      "address": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
+      "amount": "1000"
+    },
+    {
+      "address": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
+      "amount": "2000"
+    },
+    {
+      "address": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
+      "amount": "3000"
+    }
+  ],
+  "initialECOx": [
+    {
+      "address": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
+      "amount": "10"
+    },
+    {
+      "address": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
+      "amount": "20"
+    },
+    {
+      "address": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
+      "amount": "30"
+    }
+  ]
+}

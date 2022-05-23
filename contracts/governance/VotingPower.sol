@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "./ILockups.sol";
 import "./Lockup.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
+import "../currency/IECO.sol";
 import "../currency/ECOx.sol";
 import "./ECOxLockup.sol";
 
@@ -50,8 +50,8 @@ contract VotingPower is PolicedUtils {
 
     /** Get the associated balance store address.
      */
-    function getStore() internal view returns (EcoBalanceStore) {
-        return EcoBalanceStore(policyFor(ID_ERC20TOKEN));
+    function getStore() internal view returns (IECO) {
+        return IECO(policyFor(ID_ECO));
     }
 
     function getX() internal view returns (ECOx) {

@@ -31,8 +31,7 @@ const { toBN } = web3.utils;
 
 contract('Governance Policy Change [@group=9]', (accounts) => {
   let policy;
-  let balanceStore;
-  let token;
+  let eco;
   let timedPolicies;
   let policyProposals;
   let policyVotes;
@@ -52,11 +51,10 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
   it('Deploys the production system', async () => {
     ({
       policy,
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
-    } = await util.deployPolicy(accounts[counter], { trustees: [bob, charlie, dave] }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob, charlie, dave] }));
     counter += 1;
   });
 
@@ -65,10 +63,10 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
     /* Until we have some idea how initial distribution is done, this *does* use
      *a test-function
      */
-    await initInflation.mint(balanceStore.address, alice, stake);
-    await initInflation.mint(balanceStore.address, bob, stake);
-    await initInflation.mint(balanceStore.address, charlie, stake);
-    await initInflation.mint(balanceStore.address, dave, stake);
+    await initInflation.mint(eco.address, alice, stake);
+    await initInflation.mint(eco.address, bob, stake);
+    await initInflation.mint(eco.address, charlie, stake);
+    await initInflation.mint(eco.address, dave, stake);
   });
 
   it('Waits a generation', async () => {
@@ -78,7 +76,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
 
   it('Checks that the current governance contract is not poodles', async () => {
     poodleBorda = await PoodleCurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
     await expectRevert.unspecified(
@@ -102,9 +100,9 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
-    const tokenHash = web3.utils.soliditySha3('ERC20Token');
-    const pf = await policy.policyFor(tokenHash);
-    const erc = await util.policyFor(policy, tokenHash);
+    const ecoHash = web3.utils.soliditySha3('ECO');
+    const pf = await policy.policyFor(ecoHash);
+    const erc = await util.policyFor(policy, ecoHash);
     if (await isCoverage()) {
       return;
     }
@@ -119,7 +117,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
   });
 
   it('Accepts new proposals', async () => {
-    await token.approve(
+    await eco.approve(
       policyProposals.address,
       await policyProposals.COST_REGISTER(),
       { from: alice },
@@ -170,7 +168,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
 
   it('Checks that the new governance contract is poodles', async () => {
     poodleBorda = await PoodleCurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
     const poodles = await poodleBorda.provePoodles();
     expect(poodles).to.be.true;

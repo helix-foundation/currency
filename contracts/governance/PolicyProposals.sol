@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "../policy/Policy.sol";
-import "../currency/EcoBalanceStore.sol";
+import "../currency/IECO.sol";
 import "../policy/PolicedUtils.sol";
 import "./Proposal.sol";
 import "./PolicyVotes.sol";
@@ -381,6 +381,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
     /** Get the associated ERC20 token address.
      */
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 }

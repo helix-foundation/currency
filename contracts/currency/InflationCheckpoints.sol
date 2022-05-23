@@ -1,9 +1,9 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../currency/VoteCheckpoints.sol";
-import "../governance/ITimeNotifier.sol";
+import "../governance/IGenerationIncrease.sol";
 import "../policy/PolicedUtils.sol";
 
 /** @title InflationCheckpoints
@@ -14,10 +14,9 @@ import "../policy/PolicedUtils.sol";
 abstract contract InflationCheckpoints is
     VoteCheckpoints,
     PolicedUtils,
-    ITimeNotifier
+    IGenerationIncrease
 {
-    uint256 public constant INITIAL_INFLATION_MULTIPLIER =
-        1_000_000_000_000_000_000;
+    uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
     Checkpoint[] internal _linearInflationCheckpoints;
 
@@ -79,7 +78,7 @@ abstract contract InflationCheckpoints is
 
     /** Access function to determine the token balance held by some address.
      */
-    function balance(address _owner) public view override returns (uint256) {
+    function balanceOf(address _owner) public view override returns (uint256) {
         uint256 _linearInflation = _checkpointsLookup(
             _linearInflationCheckpoints,
             block.number
@@ -89,7 +88,7 @@ abstract contract InflationCheckpoints is
 
     /** Returns the total (inflation corrected) token supply
      */
-    function tokenSupply() public view override returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         uint256 _linearInflation = _checkpointsLookup(
             _linearInflationCheckpoints,
             block.number

@@ -1,4 +1,4 @@
-const ForwardTarget = artifacts.require('ForwardTarget');
+const ForwardTarget = artifacts.require('ForwardTargetImpl');
 const ForwardProxy = artifacts.require('ForwardProxy');
 const ImplementationUpdatingTarget = artifacts.require(
   'ImplementationUpdatingTarget',

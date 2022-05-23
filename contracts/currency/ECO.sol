@@ -1,48 +1,49 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "./InflationCheckpoints.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "../currency/InflationRootHashProposal.sol";
-import "../currency/EcoBalanceStore.sol";
 import "../governance/CurrencyTimer.sol";
 
 /** @title An ERC20 token interface to the Eco currency system.
  */
 contract ECO is InflationCheckpoints, TimeUtils {
-    /* Event to be emitted when InflationRootHashProposalStarted contract spawned.
-     */
-    event InflationRootHashProposalStarted(
-        address inflationRootHashProposalContract,
-        uint256 indexed generation
-    );
-
     /** Fired when a proposal with a new inflation multiplier is selected and passed.
      * Used to calculate new values for the rebased token.
      */
     event NewInflationMultiplier(uint256 inflationMultiplier);
 
     /* Current generation of the balance store. */
+    // need to set a default here
     uint256 public currentGeneration;
 
-    mapping(uint256 => InflationRootHashProposal)
-        public rootHashAddressPerGeneration;
+    // the address of the contract for initial distribution
+    address public distributor;
 
-    InflationRootHashProposal public inflationRootHashProposalImpl;
+    uint256 public initialSupply;
 
     constructor(
         address _policy,
-        InflationRootHashProposal _rootHashProposalImpl
+        address _distributor,
+        uint256 _initialSupply
     ) InflationCheckpoints(_policy, "Eco", "ECO") {
-        inflationRootHashProposalImpl = _rootHashProposalImpl;
+        distributor = _distributor;
+        initialSupply = _initialSupply;
     }
 
-    function initialize(address _self) public override onlyConstruction {
+    function initialize(address _self)
+        public
+        virtual
+        override
+        onlyConstruction
+    {
         super.initialize(_self);
-        inflationRootHashProposalImpl = EcoBalanceStore(_self)
-            .inflationRootHashProposalImpl();
+        initialSupply = ECO(_self).initialSupply();
+        address _distributor = ECO(_self).distributor();
+        _mint(_distributor, initialSupply);
     }
 
     function mint(address _to, uint256 _value) external {
@@ -98,9 +99,8 @@ contract ECO is InflationCheckpoints, TimeUtils {
         if (address(bg) != address(0)) {
             address winner = bg.winner();
             if (winner != address(0)) {
-                uint256 _inflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
+                uint256 _inflationMultiplier;
                 (, , , , , _inflationMultiplier) = bg.proposals(winner);
-                // TODO: add event here for showing that inflation multiplier was updated
                 emit NewInflationMultiplier(_inflationMultiplier);
 
                 // updates the inflation value
@@ -114,15 +114,5 @@ contract ECO is InflationCheckpoints, TimeUtils {
                 );
             }
         }
-
-        rootHashAddressPerGeneration[_old] = InflationRootHashProposal(
-            inflationRootHashProposalImpl.clone()
-        );
-        rootHashAddressPerGeneration[_old].configure(block.number);
-
-        emit InflationRootHashProposalStarted(
-            address(rootHashAddressPerGeneration[_old]),
-            _old
-        );
     }
 }

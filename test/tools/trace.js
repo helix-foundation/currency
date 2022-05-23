@@ -9,7 +9,7 @@ contract('trace', (accounts) => {
   let counter = 0;
 
   beforeEach(async () => {
-    ({ trustedNodes } = await util.deployPolicy(accounts[counter], { trustees: [bob] }));
+    ({ trustedNodes } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
     counter++;
   });
 

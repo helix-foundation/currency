@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 /** @title Proposal
  * Interface specification for proposals. Any proposal submitted in the

@@ -1,6 +1,6 @@
 /* -*- c-basic-offset: 4 -*- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "./ForwardTarget.sol";
 
@@ -8,6 +8,11 @@ import "./ForwardTarget.sol";
 
 /** @title Upgradable proxy */
 contract ForwardProxy {
+    // this is the storage slot to hold the target of the proxy
+    // keccak256(abi.encodePacked("com.eco.ForwardProxy.target"))
+    uint256 private constant IMPLEMENTATION_SLOT =
+        0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4;
+
     /** Construct a new proxy.
      *
      * @param _impl The default target address.
@@ -21,10 +26,7 @@ contract ForwardProxy {
         // Store forwarding target address at specified storage slot, copied
         // from ForwardTarget#IMPLEMENTATION_SLOT
         assembly {
-            sstore(
-                0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4,
-                _impl
-            )
+            sstore(IMPLEMENTATION_SLOT, _impl)
         }
     }
 
@@ -40,35 +42,35 @@ contract ForwardProxy {
          * This is also the only function in this contract, which avoids the
          * function dispatch overhead.
          */
+
         assembly {
             // Copy all call arguments to memory starting at 0x0
             calldatacopy(0x0, 0, calldatasize())
 
-            // Forward to proxy target (loaded from 0xd0fa...), using
+            // Forward to proxy target (loaded from IMPLEMENTATION_SLOT), using
             // arguments from memory 0x0 and having results written to
             // memory 0x0.
-            // Unfortunately, Yul doesn't allow referencing constants, so
-            // 0xd0fa... is copied from ForwardTarget#IMPLEMENTATION_SLOT
-            if delegatecall(
+            let delegate_result := delegatecall(
                 gas(),
-                sload(
-                    0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4
-                ),
+                sload(IMPLEMENTATION_SLOT),
                 0x0,
                 calldatasize(),
-                0,
+                0x0,
                 0
-            ) {
-                // If the call was successful, copy result into return
-                // buffer and return
-                returndatacopy(0x0, 0, returndatasize())
-                return(0x0, returndatasize())
+            )
+
+            let result_size := returndatasize()
+
+            //copy result into return buffer
+            returndatacopy(0x0, 0, result_size)
+
+            if delegate_result {
+                // If the call was successful, return
+                return(0x0, result_size)
             }
 
-            // If the call was not successful, copy result from return
-            // buffer and revert
-            returndatacopy(0x0, 0, returndatasize())
-            revert(0x0, returndatasize())
+            // If the call was not successful, revert
+            revert(0x0, result_size)
         }
     }
 }

@@ -28,7 +28,7 @@ contract('Lockup [@group=3]', (accounts) => {
   const charlie = accounts[2];
   let counter = 0;
   let policy;
-  let token;
+  let eco;
   let timedPolicies;
   let currencyTimer;
   let borda;
@@ -43,15 +43,15 @@ contract('Lockup [@group=3]', (accounts) => {
     );
     ({
       policy,
-      token,
+      eco,
       timedPolicies,
       currencyTimer,
       faucet,
-    } = await util.deployPolicy(accounts[counter], { trustees: [alice, bob, charlie] }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [alice, bob, charlie] }));
     counter += 1;
 
     borda = await CurrencyGovernance.at(
-      await util.policyFor(policy, await timedPolicies.ID_CURRENCY_GOVERNANCE()),
+      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
     await borda.propose(10, 20, 30, 40, toBN('1000000000000000000'), { from: bob });
@@ -74,7 +74,7 @@ contract('Lockup [@group=3]', (accounts) => {
     lockup = await Lockup.at(evt.args.addr);
 
     await faucet.mint(charlie, 1000000000, { from: charlie });
-    await token.approve(lockup.address, 1000000000, { from: charlie });
+    await eco.approve(lockup.address, 1000000000, { from: charlie });
   });
 
   it('allows deposits', async () => {
@@ -97,7 +97,7 @@ contract('Lockup [@group=3]', (accounts) => {
 
     it('punishes early withdrawal', async () => {
       await lockup.withdraw({ from: charlie });
-      expect(await token.balanceOf(charlie)).to.eq.BN(999999960);
+      expect(await eco.balanceOf(charlie)).to.eq.BN(999999960);
     });
 
     it('does not allow early withdrawFor', async () => {
@@ -122,12 +122,12 @@ contract('Lockup [@group=3]', (accounts) => {
 
       it('rewards late withdrawal', async () => {
         await lockup.withdraw({ from: charlie });
-        expect(await token.balanceOf(charlie)).to.eq.BN(1000000040);
+        expect(await eco.balanceOf(charlie)).to.eq.BN(1000000040);
       });
 
       it('allows and rewards late withdrawFor', async () => {
         await lockup.withdrawFor(charlie, { from: alice });
-        expect(await token.balanceOf(charlie)).to.eq.BN(1000000040);
+        expect(await eco.balanceOf(charlie)).to.eq.BN(1000000040);
       });
 
       it('withdrawal event emitted', async () => {

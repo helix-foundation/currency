@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "./TrustedNodes.sol";
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/EcoBalanceStore.sol";
+import "../currency/IECO.sol";
 import "./Inflation.sol";
 import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";

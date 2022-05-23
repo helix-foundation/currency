@@ -16,8 +16,7 @@ chai.use(bnChai(BN));
 
 contract('PolicyVotes [@group=8]', (accounts) => {
   let policy;
-  let balanceStore;
-  let token;
+  let eco;
   let initInflation;
   let policyVotes;
   let proposal;
@@ -34,17 +33,16 @@ contract('PolicyVotes [@group=8]', (accounts) => {
   beforeEach(async () => {
     ({
       policy,
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
     } = await util.deployPolicy(accounts[counter]));
     counter++;
 
-    await initInflation.mint(balanceStore.address, alice, toBN(10).pow(toBN(18)).muln(5000));
-    await initInflation.mint(balanceStore.address, bob, toBN(10).pow(toBN(18)).muln(5000));
-    await initInflation.mint(balanceStore.address, charlie, toBN(10).pow(toBN(18)).muln(5200));
-    await initInflation.mint(balanceStore.address, dave, toBN(10).pow(toBN(18)).muln(4800));
+    await initInflation.mint(eco.address, alice, toBN(10).pow(toBN(18)).muln(5000));
+    await initInflation.mint(eco.address, bob, toBN(10).pow(toBN(18)).muln(5000));
+    await initInflation.mint(eco.address, charlie, toBN(10).pow(toBN(18)).muln(5200));
+    await initInflation.mint(eco.address, dave, toBN(10).pow(toBN(18)).muln(4800));
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
 
@@ -143,7 +141,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
             await proxiedPolicyVotes.vote(true);
 
             assert(
-              startStake.add(await token.balanceOf(alice))
+              startStake.add(await eco.balanceOf(alice))
                 .eq(await proxiedPolicyVotes.totalStake()),
             );
           });
@@ -155,7 +153,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
 
             expect(
               await proxiedPolicyVotes.yesStake(),
-            ).to.eq.BN(startStake.add(await token.balanceOf(alice)));
+            ).to.eq.BN(startStake.add(await eco.balanceOf(alice)));
           });
 
           it('does not increas the yes stake on no', async () => {
@@ -186,7 +184,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
 
               expect(
                 await proxiedPolicyVotes.yesStake(),
-              ).to.eq.BN(startStake.sub(await token.balanceOf(alice)));
+              ).to.eq.BN(startStake.sub(await eco.balanceOf(alice)));
             });
           });
 
@@ -210,7 +208,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
 
               expect(
                 await proxiedPolicyVotes.yesStake(),
-              ).to.eq.BN(startStake.add(await token.balanceOf(alice)));
+              ).to.eq.BN(startStake.add(await eco.balanceOf(alice)));
             });
           });
         });

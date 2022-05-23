@@ -24,8 +24,7 @@ const { expect } = chai;
 
 contract('Governance Trustee Change [@group=9]', (accounts) => {
   let policy;
-  let balanceStore;
-  let token;
+  let eco;
   let timedPolicies;
   let policyProposals;
   let policyVotes;
@@ -42,12 +41,11 @@ contract('Governance Trustee Change [@group=9]', (accounts) => {
   it('Deploys the production system', async () => {
     ({
       policy,
-      balanceStore,
-      token,
+      eco,
       initInflation,
       timedPolicies,
       trustedNodes,
-    } = await util.deployPolicy(accounts[counter], { trustees: [alice, bob] }));
+    } = await util.deployPolicy(accounts[counter], { trustednodes: [alice, bob] }));
     counter += 1;
   });
 
@@ -56,10 +54,10 @@ contract('Governance Trustee Change [@group=9]', (accounts) => {
     /* Until we have some idea how initial distribution is done, this *does* use
      *a test-function
      */
-    await initInflation.mint(balanceStore.address, alice, stake);
-    await initInflation.mint(balanceStore.address, bob, stake);
-    await initInflation.mint(balanceStore.address, charlie, stake);
-    await initInflation.mint(balanceStore.address, dave, stake);
+    await initInflation.mint(eco.address, alice, stake);
+    await initInflation.mint(eco.address, bob, stake);
+    await initInflation.mint(eco.address, charlie, stake);
+    await initInflation.mint(eco.address, dave, stake);
   });
 
   it('Waits a generation', async () => {
@@ -116,7 +114,7 @@ contract('Governance Trustee Change [@group=9]', (accounts) => {
   });
 
   it('Accepts new proposals', async () => {
-    await token.approve(
+    await eco.approve(
       policyProposals.address,
       await policyProposals.COST_REGISTER(),
       { from: alice },

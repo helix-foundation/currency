@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./CurrencyTimer.sol";
@@ -41,7 +41,7 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     uint256 public duration;
 
-    uint256 public constant BILLION = 1_000_000_000;
+    uint256 public constant BILLION = 1e9;
 
     uint256 public interest;
 
@@ -135,7 +135,7 @@ contract Lockup is PolicedUtils, TimeUtils {
     }
 
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 
     function getTimer() private view returns (CurrencyTimer) {

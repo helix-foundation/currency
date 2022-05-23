@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import "../../contracts/policy/ERC1820Client.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
@@ -75,6 +75,55 @@ contract FakeCommandAction is Policy {
 contract FakeCommander is PolicedUtils {
     constructor(address _policy) PolicedUtils(_policy) {}
 
+    // public function to check each of the identifiers
+    function GET_ID_FAUCET() external pure returns (bytes32) {
+        return ID_FAUCET;
+    }
+
+    function GET_ID_ECO() external pure returns (bytes32) {
+        return ID_ECO;
+    }
+
+    function GET_ID_CLEANUP() external pure returns (bytes32) {
+        return ID_CLEANUP;
+    }
+
+    function GET_ID_TIMED_POLICIES() external pure returns (bytes32) {
+        return ID_TIMED_POLICIES;
+    }
+
+    function GET_ID_TRUSTED_NODES() external pure returns (bytes32) {
+        return ID_TRUSTED_NODES;
+    }
+
+    function GET_ID_POLICY_PROPOSALS() external pure returns (bytes32) {
+        return ID_POLICY_PROPOSALS;
+    }
+
+    function GET_ID_POLICY_VOTES() external pure returns (bytes32) {
+        return ID_POLICY_VOTES;
+    }
+
+    function GET_ID_ECO_LABS() external pure returns (bytes32) {
+        return ID_ECO_LABS;
+    }
+
+    function GET_ID_CURRENCY_GOVERNANCE() external pure returns (bytes32) {
+        return ID_CURRENCY_GOVERNANCE;
+    }
+
+    function GET_ID_CURRENCY_TIMER() external pure returns (bytes32) {
+        return ID_CURRENCY_TIMER;
+    }
+
+    function GET_ID_ECOX() external pure returns (bytes32) {
+        return ID_ECOX;
+    }
+
+    function GET_ID_ECOXLOCKUP() external pure returns (bytes32) {
+        return ID_ECOXLOCKUP;
+    }
+
     /** Run a FakeCommandAction in the context of the root policy object.
      *
      * @param _policed The address of the policed contract being acted on.
@@ -90,7 +139,27 @@ contract FakeCommander is PolicedUtils {
 /** @title DummyPoliced
  * Object that will be manipulated
  */
-contract DummyPoliced is PolicedUtils {
+contract DummyPoliced is Policed {
+    /** A value that will be changed by a policy action.
+     */
+    uint256 public value = 1;
+
+    constructor(address _policy) Policed(_policy) {}
+
+    /** Initialize a contract as a clone/proxy of DummyPolicedUtils.
+     *
+     * @param _self The address being cloned.
+     */
+    function initialize(address _self) public override onlyConstruction {
+        super.initialize(_self);
+        value = DummyPoliced(_self).value();
+    }
+}
+
+/** @title DummyPolicedUtils
+ * Object that will be manipulated
+ */
+contract DummyPolicedUtils is PolicedUtils {
     /** A value that will be changed by a policy action.
      */
     uint256 public value = 1;
@@ -116,13 +185,13 @@ contract DummyPoliced is PolicedUtils {
         value = 2;
     }
 
-    /** Initialize a contract as a clone/proxy of DummyPoliced.
+    /** Initialize a contract as a clone/proxy of DummyPolicedUtils.
      *
      * @param _self The address being cloned.
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        value = DummyPoliced(_self).value();
+        value = DummyPolicedUtils(_self).value();
     }
 
     /** Create a clone of this contract.
@@ -142,17 +211,17 @@ contract DummyInflation is PolicedUtils {
      * Inflation role is sufficient.
      */
     function callModifierTest() public {
-        DummyPoliced(policyFor(keccak256(abi.encodePacked("Dummy"))))
+        DummyPolicedUtils(policyFor(keccak256(abi.encodePacked("Dummy"))))
             .modifierTest();
     }
 }
 
 /** @title Policer
- * This will be delegatecall'd by DummyPoliced
- * Inherits from DummyPoliced to have easy access to storage layout
+ * This will be delegatecall'd by DummyPolicedUtils
+ * Inherits from DummyPolicedUtils to have easy access to storage layout
  */
-contract Policer is DummyPoliced {
-    constructor(address _policy) DummyPoliced(_policy) {}
+contract Policer is DummyPolicedUtils {
+    constructor(address _policy) DummyPolicedUtils(_policy) {}
 
     /** Set the value to 3. This is intended as a test policy action to be run
      * in the context of some other contract.

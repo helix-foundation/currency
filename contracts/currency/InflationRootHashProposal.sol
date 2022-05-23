@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
-import "./IEcoBalanceStoreGenerationBalance.sol";
+import "./IECO.sol";
 
 /** @title Inflation Root Hash Proposal
  * This implements a root hash proposal contract to be used by the ECO network to
@@ -852,16 +852,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** @notice Get the associated ERC20 token address.
      */
     function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ERC20TOKEN));
+        return IERC20(policyFor(ID_ECO));
     }
 
     /** @notice Get the associated balance store address.
      */
-    function getStore()
-        private
-        view
-        returns (IEcoBalanceStoreGenerationBalance)
-    {
-        return IEcoBalanceStoreGenerationBalance(policyFor(ID_ERC20TOKEN));
+    function getStore() private view returns (IECO) {
+        return IECO(policyFor(ID_ECO));
     }
 }
