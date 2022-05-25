@@ -60,15 +60,6 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     await time.advanceBlock();
   });
 
-  describe('notifyGenerationIncrease called early', () => {
-    it('reverts', async () => {
-      await expectRevert(
-        ecoXLockup.notifyGenerationIncrease(),
-        'Generation has not increased',
-      );
-    });
-  });
-
   describe('unauthorized call of recordVote', () => {
     it('reverts', async () => {
       await expectRevert(
