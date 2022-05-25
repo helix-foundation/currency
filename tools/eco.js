@@ -16,7 +16,7 @@ const { hdkey } = require('ethereumjs-wallet');
 const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
-const { Supervisor } = require('./supervisor');
+const { Supervisor } = require('./supervisorNew');
 
 const defaultRpc = 'ws://localhost:8545';
 
@@ -116,15 +116,15 @@ async function parseOptions() {
   if ((!options.ganache) === (!options.webrpc)) {
     throw new Error('Must specify exactly one of --ganache and --webrpc');
   }
-  if (options.ganache) {
-    if (options.supervise && !options.deploy) {
-      throw new Error('For ganache, must specify --deploy when using --supervise');
-    }
-  } else if (options.supervise) {
-    if ((!options.erc20) === (!options.deploy)) {
-      throw new Error('For supervise, must specify either --deploy or --erc20');
-    }
-  }
+  // if (options.ganache) {
+  //   if (options.supervise && !options.deploy) {
+  //     throw new Error('For ganache, must specify --deploy when using --supervise');
+  //   }
+  // } else if (options.supervise) {
+  //   if ((!options.erc20) === (!options.deploy)) {
+  //     throw new Error('For supervise, must specify either --deploy or --erc20');
+  //   }
+  // }
 }
 
 async function initWeb3() {
@@ -133,7 +133,7 @@ async function initWeb3() {
     let serverPort;
     if (options.deployTokens) {
       serverPort = 8545;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000 });
+      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, blockTime: .25 });
     } else if (options.deployGovernance) {
       serverPort = 8546;
       options.ganacheServer = ganache.server({ default_balance_ether: 1000000, fork: `${serverAddr}:${serverPort - 1}` });
@@ -163,8 +163,13 @@ async function initUsers() {
   let account;
   let chumpAccount;
   if (!options.production) {
-    [chumpAccount] = await web3.eth.getAccounts();
+    // [chumpAccount] = await web3.eth.getAccounts();
+    [chumpAccount] = await ethersProvider.listAccounts();
     options.chumpAccount = chumpAccount;
+    console.log(`chump account is ${options.chumpAccount}`);
+    options.signer = await ethersProvider.getSigner();
+    console.log(await options.signer.getAddress());
+
   }
 
   if (options.from) {
@@ -196,6 +201,7 @@ async function initUsers() {
 
   // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
   const balance = await ethersProvider.getBalance(account);
+  console.log(balance);
   if (balance < 1) {
     console.log(`Deployment account ${account} should have at least 1 Ether, has only ${balance}`);
     const chumpBalance = web3.utils.fromWei(await web3.eth.getBalance(chumpAccount), 'ether');
@@ -288,7 +294,8 @@ async function supervise() {
     } else {
       await Supervisor.start({
         root: options.policy,
-        account: options.account,
+        // account: options.account,
+        signer: options.signer,
       });
     }
   }
@@ -314,7 +321,6 @@ async function closeTest() {
     await initWeb3();
     await initUsers();
     await deployEco();
-    console.log( 'OYOYOY' + options.account);
     await findPolicy();
     // await startExpress();
     await supervise();

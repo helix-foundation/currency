@@ -4,7 +4,7 @@ const path = require('path');
 
 //change this later
 const provider = new ethers.providers.JsonRpcProvider();
-const signer = provider.getSigner();
+// const signer = provider.getSigner();x
 
 // async function testshit() {
 //   provider.on("block", async (num) => {
@@ -60,13 +60,14 @@ const { toBN } = web3.utils;
 
 
 class Supervisor {
-  constructor(policyAddr, account) {
+  constructor(policyAddr, signer) {
+    this.signer = signer;
     // this.policy = new web3.eth.Contract(PolicyABI.abi, policyAddr);
-    this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.account);
+    this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.signer);
+    this.account = signer.getAddress();
     // this.policyDecisionAddresses = new Set();
     // this.policyVotesAddressesExecuted = new Set();
     // this.currencyAddresses = new Set();
-    this.account = account;
     this.timedPolicies = 0;
     // some things only need to be redeployed in the event of a successful policy change
     this.policyChange = false;
@@ -238,7 +239,7 @@ class Supervisor {
   }
 
   static async start(options = {}) {
-    const supervisor = await new Supervisor(options.root, options.account)
+    const supervisor = await new Supervisor(options.root, options.signer);
     console.log('STARTED');
 
     supervisor.catchup();
