@@ -133,7 +133,9 @@ async function initWeb3() {
     let serverPort;
     if (options.deployTokens) {
       serverPort = 8545;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, blockTime: .25 });
+      options.ganacheServer = ganache.server({ default_balance_ether: 1000000,
+       // blockTime: .3 
+     });
     } else if (options.deployGovernance) {
       serverPort = 8546;
       options.ganacheServer = ganache.server({ default_balance_ether: 1000000, fork: `${serverAddr}:${serverPort - 1}` });

@@ -60,15 +60,14 @@ const { toBN } = web3.utils;
 
 
 class Supervisor {
-  constructor(policyAddr, signer) {
+  constructor(policyAddr, signer, account) {
     this.signer = signer;
     // this.policy = new web3.eth.Contract(PolicyABI.abi, policyAddr);
     this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.signer);
-    this.account = signer.getAddress();
+    this.account = account;
     // this.policyDecisionAddresses = new Set();
     // this.policyVotesAddressesExecuted = new Set();
     // this.currencyAddresses = new Set();
-    this.timedPolicies = 0;
     // some things only need to be redeployed in the event of a successful policy change
     this.policyChange = false;
 
@@ -95,17 +94,13 @@ class Supervisor {
   async updateContracts() {
     //called the block after generation update
     //fetches all the new contract addresses from the registry
-    console.log('about to call policyFor!');
-    let bal = await provider.getBalance(this.account);
-    console.log(this.account + ':' + ethers.utils.formatEther(bal));
-    const timedPoliciesAddress = await this.policy.policyFor(ID_TIMED_POLICIES);
-    console.log('timedpolicies address is ' + timedPoliciesAddress);
 
+    this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
+      TimedPoliciesABI.abi,
+      this.signer,
+    );
+    console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
 
-    // this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
-    //   TimedPoliciesABI,
-    //   this.account,
-    // );
     // console.log(this.timedPolicies.address);
     // this.currencyTimer = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_TIMER),
     //   CurrencyTimerABI,
@@ -179,18 +174,27 @@ class Supervisor {
 
     //set initial generation information
     const latestBlock = await provider.getBlock('latest');
-    await this.timedPolicies.queryFilter('PolicyDecisionStarted', {
-      fromBlock: latestBlock.number - 20,
-      toBlock:  latestBlock.number,
-    }).forEach((event) => {
-      console.log('got a PolicyDecisionStarted event at block ' + event.blockNumber);
-    })
+
+    const filter = this.timedPolicies.filters.PolicyDecisionStarted();
+    filter.fromBlock = "latest";
+    filter.toBlock = "latest";
+    // filter.fromBlock
+
+    const events = await provider.getLogs(filter);
+    
+    // console.log("aaaa" + events);
+    // await this.timedPolicies.queryFilter('PolicyDecisionStarted', {
+    //   fromBlock: latestBlock.number - 20,
+    //   toBlock:  latestBlock.number,
+    // }).forEach((event) => {
+    //   console.log('got a PolicyDecisionStarted event at block ' + event.blockNumber);
+    // })
 
 
   }
 
   async getTxHistory() {
-
+    // blocked by transfer event redefinition
     const map = {};
 
     // const token = await this.getERC20Token();
@@ -239,7 +243,7 @@ class Supervisor {
   }
 
   static async start(options = {}) {
-    const supervisor = await new Supervisor(options.root, options.signer);
+    const supervisor = await new Supervisor(options.root, options.signer, await options.signer.getAddress());
     console.log('STARTED');
 
     supervisor.catchup();
