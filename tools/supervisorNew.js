@@ -58,6 +58,15 @@ const ID_POLICY_VOTES = web3.utils.soliditySha3('PolicyVotes');
 
 const { toBN } = web3.utils;
 
+//useful time constants
+const HOUR = 3600*1000;
+const DAY = 24 * HOUR;
+
+// time before next generation that auto refund is called
+const REFUND_BUFFER = HOUR;
+// length of a generation
+const GENERATION_TIME = 14 * DAY;
+
 
 class Supervisor {
   constructor(policyAddr, signer, account) {
@@ -68,25 +77,23 @@ class Supervisor {
     // this.policyDecisionAddresses = new Set();
     // this.policyVotesAddressesExecuted = new Set();
     // this.currencyAddresses = new Set();
+
     // some things only need to be redeployed in the event of a successful policy change
-    this.policyChange = false;
+    this.policyChange = true;
 
     // generational info
     this.currentGenerationBlock = 0;
-    this.currentGenerationStart = 0;
-    this.nextGenerationStart = 0;
-
-    // time before next generation that auto refund is called
-    this.refundBuffer = 3600*1000;
+    this.currentGenerationStartTime = 0;
+    this.nextGenerationStartTime = 0;
 
   }
 
   async updateGeneration() {
     if (this.timestamp > this.nextGenerationStart) {
       await this.timedPolicies.incrementGeneration({ from: this.account });
-      this.currentGenerationStart = this.timestamp;
-      this.nextGenerationStart = this.currentGenerationStart + 14*24*3600*1000;
       this.currentGenerationBlock = this.blockNumber;
+      this.currentGenerationStartTime = this.timestamp;
+      this.nextGenerationStartTime = this.currentGenerationStartTime + generationTime;
     };
 
   }
@@ -95,33 +102,47 @@ class Supervisor {
     //called the block after generation update
     //fetches all the new contract addresses from the registry
 
-    this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
-      TimedPoliciesABI.abi,
+    //only need to re-fetch these sometimes
+    if (this.policyChange) {
+
+      this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
+        TimedPoliciesABI.abi,
+        this.signer,
+      );
+      console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
+
+      this.currencyTimer = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_TIMER),
+        CurrencyTimerABI.abi,
+        this.signer
+      );
+      console.log(`currencyTimer address is: ${this.currencyTimer.address}`);
+
+      // TODO: this is giving the 0 address, investigate
+      this.eco = new ethers.Contract(await this.policy.policyFor(ID_ERC20TOKEN),
+        ECO.abi,
+        this.signer,
+      );
+      console.log(`ECO address is: ${this.eco.address}`);
+
+    }
+
+    this.policyProposals = new ethers.Contract(await this.policy.policyFor(ID_POLICY_PROPOSALS),
+      PolicyProposalsABI.abi,
       this.signer,
     );
-    console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
+    console.log(`policyProposals address is: ${this.policyProposals.address}`);
 
-    // console.log(this.timedPolicies.address);
-    // this.currencyTimer = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_TIMER),
-    //   CurrencyTimerABI,
-    //   this.account
-    // );
-    // this.policyProposals = new ethers.Contract(await this.policy.policyFor(ID_POLICY_PROPOSALS),
-    //   PolicyProposalsABI,
-    //   this.account,
-    // );
-    // this.eco = new ethers.Contract(await this.policy.policyFor(ID_ERC20TOKEN),
-    //   ECO,
-    //   this.account,
-    // );
-    // this.currencyGovernance = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
-    //   CurrencyGovernanceABI,
-    //   this.account,
-    // );
-    // this.randomInflation = new ethers.Contract(await currencyTimer.inflationImpl(),
-    //   InflationABI,
-    //   this.account
-    // );
+    this.currencyGovernance = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
+      CurrencyGovernanceABI.abi,
+      this.signer,
+    );
+    console.log(`currencyGovernance address is: ${this.currencyGovernance.address}`);
+
+    this.randomInflation = new ethers.Contract(await this.currencyTimer.inflationImpl(),
+      InflationABI.abi,
+      this.signer
+    );
+    console.log(`randomInflation address is: ${this.currencyTimer.address}`);
     
   }
 
@@ -139,9 +160,16 @@ class Supervisor {
     } else {
       if (this.policyVotes) {
         // seems inefficient but ok for now
-        await this.policyVotes.execute();
+        try {
+          // will revert most of the time
+          await this.policyVotes.execute();
+          this.policyChange = true;
+        } catch (e) {
+          console.log(e)
+        }
+        
       };
-      if (this.timestamp + this.refundBuffer > this.nextGenerationStart) {
+      if (this.timestamp + REFUND_BUFFER > this.nextGenerationStart) {
         // do refunds of unselected proposals
         (await this.policyProposals.allProposals()
           .forEach((proposal) => {
@@ -155,46 +183,50 @@ class Supervisor {
   async manageCurrencyGovernance() {
     //updates the stage of the currency governance process
 
-    //can be more granular about this, the logging might be ugly, but is this ok wrt gas cost
-    
-    if (await this.currencyGovernance.updateStage()) {
-      await this.currencyGovernance.compute();
+    //can be more granular about this, the logging might be ugly, but is this ok wrt gas cost?
+    try {
+      await this.currencyGovernance.updateStage();
+      try {
+        await this.currencyGovernance.compute();
+      } catch (e) {
+        console.log(e);
+      }
+    } catch (e) {
+      console.log(e);
     }
-
   }
 
   async manageRandomInflation() {
+    // TODO
   }
 
   async catchup() {
 
     await this.updateContracts();
 
-    // await getTxHistory();
-
+    this.policyChange = false;
     //set initial generation information
-    const latestBlock = await provider.getBlock('latest');
 
     const filter = this.timedPolicies.filters.PolicyDecisionStarted();
-    filter.fromBlock = "latest";
+    filter.fromBlock = "latest" - 20; // replace with latest - 1 generation of blocks
     filter.toBlock = "latest";
-    // filter.fromBlock
 
     const events = await provider.getLogs(filter);
-    
-    // console.log("aaaa" + events);
-    // await this.timedPolicies.queryFilter('PolicyDecisionStarted', {
-    //   fromBlock: latestBlock.number - 20,
-    //   toBlock:  latestBlock.number,
-    // }).forEach((event) => {
-    //   console.log('got a PolicyDecisionStarted event at block ' + event.blockNumber);
-    // })
+    this.currentGenerationBlock = events[0].blockNumber;
+    this.currentGenerationStartTime = await provider.getBlock(this.currentGenerationBlock).timeStamp;
+    this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
+
+
+    // get full tx history until now, to set up balances for randominflation
+    // await getTxHistory();
 
 
   }
 
   async getTxHistory() {
     // blocked by transfer event redefinition
+    return null;
+
     const map = {};
 
     // const token = await this.getERC20Token();
