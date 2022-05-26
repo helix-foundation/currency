@@ -56,7 +56,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
 
       const p = await borda.proposals(bob);
       expect(p.valid).to.be.true;
-      expect(p.randomInflationWinners).to.eq.BN(33);
+      expect(p.numberOfRecipients).to.eq.BN(33);
     });
 
     it('Doesn\'t allow voting yet', async () => {
@@ -75,8 +75,8 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
       const [evt] = await borda.getPastEvents('ProposalCreated');
       expect(evt.args.trusteeAddress).to.eq.BN(bob);
-      expect(evt.args._randomInflationWinners).to.eq.BN(33);
-      expect(evt.args._randomInflationPrize).to.eq.BN(34);
+      expect(evt.args._numberOfRecipients).to.eq.BN(33);
+      expect(evt.args._randomInflationReward).to.eq.BN(34);
       expect(evt.args._lockupDuration).to.eq.BN(35);
       expect(evt.args._lockupInterest).to.eq.BN(36);
       expect(evt.args._inflationMultiplier).to.eq.BN('1000000000000000000');

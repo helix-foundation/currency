@@ -27,7 +27,7 @@ const { n, bnHex } = require('./vdf');
 const {
   getTree,
   answer,
-} = require('./ticketlessInflationUtils');
+} = require('./randomInflationUtils');
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -133,30 +133,30 @@ class Supervisor {
     testVDFSolver();
   }
 
-  static getWinner(ticket, accounts, sums) {
-    if (toBN(ticket) === 0) {
+  static getRecipient(claimNumber, accounts, sums) {
+    if (toBN(claimNumber) === 0) {
       return [0, accounts[0]];
     }
-    let index = sums.findIndex((element) => element.gt(toBN(ticket)));
+    let index = sums.findIndex((element) => element.gt(toBN(claimNumber)));
     index = index === -1 ? 2 : index - 1;
     return [index, accounts[index]];
   }
 
   getClaimParameters(contractAddress, seed, sequence) {
     const { tree, accounts, sums } = this.rootHashState[contractAddress];
-    const winningTicketHash = web3.utils.soliditySha3({
+    const successfulClaimNumberHash = web3.utils.soliditySha3({
       t: 'bytes32',
       v: seed,
     }, {
       t: 'uint256',
       v: sequence,
     });
-    const [index, winner] = Supervisor.getWinner(
-      toBN(winningTicketHash).mod(toBN(tree.total)),
+    const [index, recipient] = Supervisor.getRecipient(
+      toBN(successfulClaimNumberHash).mod(toBN(tree.total)),
       accounts,
       sums,
     );
-    return [answer(tree, index), index, winner];
+    return [answer(tree, index), index, recipient];
   }
 
   async getBalanceStore() {
@@ -603,7 +603,7 @@ class Supervisor {
           const numNodes = totalRevealed.toNumber();
           const nodes = [];
           const inflationVote = {};
-          const prizeVote = {};
+          const rewardVote = {};
           const certificatesVote = {};
           const interestVote = {};
 
@@ -613,20 +613,20 @@ class Supervisor {
             const node = await governance.methods.revealedNodes(i).call();
             nodes.push(node);
             inflationVote[node] = toBN(await governance.methods.inflationVotes(node).call());
-            prizeVote[node] = toBN(await governance.methods.prizeVotes(node).call());
+            rewardVote[node] = toBN(await governance.methods.rewardVotes(node).call());
             certificatesVote[node] = toBN(
               await governance.methods.certificatesTotalVotes(node).call(),
             );
             interestVote[node] = toBN(await governance.methods.interestVotes(node).call());
           }
           const inflationOrder = nodes.slice().sort(comparator(inflationVote));
-          const prizeOrder = nodes.slice().sort(comparator(prizeVote));
+          const rewardOrder = nodes.slice().sort(comparator(rewardVote));
           const certificatesOrder = nodes.slice().sort(comparator(certificatesVote));
           const interestOrder = nodes.slice().sort(comparator(interestVote));
 
           await governance.methods.computeVote(
             inflationOrder,
-            prizeOrder,
+            rewardOrder,
             certificatesOrder,
             interestOrder,
           )
@@ -658,26 +658,26 @@ class Supervisor {
             this.account,
           );
         } else if (!web3.utils.toBN(await rootHash.methods.acceptedRootHash()).call().eq(web3.utils.toBN('0'))) {
-          const winners = toBN(await inflation.methods.winners().call()).toNumber();
+          const numRecipients = toBN(await inflation.methods.numRecipients().call()).toNumber();
           let allClaimed = true;
-          for (let i = 0; i < winners; i += 1) {
+          for (let i = 0; i < numRecipients; i += 1) {
             const claimed = await inflation.methods.claimed(i).call();
             allClaimed = allClaimed && claimed;
             if (!claimed) {
-              const period = toBN(await inflation.methods.PAYOUT_PERIOD().call()).toNumber();
-              const payStart = toBN(await inflation.methods.payoutPeriodStarts().call()).toNumber();
-              const payOut = payStart + (period * i) / winners;
-              if (payOut >= this.timeStamp) {
+              const period = toBN(await inflation.methods.CLAIM_PERIOD().call()).toNumber();
+              const payStart = toBN(await inflation.methods.claimPeriodStarts().call()).toNumber();
+              const claimableTime = payStart + (period * i) / numRecipients;
+              if (claimableTime >= this.timeStamp) {
                 break;
               } else {
-                const [a, index, winner] = this.getClaimParameters(
+                const [a, index, recipient] = this.getClaimParameters(
                   rootHash._address,
                   bnHex(seed, 32),
                   i,
                 );
-                logger.info(`Paying winning ticket ${i} to ${winner}`);
+                logger.info(`Paying successful claimNumber ${i} to ${recipient}`);
                 await inflation.methods.claimFor(
-                  winner,
+                  recipient,
                   i,
                   a[1].reverse(),
                   a[0].sum.toString(),

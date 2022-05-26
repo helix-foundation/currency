@@ -27,7 +27,7 @@ const {
 const {
   getTree,
   answer,
-} = require('../../tools/ticketlessInflationUtils');
+} = require('../../tools/randomInflationUtils');
 
 contract('Inflation [@group=6]', (unsortedAccounts) => {
   let policy;
@@ -44,9 +44,9 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   let counter = 0;
 
   //    const inflationVote = 800000;
-  //    const prizeVote = 20000;
+  //    const rewardVote = 20000;
   const inflationVote = 10;
-  const prizeVote = 20000;
+  const rewardVote = 20000;
 
   const accounts = Array.from(unsortedAccounts);
   accounts.sort((a, b) => Number(a - b));
@@ -105,25 +105,25 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     );
   }
 
-  function getWinner(ticket) {
-    if (toBN(ticket) === 0) {
+  function getRecipient(claimNumber) {
+    if (toBN(claimNumber) === 0) {
       return [0, accounts[0]];
     }
-    let index = accountsSums.findIndex((element) => element.gt(toBN(ticket)));
+    let index = accountsSums.findIndex((element) => element.gt(toBN(claimNumber)));
     index = index === -1 ? 2 : index - 1;
     return [index, accounts[index]];
   }
 
   async function getClaimParameters(inf, sequence) {
-    const winningTicketHash = web3.utils.soliditySha3({
+    const chosenClaimNumberHash = web3.utils.soliditySha3({
       t: 'bytes32',
       v: await inf.seed(),
     }, {
       t: 'uint256',
       v: sequence,
     });
-    const [index, winner] = getWinner(toBN(winningTicketHash).mod(toBN(totalSum)));
-    return [answer(tree, index), index, winner];
+    const [index, recipient] = getRecipient(toBN(chosenClaimNumberHash).mod(toBN(totalSum)));
+    return [answer(tree, index), index, recipient];
   }
 
   async function getPrimeDistance() {
@@ -161,7 +161,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     const bob = accounts[1];
     const charlie = accounts[2];
     const dave = accounts[3];
-    await governance.propose(inflationVote, prizeVote, 0, 0, toBN('1000000000000000000'), { from: bob });
+    await governance.propose(inflationVote, rewardVote, 0, 0, toBN('1000000000000000000'), { from: bob });
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [web3.utils.randomHex(32), bob, [bob]];
@@ -186,21 +186,21 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   });
 
   describe('startInflation', () => {
-    it('reverts if startInflation is called with zero value _winners', async () => {
+    it('reverts if startInflation is called with zero value _numRecipients', async () => {
       await expectRevert(
         inflation.startInflation(0, 1),
         'Contract must have rewards',
       );
     });
 
-    it('reverts if startInflation is called with zero value _prize', async () => {
+    it('reverts if startInflation is called with zero value _reward', async () => {
       await expectRevert(
         inflation.startInflation(1, 0),
         'Contract must have rewards',
       );
     });
 
-    it('reverts if contract doesnt have the required funds to reward winners', async () => {
+    it('reverts if contract doesnt have the required funds to reward chosen recipients', async () => {
       await expectRevert(
         inflation.startInflation(1000000000, 1000000000),
         'The contract must have a token balance at least the total rewards',
@@ -329,15 +329,15 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       });
 
       it('pays out inflation', async () => {
-        const [a, index, winner] = await getClaimParameters(inflation, 0);
+        const [a, index, recipient] = await getClaimParameters(inflation, 0);
         await expectEvent.inTransaction(
           (await inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-            from: winner,
+            from: recipient,
           })).tx,
           inflation.constructor,
           'Claimed',
           {
-            who: winner.toString(),
+            who: recipient.toString(),
             sequence: '0',
           },
         );
@@ -345,14 +345,14 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
       it('emits the Claimed event', async () => {
         await time.increase(3600 * 24 * 10 + 1);
-        const [a, index, winner] = await getClaimParameters(inflation, 3);
+        const [a, index, recipient] = await getClaimParameters(inflation, 3);
         const tx = await inflation.claim(
           3,
           a[1].reverse(),
           toBN(a[0].sum),
           index,
           {
-            from: winner,
+            from: recipient,
           },
         );
         await expectEvent.inTransaction(
@@ -360,29 +360,29 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
           inflation.constructor,
           'Claimed',
           {
-            who: winner,
+            who: recipient,
             sequence: '3',
           },
         );
       });
 
-      context('reverts when called with a non-winning ticket', async () => {
-        it('sequence is not in winners', async () => {
-          const winners = await inflation.winners();
-          const [a, index, winner] = await getClaimParameters(inflation, 2);
+      context('reverts when called with a non-chosen claimNumber', async () => {
+        it('sequence is not in numRecipients', async () => {
+          const numRecipients = await inflation.numRecipients();
+          const [a, index, recipient] = await getClaimParameters(inflation, 2);
           await expectRevert(
-            inflation.claim(winners, a[1].reverse(), toBN(a[0].sum), index, {
-              from: winner,
+            inflation.claim(numRecipients, a[1].reverse(), toBN(a[0].sum), index, {
+              from: recipient,
             }),
-            'must be within the set of winners',
+            'The provided sequence number must be within the set of recipients',
           );
         });
 
         it('fail root hash verification', async () => {
-          const [a, index, winner] = await getClaimParameters(inflation, 2);
+          const [a, index, recipient] = await getClaimParameters(inflation, 2);
           await expectRevert(
             inflation.claim(0, a[1].reverse(), toBN(a[0].sum + 1000000), index, {
-              from: winner,
+              from: recipient,
             }),
             'A claim submission failed root hash verification',
           );
@@ -390,10 +390,10 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       });
 
       it('reverts when called for the next period', async () => {
-        const [a, index, winner] = await getClaimParameters(inflation, 1000);
+        const [a, index, recipient] = await getClaimParameters(inflation, 1000);
         await expectRevert(
           inflation.claim(3, a[1].reverse(), toBN(a[0].sum), index, {
-            from: winner,
+            from: recipient,
           }),
           'can only be made after enough time',
         );
@@ -401,17 +401,17 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
       context('when already called this period', () => {
         beforeEach(async () => {
-          const [a, index, winner] = await getClaimParameters(inflation, 0);
+          const [a, index, recipient] = await getClaimParameters(inflation, 0);
           await inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-            from: winner,
+            from: recipient,
           });
         });
 
         it('reverts', async () => {
-          const [a, index, winner] = await getClaimParameters(inflation, 0);
+          const [a, index, recipient] = await getClaimParameters(inflation, 0);
           await expectRevert(
             inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-              from: winner,
+              from: recipient,
             }),
             'claim can only be made if it has not already been made',
           );
@@ -425,26 +425,26 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
             updatedMap.set(accounts[i], await eco.balanceOf.call(accounts[
               i]));
           }
-          const [a, index, winner] = await getClaimParameters(inflation, 0);
-          updatedMap.set(winner, updatedMap.get(winner).add(toBN(prizeVote)));
+          const [a, index, recipient] = await getClaimParameters(inflation, 0);
+          updatedMap.set(recipient, updatedMap.get(recipient).add(toBN(rewardVote)));
           await inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-            from: winner,
+            from: recipient,
           });
           await time.increase(3600 * 24 * 30);
         });
 
         it('pays out more inflation', async () => {
           for (let i = 1; i <= 9; i += 1) {
-            const [a, index, winner] = await getClaimParameters(inflation, i);
-            updatedMap.set(winner, updatedMap.get(winner).add(toBN(
-              prizeVote,
+            const [a, index, recipient] = await getClaimParameters(inflation, i);
+            updatedMap.set(recipient, updatedMap.get(recipient).add(toBN(
+              rewardVote,
             )));
             await inflation.claim(i, a[1].reverse(), toBN(a[0].sum), index, {
-              from: winner,
+              from: recipient,
             });
             assert.equal(
-              (await eco.balanceOf.call(winner)).toString(),
-              updatedMap.get(winner).toString(),
+              (await eco.balanceOf.call(recipient)).toString(),
+              updatedMap.get(recipient).toString(),
               'Should get an inflation',
             );
           }
@@ -482,12 +482,12 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
             await vdf.update(i + 1, bnHex(u[i]));
           }
           await inflation.submitEntropyVDF(bnHex(y));
-          const winners = await inflation.winners();
-          for (let i = 0; i < winners; i += 1) {
+          const numRecipients = await inflation.numRecipients();
+          for (let i = 0; i < numRecipients; i += 1) {
             await time.increase(3600 * 24 * 8 + 1);
-            const [a, index, winner] = await getClaimParameters(inflation, i);
+            const [a, index, recipient] = await getClaimParameters(inflation, i);
             await inflation.claim(i, a[1].reverse(), toBN(a[0].sum), index, {
-              from: winner,
+              from: recipient,
             });
           }
         });
@@ -520,11 +520,11 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
           await inflation.submitEntropyVDF(bnHex(y));
         });
 
-        context('and tickets have not been paid out', () => {
+        context('and claimNumbers have not been paid out', () => {
           it('reverts', async () => {
             await expectRevert(
               inflation.destruct(),
-              'winnings must be claimed prior',
+              'rewards must be claimed prior',
             );
           });
 
@@ -536,25 +536,25 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
             it('still reverts', async () => {
               await expectRevert(
                 inflation.destruct(),
-                'winnings must be claimed prior',
+                'rewards must be claimed prior',
               );
             });
           });
         });
 
-        context('and tickets have been paid out', () => {
+        context('and claimNumbers have been paid out', () => {
           beforeEach(async () => {
             await time.increase(3600 * 24 * 30);
 
-            const winners = (await inflation.winners()).toNumber();
+            const numRecipients = (await inflation.numRecipients()).toNumber();
 
             await Promise.all([accounts[0], accounts[1]].map(async () => {
-              for (let i = 0; i < winners; i += 1) {
+              for (let i = 0; i < numRecipients; i += 1) {
                 try {
-                  const [a, index, winner] = await getClaimParameters(inflation, i);
+                  const [a, index, recipient] = await getClaimParameters(inflation, i);
                   await inflation.claim(i, a[1].reverse(), toBN(a[
                     0].sum), index, {
-                    from: winner,
+                    from: recipient,
                   });
                 } catch (e) {
                   if (!e.message.includes(

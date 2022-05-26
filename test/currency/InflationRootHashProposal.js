@@ -27,7 +27,7 @@ const {
   getRandomIntInclusive,
   getRandomIntInclusiveEven,
   getRandomIntInclusiveOdd,
-} = require('../../tools/ticketlessInflationUtils');
+} = require('../../tools/randomInflationUtils');
 
 const util = require('../../tools/test/util');
 

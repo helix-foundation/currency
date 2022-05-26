@@ -87,8 +87,8 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
             policyFor(ID_CURRENCY_GOVERNANCE)
         );
 
-        uint256 _randomInflationWinners = 0;
-        uint256 _randomInflationPrize = 0;
+        uint256 _numberOfRecipients = 0;
+        uint256 _randomInflationReward = 0;
         uint256 _lockupDuration = 0;
         uint256 _lockupInterest = 0;
 
@@ -97,8 +97,8 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
             if (winner != address(0)) {
                 (
                     ,
-                    _randomInflationWinners,
-                    _randomInflationPrize,
+                    _numberOfRecipients,
+                    _randomInflationReward,
                     _lockupDuration,
                     _lockupInterest,
 
@@ -132,16 +132,16 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
             _old
         );
 
-        if (_randomInflationWinners > 0 && _randomInflationPrize > 0) {
+        if (_numberOfRecipients > 0 && _randomInflationReward > 0) {
             // new inflation contract
             address _clone = Inflation(inflationImpl).clone();
             getStore().mint(
                 _clone,
-                _randomInflationWinners * _randomInflationPrize
+                _numberOfRecipients * _randomInflationReward
             );
             Inflation(_clone).startInflation(
-                _randomInflationWinners,
-                _randomInflationPrize
+                _numberOfRecipients,
+                _randomInflationReward
             );
             emit InflationStarted(_clone);
         }

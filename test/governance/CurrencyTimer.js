@@ -112,8 +112,8 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
     it('has inflation', async () => {
       const [evt] = await currencyTimer.getPastEvents('InflationStarted');
       const infl = await Inflation.at(evt.args.addr);
-      expect(await infl.prize()).to.eq.BN(20);
-      expect(await infl.winners()).to.eq.BN(10);
+      expect(await infl.reward()).to.eq.BN(20);
+      expect(await infl.numRecipients()).to.eq.BN(10);
       expect(await eco.balanceOf(infl.address)).to.eq.BN(200);
     });
 
