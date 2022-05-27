@@ -236,12 +236,16 @@ class Supervisor {
     const block = await provider.getBlock('latest');
     this.blockNumber = block.number;
     this.timestamp = block.timestamp;
-    if (timestamp > nextGenerationStart) {
+    if (this.timestamp > this.nextGenerationStartTime) {
+      console.log(`current time is ${this.timeStamp}, nextGenerationStart is ${this.nextGenerationStartTime}, updating generation`);
       await updateGeneration();
     } else if (this.currentGenerationBlock == this.blockNumber - 1) {
+      console.log(`current generation block is ${this.currentGenerationBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`);
       updateContracts();
     } else {
+        console.log(`managing currency governance`);
         manageCurrencyGovernance();
+        console.log(`managing community governance`);
         manageCommunityGovernance();
 
         if (this.randomInflation) {
@@ -260,8 +264,8 @@ class Supervisor {
     supervisor.catchup();
 
     provider.on("block", (num) => {
-      // supervisor.processBlock();
       console.log(num);
+      supervisor.processBlock();
       
     })
   }
