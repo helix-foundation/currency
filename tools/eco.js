@@ -169,8 +169,8 @@ async function initUsers() {
     [chumpAccount] = await ethersProvider.listAccounts();
     options.chumpAccount = chumpAccount;
     console.log(`chump account is ${options.chumpAccount}`);
+
     options.signer = await ethersProvider.getSigner();
-    console.log(await options.signer.getAddress());
 
   }
 
@@ -203,7 +203,7 @@ async function initUsers() {
 
   // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
   const balance = await ethersProvider.getBalance(account);
-  console.log(balance);
+
   if (balance < 1) {
     console.log(`Deployment account ${account} should have at least 1 Ether, has only ${balance}`);
     const chumpBalance = web3.utils.fromWei(await web3.eth.getBalance(chumpAccount), 'ether');
@@ -219,7 +219,6 @@ async function initUsers() {
   }
 
   // Verify account works
-  console.log(account);
   await web3.eth.sendTransaction({
     from: account,
     to: account,
@@ -229,7 +228,6 @@ async function initUsers() {
 
   console.log(`using account ${account} for deployment`);
   options.account = account;
-  console.log(options.account);
 
 }
 
@@ -296,7 +294,6 @@ async function supervise() {
     } else {
       await Supervisor.start({
         root: options.policy,
-        // account: options.account,
         signer: options.signer,
       });
     }
@@ -324,7 +321,7 @@ async function closeTest() {
     await initUsers();
     await deployEco();
     await findPolicy();
-    // await startExpress();
+    await startExpress();
     await supervise();
     await closeTest();
   } catch (e) {

@@ -6,20 +6,6 @@ const path = require('path');
 const provider = new ethers.providers.JsonRpcProvider();
 // const signer = provider.getSigner();x
 
-// async function testshit() {
-//   provider.on("block", async (num) => {
-//       // supervisor.processBlock();
-//       let block = await provider.getBlock('latest');
-//       console.log(block.timestamp);
-//       let date = new Date(block.timestamp*1000);
-//       let twoWksLater = new Date((block.timestamp + 14*24*3600)*1000);
-//       console.log(date);
-//       console.log(twoWksLater);
-
-//   });
-// };
-
-// testshit();
 
 
 function req(contract) {
@@ -71,12 +57,9 @@ const GENERATION_TIME = 14 * DAY;
 class Supervisor {
   constructor(policyAddr, signer, account) {
     this.signer = signer;
-    // this.policy = new web3.eth.Contract(PolicyABI.abi, policyAddr);
+
     this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.signer);
     this.account = account;
-    // this.policyDecisionAddresses = new Set();
-    // this.policyVotesAddressesExecuted = new Set();
-    // this.currencyAddresses = new Set();
 
     // some things only need to be redeployed in the event of a successful policy change
     this.policyChange = true;
@@ -102,7 +85,7 @@ class Supervisor {
     //called the block after generation update
     //fetches all the new contract addresses from the registry
 
-    //only need to re-fetch these sometimes
+    //only need to fetch these if there is a policy change
     if (this.policyChange) {
 
       this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
@@ -126,6 +109,7 @@ class Supervisor {
 
     }
 
+    //need to fetch every generation
     this.policyProposals = new ethers.Contract(await this.policy.policyFor(ID_POLICY_PROPOSALS),
       PolicyProposalsABI.abi,
       this.signer,
@@ -216,8 +200,6 @@ class Supervisor {
     this.currentGenerationStartTime = await provider.getBlock(this.currentGenerationBlock).timeStamp;
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
-
-    // get full tx history until now, to set up balances for randominflation
     // await getTxHistory();
 
 
@@ -251,26 +233,23 @@ class Supervisor {
 
 
   async processBlock() {
-    let block = await provider.getBlock('latest');
+    const block = await provider.getBlock('latest');
     this.blockNumber = block.number;
     this.timestamp = block.timestamp;
     if (timestamp > nextGenerationStart) {
       await updateGeneration();
-      return;
-    };
-
-    if (this.currentGenerationBlock == this.blockNumber - 1) {
+    } else if (this.currentGenerationBlock == this.blockNumber - 1) {
       updateContracts();
-      return;
-    }
+    } else {
+        manageCurrencyGovernance();
+        manageCommunityGovernance();
 
-    manageCurrencyGovernance();
-    manageCommunityGovernance();
-    if (this.randomInflation) {
-      manageRandomInflation();
-    }
+        if (this.randomInflation) {
+          manageRandomInflation();
+        }
 
-    console.log(this.blockNumber);
+        console.log(this.blockNumber);
+    }
 
   }
 
@@ -285,10 +264,6 @@ class Supervisor {
       console.log(num);
       
     })
-    // provider.on("Transfer",)
-
-
-    // console.log(`policy address is: ${supervisor.policy.address}`)
   }
 
 
