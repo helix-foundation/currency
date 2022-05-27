@@ -262,10 +262,10 @@ proposal.
 ###### ProposalCreated
 Attributes:
   - `trusteeAddress` (address) - address of the trustee that created this proposal.
-  - `_randomInflationWinners` (uint256) - number of random inflation winners for this
+  - `_numberOfRecipients` (uint256) - number of random inflation recipients for this
     proposal.
-  - `_randomInflationPrize` (uint256) - total prize to be awarded to randomInflation
-    winners.
+  - `_randomInflationReward` (uint256) - total reward to be awarded to randomInflation
+    recipients.
   - `_lockupDuration` (uint256) - duration of lockup period.
   - `_lockupInterest` (uint256) - interest earned by keeping funds locked up for the
     full lockup period.
@@ -326,10 +326,10 @@ progress to the next stage.
 
 ##### propose
 Arguments:
-  - `_randomInflationWinners` (uint256) - the number of random inflation prizes
+  - `_numberOfRecipients` (uint256) - the number of random inflation rewards
     to be offered,
-  - `_randomInflationPrize` (uint256) - the quantity (in 10^-18 inflated ECO)
-    to be given as prize,
+  - `_randomInflationReward` (uint256) - the quantity (in 10^-18 inflated ECO)
+    to be given as reward,
   - `_lockupDuration` (uint256) - the minimum duration a user of a lockup must
     wait for their interest,
   - `_lockupInterest` (uint256) - the "percentage" of interest to be added,
@@ -539,35 +539,35 @@ from the one stored in this contract.
 #### Inflation
   - Inherits: `PolicedUtils`
 
-This contract holds and executes the payouts in the result of a Random Inflation
-process, triggered by a `CurrenceGovernance` vote (see above). The random payout
+This contract holds and executes the reward disbursement in the result of a Random
+Inflation process, triggered by a `CurrenceGovernance` vote (see above). The disbursement
 is supported by two contracts: the `VDFVerifier` (see [here](../VDF/README.md)) which does
 the verification and security of the initial random seed and the `InflationRootHashProposal`
-(see below) which does the confirmation of validity the claims for payout.
+(see below) which does the validation of the claims.
 
-Payouts are randomly distributed in a manner that weights by balance and is
-indexed by a winning ticket number that runs from 0 to `winners`, a variable
+Rewards are randomly made claimable in a manner that weights by balance and is
+indexed by a sequence number that runs from 0 to `recipients`, a variable
 decided by the governance vote and set on construction when cloned by the
-`CurrencyTimer` contract. The `prize` value is set this way as well and is
-the same for each ticket. Claimed ticket numbers are tracked in the `claimed`
-mapping which maps to a boolean that denotes if the ticket has been claimed.
-Once `startInflation` has been called, a 28 day payout period is started where
-the winning tickets maybe be claimed, in order, after evenly spaced time periods
-across the whole payout period. For example, if there are 28 winners, the first
-may claim on the first day, the second on the second day, and so on. This is to
-reduce the surge of new funds that comes into the economy.
+`CurrencyTimer` contract. The `reward` value is set this way as well and is the
+same for each number. Claim numbers that have been claimed are tracked
+in the `claimed` mapping which maps the claim number to a boolean.
+A successful call to `startInflation` begins a 28 day claim period. This period is
+divided into `numRecipients` sub-periods, and each passing sub-period allows the 
+next recipient in the order to claim. For example, if there are 28 recipients, the
+first may claim on the first day, the second on the second day, and so on. This is
+to reduce the shock to the economy from the addition of new funds
 
 
 ##### Events
 
 ###### Claimed
 Attributes:
-  - `who` (address) - the address of the winner whose prize was delivered
-  - `sequence` (uint256) - the payout sequence number that was used to verify
-    that the address did in fact win.
+  - `who` (address) - the address of the claimant whose reward was delivered
+  - `sequence` (uint256) - the claim sequence number that was used to verify
+    that the address is in fact entitled to the reward.
 
-This event is emitted when there is a successful claiming of a prize. It emits
-after the transfer of funds, so it is a marker that the payout was successful.
+This event is emitted when there is a successful claiming of a reward. It emits
+after the transfer of funds, so it is a marker that the claimant received the reward.
 
 ###### EntropyVDFSeedCommitted
 Attributes:
@@ -579,22 +579,22 @@ Emitted when the seed for the VDF has been committed to the contract.
 ###### EntropySeedRevealed
 Attributes:
   - `seed` (bytes32) - the random seed used to determine the inflation pay-out
-    winners
+    recipients
 
 Emitted after the VDF can verify that the emitted seed has entropy to fulfill
 the `randomVDFDifficulty` set on construction.
 
 ##### startInflation
 Arguments:
-  - `_winners` (uint256) - the number of prizes to be claimable
-  - `_prize` (uint256) - the amount of ECO to be given as prize
+  - `_numRecipients` (uint256) - the number of rewards to be claimable
+  - `_reward` (uint256) - the amount of ECO to be given as reward to each recipient
 
 This function is called by `CurrencyTimer` after it has cloned and funded the
-`Inflation` contract. It sets the `winners` and `prize` variables based on the
-inputs as well as the start of the payout period to the current time.
+`Inflation` contract. It sets the `numRecipients` and `reward` variables based on the
+inputs as well as the start of the claim period to the current time.
 
 ###### Security Notes
-  - Can't be called twice (can't be called if `winners` is already set).
+  - Can't be called twice (can't be called if `numRecipients` is already set).
   - Can only be called on a cloned `Inflation` contract.
   - Reverts if the contract has not been sufficiently funded for operation.
   - As it is called as part of the function call that creates the contract it
@@ -629,31 +629,31 @@ sufficient random difficulty (see the [VDF Readme](../VDF/README.md) for more de
 
 ##### claimFor
 Arguments:
-  - `_who` (address) - the winner address whose prize is being claimed
-  - `_sequence` (uint256) - the sequence number of the ticket to claim
+  - `_who` (address) - the address whose reward is being claimed
+  - `_sequence` (uint256) - the index in the sequence order corresponding to this claim number
   - `_proof` (bytes32[]) - the “other nodes” in the Merkle tree
   - `_sum` (uint256) - cumulative sum of all account balances before this node
-  - `_index` (uint256) - which index of the tree proposer required to prove
+  - `_index` (uint256) - the index of the `who` address in the Merkle tree
 
-Verifies that the address being claimed for is a valid winner (see 
+Verifies that the address being claimed for is a valid recipient (see 
 `InflationRootHashProposal` for all the details about this process) and then
-pays the address `_who` the random inflation prize. Emits a `Claimed` event
-after the transfer has been made. The staggering of payouts over the payout
-period is indexed by the `_sequence` variable which runs from 0 up to `winners`.
+transfers the random inflation reward to the address `_who`. Emits a `Claimed` event
+after the transfer has been made. The staggering of claims over the claim
+period is indexed by the `_sequence` variable which runs from 0 up to `numRecipients`.
 
 ###### Security Notes
   - Cannot be called until the `InflationRootHashProposal` has accepted the root
     hash for the previous generation snapshot.
   - Can be called by anyone so that the gas fee does not need to be paid by the
-    winning address.
-  - Winners are indexed by `_sequence` and not by addresses. This means that it
-    is not impossible for the same address to win more than one prize, which is
+    recipient.
+  - recipients are indexed by `_sequence` and not by addresses. This means that it
+    is not impossible for the same address to receive more than one reward, which is
     a consequence of the intentional choice of weighting of random chance by the
     balance at each address. However a `_sequence` cannot be claimed twice.
 
 ##### claim
 Arguments:
-  - `_sequence` (uint256) - the sequence number of the ticket to claim
+  - `_sequence` (uint256) - the sequence order of the claim number
   - `_proof` (bytes32[]) - the “other nodes” in the Merkle tree
   - `_sum` (uint256) - cumulative sum of all account balances before this node
   - `_index` (uint256) - which index of the tree proposer required to prove
@@ -667,25 +667,25 @@ Destructs the `vdfVerifier` and transfers the balance of the contract to the roo
 policy contract. Then selfdestructs the `Inflation` contract.
 
 ###### Security Notes
-  - If the `seed` is set, can only be called if every ticket has been claimed.
+  - If the `seed` is set, can only be called if every claim number has been claimed.
   - Otherwise, can only be called if the contract is completely un-funded.
   - Is public to assure that, when the process is over, anyone can clean up.
 
 #### InflationRootHashProposal
   - Inherits: `PolicedUtils`
 
-To distribute Inflation rewards we need to establish winners of the "Inflation lottery". Inflation contract responsible to generate "winning tickets". While InflationRootHashProposal helps to establish which user holds what ticket.
+To distribute Inflation rewards we need to establish which users can claim them. Inflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' balances match to each of those numbers - those users can claim the reward.
 
-We assume that all users would always obtain tickets. Then, when claiming a reward, the user simply posts a proof stating that “if all users had gotten tickets, then I would have had ticket numbers from X to Y”; and if that range overlaps a winning ticket number, they get paid.
+We assume that all users would always want to participate. Then, when claiming a reward, the user simply posts a proof stating that “if all users had participated, then I would have had claim numbers from X to Y”; and if that range overlaps a winning claim number, they get paid.
 
 Assume that there exists a Merkle tree based on a list of nodes, where each node contains the following:
 Account number
 Account balance
 The cumulative sum of all account balances before this node.
-The cumulative sum of the node represents the start of the user's ticket range.
+The cumulative sum of the node represents the start of the user's claim range.
 
 The list is sorted by ascending account number, and the Merkle root hash exists.
-Thus, assuming ticket X was a winner, the account holder of that can prove it by submitting:
+Thus, assuming claim number X entitled its holder to a reward, the account holder of that can prove it by submitting:
 The index in the tree
 The cumulative sum before me
 The “other side” of the Merkle tree
@@ -741,7 +741,7 @@ Attributes:
   - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree of this proposal
   - `proposer` (address) - address of the proposer of accepted root hash
 
-Indicates that a new root hash proposal was accepted by the system, now winners can claim inflation rewards
+Indicates that a new root hash proposal was accepted by the system, now recipients can claim inflation rewards
 
 ###### ChallengeMissingAccountSuccess
 Attributes:
@@ -863,7 +863,7 @@ new challenges is over and there is no unanswered challenges, root hash is accep
 
 ##### verifyClaimSubmission
 Arguments:
-  - `_who_`   (address)   - address of an account claiming win
+  - `_who_`   (address)   - address of the account attempting to claim
   - `_proof`  (bytes32[]) - the “other nodes” in the Merkle tree.
   - `_sum`    (uint256)   - cumulative sum of a claiming account 
 

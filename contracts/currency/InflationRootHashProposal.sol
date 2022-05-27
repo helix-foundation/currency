@@ -10,7 +10,7 @@ import "./IECO.sol";
  * This implements a root hash proposal contract to be used by the ECO network to
  * establish root hash of merkle tree representing accounts and balances in the system given generation
  *
- * Merkle Tree serves as a mechanism to distribute tickets for Inflationary lottery amongst all accounts in the system
+ * Merkle Tree serves as a way to fairly establish which addresses can claim the random inflation reward
  */
 contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     enum ChallengeStatus {
@@ -319,7 +319,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     constructor(address _policy) PolicedUtils(_policy) {}
 
     /** @notice Configure the inflation root hash proposal contract
-     *  which is part of the inflation lottery mechanism
+     *  which is part of the random inflation mechanism
      *
      * @param _blockNumber block number to verify accounts balances against
      */
@@ -340,7 +340,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     }
 
     /** @notice Allows to propose new root hash co
-     *  which is part of the inflation lottery mechanism
+     *  which is part of the random inflation mechanism
      *
      * @param _proposedRootHash a root hash of the merkle tree describing all the accounts
      * @param _totalSum total cumulative sum of all the balances in the merkle tree
@@ -627,7 +627,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** @notice Verifies that the account specified is associated with the provided cumulative sum in the approved
      * Merkle tree for the current generation.
      *
-     *  @param _who    address of an account claiming win
+     *  @param _who    address of the account attempting to claim
      *  @param _proof   the “other nodes” in the merkle tree.
      *  @param _sum     cumulative sum of a claiming account
      *
@@ -640,7 +640,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     ) external view returns (bool) {
         require(
             acceptedRootHash != 0,
-            "Can't claim win before root hash established"
+            "Can't claim before root hash established"
         );
         uint256 balance = getStore().balanceAt(_who, blockNumber);
         return

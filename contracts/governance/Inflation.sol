@@ -16,24 +16,24 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * on demand by the CurrencyTimer.
  */
 contract Inflation is PolicedUtils, TimeUtils {
-    // Change this so nodes vote on total_eco and eco_per_ticket, compute
-    // tickets and distribute over 28 days (2 generations).
-    /** The time period over which inflation pay-out is spread to prevent
+    // Change this so nodes vote on total_eco and eco_per_claimNumber, compute
+    // claim numbers and distribute over 28 days (2 generations).
+    /** The time period over which inflation reward is spread to prevent
      *  flooding by spreading out the new tokens.
      */
-    uint256 public constant PAYOUT_PERIOD = 28 days;
+    uint256 public constant CLAIM_PERIOD = 28 days;
 
     /** The bound on how much more than the uint256 previous blockhash can a submitted prime be
      */
     uint256 public constant PRIME_BOUND = 1000;
 
-    /** The per-participant pay-out amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
+    /** The per-participant reward amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
      */
-    uint256 public prize;
+    uint256 public reward;
 
-    /** The computed number of pay-out winners (inflation/prize) in basic unit of 10^{-18} ECO (weico).
+    /** The computed number of reward recipients (inflation/reward) in basic unit of 10^{-18} ECO (weico).
      */
-    uint256 public winners;
+    uint256 public numRecipients;
 
     /** The block number to use as the reference point when checking if an account holds currency.
      */
@@ -48,24 +48,24 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     uint256 public entropyVDFSeed;
 
-    /** The random seed used to determine the inflation pay-out winners.
+    /** The random seed used to determine the inflation reward recipients.
      */
     bytes32 public seed;
 
     /** Difficulty of VDF for random process */
     uint256 public randomVDFDifficulty;
 
-    /** Timestamp to start payout period from */
-    uint256 public payoutPeriodStarts;
+    /** Timestamp to start claim period from */
+    uint256 public claimPeriodStarts;
 
-    /** A mapping recording which tickets have been claimed.
+    /** A mapping recording which claim numbers have been claimed.
      */
     mapping(uint256 => bool) public claimed;
 
     /** The base VDF implementation */
     VDFVerifier public vdfVerifier;
 
-    /** Fired when a user claims winnings */
+    /** Fired when a user claims their reward */
     event Claimed(address indexed who, uint256 sequence);
 
     /** Emitted when the VDF seed used to provide entropy has been committed to the contract.
@@ -87,20 +87,20 @@ contract Inflation is PolicedUtils, TimeUtils {
 
     /** Clean up the inflation contract.
      *
-     * Can only be called after all pay-outs
+     * Can only be called after all rewards
      * have been claimed.
      */
     function destruct() external {
         if (seed != 0) {
-            /* The higher bound for the loop iterations is the amount
-             * of the winners according to a vote by trusted nodes.
+            /* The higher bound for the loop iterations is the number
+             * of reward recipients according to a vote by trusted nodes.
              * It is supposed to be a reasonable number which does not impose a threat
              * to a system from a gas consumption standpoint.
              */
-            for (uint256 i = 0; i < winners; ++i) {
+            for (uint256 i = 0; i < numRecipients; ++i) {
                 require(
                     claimed[i],
-                    "All winnings must be claimed prior to destruct"
+                    "All rewards must be claimed prior to destruct"
                 );
             }
         }
@@ -174,19 +174,22 @@ contract Inflation is PolicedUtils, TimeUtils {
         emit EntropyVDFSeedCommitted(entropyVDFSeed);
     }
 
-    function startInflation(uint256 _winners, uint256 _prize) external {
-        require(_winners > 0 && _prize > 0, "Contract must have rewards");
+    function startInflation(uint256 _numRecipients, uint256 _reward) external {
         require(
-            getToken().balanceOf(address(this)) >= _winners * _prize,
+            _numRecipients > 0 && _reward > 0,
+            "Contract must have rewards"
+        );
+        require(
+            getToken().balanceOf(address(this)) >= _numRecipients * _reward,
             "The contract must have a token balance at least the total rewards"
         );
-        require(winners == 0, "The sale can only be started once");
+        require(numRecipients == 0, "The sale can only be started once");
 
-        /* This sets the amount of winners we will iterate through later, it is important
+        /* This sets the amount of recipients we will iterate through later, it is important
         this number stay reasonable from gas consumption standpoint */
-        winners = _winners;
-        prize = _prize;
-        payoutPeriodStarts = getTime();
+        numRecipients = _numRecipients;
+        reward = _reward;
+        claimPeriodStarts = getTime();
     }
 
     /** Submit a solution for VDF for randomness.
@@ -208,16 +211,16 @@ contract Inflation is PolicedUtils, TimeUtils {
         emit EntropySeedRevealed(seed);
     }
 
-    /** Claim an inflation pay-out on behalf of some address.
+    /** Claim an inflation reward on behalf of some address.
      *
-     * The pay-out is sent directly to the address winning the pay-out, but the
+     * The reward is sent directly to the address that has claim to the reward, but the
      * gas cost is paid by the caller.
      *
      * For example, an exchange might stake using funds deposited into its
      * contract.
      *
-     * @param _who The address to claim a pay-out on behalf of.
-     * @param _sequence The pay-out sequence number to determine if the address
+     * @param _who The address to claim a reward on behalf of.
+     * @param _sequence The reward sequence number to determine if the address
      *                  gets paid.
      */
     function claimFor(
@@ -229,12 +232,12 @@ contract Inflation is PolicedUtils, TimeUtils {
     ) public {
         require(seed != bytes32(0), "Must prove VDF before claims can be paid");
         require(
-            _sequence < winners,
-            "The provided sequence number must be within the set of winners"
+            _sequence < numRecipients,
+            "The provided sequence number must be within the set of recipients"
         );
         require(
             getTime() >
-                payoutPeriodStarts + (_sequence * PAYOUT_PERIOD) / winners,
+                claimPeriodStarts + (_sequence * CLAIM_PERIOD) / numRecipients,
             "A claim can only be made after enough time has passed - please wait longer"
         );
         require(
@@ -258,29 +261,29 @@ contract Inflation is PolicedUtils, TimeUtils {
 
         claimed[_sequence] = true;
 
-        uint256 _winner = uint256(
+        uint256 claimable = uint256(
             keccak256(abi.encodePacked(seed, _sequence))
         ) % rootHashContract.acceptedTotalSum();
 
         require(
-            _winner < getToken().balanceAt(_who, blockNumber) + _sum,
-            "The provided address does not hold a winning ticket"
+            claimable < getToken().balanceAt(_who, blockNumber) + _sum,
+            "The provided address cannot claim this reward."
         );
         require(
-            _winner >= _sum,
-            "The provided address does not hold a winning ticket."
+            claimable >= _sum,
+            "The provided address cannot claim this reward."
         );
 
-        require(getToken().transfer(_who, prize), "Transfer Failed");
+        require(getToken().transfer(_who, reward), "Transfer Failed");
 
         emit Claimed(_who, _sequence);
     }
 
-    /** Claim an inflation pay-out for yourself.
+    /** Claim an inflation reward for yourself.
      *
-     * You need to know your ticket number.
+     * You need to know your claim number's place in the order.
      *
-     * @param _sequence Your inflation ticket number.
+     * @param _sequence Your claim number's place in the order.
      */
     function claim(
         uint256 _sequence,

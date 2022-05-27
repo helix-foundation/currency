@@ -28,8 +28,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
     struct GovernanceProposal {
         bool valid;
-        uint256 randomInflationWinners;
-        uint256 randomInflationPrize;
+        uint256 numberOfRecipients;
+        uint256 randomInflationReward;
         uint256 lockupDuration;
         uint256 lockupInterest;
         uint256 inflationMultiplier;
@@ -54,8 +54,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
     event ProposalCreated(
         address trusteeAddress,
-        uint256 _randomInflationWinners,
-        uint256 _randomInflationPrize,
+        uint256 _numberOfRecipients,
+        uint256 _randomInflationReward,
         uint256 _lockupDuration,
         uint256 _lockupInterest,
         uint256 _inflationMultiplier
@@ -120,24 +120,24 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     }
 
     function propose(
-        uint256 _randomInflationWinners,
-        uint256 _randomInflationPrize,
+        uint256 _numberOfRecipients,
+        uint256 _randomInflationReward,
         uint256 _lockupDuration,
         uint256 _lockupInterest,
         uint256 _inflationMultiplier
     ) external onlyTrusted atStage(Stages.Propose) {
         GovernanceProposal storage p = proposals[msg.sender];
         p.valid = true;
-        p.randomInflationWinners = _randomInflationWinners;
-        p.randomInflationPrize = _randomInflationPrize;
+        p.numberOfRecipients = _numberOfRecipients;
+        p.randomInflationReward = _randomInflationReward;
         p.lockupDuration = _lockupDuration;
         p.lockupInterest = _lockupInterest;
         p.inflationMultiplier = _inflationMultiplier;
 
         emit ProposalCreated(
             msg.sender,
-            _randomInflationWinners,
-            _randomInflationPrize,
+            _numberOfRecipients,
+            _randomInflationReward,
             _lockupDuration,
             _lockupInterest,
             _inflationMultiplier

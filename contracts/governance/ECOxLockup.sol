@@ -17,7 +17,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
      * @param source The address that a deposit certificate has been issued to.
      * @param amount The amount of ECOx tokens deposited.
      */
-    event Deposit(address source, uint256 amount);
+    event Deposit(address indexed source, uint256 amount);
 
     /** The Withdrawal event indicates that a withdrawal has been made to a particular
      * address in a particular amount.
@@ -25,7 +25,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
      * @param destination The address that has made a withdrawal.
      * @param amount The amount in basic unit of 10^{-18} ECOx (weicoX) tokens withdrawn.
      */
-    event Withdrawal(address destination, uint256 amount);
+    event Withdrawal(address indexed destination, uint256 amount);
 
     // marks each address's ability to withdraw, maps from address to last voted generation
     mapping(address => uint256) public votingTracker;
@@ -100,12 +100,9 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
     }
 
     function notifyGenerationIncrease() public {
-        uint256 _old = currentGeneration;
-        uint256 _new = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
-        require(_new != _old, "Generation has not increased");
-
         // update currentGeneration
-        currentGeneration = _new;
+        currentGeneration = IGeneration(policyFor(ID_TIMED_POLICIES))
+            .generation();
     }
 
     function transfer(address, uint256) public pure override returns (bool) {
