@@ -133,9 +133,10 @@ async function initWeb3() {
     let serverPort;
     if (options.deployTokens) {
       serverPort = 8545;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000,
-       blockTime: .3 
-     });
+      options.ganacheServer = ganache.server({
+        default_balance_ether: 1000000,
+        blockTime: 0.3,
+      });
     } else if (options.deployGovernance) {
       serverPort = 8546;
       options.ganacheServer = ganache.server({ default_balance_ether: 1000000, fork: `${serverAddr}:${serverPort - 1}` });
@@ -150,7 +151,7 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
-    ethersProvider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+    ethersProvider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
   } else {
     global.web3 = new Web3(options.webrpc || defaultRpc);
   }
@@ -171,7 +172,6 @@ async function initUsers() {
     console.log(`chump account is ${options.chumpAccount}`);
 
     options.signer = await ethersProvider.getSigner();
-
   }
 
   if (options.from) {
@@ -228,7 +228,6 @@ async function initUsers() {
 
   console.log(`using account ${account} for deployment`);
   options.account = account;
-
 }
 
 async function deployEco() {

@@ -9,15 +9,14 @@
 //     winston.format.prettyPrint(),
 //   ),
 //   transports: [
-//     new winston.transports.File({ filename: `${__dirname}/../log/supervisor.log`, level: 'info' }),
+//     new winston.transports.File({ filename:
+// `${__dirname}/../log/supervisor.log`, level: 'info' }),
 //     new winston.transports.Console(),
 //   ],
 // });
 // const vdfProcessManager = {};
 // const REVEAL = 'reveal';
 // const ENTROPY = 'entropy';
-
-
 
 // function existRunningVDFProc(node, address, type) {
 //   return !vdfProcessManager[[node, address, type]] === undefined;

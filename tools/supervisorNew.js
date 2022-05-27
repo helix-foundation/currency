@@ -1,12 +1,15 @@
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
 
-//change this later
+/* eslint-disable no-console */
+/* eslint no-bitwise: 0 */
+/* eslint-disable no-param-reassign, no-await-in-loop */
+/* eslint-disable no-lone-blocks, no-underscore-dangle */
+
+// change this later
 const provider = new ethers.providers.JsonRpcProvider();
 // const signer = provider.getSigner();x
-
-
 
 function req(contract) {
   try {
@@ -20,39 +23,38 @@ function req(contract) {
   }
 }
 
-//Contract ABIs and Bytecode
+// Contract ABIs and Bytecode
 const PolicyABI = req('Policy');
 const ECO = req('ECO');
 const TimedPoliciesABI = req('TimedPolicies');
 const PolicyProposalsABI = req('PolicyProposals');
 const PolicyVotesABI = req('PolicyVotes');
-const TrustedNodesABI = req('TrustedNodes');
-const VDFVerifierABI = req('VDFVerifier');
+// const TrustedNodesABI = req('TrustedNodes');
+// const VDFVerifierABI = req('VDFVerifier');
 const CurrencyGovernanceABI = req('CurrencyGovernance');
 const CurrencyTimerABI = req('CurrencyTimer');
 const InflationABI = req('Inflation');
-const LockupContractABI = req('Lockup');
-const InflationRootHashProposal = req('InflationRootHashProposal');
+// const LockupContractABI = req('Lockup');
+// const InflationRootHashProposal = req('InflationRootHashProposal');
 
 const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
 const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
 const ID_CURRENCY_GOVERNANCE = web3.utils.soliditySha3('CurrencyGovernance');
-const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
+// const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
 const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
 const ID_POLICY_PROPOSALS = web3.utils.soliditySha3('PolicyProposals');
 const ID_POLICY_VOTES = web3.utils.soliditySha3('PolicyVotes');
 
 const { toBN } = web3.utils;
 
-//useful time constants
-const HOUR = 3600*1000;
+// useful time constants
+const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
 
 // time before next generation that auto refund is called
 const REFUND_BUFFER = HOUR;
 // length of a generation
 const GENERATION_TIME = 14 * DAY;
-
 
 class Supervisor {
   constructor(policyAddr, signer, account) {
@@ -68,7 +70,6 @@ class Supervisor {
     this.currentGenerationBlock = 0;
     this.currentGenerationStartTime = 0;
     this.nextGenerationStartTime = 0;
-
   }
 
   async updateGeneration() {
@@ -76,69 +77,74 @@ class Supervisor {
       await this.timedPolicies.incrementGeneration({ from: this.account });
       this.currentGenerationBlock = this.blockNumber;
       this.currentGenerationStartTime = this.timestamp;
-      this.nextGenerationStartTime = this.currentGenerationStartTime + generationTime;
-    };
-
+      this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
+    }
   }
 
   async updateContracts() {
-    //called the block after generation update
-    //fetches all the new contract addresses from the registry
+    // called the block after generation update
+    // fetches all the new contract addresses from the registry
 
-    //only need to fetch these if there is a policy change
+    // only need to fetch these if there is a policy change
     if (this.policyChange) {
-
-      this.timedPolicies = new ethers.Contract(await this.policy.policyFor(ID_TIMED_POLICIES),
+      this.timedPolicies = new ethers.Contract(
+        await this.policy.policyFor(ID_TIMED_POLICIES),
         TimedPoliciesABI.abi,
         this.signer,
       );
       console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
 
-      this.currencyTimer = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_TIMER),
+      this.currencyTimer = new ethers.Contract(
+        await this.policy.policyFor(ID_CURRENCY_TIMER),
         CurrencyTimerABI.abi,
-        this.signer
+        this.signer,
       );
       console.log(`currencyTimer address is: ${this.currencyTimer.address}`);
 
       // TODO: this is giving the 0 address, investigate
-      this.eco = new ethers.Contract(await this.policy.policyFor(ID_ERC20TOKEN),
+      this.eco = new ethers.Contract(
+        await this.policy.policyFor(ID_ERC20TOKEN),
         ECO.abi,
         this.signer,
       );
       console.log(`ECO address is: ${this.eco.address}`);
-
     }
 
-    //need to fetch every generation
-    this.policyProposals = new ethers.Contract(await this.policy.policyFor(ID_POLICY_PROPOSALS),
+    // need to fetch every generation
+    this.policyProposals = new ethers.Contract(
+      await this.policy.policyFor(ID_POLICY_PROPOSALS),
       PolicyProposalsABI.abi,
       this.signer,
     );
     console.log(`policyProposals address is: ${this.policyProposals.address}`);
 
-    this.currencyGovernance = new ethers.Contract(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
+    this.currencyGovernance = new ethers.Contract(
+      await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
       CurrencyGovernanceABI.abi,
       this.signer,
     );
     console.log(`currencyGovernance address is: ${this.currencyGovernance.address}`);
 
-    this.randomInflation = new ethers.Contract(await this.currencyTimer.inflationImpl(),
+    this.randomInflation = new ethers.Contract(
+      await this.currencyTimer.inflationImpl(),
       InflationABI.abi,
-      this.signer
+      this.signer,
     );
     console.log(`randomInflation address is: ${this.currencyTimer.address}`);
-    
   }
 
   async manageCommunityGovernance() {
-    if (await !this.policyProposals.proposalSelected() && this.timestamp < await this.policyProposals.proposalEnds()) {
-      let events = this.policyProposals.queryFilter("SupportThresholdReached", "latest");
-      if (len(events) == 1) {
+    if (await !this.policyProposals.proposalSelected()
+      && this.timestamp < await this.policyProposals.proposalEnds()
+    ) {
+      const events = this.policyProposals.queryFilter('SupportThresholdReached', 'latest');
+      if (events.length === 1) {
         await this.policyProposals.deployProposalVoting({ from: this.account });
-        //this is probably wrong, how do i get the policy votes address from the event emitted by the deploy? 
-        this.policyVotes = new ethers.Contract(await this.policy.policyFor(ID_POLICY_VOTES),
+        // this is probably wrong, how do i get the policy votes address from the deploy event?
+        this.policyVotes = new ethers.Contract(
+          await this.policy.policyFor(ID_POLICY_VOTES),
           PolicyVotesABI,
-          { from: this.account }
+          { from: this.account },
         );
       }
     } else {
@@ -149,10 +155,9 @@ class Supervisor {
           await this.policyVotes.execute();
           this.policyChange = true;
         } catch (e) {
-          console.log(e)
+          console.log(e);
         }
-        
-      };
+      }
       if (this.timestamp + REFUND_BUFFER > this.nextGenerationStart) {
         // do refunds of unselected proposals
         (await this.policyProposals.allProposals()
@@ -165,9 +170,9 @@ class Supervisor {
   }
 
   async manageCurrencyGovernance() {
-    //updates the stage of the currency governance process
+    // updates the stage of the currency governance process
 
-    //can be more granular about this, the logging might be ugly, but is this ok wrt gas cost?
+    // can be more granular about this, the logging might be ugly, but is this ok wrt gas cost?
     try {
       await this.currencyGovernance.updateStage();
       try {
@@ -181,33 +186,31 @@ class Supervisor {
   }
 
   async manageRandomInflation() {
-    // TODO
+    console.log(this.blockNumber);
   }
 
   async catchup() {
-
     await this.updateContracts();
 
     this.policyChange = false;
-    //set initial generation information
+    // set initial generation information
 
     const filter = this.timedPolicies.filters.PolicyDecisionStarted();
-    filter.fromBlock = "latest" - 20; // replace with latest - 1 generation of blocks
-    filter.toBlock = "latest";
+    filter.fromBlock = 'latest' - 20; // replace w latest - 1 generation of blocks
+    filter.toBlock = 'latest';
 
     const events = await provider.getLogs(filter);
     this.currentGenerationBlock = events[0].blockNumber;
-    this.currentGenerationStartTime = await provider.getBlock(this.currentGenerationBlock).timeStamp;
+    this.currentGenerationStartTime = await provider.getBlock(
+      this.currentGenerationBlock,
+    ).timeStamp;
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
     // await getTxHistory();
-
-
   }
 
   async getTxHistory() {
     // blocked by transfer event redefinition
-    return null;
 
     const map = {};
 
@@ -230,47 +233,46 @@ class Supervisor {
     // return map;
   }
 
-
-
   async processBlock() {
     const block = await provider.getBlock('latest');
     this.blockNumber = block.number;
     this.timestamp = block.timestamp;
     if (this.timestamp > this.nextGenerationStartTime) {
       console.log(`current time is ${this.timeStamp}, nextGenerationStart is ${this.nextGenerationStartTime}, updating generation`);
-      await updateGeneration();
-    } else if (this.currentGenerationBlock == this.blockNumber - 1) {
+      await this.updateGeneration();
+    } else if (this.currentGenerationBlock === this.blockNumber - 1) {
       console.log(`current generation block is ${this.currentGenerationBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`);
-      updateContracts();
+      this.updateContracts();
     } else {
-        console.log(`managing currency governance`);
-        manageCurrencyGovernance();
-        console.log(`managing community governance`);
-        manageCommunityGovernance();
+      console.log('managing currency governance');
+      this.manageCurrencyGovernance();
+      console.log('managing community governance');
+      this.manageCommunityGovernance();
 
-        if (this.randomInflation) {
-          manageRandomInflation();
-        }
+      if (this.randomInflation) {
+        console.log('managing random inflation');
+        this.manageRandomInflation();
+      }
 
-        console.log(this.blockNumber);
+      console.log(this.blockNumber);
     }
-
   }
 
   static async start(options = {}) {
-    const supervisor = await new Supervisor(options.root, options.signer, await options.signer.getAddress());
+    const supervisor = await new Supervisor(
+      options.root,
+      options.signer,
+      await options.signer.getAddress(),
+    );
     console.log('STARTED');
 
     supervisor.catchup();
 
-    provider.on("block", (num) => {
+    provider.on('block', (num) => {
       console.log(num);
       supervisor.processBlock();
-      
-    })
+    });
   }
-
-
 }
 
 module.exports = {
