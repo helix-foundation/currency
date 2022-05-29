@@ -278,15 +278,15 @@ class Supervisor {
   }
 }
 
-// let args = fs.readFileSync('tools/supervisorInputs.txt');
-// args = new String(args).split('\n');
-// let _signer = new ethers.Signer(JSON.parse(args[1]));
-// Supervisor.start({
-//   root: args[0],
-//   signer: _signer
-// })
+let args = fs.readFileSync('tools/supervisorInputs.txt');
+args = new String(args).split('\n');
+let _signer = new ethers.Signer(JSON.parse(args[1]));
+Supervisor.start({
+  root: args[0],
+  signer: _signer
+})
 
 
-module.exports = {
-  Supervisor,
-};
+// module.exports = {
+//   Supervisor,
+// };
