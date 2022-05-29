@@ -1,3 +1,4 @@
+const web3 = require('web3');
 const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
@@ -155,7 +156,7 @@ class Supervisor {
           await this.policyVotes.execute();
           this.policyChange = true;
         } catch (e) {
-          console.log(e);
+          // console.log(e);
         }
       }
       if (this.timestamp + REFUND_BUFFER > this.nextGenerationStart) {
@@ -178,10 +179,10 @@ class Supervisor {
       try {
         await this.currencyGovernance.compute();
       } catch (e) {
-        console.log(e);
+        // console.log(e);
       }
     } catch (e) {
-      console.log(e);
+      // console.log(e);
     }
   }
 
@@ -234,6 +235,7 @@ class Supervisor {
   }
 
   async processBlock() {
+    console.log(`processing block ${this.blockNumber}`);
     const block = await provider.getBlock('latest');
     this.blockNumber = block.number;
     this.timestamp = block.timestamp;
@@ -242,19 +244,19 @@ class Supervisor {
       await this.updateGeneration();
     } else if (this.currentGenerationBlock === this.blockNumber - 1) {
       console.log(`current generation block is ${this.currentGenerationBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`);
-      this.updateContracts();
+      await this.updateContracts();
     } else {
       console.log('managing currency governance');
-      this.manageCurrencyGovernance();
+      await this.manageCurrencyGovernance();
       console.log('managing community governance');
-      this.manageCommunityGovernance();
+      await this.manageCommunityGovernance();
 
       if (this.randomInflation) {
         console.log('managing random inflation');
-        this.manageRandomInflation();
+        await this.manageRandomInflation();
       }
 
-      console.log(this.blockNumber);
+      console.log(`done with block ${this.blockNumber}`);
     }
   }
 
@@ -268,12 +270,22 @@ class Supervisor {
 
     supervisor.catchup();
 
+    console.log("CAUGHT UP")
+
     provider.on('block', (num) => {
-      console.log(num);
-      supervisor.processBlock();
+      supervisor.processBlock()
     });
   }
 }
+
+// let args = fs.readFileSync('tools/supervisorInputs.txt');
+// args = new String(args).split('\n');
+// let _signer = new ethers.Signer(JSON.parse(args[1]));
+// Supervisor.start({
+//   root: args[0],
+//   signer: _signer
+// })
+
 
 module.exports = {
   Supervisor,

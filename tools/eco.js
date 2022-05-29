@@ -135,7 +135,7 @@ async function initWeb3() {
       serverPort = 8545;
       options.ganacheServer = ganache.server({
         default_balance_ether: 1000000,
-        blockTime: 0.3,
+        // blockTime: .3,
       });
     } else if (options.deployGovernance) {
       serverPort = 8546;
@@ -291,6 +291,12 @@ async function supervise() {
       const supervisor = new Supervisor(options.policy, options.signer);
       await supervisor.processAllBlocks();
     } else {
+      // let content = options.policy + '\n' + JSON.stringify(options.signer);
+      // fs.writeFile('tools/supervisorInputs.txt', content, e => {
+      //   if (e) {
+      //     console.log(e);
+      //   }
+      // });
       await Supervisor.start({
         root: options.policy,
         signer: options.signer,
