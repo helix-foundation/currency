@@ -291,12 +291,12 @@ async function supervise() {
       const supervisor = new Supervisor(options.policy, options.signer);
       await supervisor.processAllBlocks();
     } else {
-      let content = options.policy + '\n' + JSON.stringify(options.signer);
-      fs.writeFile('tools/supervisorInputs.txt', content, e => {
-        if (e) {
-          console.log(e);
-        }
-      });
+      // let content = options.policy + '\n' + JSON.stringify(options.signer);
+      // fs.writeFile('tools/supervisorInputs.txt', content, e => {
+      //   if (e) {
+      //     console.log(e);
+      //   }
+      // });
       await Supervisor.start({
         root: options.policy,
         signer: options.signer,
