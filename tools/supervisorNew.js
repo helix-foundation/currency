@@ -152,9 +152,12 @@ class Supervisor {
       if (this.policyVotes) {
         // seems inefficient but ok for now
         try {
-          // will revert most of the time
-          await this.policyVotes.execute();
-          this.policyChange = true;
+          const totalVP = await this.policyVotes.totalVotingPower(blockNumber);
+          const yesStake = await this.policyVotes.yesStake();
+          if (yesStake > totalVP / 2) {
+            await this.policyVotes.execute();
+            this.policyChange = true;
+          }
         } catch (e) {
           // console.log(e);
         }
