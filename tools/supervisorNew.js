@@ -151,11 +151,10 @@ class Supervisor {
     } else {
       if (this.policyVotes) {
         try {
-          const totalVP = await this.policyVotes.totalVotingPower(blockNumber);
+          const totalVP = await this.policyVotes.totalVotingPower(this.blockNumber);
           const yesStake = await this.policyVotes.yesStake();
-          if (yesStake > totalVP / 2 ||
-            this.timestamp > await this.policyVotes.voteEnds + await this.policyVotes.ENACTION_DELAY ) 
-          {
+          if (yesStake > totalVP / 2
+            || this.timestamp > await this.policyVotes.voteEnds + await this.policyVotes.ENACTION_DELAY) {
             await this.policyVotes.execute();
             this.policyChange = true;
           }
@@ -177,14 +176,13 @@ class Supervisor {
   async manageCurrencyGovernance() {
     // updates the stage of the currency governance process
 
-      const stage = await this.currencyGovernance.stage()
+    const stage = await this.currencyGovernance.stage();
 
-      if (stage == 0 && time >= await this.currencyGovernance.proposalEnds() ||
-        stage == 1 && time >= await this.currencyGovernance.votingEnds() ||
-        stage == 2 && time >= await this.currencyGovernance.revealEnds()) 
-      {
-        await this.currencyGovernance.updateStage();
-      }
+    if ((stage === 0 && this.timestamp >= await this.currencyGovernance.proposalEnds())
+        || (stage === 1 && this.timestamp >= await this.currencyGovernance.votingEnds())
+        || (stage === 2 && this.timestamp >= await this.currencyGovernance.revealEnds())) {
+      await this.currencyGovernance.updateStage();
+    }
   }
 
   async manageRandomInflation() {
