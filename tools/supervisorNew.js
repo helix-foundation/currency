@@ -150,11 +150,12 @@ class Supervisor {
       }
     } else {
       if (this.policyVotes) {
-        // seems inefficient but ok for now
         try {
           const totalVP = await this.policyVotes.totalVotingPower(blockNumber);
           const yesStake = await this.policyVotes.yesStake();
-          if (yesStake > totalVP / 2) {
+          if (yesStake > totalVP / 2 ||
+            this.timestamp > await this.policyVotes.voteEnds + await this.policyVotes.ENACTION_DELAY ) 
+          {
             await this.policyVotes.execute();
             this.policyChange = true;
           }
@@ -176,17 +177,14 @@ class Supervisor {
   async manageCurrencyGovernance() {
     // updates the stage of the currency governance process
 
-    // can be more granular about this, the logging might be ugly, but is this ok wrt gas cost?
-    try {
-      await this.currencyGovernance.updateStage();
-      try {
-        await this.currencyGovernance.compute();
-      } catch (e) {
-        // console.log(e);
+      const stage = await this.currencyGovernance.stage()
+
+      if (stage == 0 && time >= await this.currencyGovernance.proposalEnds() ||
+        stage == 1 && time >= await this.currencyGovernance.votingEnds() ||
+        stage == 2 && time >= await this.currencyGovernance.revealEnds()) 
+      {
+        await this.currencyGovernance.updateStage();
       }
-    } catch (e) {
-      // console.log(e);
-    }
   }
 
   async manageRandomInflation() {
