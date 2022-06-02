@@ -68,9 +68,9 @@ class Supervisor {
     this.policyChange = true;
 
     // generational info
-    this.currentGenerationBlock = 0;
-    this.currentGenerationStartTime = 0;
-    this.nextGenerationStartTime = 0;
+    this.currentGenerationBlock;
+    this.currentGenerationStartTime;
+    this.nextGenerationStartTime;
   }
 
   async updateGeneration() {
@@ -269,7 +269,7 @@ class Supervisor {
     );
     console.log('STARTED');
 
-    supervisor.catchup();
+    await supervisor.catchup();
 
     console.log('CAUGHT UP');
 
