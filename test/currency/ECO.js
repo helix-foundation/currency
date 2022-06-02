@@ -147,11 +147,26 @@ contract('ECO [@group=1]', (accounts) => {
       });
 
       it('emits a Transfer event', async () => {
-        const result = await eco.transfer(accounts[2], amount, meta);
+        const recipient = accounts[2];
+        const result = await eco.transfer(recipient, amount, meta);
         await expectEvent.inTransaction(
           result.tx,
           eco.constructor,
           'Transfer',
+          { from: meta.from, to: recipient, value: amount.toString() },
+        );
+      });
+
+      it('emits a BaseValueTransfer event', async () => {
+        const recipient = accounts[2];
+        const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
+        const gonsAmount = inflationMult.mul(amount);
+        const result = await eco.transfer(recipient, amount, meta);
+        await expectEvent.inTransaction(
+          result.tx,
+          eco.constructor,
+          'BaseValueTransfer',
+          { from: meta.from, to: recipient, value: gonsAmount.toString() },
         );
       });
 
@@ -219,11 +234,13 @@ contract('ECO [@group=1]', (accounts) => {
       });
 
       it('emits a Transfer event', async () => {
-        const result = await eco.burn(accounts[1], amount, meta);
+        const source = accounts[1];
+        const result = await eco.burn(source, amount, meta);
         await expectEvent.inTransaction(
           result.tx,
           eco.constructor,
           'Transfer',
+          { from: source, to: '0x0000000000000000000000000000000000000000', value: amount.toString() },
         );
       });
     });
@@ -373,6 +390,7 @@ contract('ECO [@group=1]', (accounts) => {
             result.tx,
             eco.constructor,
             'Transfer',
+            { from, to, value: allowanceParts[0].toString() },
           );
         });
 
@@ -430,6 +448,7 @@ contract('ECO [@group=1]', (accounts) => {
                     result.tx,
                     eco.constructor,
                     'Transfer',
+                    { from, to, value: part.toString() },
                   );
                 },
               ),
@@ -469,7 +488,12 @@ contract('ECO [@group=1]', (accounts) => {
       context('when transferring 0', () => {
         it('emits a Transfer event', async () => {
           const result = await eco.transferFrom(from, to, 0, meta);
-          await expectEvent.inTransaction(result.tx, eco.constructor, 'Transfer');
+          await expectEvent.inTransaction(
+            result.tx,
+            eco.constructor,
+            'Transfer',
+            { from, to, value: '0' },
+          );
         });
 
         it('does not decrease the allowance', async () => {
@@ -504,14 +528,24 @@ contract('ECO [@group=1]', (accounts) => {
 
     it('emits Transfer when minting', async () => {
       const tx = await faucet.mint(accounts[1], amount);
-      await expectEvent.inTransaction(tx.tx, eco.constructor, 'Transfer', { from: '0x0000000000000000000000000000000000000000', to: accounts[1], value: amount.toString() });
+      await expectEvent.inTransaction(
+        tx.tx,
+        eco.constructor,
+        'Transfer',
+        { from: '0x0000000000000000000000000000000000000000', to: accounts[1], value: amount.toString() },
+      );
     });
 
     it('emits Transfer when burning', async () => {
       await faucet.mint(accounts[1], amount);
       const burnAmount = one.muln(100);
       const tx = await eco.burn(accounts[1], burnAmount, { from: accounts[1] });
-      await expectEvent.inTransaction(tx.tx, eco.constructor, 'Transfer', { to: '0x0000000000000000000000000000000000000000', from: accounts[1], value: burnAmount.toString() });
+      await expectEvent.inTransaction(
+        tx.tx,
+        eco.constructor,
+        'Transfer',
+        { to: '0x0000000000000000000000000000000000000000', from: accounts[1], value: burnAmount.toString() },
+      );
     });
   });
 
@@ -532,7 +566,6 @@ contract('ECO [@group=1]', (accounts) => {
       await faucet.mint(from, deposit);
     });
 
-    // fixes here
     it('can get a checkpoint value', async () => {
       const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
       const checkpoint = await eco.checkpoints(from, 1);

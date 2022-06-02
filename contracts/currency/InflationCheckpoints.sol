@@ -20,6 +20,14 @@ abstract contract InflationCheckpoints is
 
     Checkpoint[] internal _linearInflationCheckpoints;
 
+    // to be used to record the transfer amounts after _beforeTokenTransfer
+    // these values are the base (unchanging) values the currency is stored in
+    event BaseValueTransfer(
+        address indexed from,
+        address indexed to,
+        uint256 value
+    );
+
     /** Construct a new instance.
      *
      * Note that it is always necessary to call reAuthorize on the balance store
@@ -55,13 +63,16 @@ abstract contract InflationCheckpoints is
     }
 
     function _beforeTokenTransfer(
-        address,
-        address,
+        address from,
+        address to,
         uint256 amount
     ) internal virtual override returns (uint256) {
-        return
-            amount *
+        uint256 gonsAmount = amount *
             _checkpointsLookup(_linearInflationCheckpoints, block.number);
+
+        emit BaseValueTransfer(from, to, gonsAmount);
+
+        return gonsAmount;
     }
 
     function getPastLinearInflation(uint256 blockNumber)
