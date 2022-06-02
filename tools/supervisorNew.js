@@ -9,7 +9,7 @@ const path = require('path');
 /* eslint-disable no-lone-blocks, no-underscore-dangle */
 
 // change this later
-const provider = new ethers.providers.JsonRpcProvider();
+let provider;
 // const signer = provider.getSigner();x
 
 function req(contract) {
@@ -217,11 +217,8 @@ class Supervisor {
 
     const map = {};
 
-    // const token = await this.getERC20Token();
-    (await this.eco.queryFilter('Transfer', {
-      fromBlock: 0,
-      toBlock: 'latest',
-    })).forEach((event) => {
+    const filter = this.eco.filters.Transfer();
+    (await provider.getLogs(filter)).forEach((event) => {
       const params = event.returnValues;
       if (!toBN(params.from).eq(toBN('0')) && !toBN(params.value).eq(toBN('0'))) {
         map[params.from] = map[params.from].sub(toBN(params.value));
@@ -233,7 +230,7 @@ class Supervisor {
       }
     });
 
-    // return map;
+    return map;
   }
 
   async processBlock() {
@@ -263,6 +260,7 @@ class Supervisor {
   }
 
   static async start(options = {}) {
+    provider = options.provider;
     const supervisor = await new Supervisor(
       options.root,
       options.signer,

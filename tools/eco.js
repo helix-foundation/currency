@@ -299,6 +299,7 @@ async function supervise() {
       // });
       await Supervisor.start({
         root: options.policy,
+        provider: ethersProvider,
         signer: options.signer,
       });
     }
