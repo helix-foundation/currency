@@ -120,7 +120,7 @@ abstract contract InflationCheckpoints is
         return getPastTotalSupply(_blockNumber) / _linearInflation;
     }
 
-    /** Return historical balance at given generation.
+    /** Return historical voting balance (includes delegation) at given block number.
      *
      * If the latest block number for the account is before the requested
      * block then the most recent known balance is returned. Otherwise the
@@ -131,7 +131,7 @@ abstract contract InflationCheckpoints is
      *                        of. Must be less than or equal to the present
      *                        block number.
      */
-    function balanceAt(address _owner, uint256 _blockNumber)
+    function getPastVotes(address _owner, uint256 _blockNumber)
         public
         view
         override
@@ -139,6 +139,6 @@ abstract contract InflationCheckpoints is
     {
         uint256 _linearInflation = getPastLinearInflation(_blockNumber);
 
-        return getPastVotes(_owner, _blockNumber) / _linearInflation;
+        return getPastVotingGons(_owner, _blockNumber) / _linearInflation;
     }
 }

@@ -76,22 +76,22 @@ This function looks up the value in the checkpoint for total supply that occurs 
  - Reverts if `_blockNumber` is >= the current block number.
  - If no checkpoint is found before the requested block number, 0 is returned.
 
-#### balanceAt
+#### getPastVotes
 Arguments:
- - `_owner` (address) - the address for which to look up the balance
+ - `_owner` (address) - the address for which to look up the ECO voting power
  - `_blockNumber` (uint256) - the block number at which to check the total supply.
 
-An alias for `getPastVotes`. Is overidden in the child contract to account for inflation.
+An alias for `getPastVotingGons`. Is overidden in the child contract to account for inflation.
 
 ##### Security Notes
  - This is not the same as the user's balance at the time. This is used purely for looking at snapshotted voting power and accounts for the delegation decisions of the `account` address.
 
-#### getPastVotes
+#### getPastVotingGons
 Arguments:
- - `account` (address) - the address for which to look up the balance
+ - `account` (address) - the address for which to look up the ECO voting power
  - `blockNumber` (uint256) - the block number at which to check the total supply.
 
-This function looks up the value in the checkpoint for user balance that occurs soonest before `blockNumber`. This lookup is done via a binary search. Is overidden in the child contract to account for inflation.
+This function looks up the value in the checkpoint for user checkpoint that occurs soonest before `blockNumber`. This lookup is done via a binary search. Is overidden in the child contract to account for inflation.
 
 ##### Security Notes
  - This is not the same as the user's balance at the time. This is used purely for looking at snapshotted voting power and accounts for the delegation decisions of the `account` address.
@@ -110,7 +110,7 @@ Arguments:
 
 Returns the current delegate for `account`. If the `account` is its own delegate (i.e. a delegate has not been set), `account` will be returned. Note that this applies to using this function for an acconut that's completely unused as each account is its own delegate by default.
 
-#### getVotes
+#### getVotingGons
 Arguments:
  - `account` (address) - the address to get votes for
 
@@ -146,12 +146,12 @@ Overrides the `balanceOf` function in `ERC20` to account for inflation. The unin
 ##### Security Notes
  - the division is done via deterministic integer division with truncation
 
-#### balanceAt
+#### getPastVotes
 Arguments:
  - `_owner` (address) - the address for which to look up the balance
  - `_blockNumber` (uint256) - the block number at which to check the total supply.
 
-Overrides the `balanceAt` function in `VoteCheckpoints` to account for inflation. The uninflated value stored in the checkpoint is divided by the most recent inflation multiplier to `_blockNumber`.
+Overrides the `getPastVotes` function in `VoteCheckpoints` to account for inflation. The uninflated value stored in the checkpoint is divided by the most recent inflation multiplier to `_blockNumber`.
 
 ##### Security Notes
  - This is not the same as the user's balance at the time. This is used purely for looking at snapshotted voting power and accounts for the delegation decisions of the `account` address.

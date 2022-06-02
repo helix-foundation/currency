@@ -143,7 +143,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
       });
 
       it('Can get a past balance', async () => {
-        const pastBalance = await ecoXLockup.balanceAt(alice, blockNumber);
+        const pastBalance = await ecoXLockup.getPastVotes(alice, blockNumber);
         expect(pastBalance).to.be.eq.BN(one.muln(10));
       });
     });

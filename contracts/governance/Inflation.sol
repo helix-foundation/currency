@@ -266,7 +266,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         ) % rootHashContract.acceptedTotalSum();
 
         require(
-            claimable < getToken().balanceAt(_who, blockNumber) + _sum,
+            claimable < getToken().getPastVotes(_who, blockNumber) + _sum,
             "The provided address cannot claim this reward."
         );
         require(

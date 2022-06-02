@@ -71,7 +71,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
         view
         returns (uint256)
     {
-        return getPastVotes(_voter, _blockNumber);
+        return getPastVotingGons(_voter, _blockNumber);
     }
 
     function totalVotingECOx(uint256 _blockNumber)

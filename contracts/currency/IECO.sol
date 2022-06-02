@@ -14,7 +14,7 @@ interface IECO is IERC20 {
     function currentGeneration() external view returns (uint256);
 
     // address owner, uint256 blockNumber
-    function balanceAt(address, uint256) external view returns (uint256);
+    function getPastVotes(address, uint256) external view returns (uint256);
 
     // uint256 blockNumber
     function totalSupplyAt(uint256) external view returns (uint256);

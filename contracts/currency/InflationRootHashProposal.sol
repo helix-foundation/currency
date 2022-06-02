@@ -435,7 +435,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         require(
-            getStore().balanceAt(_account, blockNumber) > 0,
+            getStore().getPastVotes(_account, blockNumber) > 0,
             "Missing account does not exist"
         );
 
@@ -515,7 +515,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         proposal.challengeResponses[_index].sum = _sum;
 
         require(
-            getStore().balanceAt(_account, blockNumber) == _claimedBalance,
+            getStore().getPastVotes(_account, blockNumber) == _claimedBalance,
             "Challenge response failed account balance check"
         );
 
@@ -642,7 +642,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             acceptedRootHash != 0,
             "Can't claim before root hash established"
         );
-        uint256 balance = getStore().balanceAt(_who, blockNumber);
+        uint256 balance = getStore().getPastVotes(_who, blockNumber);
         return
             verifyMerkleProof(
                 _proof,

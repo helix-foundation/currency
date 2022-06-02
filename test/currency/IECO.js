@@ -250,7 +250,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
         originalGeneration = (await eco.currentGeneration()).toNumber();
-        initialBalance = await eco.balanceAt(
+        initialBalance = await eco.getPastVotes(
           accounts[1],
           blockNumber,
         );
@@ -266,7 +266,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
 
       it('uses the last-updated block number for old balances', async () => {
         expect(
-          await eco.balanceAt(
+          await eco.getPastVotes(
             testAccount,
             (await time.latestBlock()) - 1,
           ),
@@ -281,7 +281,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
 
     it('Cannot return future balances', async () => {
       await expectRevert(
-        eco.balanceAt(accounts[1], 999999999),
+        eco.getPastVotes(accounts[1], 999999999),
         'InflationCheckpoints: block not yet mined',
       );
     });
@@ -295,7 +295,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
         await faucet.mint(testAccount, new BN(1000));
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
-        initialBalance = await eco.balanceAt(
+        initialBalance = await eco.getPastVotes(
           testAccount,
           blockNumber,
         );
@@ -310,7 +310,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
       });
 
       it('preserves orignal balance', async () => {
-        expect(await eco.balanceAt(testAccount, blockNumber))
+        expect(await eco.getPastVotes(testAccount, blockNumber))
           .to.eq.BN(initialBalance);
       });
 
@@ -333,7 +333,7 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
 
         it('preserves orignal balance', async () => {
           expect(
-            await eco.balanceAt(
+            await eco.getPastVotes(
               testAccount,
               intermediateBlockNumber,
             ),
@@ -364,13 +364,13 @@ contract('IECO [@group=5]', (unsortedAccounts) => {
           }
 
           for (let i = 0; i < 3; i += 1) {
-            const account1Balance = await eco.balanceAt(
+            const account1Balance = await eco.getPastVotes(
               testAccount1,
               checkPoints[i],
             );
             expect(account1Balance).to.eq.BN(testAccount1Balances[i]);
 
-            const account2Balance = await eco.balanceAt(
+            const account2Balance = await eco.getPastVotes(
               testAccount2,
               checkPoints[i],
             );

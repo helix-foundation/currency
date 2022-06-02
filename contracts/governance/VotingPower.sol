@@ -34,7 +34,7 @@ contract VotingPower is PolicedUtils {
         view
         returns (uint256)
     {
-        uint256 _power = getStore().balanceAt(_who, _blockNumber);
+        uint256 _power = getStore().getPastVotes(_who, _blockNumber);
 
         uint256 _x = getXLockup().votingECOx(_who, _blockNumber);
         if (_x > 0) {

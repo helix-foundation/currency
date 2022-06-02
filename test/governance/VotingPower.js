@@ -165,8 +165,8 @@ contract('VotingPower [@group=2]', (accounts) => {
     //   });
 
     //   it('Had the right balance on the previous generation', async () => {
-    //     expect(await ecox.balanceAt(alice, generation)).to.eq.BN(one.muln(300));
-    //     expect(await eco.balanceAt(alice, generation)).to.eq.BN(
+    //     expect(await ecox.getPastVotes(alice, generation)).to.eq.BN(one.muln(300));
+    //     expect(await eco.getPastVotes(alice, generation)).to.eq.BN(
     //      toBN('7103418361512952496234')
     //     );
     //   });

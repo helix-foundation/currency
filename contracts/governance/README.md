@@ -632,7 +632,7 @@ Arguments:
   - `_who` (address) - the address whose reward is being claimed
   - `_sequence` (uint256) - the index in the sequence order corresponding to this claim number
   - `_proof` (bytes32[]) - the “other nodes” in the Merkle tree
-  - `_sum` (uint256) - cumulative sum of all account balances before this node
+  - `_sum` (uint256) - cumulative sum of all account ECO votes before this node
   - `_index` (uint256) - the index of the `who` address in the Merkle tree
 
 Verifies that the address being claimed for is a valid recipient (see 
@@ -649,13 +649,13 @@ period is indexed by the `_sequence` variable which runs from 0 up to `numRecipi
   - recipients are indexed by `_sequence` and not by addresses. This means that it
     is not impossible for the same address to receive more than one reward, which is
     a consequence of the intentional choice of weighting of random chance by the
-    balance at each address. However a `_sequence` cannot be claimed twice.
+    ECO voting power at each address. However a `_sequence` cannot be claimed twice.
 
 ##### claim
 Arguments:
   - `_sequence` (uint256) - the sequence order of the claim number
   - `_proof` (bytes32[]) - the “other nodes” in the Merkle tree
-  - `_sum` (uint256) - cumulative sum of all account balances before this node
+  - `_sum` (uint256) - cumulative sum of all account ECO votes before this node
   - `_index` (uint256) - which index of the tree proposer required to prove
 
 Calls `claimFor` with `msg.sender` as the input for `_who`.
@@ -664,7 +664,7 @@ Calls `claimFor` with `msg.sender` as the input for `_who`.
 Arguments: none
 
 Destructs the `vdfVerifier` and transfers the balance of the contract to the root
-policy contract. Then selfdestructs the `Inflation` contract.
+policy contract.
 
 ###### Security Notes
   - If the `seed` is set, can only be called if every claim number has been claimed.
@@ -674,14 +674,14 @@ policy contract. Then selfdestructs the `Inflation` contract.
 #### InflationRootHashProposal
   - Inherits: `PolicedUtils`
 
-To distribute Inflation rewards we need to establish which users can claim them. Inflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' balances match to each of those numbers - those users can claim the reward.
+To distribute Inflation rewards we need to establish which users can claim them. Inflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' ECO voting power match to each of those numbers - those users can claim the reward. The difference between ECO voting power and balance is that the voting power accounts for delegation.
 
 We assume that all users would always want to participate. Then, when claiming a reward, the user simply posts a proof stating that “if all users had participated, then I would have had claim numbers from X to Y”; and if that range overlaps a winning claim number, they get paid.
 
 Assume that there exists a Merkle tree based on a list of nodes, where each node contains the following:
 Account number
-Account balance
-The cumulative sum of all account balances before this node.
+Account ECO voting power
+The cumulative sum of all account ECO voting power before this node.
 The cumulative sum of the node represents the start of the user's claim range.
 
 The list is sorted by ascending account number, and the Merkle root hash exists.
@@ -690,9 +690,9 @@ The index in the tree
 The cumulative sum before me
 The “other side” of the Merkle tree
 
-The contract can then hash account number, balance, and the cumulative sum to get the node hash, then using the supplied other side of the Merkle tree verify that submission hashes up to the root hash. Ergo the proof is correct.
+The contract can then hash account number, ECO voting power, and the cumulative sum to get the node hash, then using the supplied other side of the Merkle tree verify that submission hashes up to the root hash. Ergo the proof is correct.
 
-If the user submits the wrong index or cumulative sum, the root hash will be wrong. To simplify verification of trees, the number of nodes is always a power of two, and the extra nodes must have account, balance, and sum set to 0. The time window (`CHALLENGING_TIME`) for challenging a root hash submission is one day.
+If the user submits the wrong index or cumulative sum, the root hash will be wrong. To simplify verification of trees, the number of nodes is always a power of two, and the extra nodes must have account, ECO voting power, and sum set to 0. The time window (`CHALLENGING_TIME`) for challenging a root hash submission is one day.
 
 To achieve it we need to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
 
@@ -712,7 +712,7 @@ Attributes:
   - `proposedRootHash` (bytes32) - root hash being challenged
   - `challenger` (address) - address of the submitter of the challenge
   - `account` (address) - address of the account being challenged
-  - `balance` (uint256) - balance at generation of the account being challenged
+  - `balance` (uint256) - balance of delegated votes at generation of the account being challenged
   - `sum` (uint256) - cumulative sum of the account being challenged
   - `index` (uint256) - index in the Merkle tree of the account being challenged
 
@@ -721,7 +721,7 @@ Indicates that submitted response to a challenge was successfully verified.
 ###### RootHashProposed
 Attributes:
   - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
-  - `totalSum` (uint256) - total cumulative sum of all the balances (sum of the last node + its balance) 
+  - `totalSum` (uint256) - total cumulative sum of all the ECO voting power (sum of the last node + its votes) 
   - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree
   - `proposer` (address) - address of the proposer of the root hash
 
@@ -737,7 +737,7 @@ Indicates that root hash was proved to be wrong or timed out on unanswered chall
 ###### RootHashAccepted
 Attributes:
   - `proposedRootHash` (bytes32) - the accepted root hash
-  - `totalSum` (uint256) - total cumulative sum of all the balances of this proposal
+  - `totalSum` (uint256) - total cumulative sum of all the ECO voting power of this proposal
   - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree of this proposal
   - `proposer` (address) - address of the proposer of accepted root hash
 
@@ -754,17 +754,17 @@ Indicates that a missing account challenge was successful, challenged root hash 
 
 ##### configure
 Arguments:
-  - `_generation` (uint256) - A balance store generation the contract will establish root hash for
+  - `_blockNumber` (uint256) - the block number at which to check ECO voting power against
 
-Configures an InflationRootHashProposal setting a balance store generation for which contract will establish root hash.
+Configures an InflationRootHashProposal setting the block number for which contract will establish root hash.
 
 ###### Security Notes
-  - Can be run only once (reverts if `generation` is already set) and is called during cloning.
+  - Can be run only once (reverts if `_blockNumber` is already set) and is called during cloning.
     
 ##### proposeRootHash
 Arguments:
   - `_proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
-  - `_totalSum`         (uint256) - total cumulative sum of all the balances
+  - `_totalSum`         (uint256) - total cumulative sum of all the ECO votes
   - `_amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree
 
 Allows to propose new root hash to the system. Takes the submitted function
@@ -807,7 +807,7 @@ Arguments:
   - `_account`            (address) - address of the missing account
 
 A special challenge, the challenger can claim that an account is missing, which it does by saying “index X should be account A”. 
-“X” and “X-1” must have been previously challenged, and if the contract sees that A has a balance, 
+“X” and “X-1” must have been previously challenged, and if the contract sees that A has votes, 
 and account(X) > A > account(x-1), then the proposal is rejected and a `ChallengeMissingAccountSuccess` event is emitted.
 
 ###### Security Notes
@@ -815,7 +815,7 @@ and account(X) > A > account(x-1), then the proposal is rejected and a `Challeng
   - The root hash challenged must match the one in the proposal
   - The status of the challenged root hash must be Pending
   - The index being challenged must be in the number of accounts in the proposal
-  - The account being claimed to be missing must have a balance
+  - The account being claimed to be missing must have ECO voting power
   - Only 2 log N + 2 challenges are allowed per challenger where N is the number
     of accounts proposed.
   - New challenges are only allowed before root hash is accepted
@@ -830,7 +830,7 @@ Arguments:
   - `_challenger`     (address)   - address of the submitter of the challenge
   - `_proof`          (bytes32[]) - the “other nodes” in the Merkle tree.
   - `_account`        (address)   - address of an account of challenged index in the tree
-  - `_claimedBalance` (uint256)   - balance of an account of challenged index in the tree
+  - `_claimedBalance` (uint256)   - balance of votes for the account account of the challenged index in the tree
   - `_sum`            (uint256)   - cumulative sum of an account of challenged index in the tree
   - `_index`          (uint256)   - index in the Merkle tree being answered
 
@@ -845,7 +845,7 @@ is given 1 hour more of challenge times in which to submit any additional challe
   - Only proposer of the root hash can respond to a challenge.
   - The challenge must exist.
   - The challenge response time must not be over.
-  - The account must have the claimed balance.
+  - The account must have the claimed ECO voting power. See [getPastVotes](../currency/README.md#getpastvotes).
   - The Merkle proof must verify correctly
   - If the index is 0, the cumulative `_sum` must be zero
   - The left and right neighbors of the challenged index must be consistent
@@ -902,11 +902,10 @@ See claimFeeFor
 ##### destruct
 Arguments: none
 
-Self-destructs the inflation root hash proposal contract.
+Sends any leftover tokens to the rootpolicy treasury.
 
 ###### Security Notes
   - Can only be called after the end fee collection period.
-  - Any ECO deposited to the contract is transferred to the policy.
 
 #### Lockup
   - Inherits: `PolicedUtils`
