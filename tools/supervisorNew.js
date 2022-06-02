@@ -59,11 +59,10 @@ const REFUND_BUFFER = HOUR;
 const GENERATION_TIME = 14 * DAY;
 
 class Supervisor {
-  constructor(policyAddr, signer, account) {
+  constructor(policyAddr, signer) {
     this.signer = signer;
 
     this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.signer);
-    this.account = account;
 
     // some things only need to be redeployed in the event of a successful policy change
     this.policyChange = true;
@@ -76,7 +75,7 @@ class Supervisor {
 
   async updateGeneration() {
     if (this.timestamp > this.nextGenerationStart) {
-      await this.timedPolicies.incrementGeneration({ from: this.account });
+      await this.timedPolicies.incrementGeneration();
       this.currentGenerationBlock = this.blockNumber;
       this.currentGenerationStartTime = this.timestamp;
       this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
@@ -143,7 +142,7 @@ class Supervisor {
       filter.fromBlock = 'latest';
       const events = provider.getLogs(filter);
       if (events.length === 1) {
-        await this.policyProposals.deployProposalVoting({ from: this.account });
+        await this.policyProposals.deployProposalVoting();
         // this is probably wrong, how do i get the policy votes address from the deploy event?
         filter = this.policyProposals.filters.VotingStarted();
         this.policyVotes = new ethers.Contract(
@@ -170,7 +169,7 @@ class Supervisor {
         // do refunds of unselected proposals
         (await this.policyProposals.allProposals()
           .forEach((proposal) => {
-            this.policyProposals.refund(proposal, { from: this.account });
+            this.policyProposals.refund(proposal, );
           })
         );
       }
@@ -267,7 +266,6 @@ class Supervisor {
     const supervisor = await new Supervisor(
       options.root,
       options.signer,
-      await options.signer.getAddress(),
     );
     console.log('STARTED');
 
