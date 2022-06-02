@@ -43,6 +43,7 @@ const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
 const ID_CURRENCY_GOVERNANCE = web3.utils.soliditySha3('CurrencyGovernance');
 // const ID_TRUSTED_NODES = web3.utils.soliditySha3('TrustedNodes');
 const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
+const ID_ECO = web3.utils.soliditySha3('ECO');
 const ID_POLICY_PROPOSALS = web3.utils.soliditySha3('PolicyProposals');
 const ID_POLICY_VOTES = web3.utils.soliditySha3('PolicyVotes');
 
@@ -104,7 +105,7 @@ class Supervisor {
 
       // TODO: this is giving the 0 address, investigate
       this.eco = new ethers.Contract(
-        await this.policy.policyFor(ID_ERC20TOKEN),
+        await this.policy.policyFor(ID_ECO),
         ECO.abi,
         this.signer,
       );
@@ -138,14 +139,17 @@ class Supervisor {
     if (await !this.policyProposals.proposalSelected()
       && this.timestamp < await this.policyProposals.proposalEnds()
     ) {
-      const events = this.policyProposals.queryFilter('SupportThresholdReached', 'latest');
+      const filter = this.policyProposals.filters.SupportThresholdReached();
+      filter.fromBlock = 'latest';
+      const events = provider.getLogs(filter);
       if (events.length === 1) {
         await this.policyProposals.deployProposalVoting({ from: this.account });
         // this is probably wrong, how do i get the policy votes address from the deploy event?
+        filter = this.policyProposals.filters.VotingStarted();
         this.policyVotes = new ethers.Contract(
           await this.policy.policyFor(ID_POLICY_VOTES),
-          PolicyVotesABI,
-          { from: this.account },
+          PolicyVotesABI.abi,
+          this.signer,
         );
       }
     } else {
