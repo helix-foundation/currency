@@ -3,12 +3,13 @@ const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
 
+const { getTree,answer, } = require('./randomInflationUtils');
+
 /* eslint-disable no-console */
 /* eslint no-bitwise: 0 */
 /* eslint-disable no-param-reassign, no-await-in-loop */
 /* eslint-disable no-lone-blocks, no-underscore-dangle */
 
-// change this later
 let provider;
 // const signer = provider.getSigner();x
 
@@ -67,6 +68,8 @@ class Supervisor {
     // some things only need to be redeployed in the event of a successful policy change
     this.policyChange = true;
 
+    this.cumulativeBalances = {};
+
     // generational info
     this.currentGenerationBlock;
     this.currentGenerationStartTime;
@@ -76,6 +79,7 @@ class Supervisor {
   async updateGeneration() {
     if (this.timestamp > this.nextGenerationStart) {
       await this.timedPolicies.incrementGeneration();
+      await this.getTxHistory(this.currentGenerationBlock);
       this.currentGenerationBlock = this.blockNumber;
       this.currentGenerationStartTime = this.timestamp;
       this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
@@ -131,7 +135,7 @@ class Supervisor {
       InflationABI.abi,
       this.signer,
     );
-    console.log(`randomInflation address is: ${this.currencyTimer.address}`);
+    console.log(`randomInflation address is: ${this.randomInflation.address}`);
   }
 
   async manageCommunityGovernance() {
@@ -169,7 +173,7 @@ class Supervisor {
         // do refunds of unselected proposals
         (await this.policyProposals.allProposals()
           .forEach((proposal) => {
-            this.policyProposals.refund(proposal, );
+            this.policyProposals.refund(proposal);
           })
         );
       }
@@ -209,28 +213,77 @@ class Supervisor {
     ).timeStamp;
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
-    // await getTxHistory();
+    await getTxHistory(0);
   }
 
-  async getTxHistory() {
-    // blocked by transfer event redefinition
+  async getTxHistory(fromBlock) {
+    // gets gons balances from 0 to latest
 
-    const map = {};
+    const balanceChanges = {};
 
-    const filter = this.eco.filters.Transfer();
+    const filter = this.eco.filters.BaseValueTransfer();
+    filter.fromBlock = fromBlock;
+
     (await provider.getLogs(filter)).forEach((event) => {
       const params = event.returnValues;
       if (!toBN(params.from).eq(toBN('0')) && !toBN(params.value).eq(toBN('0'))) {
-        map[params.from] = map[params.from].sub(toBN(params.value));
+        balanceChanges[params.from] = balanceChanges[params.from].sub(toBN(params.value));
       }
-      if (map[params.to] === undefined) {
-        map[params.to] = toBN(params.value);
+      if (balanceChanges[params.to] === undefined) {
+        balanceChanges[params.to] = toBN(params.value);
       } else {
-        map[params.to] = map[params.to].add(toBN(params.value));
+        balanceChanges[params.to] = balanceChanges[params.to].add(toBN(params.value));
       }
     });
 
+    for (const [k, v] of map) {
+      if (this.cumulativeBalances.has(k)) {
+        cumulativeBalances[k].add(v);
+      } else {
+        cumulativeBalances[k] = v;
+      }
+    }
+
     return map;
+  }
+
+  async constructAccountSumMap(accountsMap) {
+    // creates 2 lists: alphabetic addresses and their corresponding cumulative balances
+    // ex: 
+    // {0xc, 2; 0xa, 1; 0xb, 3}
+    // --> [0xa, 0xb, 0xc], [1, 4, 6]
+
+    const items = [];
+    const accounts = [];
+    const sums = [];
+    // eslint-disable-next-line no-restricted-syntax
+    for (const i of accountsMap) {
+      items.push(i);
+      accounts.push(i[0]);
+    }
+    accounts.sort((a, b) => Number(a - b));
+    items.sort((a, b) => Number(a[0] - b[0]));
+    const len = items.length;
+
+    // pad with 0s
+    const wantitems = 2 ** Math.ceil(Math.log2(len));
+    for (let i = len; i < wantitems; i += 1) {
+      items.push([0, 0]);
+    }
+
+    let sum = toBN(0);
+    for (let i = 0; i < len; i += 1) {
+      sums.push(sum);
+      sum = sum.add(items[i][1]);
+    }
+    return { accounts, sums };
+  }
+
+  async getBalancesTree() {
+    const accountsMap = new Map(Object.entries(await this.constructAccountsMap()));
+    const { accounts, sums } = this.constructAccountSumMap(accountsMap);
+    const tree = getTree(accountsMap);
+    return { tree, accounts, sums };
   }
 
   async processBlock() {

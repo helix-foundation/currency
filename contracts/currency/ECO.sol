@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "./InflationCheckpoints.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
-import "../currency/InflationRootHashProposal.sol";
+// import "../currency/InflationRootHashProposal.sol";
 import "../governance/CurrencyTimer.sol";
 
 /** @title An ERC20 token interface to the Eco currency system.
