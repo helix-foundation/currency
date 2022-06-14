@@ -22,8 +22,8 @@
     "coverage": "npm run coverage:js && npm run coverage:sol",
     "generate": "tools/nicks.js $(pwd)/build/contracts/EcoBootstrap.json -s 0x1234 -d 0x00000000000000000000000028e69be378b59264018b11616fbbd15eb345668c -o bootstrap.json -g 3038418",
     "prepack": "npm run build",
-    "eco": "node tools/eco.js",
-    "eco:dev": "node --inspect-brk=0.0.0.0 tools/eco.js"
+    "deploy": "npm run build && node tools/eco.js --config",
+    "deploy:dev": "node tools/eco.js --supervise --ganache --deploy --devmode"
   },
   "repository": {
     "type": "git",
@@ -77,6 +77,7 @@
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.7",
     "ethereumjs-wallet": "^1.0.1",
+    "ethers": "^5.6.5",
     "express": "^4.17.1",
     "ganache-cli": "^6.12.2",
     "vdf-solver": "^1.0.1",

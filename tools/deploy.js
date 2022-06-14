@@ -68,7 +68,9 @@ async function parseFlags(options) {
   options.numPlaceholders = '6';
 
   if (!options.gasPrice) {
-    options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
+    options.gasPrice = `0x${web3.utils.toBN(await web3.eth.getGasPrice()).muln(5).toString(16)}`;
+  } else {
+    options.gasPring = web3.utils.toBN(options.gasPrice);
   }
 
   if (options.production) {

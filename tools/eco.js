@@ -23,7 +23,11 @@ function reqArtifact(contract) {
 }
 
 function loadConfig(fileNamePath) {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, `./${fileNamePath}`)));
+  let stem = '';
+  if (fileNamePath[0] !== '/') {
+    stem = '../';
+  }
+  return JSON.parse(fs.readFileSync(path.resolve(__dirname, `${stem}${fileNamePath}`)));
 }
 
 const ECOABI = reqArtifact('ECO');
