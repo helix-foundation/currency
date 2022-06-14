@@ -67,10 +67,14 @@ async function parseFlags(options) {
   // we currently require 6 proxies for deployment
   options.numPlaceholders = '6';
 
+  if (!options.gasMultiplier) {
+    options.gasMultiplier = 5;
+  }
+
   if (!options.gasPrice) {
-    options.gasPrice = `0x${web3.utils.toBN(await web3.eth.getGasPrice()).muln(5).toString(16)}`;
+    options.gasPrice = `0x${web3.utils.toBN(await web3.eth.getGasPrice()).muln(options.gasMultiplier).toString(16)}`;
   } else {
-    options.gasPring = web3.utils.toBN(options.gasPrice);
+    options.gasPrice = web3.utils.toBN(options.gasPrice);
   }
 
   if (options.production) {

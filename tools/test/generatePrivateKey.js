@@ -8,5 +8,4 @@ const mnemonic = bip39.generateMnemonic();
 
 const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 
-console.log(`private key: ${wallet.signingKey.privateKey}`);
-console.log(`address: ${wallet.signingKey.address}`);
+console.log(`private key: ${wallet._signingKey().privateKey}`);
