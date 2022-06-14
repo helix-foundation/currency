@@ -116,15 +116,6 @@ async function parseOptions() {
   if ((!options.ganache) === (!options.webrpc)) {
     throw new Error('Must specify exactly one of --ganache and --webrpc');
   }
-  // if (options.ganache) {
-  //   if (options.supervise && !options.deploy) {
-  //     throw new Error('For ganache, must specify --deploy when using --supervise');
-  //   }
-  // } else if (options.supervise) {
-  //   if ((!options.erc20) === (!options.deploy)) {
-  //     throw new Error('For supervise, must specify either --deploy or --erc20');
-  //   }
-  // }
 }
 
 async function initWeb3() {
@@ -139,7 +130,7 @@ async function initWeb3() {
       });
     } else if (options.deployGovernance) {
       serverPort = 8546;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, fork: `${serverAddr}:${serverPort - 1}` });
+      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, blockTime: 0.1, fork: `${serverAddr}:${serverPort - 1}` });
     }
     /* eslint-disable global-require, import/no-extraneous-dependencies */
     options.ganacheServer.listen(serverPort, serverAddr, (err) => {
@@ -166,7 +157,6 @@ async function initUsers() {
   let account;
   let chumpAccount;
   if (!options.production) {
-    // [chumpAccount] = await web3.eth.getAccounts();
     [chumpAccount] = await ethersProvider.listAccounts();
     options.chumpAccount = chumpAccount;
     console.log(`chump account is ${options.chumpAccount}`);
@@ -297,11 +287,11 @@ async function supervise() {
       //     console.log(e);
       //   }
       // });
-      await Supervisor.start({
-        root: options.policy,
-        provider: ethersProvider,
-        signer: options.signer,
-      });
+      await Supervisor.start(
+        ethersProvider,
+        options.policy,
+        options.signer
+      );
     }
   }
 }

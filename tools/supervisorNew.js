@@ -11,9 +11,9 @@ const { getTree, answer, arrayToTree, } = require('./randomInflationUtils');
 /* eslint-disable no-lone-blocks, no-underscore-dangle */
 
 let provider;
-// const signer = provider.getSigner();x
 
-function req(contract) {
+
+function getABI(contract) {
   try {
     return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
   } catch (e) {
@@ -26,18 +26,18 @@ function req(contract) {
 }
 
 // Contract ABIs and Bytecode
-const PolicyABI = req('Policy');
-const ECO = req('ECO');
-const TimedPoliciesABI = req('TimedPolicies');
-const PolicyProposalsABI = req('PolicyProposals');
-const PolicyVotesABI = req('PolicyVotes');
-// const TrustedNodesABI = req('TrustedNodes');
-// const VDFVerifierABI = req('VDFVerifier');
-const CurrencyGovernanceABI = req('CurrencyGovernance');
-const CurrencyTimerABI = req('CurrencyTimer');
-const InflationABI = req('Inflation');
-// const LockupContractABI = req('Lockup');
-const InflationRootHashProposalABI = req('InflationRootHashProposal');
+const PolicyABI = getABI('Policy');
+const ECO = getABI('ECO');
+const TimedPoliciesABI = getABI('TimedPolicies');
+const PolicyProposalsABI = getABI('PolicyProposals');
+const PolicyVotesABI = getABI('PolicyVotes');
+// const TrustedNodesABI = getABI('TrustedNodes');
+// const VDFVerifierABI = getABI('VDFVerifier');
+const CurrencyGovernanceABI = getABI('CurrencyGovernance');
+const CurrencyTimerABI = getABI('CurrencyTimer');
+const InflationABI = getABI('Inflation');
+// const LockupContractABI = getABI('Lockup');
+const InflationRootHashProposalABI = getABI('InflationRootHashProposal');
 
 const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
 const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
@@ -165,10 +165,11 @@ class Supervisor {
     } else {
       if (this.policyVotes) {
         try {
-          const totalVP = await this.policyVotes.totalVotingPower(this.blockNumber);
+          const requiredStake = await this.policyVotes.totalStake() / 2;
           const yesStake = await this.policyVotes.yesStake();
-          if (yesStake > totalVP / 2
-            || this.timestamp > await this.policyVotes.voteEnds + await this.policyVotes.ENACTION_DELAY) {
+          if (yesStake > requiredStake
+            && this.timestamp > await this.policyVotes.voteEnds 
+            + await this.policyVotes.ENACTION_DELAY) {
             await this.policyVotes.execute();
             this.policyChange = true;
           }
@@ -303,9 +304,6 @@ class Supervisor {
     this.tree = tree;
   }
 
-
-
-
   async processBlock() {
     console.log(`processing block ${this.blockNumber}`);
     const block = await provider.getBlock('latest');
@@ -332,11 +330,11 @@ class Supervisor {
     }
   }
 
-  static async start(options = {}) {
-    provider = options.provider;
+  static async start(_provider, _rootPolicy, _signer) {
+    provider = _provider;
     const supervisor = await new Supervisor(
-      options.root,
-      options.signer,
+      _rootPolicy,
+      _signer,
     );
     console.log('STARTED');
 
@@ -349,14 +347,6 @@ class Supervisor {
     });
   }
 }
-
-// let args = fs.readFileSync('tools/supervisorInputs.txt');
-// args = new String(args).split('\n');
-// let _signer = new ethers.Signer(JSON.parse(args[1]));
-// Supervisor.start({
-//   root: args[0],
-//   signer: _signer
-// })
 
 module.exports = {
   Supervisor,
