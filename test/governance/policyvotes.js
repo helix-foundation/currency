@@ -17,6 +17,7 @@ chai.use(bnChai(BN));
 contract('PolicyVotes [@group=8]', (accounts) => {
   let policy;
   let eco;
+  let ecox;
   let initInflation;
   let policyVotes;
   let proposal;
@@ -36,6 +37,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
       eco,
       initInflation,
       timedPolicies,
+      ecox,
     } = await util.deployPolicy(accounts[counter]));
     counter++;
 
@@ -46,7 +48,7 @@ contract('PolicyVotes [@group=8]', (accounts) => {
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
 
-    policyVotes = await PolicyVotes.new(policy.address);
+    policyVotes = await PolicyVotes.new(policy.address, eco.address, ecox.address);
     proposal = (await SampleProposal.new(0)).address;
     const proxy = await ForwardProxy.new(policyVotes.address);
     proxiedPolicyVotes = await PolicyVotes.at(proxy.address);

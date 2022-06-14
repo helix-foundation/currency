@@ -33,7 +33,7 @@ contract('TokenInit [@group=11]', () => {
     ecoProxied = await ECO.at(ecoProxy.address);
 
     ecoXInit = await EcoXTokenInit.new();
-    ecoXToken = await ECOx.new(policy.address, ecoXInit.address, 10);
+    ecoXToken = await ECOx.new(policy.address, ecoXInit.address, 10, ecoProxy.address);
     ecoXProxy = await ForwardProxy.new(ecoXToken.address);
     ecoXProxied = await ECOx.at(ecoXProxy.address);
   });

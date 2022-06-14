@@ -54,6 +54,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         mapping(address => bool) claimed;
     }
 
+    // the ECO token contract address
+    IECO public immutable ecoToken;
+
     /** The root hash accepted for current generation, set as a final result */
     bytes32 public acceptedRootHash;
 
@@ -316,7 +319,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         _;
     }
 
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(address _policy, address _ecoAddr) PolicedUtils(_policy) {
+        ecoToken = IECO(_ecoAddr);
+    }
 
     /** @notice Configure the inflation root hash proposal contract
      *  which is part of the random inflation mechanism
@@ -435,7 +440,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
         require(
-            getStore().getPastVotes(_account, blockNumber) > 0,
+            ecoToken.getPastVotes(_account, blockNumber) > 0,
             "Missing account does not exist"
         );
 
@@ -515,7 +520,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         proposal.challengeResponses[_index].sum = _sum;
 
         require(
-            getStore().getPastVotes(_account, blockNumber) == _claimedBalance,
+            ecoToken.getPastVotes(_account, blockNumber) == _claimedBalance,
             "Challenge response failed account balance check"
         );
 
@@ -642,7 +647,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             acceptedRootHash != 0,
             "Can't claim before root hash established"
         );
-        uint256 balance = getStore().getPastVotes(_who, blockNumber);
+        uint256 balance = ecoToken.getPastVotes(_who, blockNumber);
         return
             verifyMerkleProof(
                 _proof,
@@ -679,7 +684,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
                 "proposer can't claim fee on not accepted hash"
             );
             require(
-                getToken().transfer(_who, proposal.stakedAmount),
+                ecoToken.transfer(_who, proposal.stakedAmount),
                 "Transfer Failed"
             );
         } else {
@@ -695,7 +700,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
                 (proposal.stakedAmount *
                     proposal.challenges[msg.sender].amountOfRequests) /
                 proposal.totalChallenges;
-            require(getToken().transfer(_who, amount), "Transfer Failed");
+            require(ecoToken.transfer(_who, amount), "Transfer Failed");
         }
         proposal.claimed[_who] = true;
     }
@@ -719,9 +724,9 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             "contract might be destructed after fee collection period is over"
         );
         require(
-            getToken().transfer(
+            ecoToken.transfer(
                 address(uint160(policy)),
-                getToken().balanceOf(address(this))
+                ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"
         );
@@ -841,23 +846,11 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _fee
     ) internal {
         require(
-            getToken().transferFrom(_submitter, address(this), _fee),
+            ecoToken.transferFrom(_submitter, address(this), _fee),
             "Transfer Failed"
         );
         rootHashProposals[_proposal].stakedAmount =
             rootHashProposals[_proposal].stakedAmount +
             _fee;
-    }
-
-    /** @notice Get the associated ERC20 token address.
-     */
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ECO));
-    }
-
-    /** @notice Get the associated balance store address.
-     */
-    function getStore() private view returns (IECO) {
-        return IECO(policyFor(ID_ECO));
     }
 }

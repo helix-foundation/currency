@@ -12,11 +12,11 @@ import "../../contracts/governance/Proposal.sol";
 contract MakeRich is Policy, Proposal {
     /** The address of the account to mint tokens into.
      */
-    address public account;
+    address public immutable account;
 
     /** The amount of tokens to mint.
      */
-    uint256 public amount;
+    uint256 public immutable amount;
 
     /** Instantiate a new proposal.
      *
@@ -56,9 +56,6 @@ contract MakeRich is Policy, Proposal {
         bytes32 _inflationId = keccak256(abi.encodePacked("EcoLabs"));
         bytes32 _ecoId = keccak256(abi.encodePacked("ECO"));
 
-        address _account = MakeRich(_self).account();
-        uint256 _amount = MakeRich(_self).amount();
-
         // The token has security allowing only 'Inflation' to mint,
         // but right now we're executing with absolute privileges
         // so just impersonate *being* Inflation
@@ -70,7 +67,7 @@ contract MakeRich is Policy, Proposal {
         setInterfaceImplementation("EcoLabs", address(this));
 
         IECO _eco = IECO(policyFor(_ecoId));
-        _eco.mint(_account, _amount);
+        _eco.mint(account, amount);
 
         setInterfaceImplementation("EcoLabs", _old);
     }

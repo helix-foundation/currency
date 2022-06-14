@@ -12,18 +12,31 @@ import "./ECOxLockup.sol";
  * Compute voting power for user
  */
 contract VotingPower is PolicedUtils {
-    constructor(address _policy) PolicedUtils(_policy) {}
+    // the ECO contract address
+    IECO public immutable ecoToken;
+
+    // the ECOx contract address
+    ECOx public immutable ecoXToken;
+
+    constructor(
+        address _policy,
+        address _ecoAddr,
+        address _ecoXAddr
+    ) PolicedUtils(_policy) {
+        ecoToken = IECO(_ecoAddr);
+        ecoXToken = ECOx(_ecoXAddr);
+    }
 
     function totalVotingPower(uint256 _blockNumber)
         public
         view
         returns (uint256)
     {
-        uint256 total = getStore().totalSupplyAt(_blockNumber);
+        uint256 total = ecoToken.totalSupplyAt(_blockNumber);
 
         uint256 totalx = getXLockup().totalVotingECOx(_blockNumber);
         if (totalx > 0) {
-            total = total + getX().valueAt(totalx, _blockNumber);
+            total = total + ecoXToken.valueAt(totalx, _blockNumber);
         }
 
         return total;
@@ -34,11 +47,11 @@ contract VotingPower is PolicedUtils {
         view
         returns (uint256)
     {
-        uint256 _power = getStore().getPastVotes(_who, _blockNumber);
+        uint256 _power = ecoToken.getPastVotes(_who, _blockNumber);
 
         uint256 _x = getXLockup().votingECOx(_who, _blockNumber);
         if (_x > 0) {
-            _power = _power + getX().valueAt(_x, _blockNumber);
+            _power = _power + ecoXToken.valueAt(_x, _blockNumber);
         }
 
         return _power;
@@ -46,16 +59,6 @@ contract VotingPower is PolicedUtils {
 
     function recordVote(address _who) internal {
         getXLockup().recordVote(_who);
-    }
-
-    /** Get the associated balance store address.
-     */
-    function getStore() internal view returns (IECO) {
-        return IECO(policyFor(ID_ECO));
-    }
-
-    function getX() internal view returns (ECOx) {
-        return ECOx(policyFor(ID_ECOX));
     }
 
     function getXLockup() internal view returns (ECOxLockup) {

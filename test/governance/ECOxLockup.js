@@ -89,8 +89,14 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     const policySetter = await SimplePolicySetter.new();
     const implementation = await PolicyProposals.new(
       policy.address,
-      (await PolicyVotes.new(policy.address)).address,
+      (await PolicyVotes.new(
+        policy.address,
+        eco.address,
+        ecox.address,
+      )).address,
       policySetter.address,
+      eco.address,
+      ecox.address,
     );
     const cloner = await Cloner.new(implementation.address);
     const policyProposalsClone = await PolicyProposals.at(await cloner.clone());

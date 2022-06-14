@@ -62,7 +62,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
     uint256 public blockNumber;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) VotingPower(_policy) {}
+    constructor(
+        address _policy,
+        address _ecoAddr,
+        address _ecoXAddr
+    ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {}
 
     /** Submit your yes/no support
      *
@@ -184,17 +188,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
         Policy(policy).removeSelf(ID_POLICY_VOTES);
 
         require(
-            getToken().transfer(
+            ecoToken.transfer(
                 address(uint160(policy)),
-                getToken().balanceOf(address(this))
+                ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"
         );
-    }
-
-    /** Get the associated ERC20 token address.
-     */
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ECO));
     }
 }

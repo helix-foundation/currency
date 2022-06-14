@@ -21,9 +21,9 @@ contract ECO is InflationCheckpoints, TimeUtils {
     uint256 public currentGeneration;
 
     // the address of the contract for initial distribution
-    address public distributor;
+    address public immutable distributor;
 
-    uint256 public initialSupply;
+    uint256 public immutable initialSupply;
 
     constructor(
         address _policy,
@@ -41,9 +41,7 @@ contract ECO is InflationCheckpoints, TimeUtils {
         onlyConstruction
     {
         super.initialize(_self);
-        initialSupply = ECO(_self).initialSupply();
-        address _distributor = ECO(_self).distributor();
-        _mint(_distributor, initialSupply);
+        _mint(distributor, initialSupply);
     }
 
     function mint(address _to, uint256 _value) external {

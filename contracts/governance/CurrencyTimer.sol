@@ -13,6 +13,7 @@ import "./IGeneration.sol";
 import "./Lockup.sol";
 import "./Inflation.sol";
 import "./ILockups.sol";
+import "../currency/IECO.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
@@ -30,6 +31,9 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     address public simplePolicyImpl;
 
     address public inflationRootHashProposalImpl;
+
+    // the ECO contract address
+    IECO public immutable ecoToken;
 
     mapping(uint256 => address) public rootHashAddressPerGeneration;
 
@@ -56,18 +60,21 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         address _inflation,
         address _lockup,
         address _simplepolicy,
-        address _inflationRootHashProposal
+        address _inflationRootHashProposal,
+        address _ecoAddr
     ) PolicedUtils(_policy) {
         bordaImpl = _borda;
         inflationImpl = _inflation;
         lockupImpl = _lockup;
         simplePolicyImpl = _simplepolicy;
         inflationRootHashProposalImpl = _inflationRootHashProposal;
+        ecoToken = IECO(_ecoAddr);
     }
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
 
+        // all of these values are better left mutable to allow for easier governance
         bordaImpl = CurrencyTimer(_self).bordaImpl();
         inflationImpl = CurrencyTimer(_self).inflationImpl();
         lockupImpl = CurrencyTimer(_self).lockupImpl();
@@ -135,10 +142,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         if (_numberOfRecipients > 0 && _randomInflationReward > 0) {
             // new inflation contract
             address _clone = Inflation(inflationImpl).clone();
-            getStore().mint(
-                _clone,
-                _numberOfRecipients * _randomInflationReward
-            );
+            ecoToken.mint(_clone, _numberOfRecipients * _randomInflationReward);
             Inflation(_clone).startInflation(
                 _numberOfRecipients,
                 _randomInflationReward
@@ -164,15 +168,9 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         require(isLockup[msg.sender], "Not authorized to call this function");
 
         if (_penalty) {
-            getStore().burn(_withdrawer, _amount);
+            ecoToken.burn(_withdrawer, _amount);
         } else {
-            getStore().mint(_withdrawer, _amount);
+            ecoToken.mint(_withdrawer, _amount);
         }
-    }
-
-    /** Get the associated balance store address.
-     */
-    function getStore() private view returns (IECO) {
-        return IECO(policyFor(ID_ECO));
     }
 }

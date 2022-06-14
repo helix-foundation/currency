@@ -6,6 +6,7 @@ import "./CurrencyTimer.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "./IGeneration.sol";
+import "../currency/IECO.sol";
 
 /** @title Lockup
  * This provides deposit certificate functionality for the purpose of countering
@@ -37,6 +38,12 @@ contract Lockup is PolicedUtils, TimeUtils {
      */
     event Withdrawal(address to, uint256 amount);
 
+    // the ECO token address
+    IECO public immutable ecoToken;
+
+    // the CurrencyTimer address
+    CurrencyTimer public immutable currencyTimer;
+
     uint256 public generation;
 
     uint256 public duration;
@@ -50,7 +57,14 @@ contract Lockup is PolicedUtils, TimeUtils {
     mapping(address => uint256) public depositBalances;
     mapping(address => uint256) public depositLockupEnds;
 
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(
+        address _policy,
+        address _ecoAddr,
+        address _timerAddr
+    ) PolicedUtils(_policy) {
+        ecoToken = IECO(_ecoAddr);
+        currencyTimer = CurrencyTimer(_timerAddr);
+    }
 
     function deposit(uint256 _amount) external {
         internalDeposit(_amount, msg.sender, msg.sender);
@@ -99,8 +113,8 @@ contract Lockup is PolicedUtils, TimeUtils {
         totalDeposit = totalDeposit - _amount;
         uint256 _delta = (_amount * interest) / BILLION;
 
-        require(getToken().transfer(_owner, _amount), "Transfer Failed");
-        getTimer().lockupWithdrawal(_owner, _delta, early);
+        require(ecoToken.transfer(_owner, _amount), "Transfer Failed");
+        currencyTimer.lockupWithdrawal(_owner, _delta, early);
 
         if (early) {
             emit Withdrawal(_owner, _amount - _delta);
@@ -123,7 +137,7 @@ contract Lockup is PolicedUtils, TimeUtils {
         require(selling(), "Deposits can only be made during sale window");
 
         require(
-            getToken().transferFrom(_payer, address(this), _amount),
+            ecoToken.transferFrom(_payer, address(this), _amount),
             "Transfer Failed"
         );
 
@@ -132,13 +146,5 @@ contract Lockup is PolicedUtils, TimeUtils {
         depositLockupEnds[_who] = getTime() + duration;
 
         emit Sale(_who, _amount);
-    }
-
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ECO));
-    }
-
-    function getTimer() private view returns (CurrencyTimer) {
-        return CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
     }
 }
