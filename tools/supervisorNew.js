@@ -3,7 +3,7 @@ const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
 
-const { getTree,answer, } = require('./randomInflationUtils');
+const { getTree, answer, arrayToTree, } = require('./randomInflationUtils');
 
 /* eslint-disable no-console */
 /* eslint no-bitwise: 0 */
@@ -37,7 +37,7 @@ const CurrencyGovernanceABI = req('CurrencyGovernance');
 const CurrencyTimerABI = req('CurrencyTimer');
 const InflationABI = req('Inflation');
 // const LockupContractABI = req('Lockup');
-// const InflationRootHashProposal = req('InflationRootHashProposal');
+const InflationRootHashProposalABI = req('InflationRootHashProposal');
 
 const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
 const ID_CURRENCY_TIMER = web3.utils.soliditySha3('CurrencyTimer');
@@ -136,6 +136,13 @@ class Supervisor {
       this.signer,
     );
     console.log(`randomInflation address is: ${this.randomInflation.address}`);
+
+    this.inflationRootHashProposal = new ethers.Contract(
+      await this.currencyTimer.inflationRootHashProposalImpl(),
+      InflationRootHashProposalABI.abi,
+      this.signer,
+    );
+    console.log(`InflationRootHashProposal address is: ${this.inflationRootHashProposal.address}`);
   }
 
   async manageCommunityGovernance() {
@@ -193,7 +200,19 @@ class Supervisor {
   }
 
   async manageRandomInflation() {
-    console.log(this.blockNumber);
+    if (this.inflationRootHashProposal.acceptedRootHash() != 0) {
+      // automated claim logic
+    } else if (this.timestamp > this.currentGenerationStartTime + 12 * DAY
+      && !this.rootHashProposed) {
+      await this.inflationRootHashProposal.proposeRootHash(
+        this.tree.hash,
+        this.tree.total,
+        this.tree.items
+      );
+      this.rootHashProposed = true;
+    } else if (this.timestamp > this.currentGenerationStartTime + 13 * DAY) {
+      await this.inflationRootHashProposal.checkRootHashStatus;
+    }
   }
 
   async catchup() {
@@ -202,12 +221,11 @@ class Supervisor {
     this.policyChange = false;
     // set initial generation information
 
+    // search for generation start
     const filter = this.timedPolicies.filters.PolicyDecisionStarted();
-    filter.fromBlock = 'latest' - 20; // replace w latest - 1 generation of blocks
-    filter.toBlock = 'latest';
 
     const events = await provider.getLogs(filter);
-    this.currentGenerationBlock = events[0].blockNumber;
+    this.currentGenerationBlock = events[events.length - 1].blockNumber;
     this.currentGenerationStartTime = await provider.getBlock(
       this.currentGenerationBlock,
     ).timeStamp;
@@ -217,12 +235,13 @@ class Supervisor {
   }
 
   async getTxHistory(fromBlock) {
-    // gets gons balances from 0 to latest
+    // gets gons balances from 0 to start of generation
 
     const balanceChanges = {};
 
     const filter = this.eco.filters.BaseValueTransfer();
     filter.fromBlock = fromBlock;
+    filter.toBlock = this.currentGenerationBlock;
 
     (await provider.getLogs(filter)).forEach((event) => {
       const params = event.returnValues;
@@ -243,11 +262,9 @@ class Supervisor {
         cumulativeBalances[k] = v;
       }
     }
-
-    return map;
   }
 
-  async constructAccountSumMap(accountsMap) {
+  async constructAccountSumMap() {
     // creates 2 lists: alphabetic addresses and their corresponding cumulative balances
     // ex: 
     // {0xc, 2; 0xa, 1; 0xb, 3}
@@ -257,7 +274,7 @@ class Supervisor {
     const accounts = [];
     const sums = [];
     // eslint-disable-next-line no-restricted-syntax
-    for (const i of accountsMap) {
+    for (const i of this.cumulativeBalances) {
       items.push(i);
       accounts.push(i[0]);
     }
@@ -276,15 +293,18 @@ class Supervisor {
       sums.push(sum);
       sum = sum.add(items[i][1]);
     }
-    return { accounts, sums };
+
+    const tree = arrayToTree(items);
+    tree.items = items.length - 1;
+    tree.total = sum
+
+    this.orderedAddresses = accounts;
+    this.orderedSums = sums;
+    this.tree = tree;
   }
 
-  async getBalancesTree() {
-    const accountsMap = new Map(Object.entries(await this.constructAccountsMap()));
-    const { accounts, sums } = this.constructAccountSumMap(accountsMap);
-    const tree = getTree(accountsMap);
-    return { tree, accounts, sums };
-  }
+
+
 
   async processBlock() {
     console.log(`processing block ${this.blockNumber}`);
