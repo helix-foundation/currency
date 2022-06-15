@@ -224,19 +224,21 @@ class Supervisor {
 
     // search for generation start
     const filter = this.timedPolicies.filters.PolicyDecisionStarted();
+    filter.fromBlock = 0;
+    filter.toBlock = "latest";
 
     const events = await provider.getLogs(filter);
+
     this.currentGenerationBlock = events[events.length - 1].blockNumber;
     this.currentGenerationStartTime = await provider.getBlock(
       this.currentGenerationBlock,
     ).timeStamp;
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
-    await getTxHistory(0);
+    await this.getTxHistory(0);
   }
 
   async getTxHistory(fromBlock) {
-    // gets gons balances from 0 to start of generation
 
     const balanceChanges = {};
 
@@ -244,8 +246,9 @@ class Supervisor {
     filter.fromBlock = fromBlock;
     filter.toBlock = this.currentGenerationBlock;
 
-    (await provider.getLogs(filter)).forEach((event) => {
-      const params = event.returnValues;
+    (await this.eco.queryFilter(filter)).forEach(async (event) => {
+
+      let params = event.args;
       if (!toBN(params.from).eq(toBN('0')) && !toBN(params.value).eq(toBN('0'))) {
         balanceChanges[params.from] = balanceChanges[params.from].sub(toBN(params.value));
       }
@@ -256,11 +259,11 @@ class Supervisor {
       }
     });
 
-    for (const [k, v] of map) {
-      if (this.cumulativeBalances.has(k)) {
-        cumulativeBalances[k].add(v);
+    for (const [k, v] of Object.entries(balanceChanges)) {
+      if (k in this.cumulativeBalances) {
+        this.cumulativeBalances[k].add(v);
       } else {
-        cumulativeBalances[k] = v;
+        this.cumulativeBalances[k] = v;
       }
     }
   }
