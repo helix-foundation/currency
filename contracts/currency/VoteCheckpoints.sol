@@ -153,7 +153,6 @@ abstract contract VoteCheckpoints is ERC20 {
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
-    // CONSIDER: evaluate if we actually want binary search as opposed to just backwards iteration from present
     /**
      * @dev Lookup a value in a list of (sorted) checkpoints.
      */
@@ -162,7 +161,7 @@ abstract contract VoteCheckpoints is ERC20 {
         view
         returns (uint256)
     {
-        // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
+        // We run a binary search to look for the last checkpoint taken before `blockNumber`.
         //
         // During the loop, the index of the wanted checkpoint remains in the range [low-1, high).
         // With each iteration, either `low` or `high` is moved towards the middle of the range to maintain the invariant.
@@ -174,7 +173,6 @@ abstract contract VoteCheckpoints is ERC20 {
         // past the end of the array, so we technically don't find a checkpoint after `blockNumber`, but it works out
         // the same.
 
-        // Early exit if this is a request for the most recent value or we have no checkpoints
         uint256 ckptsLength = ckpts.length;
         if (ckptsLength == 0) return 0;
         Checkpoint memory lastCkpt = ckpts[ckptsLength - 1];
@@ -182,6 +180,7 @@ abstract contract VoteCheckpoints is ERC20 {
 
         uint256 high = ckptsLength;
         uint256 low = 0;
+
         while (low < high) {
             uint256 mid = low + ((high - low) >> 1);
             if (ckpts[mid].fromBlock > blockNumber) {

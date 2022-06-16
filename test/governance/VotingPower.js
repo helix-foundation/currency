@@ -1,4 +1,5 @@
 const PolicyProposals = artifacts.require('PolicyProposals');
+const FlashLoaner = artifacts.require('FlashLoaner');
 
 const chai = require('chai');
 const bnChai = require('bn-chai');
@@ -102,6 +103,79 @@ contract('VotingPower [@group=2]', (accounts) => {
         // full power, but all in ECO
         expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(toBN(alicePower));
       });
+    });
+  });
+
+  context('voting checkpoint stress tests', () => {
+    it('gets the right voting power despite multiple transfers', async () => {
+      await eco.delegate(charlie, { from: bob });
+      const blockNumber1 = await time.latestBlock();
+
+      // don't go much above 100 on iterations1
+      const iterations1 = 50;
+      const iterations2 = 6;
+      const promises1 = [];
+
+      // net zero transfer
+      for (let i = 0; i < iterations1; i++) {
+        promises1.push(eco.transfer(alice, one.muln(40), { from: bob }));
+        promises1.push(eco.transfer(bob, one.muln(40), { from: alice }));
+      }
+      await Promise.all(promises1);
+
+      const blockNumber2 = await time.latestBlock();
+      const promises2 = [];
+
+      // net zero transfer
+      for (let i = 0; i < iterations2; i++) {
+        promises2.push(eco.transfer(alice, one.muln(40), { from: bob }));
+        promises2.push(eco.transfer(bob, one.muln(40), { from: alice }));
+      }
+      await Promise.all(promises2);
+
+      // the only net transfer
+      await eco.transfer(alice, one.muln(400), { from: bob });
+      const blockNumber3 = await time.latestBlock();
+      await time.advanceBlock();
+
+      /* eslint-disable no-console */
+      // gas tests for the older blocks
+      console.log(await proposals.votingPower.estimateGas(alice, blockNumber1));
+      console.log(await proposals.votingPower.estimateGas(alice, blockNumber2));
+      console.log(await proposals.votingPower.estimateGas(alice, blockNumber3));
+      /* eslint-enable no-console */
+
+      // before everything
+      expect(await proposals.votingPower(alice, blockNumber1)).to.eq.BN(one.muln(5000));
+      expect(await proposals.votingPower(bob, blockNumber1)).to.eq.BN(toBN(0));
+      expect(await proposals.votingPower(charlie, blockNumber1)).to.eq.BN(one.muln(15000));
+      // in the middle
+      expect(await proposals.votingPower(alice, blockNumber2)).to.eq.BN(one.muln(5000));
+      expect(await proposals.votingPower(bob, blockNumber2)).to.eq.BN(toBN(0));
+      expect(await proposals.votingPower(charlie, blockNumber2)).to.eq.BN(one.muln(15000));
+      // after with a net transfer
+      expect(await proposals.votingPower(alice, blockNumber3)).to.eq.BN(one.muln(5400));
+      expect(await proposals.votingPower(bob, blockNumber3)).to.eq.BN(toBN(0));
+      expect(await proposals.votingPower(charlie, blockNumber3)).to.eq.BN(one.muln(14600));
+    });
+
+    it('test of flashloan attacks', async () => {
+      const flashLoaner = await FlashLoaner.new(eco.address);
+
+      await eco.approve(flashLoaner.address, one.muln(3000), { from: bob });
+      await eco.approve(flashLoaner.address, one.muln(3050), { from: alice });
+      const blockNumber1 = await time.latestBlock();
+
+      await flashLoaner.flashLoan(bob, alice, one.muln(3000), one.muln(3050));
+      const blockNumber2 = await time.latestBlock();
+      await time.advanceBlock();
+
+      // before everything
+      expect(await proposals.votingPower(alice, blockNumber1)).to.eq.BN(one.muln(5000));
+      expect(await proposals.votingPower(bob, blockNumber1)).to.eq.BN(one.muln(5000));
+      // in the middle
+      expect(await proposals.votingPower(alice, blockNumber2)).to.eq.BN(one.muln(4950));
+      expect(await proposals.votingPower(bob, blockNumber2)).to.eq.BN(one.muln(5050));
     });
   });
 
