@@ -7,6 +7,7 @@ const ethers = require('ethers');
 
 global.web3 = new Web3();
 let ethersProvider;
+let JsonrpcProviderString; //passes to supervisor so that it can connect to the same provider
 
 const commandLineArgs = require('command-line-args');
 const fs = require('fs');
@@ -142,9 +143,11 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
-    ethersProvider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
+    JsonrpcProviderString = 'http://localhost:8545'
+    ethersProvider = new ethers.providers.JsonRpcProvider(JsonrpcProviderString);
   } else {
-    global.web3 = new Web3(options.webrpc || defaultRpc);
+    JsonrpcProviderString = options.webrpc || defaultRpc
+    ethersProvider = new ethers.providers.JsonRpcProvider(options.webrpc || defaultRpc);
   }
 
   const sync = await web3.eth.isSyncing();
@@ -278,20 +281,19 @@ async function startExpress() {
 async function supervise() {
   if (options.supervise) {
     if (options.selftest) {
-      const supervisor = new Supervisor(options.policy, options.signer);
+      const supervisor = new Supervisor(JsonrpcProviderString, options.policy);
       await supervisor.processAllBlocks();
     } else {
-      // let content = options.policy + '\n' + JSON.stringify(options.signer);
-      // fs.writeFile('tools/supervisorInputs.txt', content, e => {
-      //   if (e) {
-      //     console.log(e);
-      //   }
-      // });
-      await Supervisor.start(
-        ethersProvider,
-        options.policy,
-        options.signer
-      );
+      let content = JsonrpcProviderString + '\n' + options.policy;
+      fs.writeFile('tools/supervisorInputs.txt', content, e => {
+        if (e) {
+          console.log(e);
+        }
+      });
+      // await Supervisor.start(
+      //   JsonrpcProviderString,
+      //   options.policy,
+      // );
     }
   }
 }

@@ -129,6 +129,9 @@ class Supervisor {
       this.signer,
     );
     console.log(`currencyGovernance address is: ${this.currencyGovernance.address}`);
+    const filter = this.currencyTimer.filters.InflationStarted();
+    const events = this.currencyTimer.queryFilter(filter);
+
 
     this.randomInflation = new ethers.Contract(
       await this.currencyTimer.inflationImpl(),
@@ -151,7 +154,7 @@ class Supervisor {
     ) {
       const filter = this.policyProposals.filters.SupportThresholdReached();
       filter.fromBlock = 'latest';
-      const events = provider.getLogs(filter);
+      const events = this.policyProposals.queryFilter(filter);
       if (events.length === 1) {
         await this.policyProposals.deployProposalVoting();
         // this is probably wrong, how do i get the policy votes address from the deploy event?
@@ -227,7 +230,7 @@ class Supervisor {
     filter.fromBlock = 0;
     filter.toBlock = "latest";
 
-    const events = await provider.getLogs(filter);
+    const events = await this.timedPolicies.queryFilter(filter);
 
     this.currentGenerationBlock = events[events.length - 1].blockNumber;
     this.currentGenerationStartTime = await provider.getBlock(
@@ -328,16 +331,18 @@ class Supervisor {
         console.log('managing random inflation');
         await this.manageRandomInflation();
       }
-
-      console.log(`done with block ${this.blockNumber}`);
     }
+    console.log(`done with block ${this.blockNumber}`);
   }
 
-  static async start(_provider, _rootPolicy, _signer) {
-    provider = _provider;
+  static async start(_jsonrpcProviderString, _rootPolicy) {
+
+    provider = new ethers.providers.JsonRpcProvider(_jsonrpcProviderString);
+    const signer = await provider.getSigner()
+
     const supervisor = await new Supervisor(
       _rootPolicy,
-      _signer,
+      signer,
     );
     console.log('STARTED');
 
@@ -350,6 +355,16 @@ class Supervisor {
     });
   }
 }
+
+let args = fs.readFileSync('tools/supervisorInputs.txt');
+args = new String(args).split('\n');
+let jsonrpcProviderString = args[0]
+let rootPolicy = args[1]
+
+console.log(jsonrpcProviderString);
+console.log(rootPolicy);
+
+Supervisor.start(jsonrpcProviderString, rootPolicy);
 
 module.exports = {
   Supervisor,

@@ -1,2 +1,2 @@
-0xA113ED7633E06000CC9dA87026AA90B89DDA0a0d
-{"provider":{"ready":{},"_lastBlockNumber":-2,"_balances":{},"_events":[],"_pollingInterval":4000,"_emitted":{"block":-2},"_fastQueryDate":0,"connection":{"url":"http://localhost:8545"},"_network":{"chainId":1653720000898,"name":"unknown"}},"_index":0}
+http://localhost:8545
+0x74f6A45697971d27f1d7649F447b2A5004ef5e0c
