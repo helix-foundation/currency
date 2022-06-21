@@ -1,0 +1,4710 @@
+{
+  "_format": "ethers-rs-sol-cache-3",
+  "paths": {
+    "artifacts": "out",
+    "sources": "contracts",
+    "tests": "test",
+    "libraries": [
+      "node_modules"
+    ]
+  },
+  "files": {
+    "/home/toda/dev/misc/eco/currency/contracts/Migrations.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "f61eb3097ad91b2677637e9ebb58c517",
+      "sourceName": "contracts/Migrations.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Migrations": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Migrations.sol/Migrations.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/VDF/BigNumber.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "743d5a070bd0358a4614ca8a85e5d44d",
+      "sourceName": "contracts/VDF/BigNumber.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "BigNumber": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "BigNumber.sol/BigNumber.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/VDF/IsPrime.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "8f7647a41cd4d14137a1ece3977b0c23",
+      "sourceName": "contracts/VDF/IsPrime.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IsPrime": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IsPrime.sol/IsPrime.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/VDF/VDFVerifier.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "cd7b328bb3f906223dc1cb183a3e166b",
+      "sourceName": "contracts/VDF/VDFVerifier.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "VDFVerifier": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "VDFVerifier.sol/VDFVerifier.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/clone/CloneFactory.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "c384c66125b21e31c61510a0fa2a0c8b",
+      "sourceName": "contracts/clone/CloneFactory.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "CloneFactory": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "CloneFactory.sol/CloneFactory.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/ECO.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "e8149a19b97537316f24ecf408cc9429",
+      "sourceName": "contracts/currency/ECO.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationCheckpoints.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ECO": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ECO.sol/ECO.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/ECOx.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "28666daf478a90459d99e83fb94a9b10",
+      "sourceName": "contracts/currency/ECOx.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ECOx": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ECOx.sol/ECOx.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/ERC20.sol": {
+      "lastModificationDate": 1653095690119,
+      "contentHash": "612bcaa5137033b553a2b90c0ab3e14d",
+      "sourceName": "contracts/currency/ERC20.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/currency/ERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC20": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC20.sol/ERC20.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/ERC20Permit.sol": {
+      "lastModificationDate": 1653096095604,
+      "contentHash": "c978a084978eba4df373e84f465e743d",
+      "sourceName": "contracts/currency/ERC20Permit.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC20Permit": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC20Permit.sol/ERC20Permit.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/IECO.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "6515c17f6ef3c4db17faa2724e3dfc15",
+      "sourceName": "contracts/currency/IECO.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IECO": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IECO.sol/IECO.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/InflationCheckpoints.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "1027a7b05bccc5b6316ffe190f5dd319",
+      "sourceName": "contracts/currency/InflationCheckpoints.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "InflationCheckpoints": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "InflationCheckpoints.sol/InflationCheckpoints.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/InflationRootHashProposal.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "fbac558c6a1ae374f8d2ab53a9956e21",
+      "sourceName": "contracts/currency/InflationRootHashProposal.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "InflationRootHashProposal": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "InflationRootHashProposal.sol/InflationRootHashProposal.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/currency/VoteCheckpoints.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "825f4977c4b73ea7bff61bd655a6ff95",
+      "sourceName": "contracts/currency/VoteCheckpoints.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "VoteCheckpoints": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "VoteCheckpoints.sol/VoteCheckpoints.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/deploy/EcoBootstrap.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "676d7b4074b3afc6d3d8c806a414591c",
+      "sourceName": "contracts/deploy/EcoBootstrap.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/deploy/EcoInitializable.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EcoBootstrap": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoBootstrap.sol/EcoBootstrap.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/deploy/EcoFaucet.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "d342a47794243d41ebd0f1c757e5824b",
+      "sourceName": "contracts/deploy/EcoFaucet.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EcoFaucet": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoFaucet.sol/EcoFaucet.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/deploy/EcoInitializable.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "522a8b8fea027e154bf9d9118db182f2",
+      "sourceName": "contracts/deploy/EcoInitializable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EcoInitializable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoInitializable.sol/EcoInitializable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/deploy/EcoTestCleanup.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "9dbd5f91b75c9a90110a0ba1a4efeb55",
+      "sourceName": "contracts/deploy/EcoTestCleanup.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/policy/Policed.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Destructable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoTestCleanup.sol/Destructable.json"
+        },
+        "EcoTestCleanup": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoTestCleanup.sol/EcoTestCleanup.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/deploy/EcoTokenInit.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "40e597537514c46d03ffa3c41e471ea9",
+      "sourceName": "contracts/deploy/EcoTokenInit.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECO.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationCheckpoints.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EcoTokenInit": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoTokenInit.sol/EcoTokenInit.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/deploy/EcoXTokenInit.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "ca7ad13308099a13c624e6b6e034f014",
+      "sourceName": "contracts/deploy/EcoXTokenInit.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EcoXTokenInit": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EcoXTokenInit.sol/EcoXTokenInit.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/CurrencyGovernance.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "51aaeb338bc229b266b739304a766d44",
+      "sourceName": "contracts/governance/CurrencyGovernance.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "CurrencyGovernance": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "CurrencyGovernance.sol/CurrencyGovernance.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/CurrencyTimer.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "a1594aeda3cbffd6f0f16885facb7792",
+      "sourceName": "contracts/governance/CurrencyTimer.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "CurrencyTimer": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "CurrencyTimer.sol/CurrencyTimer.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/ECOxLockup.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "39cbbadcb8419debbf09ccc306bdf766",
+      "sourceName": "contracts/governance/ECOxLockup.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ECOxLockup": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ECOxLockup.sol/ECOxLockup.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/IGeneration.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "c2d213f359792821630a030eda94e293",
+      "sourceName": "contracts/governance/IGeneration.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IGeneration": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IGeneration.sol/IGeneration.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/IGenerationIncrease.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "d5b3d84b505311de35256664ad6de5a4",
+      "sourceName": "contracts/governance/IGenerationIncrease.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IGenerationIncrease": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IGenerationIncrease.sol/IGenerationIncrease.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/ILockups.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "588d65a93806e36bd5fb6136e147ffa7",
+      "sourceName": "contracts/governance/ILockups.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ILockups": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ILockups.sol/ILockups.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/Inflation.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "55b53e8e2407aa01eb1be480de85df01",
+      "sourceName": "contracts/governance/Inflation.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Inflation": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Inflation.sol/Inflation.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/Lockup.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "79246659797341b7a3e095e7b5052e6e",
+      "sourceName": "contracts/governance/Lockup.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Lockup": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Lockup.sol/Lockup.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/PolicyProposals.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "73ecc386d042e8de3bcf209eceb3c302",
+      "sourceName": "contracts/governance/PolicyProposals.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PolicyProposals": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyProposals.sol/PolicyProposals.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/PolicyVotes.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "3dd98617de424e4c2c24edf261dd148d",
+      "sourceName": "contracts/governance/PolicyVotes.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PolicyVotes": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyVotes.sol/PolicyVotes.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/Proposal.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "53ff85f2444c5a3e138edf8aea905653",
+      "sourceName": "contracts/governance/Proposal.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Proposal": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Proposal.sol/Proposal.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/SimplePolicySetter.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "44ea4150d735a0fffd971c19f8f63d37",
+      "sourceName": "contracts/governance/SimplePolicySetter.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "SimplePolicySetter": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "SimplePolicySetter.sol/SimplePolicySetter.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/SingleTrusteeReplacement.propo.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "fbf5e28bf1469bb6c10d16a91116a02b",
+      "sourceName": "contracts/governance/SingleTrusteeReplacement.propo.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "SingleTrusteeReplacement": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "SingleTrusteeReplacement.propo.sol/SingleTrusteeReplacement.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/TimedPolicies.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "292f9609c3e97b140d26b913de8bc869",
+      "sourceName": "contracts/governance/TimedPolicies.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "TimedPolicies": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "TimedPolicies.sol/TimedPolicies.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/TrustedNodes.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "a2b3f527c9cc998549806d60b54a9774",
+      "sourceName": "contracts/governance/TrustedNodes.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "TrustedNodes": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "TrustedNodes.sol/TrustedNodes.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/TrusteeReplacement.propo.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "d0efeb5e84bba6ae279189e42c8594b7",
+      "sourceName": "contracts/governance/TrusteeReplacement.propo.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "TrusteeReplacement": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "TrusteeReplacement.propo.sol/TrusteeReplacement.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/governance/VotingPower.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "0388ef23519a33a87be465447b967154",
+      "sourceName": "contracts/governance/VotingPower.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "VotingPower": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "VotingPower.sol/VotingPower.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/policy/ERC1820Client.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "f00ecc42874382bd824a47cdddc059eb",
+      "sourceName": "contracts/policy/ERC1820Client.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC1820Client": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC1820Client.sol/ERC1820Client.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/policy/Policed.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "7c1944a4994055aae138ccca0674e405",
+      "sourceName": "contracts/policy/Policed.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Policed": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Policed.sol/Policed.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/policy/PolicedUtils.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "858fe986ad86777bdc473b27c280e3e6",
+      "sourceName": "contracts/policy/PolicedUtils.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PolicedUtils": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicedUtils.sol/PolicedUtils.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/policy/Policy.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "9c5480e634faac6742715f184adf5cbd",
+      "sourceName": "contracts/policy/Policy.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Policy": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Policy.sol/Policy.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/policy/PolicyInit.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "471da05906ae8c9739de655d06cdc610",
+      "sourceName": "contracts/policy/PolicyInit.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PolicyInit": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyInit.sol/PolicyInit.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/proxy/ForwardProxy.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "ec5f88f04315beb883c0ef04e0f3887c",
+      "sourceName": "contracts/proxy/ForwardProxy.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ForwardProxy": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ForwardProxy.sol/ForwardProxy.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/proxy/ForwardTarget.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "227e8660ae2aaf8f4aa34c381a44d3e9",
+      "sourceName": "contracts/proxy/ForwardTarget.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ForwardTarget": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ForwardTarget.sol/ForwardTarget.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/Backdoor.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "dc0e4c68498abf28282b95fec00a3ef4",
+      "sourceName": "contracts/test/Backdoor.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/deploy/EcoBootstrap.sol",
+        "contracts/deploy/EcoInitializable.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/policy/PolicyInit.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/test/FakePolicy.sol",
+        "contracts/test/TestPolicy.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Backdoor": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Backdoor.sol/Backdoor.json"
+        },
+        "BackdoorProposal": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Backdoor.sol/BackdoorProposal.json"
+        },
+        "Empty": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Backdoor.sol/Empty.json"
+        },
+        "PolicyTest": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Backdoor.sol/PolicyTest.json"
+        },
+        "SampleHandler": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Backdoor.sol/SampleHandler.json"
+        },
+        "SampleProposal": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Backdoor.sol/SampleProposal.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/BigNum.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "6836312a7f42ebcabfb0d22efdd5894b",
+      "sourceName": "contracts/test/BigNum.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "BigNum": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "BigNum.sol/BigNum.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/Cloner.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "e5ef1f684734606c72bfd693a5808313",
+      "sourceName": "contracts/test/Cloner.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Cloner": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Cloner.sol/Cloner.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/FailingInitializeContract.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "83d69ffabec05e2987bf64705409c963",
+      "sourceName": "contracts/test/FailingInitializeContract.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "FailingInitializeContract": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "FailingInitializeContract.sol/FailingInitializeContract.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/FakeInflation.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "afc0440f6d6190635493894314861003",
+      "sourceName": "contracts/test/FakeInflation.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/policy/PolicyInit.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/test/TestPolicy.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "FakeInflation": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "FakeInflation.sol/FakeInflation.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/FakePolicy.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "a56727a34b97e75c7522eede204ab9f6",
+      "sourceName": "contracts/test/FakePolicy.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/policy/PolicyInit.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/test/TestPolicy.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "FakePolicy": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "FakePolicy.sol/FakePolicy.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/ForwardTargetImpl.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "d674772f2bccf50f76304836849e6863",
+      "sourceName": "contracts/test/ForwardTargetImpl.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ForwardTargetImpl": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ForwardTargetImpl.sol/ForwardTargetImpl.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/ImplementationUpdatingTarget.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "440f2c48496d96df13b4d90573adf6f8",
+      "sourceName": "contracts/test/ImplementationUpdatingTarget.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ImplementationUpdatingTarget": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ImplementationUpdatingTarget.sol/ImplementationUpdatingTarget.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/MakeBackdoor.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "1853127ab4bc23ed0f15ba7c3232a682",
+      "sourceName": "contracts/test/MakeBackdoor.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/governance/Proposal.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "MakeBackdoor": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "MakeBackdoor.sol/MakeBackdoor.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/MakePoodle.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "e6d81e2d0acd39c058932222900c10ba",
+      "sourceName": "contracts/test/MakePoodle.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/governance/Proposal.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "MakePoodle": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "MakePoodle.sol/MakePoodle.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/MakeRich.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "9b55efda9d86d80ca0c5051110dc87aa",
+      "sourceName": "contracts/test/MakeRich.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/currency/IECO.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "MakeRich": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "MakeRich.sol/MakeRich.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/MakeTrustedPoodles.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "472d0bc11e40503dc42251ec8f03086e",
+      "sourceName": "contracts/test/MakeTrustedPoodles.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/governance/Proposal.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "MakeTrustedPoodles": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "MakeTrustedPoodles.sol/MakeTrustedPoodles.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/MurderousPolicy.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "2e5dd6c559e86a8f497493ca4ba164e4",
+      "sourceName": "contracts/test/MurderousPolicy.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/policy/PolicyInit.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/test/TestPolicy.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Killable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "MurderousPolicy.sol/Killable.json"
+        },
+        "MurderousPolicy": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "MurderousPolicy.sol/MurderousPolicy.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/PolicyTestPolicy.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "263166b68fa8b2cf458f9dd0234d9827",
+      "sourceName": "contracts/test/PolicyTestPolicy.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "DummyInflation": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/DummyInflation.json"
+        },
+        "DummyPoliced": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/DummyPoliced.json"
+        },
+        "DummyPolicedUtils": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/DummyPolicedUtils.json"
+        },
+        "FakeCommandAction": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/FakeCommandAction.json"
+        },
+        "FakeCommander": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/FakeCommander.json"
+        },
+        "Policer": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/Policer.json"
+        },
+        "PolicyForAll": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/PolicyForAll.json"
+        },
+        "PolicyTestPolicy": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/PolicyTestPolicy.json"
+        },
+        "RegistrationAttemptContract": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/RegistrationAttemptContract.json"
+        },
+        "RevertingAction": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PolicyTestPolicy.sol/RevertingAction.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/PoodleCurrencyTimer.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "ad2240fa41a493678d3f37f7a6f451a2",
+      "sourceName": "contracts/test/PoodleCurrencyTimer.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PoodleCurrencyTimer": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PoodleCurrencyTimer.sol/PoodleCurrencyTimer.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/PoodleGovernance.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "2db75b15159961b27cccfcf87aafbabe",
+      "sourceName": "contracts/test/PoodleGovernance.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PoodleCurrencyGovernance": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PoodleGovernance.sol/PoodleCurrencyGovernance.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/PoodleTrustedNodes.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "4fc4099ffffc390280b5eecbb2efbac2",
+      "sourceName": "contracts/test/PoodleTrustedNodes.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ECOx.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/currency/IECO.sol",
+        "contracts/currency/InflationRootHashProposal.sol",
+        "contracts/currency/VoteCheckpoints.sol",
+        "contracts/governance/CurrencyGovernance.sol",
+        "contracts/governance/CurrencyTimer.sol",
+        "contracts/governance/ECOxLockup.sol",
+        "contracts/governance/IGeneration.sol",
+        "contracts/governance/IGenerationIncrease.sol",
+        "contracts/governance/ILockups.sol",
+        "contracts/governance/Inflation.sol",
+        "contracts/governance/Lockup.sol",
+        "contracts/governance/PolicyProposals.sol",
+        "contracts/governance/PolicyVotes.sol",
+        "contracts/governance/Proposal.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/governance/TrustedNodes.sol",
+        "contracts/governance/VotingPower.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/utils/TimeUtils.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "PoodleTrustedNodes": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "PoodleTrustedNodes.sol/PoodleTrustedNodes.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/SampleForward.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "b7e719dfd8730376c7c6a2f8f1e589c0",
+      "sourceName": "contracts/test/SampleForward.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "SampleForward": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "SampleForward.sol/SampleForward.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/SimplePolicyCloner.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "2b02a43f6b3eeaf7324730fae62e6fb1",
+      "sourceName": "contracts/test/SimplePolicyCloner.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/governance/SimplePolicySetter.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "SimplePolicyCloner": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "SimplePolicyCloner.sol/SimplePolicyCloner.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/SumVerifier.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "e4dd537363b9c20cf3c04d7552c12d85",
+      "sourceName": "contracts/test/SumVerifier.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/test/SampleForward.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "SumVerifier": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "SumVerifier.sol/SumVerifier.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/TestPolicy.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "6ecc7ec33e652b27cdee09caf8bd51fa",
+      "sourceName": "contracts/test/TestPolicy.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/policy/Policy.sol",
+        "contracts/policy/PolicyInit.sol",
+        "contracts/proxy/ForwardProxy.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "TestPolicy": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "TestPolicy.sol/TestPolicy.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/Token.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "fb266a8d42f47d64dbdd65c2b8d90e54",
+      "sourceName": "contracts/test/Token.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/clone/CloneFactory.sol",
+        "contracts/currency/ERC20.sol",
+        "contracts/currency/ERC20Permit.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+        "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Token": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Token.sol/Token.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/Token20.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "3cf4aa75ae42114f39efa29ef377cfa4",
+      "sourceName": "contracts/test/Token20.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/access/AccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/AccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/security/Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Token20": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Token20.sol/Token20.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/Token827.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "cecf56330961374bbe46ba2385f38e0a",
+      "sourceName": "contracts/test/Token827.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/proxy/ForwardTarget.sol",
+        "contracts/test/Token20.sol",
+        "node_modules/@openzeppelin/contracts/access/AccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/AccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+        "node_modules/@openzeppelin/contracts/security/Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Token827": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Token827.sol/Token827.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/TokenTarget.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "eaa1688469511c3cfd39f35fb5b78cc5",
+      "sourceName": "contracts/test/TokenTarget.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "TokenTarget": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "TokenTarget.sol/TokenTarget.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/test/VdfCloner.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "22b3000b52396ce88f5c3835d056f378",
+      "sourceName": "contracts/test/VdfCloner.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "contracts/VDF/BigNumber.sol",
+        "contracts/VDF/IsPrime.sol",
+        "contracts/VDF/VDFVerifier.sol",
+        "contracts/clone/CloneFactory.sol",
+        "contracts/policy/ERC1820Client.sol",
+        "contracts/policy/Policed.sol",
+        "contracts/policy/PolicedUtils.sol",
+        "contracts/proxy/ForwardTarget.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "VdfCloner": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "VdfCloner.sol/VdfCloner.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/contracts/utils/TimeUtils.sol": {
+      "lastModificationDate": 1653095035860,
+      "contentHash": "39332e9882b8d6dd43714dda343dc97e",
+      "sourceName": "contracts/utils/TimeUtils.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "TimeUtils": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "TimeUtils.sol/TimeUtils.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/access/AccessControl.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "76cae8e1eb9c27e818b0b08e1527f731",
+      "sourceName": "node_modules/@openzeppelin/contracts/access/AccessControl.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "AccessControl": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "AccessControl.sol/AccessControl.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/access/AccessControlEnumerable.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "b6d9b165dc57e9ad8153bdca05c783a4",
+      "sourceName": "node_modules/@openzeppelin/contracts/access/AccessControlEnumerable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/access/AccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "AccessControlEnumerable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "AccessControlEnumerable.sol/AccessControlEnumerable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/access/IAccessControl.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "57c84298234411cea19c7c284d86be8b",
+      "sourceName": "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IAccessControl": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IAccessControl.sol/IAccessControl.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/access/IAccessControlEnumerable.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "4e71cc90682e109e999ce2bd329f6572",
+      "sourceName": "node_modules/@openzeppelin/contracts/access/IAccessControlEnumerable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IAccessControlEnumerable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IAccessControlEnumerable.sol/IAccessControlEnumerable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "8398972af73b4e9e5ff3b31cad86234f",
+      "sourceName": "node_modules/@openzeppelin/contracts/access/Ownable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Ownable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Ownable.sol/Ownable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/security/Pausable.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "9c2dccab8e3a43a18c41e358763fe4d8",
+      "sourceName": "node_modules/@openzeppelin/contracts/security/Pausable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Pausable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Pausable.sol/Pausable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "bab063ddd80e9cc9e313361fef7ef07f",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC20": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC20.sol/ERC20.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "a44d1a099633876550ad2476b21bafbe",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IERC20": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IERC20.sol/IERC20.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "a1c7f80ae26f5b2d7d563475627fbf25",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC20Burnable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC20Burnable.sol/ERC20Burnable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "ab4babe7912604097ae769a62fa08506",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/security/Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC20Pausable": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC20Pausable.sol/ERC20Pausable.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "909ab67fc5c25033fe6cd364f8c056f9",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IERC20Metadata": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IERC20Metadata.sol/IERC20Metadata.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "fb77f144244b9ab12533aa6ce85ef8c5",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IERC20Permit": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "draft-IERC20Permit.sol/IERC20Permit.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "ca6cd8d752c4e75efa2a15734be0cb94",
+      "sourceName": "node_modules/@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/access/AccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/AccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControl.sol",
+        "node_modules/@openzeppelin/contracts/access/IAccessControlEnumerable.sol",
+        "node_modules/@openzeppelin/contracts/security/Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol",
+        "node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "node_modules/@openzeppelin/contracts/utils/Context.sol",
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol",
+        "node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC20PresetMinterPauser": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC20PresetMinterPauser.sol/ERC20PresetMinterPauser.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/Context.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "5f2c5c4b6af2dd4551027144797bc8be",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/Context.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Context": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Context.sol/Context.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "74654e3ae5d7f39555055dfe244dab7a",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/Counters.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Counters": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Counters.sol/Counters.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "9c54c6c065d9e590fdcdd72c451425b9",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Strings": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "Strings.sol/Strings.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "482bcc512029ecf51ca4ae85cf4667c7",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ECDSA": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ECDSA.sol/ECDSA.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "161aae4dc1450371d0f324488f66a9cf",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/utils/Strings.sol",
+        "node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EIP712": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "draft-EIP712.sol/EIP712.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "0e7db055ce108f9da7bb6686a00287c0",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [
+        "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "ERC165": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "ERC165.sol/ERC165.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "03e6768535ac4da0e9756f1d8a4a018a",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IERC165": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IERC165.sol/IERC165.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "0612f1c8beee4b227de51b49174b9bc2",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IERC1820Implementer": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IERC1820Implementer.sol/IERC1820Implementer.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "f584744ea68647073c73fe42d509a3e1",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "IERC1820Registry": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "IERC1820Registry.sol/IERC1820Registry.json"
+        }
+      }
+    },
+    "/home/toda/dev/misc/eco/currency/node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol": {
+      "lastModificationDate": 499162500000,
+      "contentHash": "b8070bbbb327a49a4d37f5c590b38238",
+      "sourceName": "node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london"
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "EnumerableSet": {
+          "0.8.13+commit.abaa5c0e.Linux.gcc": "EnumerableSet.sol/EnumerableSet.json"
+        }
+      }
+    }
+  }
+}

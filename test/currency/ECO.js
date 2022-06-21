@@ -265,6 +265,296 @@ describe('ECO [@group=1]', () => {
       });
     });
 
+    describe('permit', () => {
+      const permitSpender = web3.eth.accounts.create();
+      const owner = web3.eth.accounts.create();
+
+      context('when the source address has enough balance', async () => {
+        const amount = one.muln(1000);
+        it('fails if signed from non-owner', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(owner.address);
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: owner.address,
+            spender: permitSpender.address,
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: (await web3.eth.getChainId()).toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner.privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expectRevert(
+            eco.permit(
+              permitSpender.address,
+              owner.address,
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+            'ERC20Permit: invalid signature',
+            eco.constructor,
+          );
+        });
+
+        it('fails with invalid nonce', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(owner.address);
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: owner.address,
+            spender: permitSpender.address,
+            value: amount.toString(),
+            nonce: nonce + 1,
+            chainId: (await web3.eth.getChainId()).toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner.privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expectRevert(
+            eco.permit(
+              owner.address,
+              permitSpender.address,
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+            'ERC20Permit: invalid signature',
+            eco.constructor,
+          );
+        });
+
+        it('fails with invalid spender', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(owner.address);
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: owner.address,
+            spender: permitSpender.address,
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: (await web3.eth.getChainId()).toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner.privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expectRevert(
+            eco.permit(
+              owner.address,
+              accounts[0],
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+            'ERC20Permit: invalid signature',
+            eco.constructor,
+          );
+        });
+
+        it('fails with invalid deadline', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 - 100);
+          const nonce = await eco.nonces(owner.address);
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: owner.address,
+            spender: permitSpender.address,
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: (await web3.eth.getChainId()).toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner.privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expectRevert(
+            eco.permit(
+              owner.address,
+              permitSpender.address,
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+            'ERC20Permit: expired deadline',
+            eco.constructor,
+          );
+        });
+
+        it('fails with signature reuse', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(owner.address);
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: owner.address,
+            spender: permitSpender.address,
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: (await web3.eth.getChainId()).toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner.privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          const result = await eco.permit(
+            owner.address,
+            permitSpender.address,
+            amount,
+            deadline,
+            v,
+            r,
+            s,
+          );
+          await expectEvent.inTransaction(
+            result.tx,
+            eco.constructor,
+            'Approval',
+          );
+
+          await expectRevert(
+            eco.permit(
+              owner.address,
+              permitSpender.address,
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+            'ERC20Permit: invalid signature',
+            eco.constructor,
+          );
+        });
+
+        it('emits an Approval event', async () => {
+          const result = await permit(
+            eco,
+            owner,
+            permitSpender,
+            await web3.eth.getChainId(),
+            amount,
+          );
+          await expectEvent.inTransaction(
+            result.tx,
+            eco.constructor,
+            'Approval',
+          );
+        });
+
+        it('increments the nonce', async () => {
+          const nonce = await eco.nonces(owner.address);
+          await permit(
+            eco,
+            owner,
+            permitSpender,
+            await web3.eth.getChainId(),
+            amount,
+          );
+          const nonceAfter = await eco.nonces(owner.address);
+          expect(nonceAfter - nonce).to.eq.BN(1);
+        });
+
+        context('when there is no existing allowance', () => {
+          it('sets the allowance', async () => {
+            const result = await permit(
+              eco,
+              owner,
+              permitSpender,
+              await web3.eth.getChainId(),
+              amount,
+            );
+            await expectEvent.inTransaction(
+              result.tx,
+              eco.constructor,
+              'Approval',
+            );
+            const allowance = await eco.allowance(owner.address, permitSpender.address);
+            expect(allowance).to.eq.BN(amount);
+          });
+        });
+
+        context('when there is a pre-existing allowance', () => {
+          beforeEach(async () => {
+            await permit(
+              eco,
+              owner,
+              permitSpender,
+              await web3.eth.getChainId(),
+              amount.sub(new BN(50)),
+            );
+          });
+
+          it('replaces the existing allowance', async () => {
+            await permit(
+              eco,
+              owner,
+              permitSpender,
+              await web3.eth.getChainId(),
+              amount,
+            );
+            const allowance = await eco.allowance(owner.address, permitSpender.address);
+
+            expect(allowance).to.eq.BN(amount);
+          });
+
+          it('emits the Approval event', async () => {
+            const result = await permit(
+              eco,
+              owner,
+              permitSpender,
+              await web3.eth.getChainId(),
+              amount,
+            );
+            await expectEvent.inTransaction(
+              result.tx,
+              eco.constructor,
+              'Approval',
+            );
+          });
+        });
+      });
+    });
+
     context('when the source address does not have enough balance', () => {
       const amount = one.mul(1000);
 

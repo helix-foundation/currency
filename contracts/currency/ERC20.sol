@@ -3,6 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "../utils/StringPacker.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "./ERC20Permit.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -30,7 +32,7 @@ import "../utils/StringPacker.sol";
  * allowances. See {IERC20-approve}.
  */
 // internal _name and _symbol are stored immutable as bytes32 and unpacked via StringPacker
-contract ERC20 {
+contract ERC20 is ERC20Permit {
     mapping(address => uint256) internal _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -67,7 +69,7 @@ contract ERC20 {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(string memory name_, string memory symbol_) {
+    constructor(string memory name_, string memory symbol_) ERC20Permit(name_) {
         _name = StringPacker.pack(name_);
         _symbol = StringPacker.pack(symbol_);
     }
@@ -377,7 +379,7 @@ contract ERC20 {
         address owner,
         address spender,
         uint256 amount
-    ) internal virtual {
+    ) internal virtual override {
         require(spender != address(0), "ERC20: approve to the zero address");
 
         _allowances[owner][spender] = amount;

@@ -139,6 +139,89 @@ describe('ECOx', () => {
     });
   });
 
+  describe('permit', () => {
+    const spender = web3.eth.accounts.create();
+    const owner = web3.eth.accounts.create();
+
+    context('when the source address has enough balance', async () => {
+      const amount = one.muln(1000);
+
+      it('emits an Approval event', async () => {
+        const result = await permit(
+          eco,
+          owner,
+          spender,
+          await web3.eth.getChainId(),
+          amount,
+        );
+        await expectEvent.inTransaction(
+          result.tx,
+          eco.constructor,
+          'Approval',
+        );
+      });
+
+      context('when there is no existing allowance', () => {
+        it('sets the allowance', async () => {
+          const result = await permit(
+            eco,
+            owner,
+            spender,
+            await web3.eth.getChainId(),
+            amount,
+          );
+          await expectEvent.inTransaction(
+            result.tx,
+            eco.constructor,
+            'Approval',
+          );
+          const allowance = await eco.allowance(owner.address, spender.address);
+          expect(allowance).to.eq.BN(amount);
+        });
+      });
+
+      context('when there is a pre-existing allowance', () => {
+        beforeEach(async () => {
+          await permit(
+            eco,
+            owner,
+            spender,
+            await web3.eth.getChainId(),
+            amount.sub(new BN(50)),
+          );
+        });
+
+        it('replaces the existing allowance', async () => {
+          await permit(
+            eco,
+            owner,
+            spender,
+            await web3.eth.getChainId(),
+            amount,
+          );
+          const allowance = await eco.allowance(owner.address, spender.address);
+
+          expect(allowance).to.eq.BN(amount);
+        });
+
+        it('emits the Approval event', async () => {
+          const result = await permit(
+            eco,
+            owner,
+            spender,
+            await web3.eth.getChainId(),
+            amount,
+          );
+          await expectEvent.inTransaction(
+            result.tx,
+            eco.constructor,
+            'Approval',
+          );
+        });
+      });
+    });
+  });
+
   context('mint', () => {
     it('mint reverts if called by non-faucet address', async () => {
       await expect(
