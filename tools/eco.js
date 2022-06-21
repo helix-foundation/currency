@@ -17,7 +17,7 @@ const { hdkey } = require('ethereumjs-wallet');
 const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
-const { Supervisor } = require('./supervisorNew');
+// const { Supervisor } = require('./supervisorNew');
 
 const defaultRpc = 'ws://localhost:8545';
 

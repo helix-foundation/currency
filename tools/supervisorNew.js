@@ -149,74 +149,17 @@ class Supervisor {
   }
 
   async manageCommunityGovernance() {
-    if (await !this.policyProposals.proposalSelected()
-      && this.timestamp < await this.policyProposals.proposalEnds()
-    ) {
-      const filter = this.policyProposals.filters.SupportThresholdReached();
-      filter.fromBlock = 'latest';
-      const events = this.policyProposals.queryFilter(filter);
-      if (events.length === 1) {
-        await this.policyProposals.deployProposalVoting();
-        // this is probably wrong, how do i get the policy votes address from the deploy event?
-        filter = this.policyProposals.filters.VotingStarted();
-        this.policyVotes = new ethers.Contract(
-          await this.policy.policyFor(ID_POLICY_VOTES),
-          PolicyVotesABI.abi,
-          this.signer,
-        );
-      }
-    } else {
-      if (this.policyVotes) {
-        try {
-          const requiredStake = await this.policyVotes.totalStake() / 2;
-          const yesStake = await this.policyVotes.yesStake();
-          if (yesStake > requiredStake
-            && this.timestamp > await this.policyVotes.voteEnds 
-            + await this.policyVotes.ENACTION_DELAY) {
-            await this.policyVotes.execute();
-            this.policyChange = true;
-          }
-        } catch (e) {
-          // console.log(e);
-        }
-      }
-      if (this.timestamp + REFUND_BUFFER > this.nextGenerationStart) {
-        // do refunds of unselected proposals
-        (await this.policyProposals.allProposals()
-          .forEach((proposal) => {
-            this.policyProposals.refund(proposal);
-          })
-        );
-      }
-    }
+    return null;
   }
 
   async manageCurrencyGovernance() {
     // updates the stage of the currency governance process
 
-    const stage = await this.currencyGovernance.stage();
-
-    if ((stage === 0 && this.timestamp >= await this.currencyGovernance.proposalEnds())
-        || (stage === 1 && this.timestamp >= await this.currencyGovernance.votingEnds())
-        || (stage === 2 && this.timestamp >= await this.currencyGovernance.revealEnds())) {
-      await this.currencyGovernance.updateStage();
-    }
+   return null;
   }
 
   async manageRandomInflation() {
-    if (this.inflationRootHashProposal.acceptedRootHash() != 0) {
-      // automated claim logic
-    } else if (this.timestamp > this.currentGenerationStartTime + 12 * DAY
-      && !this.rootHashProposed) {
-      await this.inflationRootHashProposal.proposeRootHash(
-        this.tree.hash,
-        this.tree.total,
-        this.tree.items
-      );
-      this.rootHashProposed = true;
-    } else if (this.timestamp > this.currentGenerationStartTime + 13 * DAY) {
-      await this.inflationRootHashProposal.checkRootHashStatus;
-    }
+    return null;
   }
 
   async catchup() {
@@ -238,76 +181,11 @@ class Supervisor {
     ).timeStamp;
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
-    await this.getTxHistory(0);
+    // await this.getTxHistory(0);
   }
 
   async getTxHistory(fromBlock) {
-
-    const balanceChanges = {};
-
-    const filter = this.eco.filters.BaseValueTransfer();
-    filter.fromBlock = fromBlock;
-    filter.toBlock = this.currentGenerationBlock;
-
-    (await this.eco.queryFilter(filter)).forEach(async (event) => {
-
-      let params = event.args;
-      if (!toBN(params.from).eq(toBN('0')) && !toBN(params.value).eq(toBN('0'))) {
-        balanceChanges[params.from] = balanceChanges[params.from].sub(toBN(params.value));
-      }
-      if (balanceChanges[params.to] === undefined) {
-        balanceChanges[params.to] = toBN(params.value);
-      } else {
-        balanceChanges[params.to] = balanceChanges[params.to].add(toBN(params.value));
-      }
-    });
-
-    for (const [k, v] of Object.entries(balanceChanges)) {
-      if (k in this.cumulativeBalances) {
-        this.cumulativeBalances[k].add(v);
-      } else {
-        this.cumulativeBalances[k] = v;
-      }
-    }
-  }
-
-  async constructAccountSumMap() {
-    // creates 2 lists: alphabetic addresses and their corresponding cumulative balances
-    // ex: 
-    // {0xc, 2; 0xa, 1; 0xb, 3}
-    // --> [0xa, 0xb, 0xc], [1, 4, 6]
-
-    const items = [];
-    const accounts = [];
-    const sums = [];
-    // eslint-disable-next-line no-restricted-syntax
-    for (const i of this.cumulativeBalances) {
-      items.push(i);
-      accounts.push(i[0]);
-    }
-    accounts.sort((a, b) => Number(a - b));
-    items.sort((a, b) => Number(a[0] - b[0]));
-    const len = items.length;
-
-    // pad with 0s
-    const wantitems = 2 ** Math.ceil(Math.log2(len));
-    for (let i = len; i < wantitems; i += 1) {
-      items.push([0, 0]);
-    }
-
-    let sum = toBN(0);
-    for (let i = 0; i < len; i += 1) {
-      sums.push(sum);
-      sum = sum.add(items[i][1]);
-    }
-
-    const tree = arrayToTree(items);
-    tree.items = items.length - 1;
-    tree.total = sum
-
-    this.orderedAddresses = accounts;
-    this.orderedSums = sums;
-    this.tree = tree;
+    return null;
   }
 
   async processBlock() {
