@@ -7,7 +7,7 @@ const ethers = require('ethers');
 
 global.web3 = new Web3();
 let ethersProvider;
-let JsonrpcProviderString; //passes to supervisor so that it can connect to the same provider
+let JsonrpcProviderString; // passes to supervisor so that it can connect to the same provider
 
 const commandLineArgs = require('command-line-args');
 const fs = require('fs');
@@ -147,10 +147,10 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
-    JsonrpcProviderString = 'http://localhost:8545'
+    JsonrpcProviderString = 'http://localhost:8545';
     ethersProvider = new ethers.providers.JsonRpcProvider(JsonrpcProviderString);
   } else {
-    JsonrpcProviderString = options.webrpc || defaultRpc
+    JsonrpcProviderString = options.webrpc || defaultRpc;
     ethersProvider = new ethers.providers.JsonRpcProvider(options.webrpc || defaultRpc);
   }
 
@@ -285,12 +285,12 @@ async function startExpress() {
 async function supervise() {
   if (options.supervise) {
     if (options.selftest) {
-      const supervisor = new Supervisor(JsonrpcProviderString, options.policy);
-      await supervisor.processAllBlocks();
+      // const supervisor = new Supervisor(JsonrpcProviderString, options.policy);
+      // await supervisor.processAllBlocks();
     } else {
       console.log('storing supervisor inputs');
-      let content = JsonrpcProviderString + '\n' + options.policy;
-      fs.writeFile('tools/supervisorInputs.txt', content, e => {
+      const content = `${JsonrpcProviderString}\n${options.policy}`;
+      fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
         if (e) {
           console.log(e);
         }
