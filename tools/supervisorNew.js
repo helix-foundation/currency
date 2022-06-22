@@ -15,6 +15,7 @@ let provider;
 
 function getABI(contract) {
   try {
+    // TODO: replace this fs stuff with a more explicit import
     return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
   } catch (e) {
     if (global.artifacts === undefined) {
@@ -36,7 +37,6 @@ const PolicyVotesABI = getABI('PolicyVotes');
 const CurrencyGovernanceABI = getABI('CurrencyGovernance');
 const CurrencyTimerABI = getABI('CurrencyTimer');
 const InflationABI = getABI('Inflation');
-// const LockupContractABI = getABI('Lockup');
 const InflationRootHashProposalABI = getABI('InflationRootHashProposal');
 
 const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
@@ -65,13 +65,10 @@ class Supervisor {
 
     this.policy = new ethers.Contract(policyAddr, PolicyABI.abi, this.signer);
 
-    // some things only need to be redeployed in the event of a successful policy change
-    this.policyChange = true;
-
     this.cumulativeBalances = {};
 
     // generational info
-    this.currentGenerationBlock;
+    this.currentGenerationStartBlock;
     this.currentGenerationStartTime;
     this.nextGenerationStartTime;
   }
@@ -79,8 +76,8 @@ class Supervisor {
   async updateGeneration() {
     if (this.timestamp > this.nextGenerationStart) {
       await this.timedPolicies.incrementGeneration();
-      await this.getTxHistory(this.currentGenerationBlock);
-      this.currentGenerationBlock = this.blockNumber;
+      await this.getTxHistory(this.currentGenerationStartBlock);
+      this.currentGenerationStartBlock = this.blockNumber;
       this.currentGenerationStartTime = this.timestamp;
       this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
     }
@@ -90,32 +87,6 @@ class Supervisor {
     // called the block after generation update
     // fetches all the new contract addresses from the registry
 
-    // only need to fetch these if there is a policy change
-    if (this.policyChange) {
-      this.timedPolicies = new ethers.Contract(
-        await this.policy.policyFor(ID_TIMED_POLICIES),
-        TimedPoliciesABI.abi,
-        this.signer,
-      );
-      console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
-
-      this.currencyTimer = new ethers.Contract(
-        await this.policy.policyFor(ID_CURRENCY_TIMER),
-        CurrencyTimerABI.abi,
-        this.signer,
-      );
-      console.log(`currencyTimer address is: ${this.currencyTimer.address}`);
-
-      // TODO: this is giving the 0 address, investigate
-      this.eco = new ethers.Contract(
-        await this.policy.policyFor(ID_ECO),
-        ECO.abi,
-        this.signer,
-      );
-      console.log(`ECO address is: ${this.eco.address}`);
-    }
-
-    // need to fetch every generation
     this.policyProposals = new ethers.Contract(
       await this.policy.policyFor(ID_POLICY_PROPOSALS),
       PolicyProposalsABI.abi,
@@ -129,16 +100,18 @@ class Supervisor {
       this.signer,
     );
     console.log(`currencyGovernance address is: ${this.currencyGovernance.address}`);
+
     const filter = this.currencyTimer.filters.InflationStarted();
-    const events = this.currencyTimer.queryFilter(filter);
-
-
-    this.randomInflation = new ethers.Contract(
-      await this.currencyTimer.inflationImpl(),
-      InflationABI.abi,
-      this.signer,
-    );
+    const events = await this.currencyTimer.queryFilter(filter, this.currentGenerationStartBlock, "latest");
+    if (events.length > 0) {
+      const inflationAddress = events[events.length - 1].args[0];
+      this.randomInflation = new ethers.Contract(
+        inflationAddress,
+        InflationABI.abi,
+        this.signer,
+      );
     console.log(`randomInflation address is: ${this.randomInflation.address}`);
+    }
 
     this.inflationRootHashProposal = new ethers.Contract(
       await this.currencyTimer.inflationRootHashProposalImpl(),
@@ -163,25 +136,44 @@ class Supervisor {
   }
 
   async catchup() {
-    await this.updateContracts();
+    // set up supervisor
 
-    this.policyChange = false;
-    // set initial generation information
+    // these contracts only need be declared once, they are hosted on proxies
+    this.timedPolicies = new ethers.Contract(
+      await this.policy.policyFor(ID_TIMED_POLICIES),
+      TimedPoliciesABI.abi,
+      this.signer,
+    );
+    console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
 
-    // search for generation start
+    this.currencyTimer = new ethers.Contract(
+      await this.policy.policyFor(ID_CURRENCY_TIMER),
+      CurrencyTimerABI.abi,
+      this.signer,
+    );
+    console.log(`currencyTimer address is: ${this.currencyTimer.address}`);
+
+    this.eco = new ethers.Contract(
+      await this.policy.policyFor(ID_ECO),
+      ECO.abi,
+      this.signer,
+    );
+    console.log(`ECO address is: ${this.eco.address}`);
+
     const filter = this.timedPolicies.filters.PolicyDecisionStarted();
     filter.fromBlock = 0;
     filter.toBlock = "latest";
-
     const events = await this.timedPolicies.queryFilter(filter);
-
-    this.currentGenerationBlock = events[events.length - 1].blockNumber;
-    this.currentGenerationStartTime = await provider.getBlock(
-      this.currentGenerationBlock,
-    ).timeStamp;
+    this.currentGenerationStartBlock = events[events.length - 1].blockNumber;
+    const block = await provider.getBlock(this.currentGenerationStartBlock);
+    this.currentGenerationStartTime = block.timestamp;
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
-    // await this.getTxHistory(0);
+    console.log(`SUPERVISOR STARTED. CURRENT GENERATION STARTED AT TIME: ${this.currentGenerationStartTime} ON BLOCK: ${this.currentGenerationStartBlock}`);
+
+    await this.updateContracts();
+
+    await this.getTxHistory(0);
   }
 
   async getTxHistory(fromBlock) {
@@ -193,11 +185,21 @@ class Supervisor {
     const block = await provider.getBlock('latest');
     this.blockNumber = block.number;
     this.timestamp = block.timestamp;
+    const drift = Math.abs(Math.floor(Date.now() / 1000) - this.timestamp)
+    if (drift > 300) {
+      // pretty primitive logging here, but it'll work for now? 
+      const content = `current timestamp: ${Math.floor(Date.now() / 1000)}, block timestamp: ${this.timestamp}, drift: ${drift}` + '\n';
+      fs.writeFile('tools/timedrift.txt', content, e => {
+        if (e) {
+          console.log(e);
+        }
+      })
+    }
     if (this.timestamp > this.nextGenerationStartTime) {
       console.log(`current time is ${this.timeStamp}, nextGenerationStart is ${this.nextGenerationStartTime}, updating generation`);
       await this.updateGeneration();
-    } else if (this.currentGenerationBlock === this.blockNumber - 1) {
-      console.log(`current generation block is ${this.currentGenerationBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`);
+    } else if (this.currentGenerationStartBlock === this.blockNumber - 1) {
+      console.log(`current generation block is ${this.currentGenerationStartBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`);
       await this.updateContracts();
     } else {
       console.log('managing currency governance');
@@ -222,7 +224,6 @@ class Supervisor {
       _rootPolicy,
       signer,
     );
-    console.log('STARTED');
 
     await supervisor.catchup();
 

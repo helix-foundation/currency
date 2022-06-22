@@ -17,7 +17,6 @@ const { hdkey } = require('ethereumjs-wallet');
 const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
-// const { Supervisor } = require('./supervisorNew');
 
 const defaultRpc = 'ws://localhost:8545';
 
@@ -110,7 +109,12 @@ async function parseOptions() {
   }
 
   if (options.config) {
+    let s = false;
+    if (options.supervise) {
+      s = true;
+    }
     options = loadConfig(options.config);
+    options.supervise = s;
     console.log('loaded config from file, CLI options not used');
   }
 
@@ -284,6 +288,7 @@ async function supervise() {
       const supervisor = new Supervisor(JsonrpcProviderString, options.policy);
       await supervisor.processAllBlocks();
     } else {
+      console.log('storing supervisor inputs');
       let content = JsonrpcProviderString + '\n' + options.policy;
       fs.writeFile('tools/supervisorInputs.txt', content, e => {
         if (e) {
