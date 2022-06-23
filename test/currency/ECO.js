@@ -579,13 +579,13 @@ contract('ECO [@group=1]', (accounts) => {
 
     it('can get the internal votes for an account', async () => {
       const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
-      const votes = await eco.getVotes(from);
+      const votes = await eco.getVotingGons(from);
       expect(votes).to.be.eq.BN(inflationMult.mul(balance));
     });
 
     it('cannot get the internal votes for an account until the block requestsed has been mined', async () => {
       await expectRevert(
-        eco.getPastVotes(from, await time.latestBlock(), { from }),
+        eco.getPastVotingGons(from, await time.latestBlock(), { from }),
         'VoteCheckpoints: block not yet mined',
         eco.constructor,
       );

@@ -12,6 +12,7 @@ const {
 const ECOx = artifacts.require('ECOx');
 
 const { expectRevert, constants } = require('@openzeppelin/test-helpers');
+const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants');
 const util = require('../../tools/test/util');
 
 chai.use(bnChai(BN));
@@ -66,7 +67,7 @@ contract('ECOx', (accounts) => {
 
   it('fails if initialSupply == 0', async () => {
     await expectRevert(
-      ECOx.new(policy.address, charlie, 0),
+      ECOx.new(policy.address, charlie, 0, ZERO_ADDRESS),
       'initial supply not properly set',
     );
   });

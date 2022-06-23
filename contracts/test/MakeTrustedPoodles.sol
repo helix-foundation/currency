@@ -12,11 +12,15 @@ import "../../contracts/governance/Proposal.sol";
 contract MakeTrustedPoodles is Policy, Proposal {
     /** The address of the updated TrustedNodes contract
      */
-    address public newTrustedNodes;
+    address public immutable newTrustedNodes;
 
     /** The address of the updating contract
      */
-    address public implementationUpdatingTarget;
+    address public immutable implementationUpdatingTarget;
+
+    // The ID hash for the TrustedNodes contract
+    bytes32 public constant trustedNodesId =
+        keccak256(abi.encodePacked("TrustedNodes"));
 
     /** Instantiate a new proposal.
      *
@@ -53,18 +57,13 @@ contract MakeTrustedPoodles is Policy, Proposal {
      * @param _self The address of the proposal.
      */
     function enacted(address _self) public override {
-        bytes32 _trustedNodesId = keccak256(abi.encodePacked("TrustedNodes"));
-        address _trustedNodes = policyFor(_trustedNodesId);
-
-        address _newTrustedNodes = MakeTrustedPoodles(_self).newTrustedNodes();
-        address _implementationUpdatingTarget = MakeTrustedPoodles(_self)
-            .implementationUpdatingTarget();
+        address _trustedNodes = policyFor(trustedNodesId);
 
         Policed(_trustedNodes).policyCommand(
-            _implementationUpdatingTarget,
+            implementationUpdatingTarget,
             abi.encodeWithSignature(
                 "updateImplementation(address)",
-                _newTrustedNodes
+                newTrustedNodes
             )
         );
     }

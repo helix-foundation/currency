@@ -64,6 +64,7 @@ contract TrustedNodes is PolicedUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
+        // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();

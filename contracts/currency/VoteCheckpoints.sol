@@ -10,7 +10,7 @@ import "./ERC20.sol";
  *
  * This extension keeps a history (checkpoints) of each account's vote power. Vote power can be delegated either
  * by calling the {delegate} function directly, or by providing a signature to be used with {delegateBySig}. Voting
- * power can be queried through the public accessors {getVotes} and {getPastVotes}.
+ * power can be queried through the public accessors {getVotingGons} and {getPastVotingGons}.
  *
  * By default, token balance does not account for voting power. This makes transfers cheaper. The downside is that it
  * requires users to delegate to themselves in order to activate checkpoints and have their voting power tracked.
@@ -57,7 +57,7 @@ abstract contract VoteCheckpoints is ERC20 {
         return getPastTotalSupply(_blockNumber);
     }
 
-    /** Return historical balance at given generation.
+    /** Return historical voting balance (includes delegation) at given block number.
      *
      * If the latest block number for the account is before the requested
      * block then the most recent known balance is returned. Otherwise the
@@ -68,13 +68,13 @@ abstract contract VoteCheckpoints is ERC20 {
      *                        of. Must be less than or equal to the present
      *                        block number.
      */
-    function balanceAt(address _owner, uint256 _blockNumber)
+    function getPastVotes(address _owner, uint256 _blockNumber)
         public
         view
         virtual
         returns (uint256)
     {
-        return getPastVotes(_owner, _blockNumber);
+        return getPastVotingGons(_owner, _blockNumber);
     }
 
     /**
@@ -107,21 +107,21 @@ abstract contract VoteCheckpoints is ERC20 {
     }
 
     /**
-     * @dev Gets the current votes balance for `account`
+     * @dev Gets the current votes balance in gons for `account`
      */
-    function getVotes(address account) public view returns (uint256) {
+    function getVotingGons(address account) public view returns (uint256) {
         uint256 pos = checkpoints[account].length;
         return pos == 0 ? 0 : checkpoints[account][pos - 1].value;
     }
 
     /**
-     * @dev Retrieve the number of votes for `account` at the end of `blockNumber`.
+     * @dev Retrieve the number of votes in gons for `account` at the end of `blockNumber`.
      *
      * Requirements:
      *
      * - `blockNumber` must have been already mined
      */
-    function getPastVotes(address account, uint256 blockNumber)
+    function getPastVotingGons(address account, uint256 blockNumber)
         public
         view
         returns (uint256)
@@ -153,7 +153,6 @@ abstract contract VoteCheckpoints is ERC20 {
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
-    // CONSIDER: evaluate if we actually want binary search as opposed to just backwards iteration from present
     /**
      * @dev Lookup a value in a list of (sorted) checkpoints.
      */
@@ -162,7 +161,7 @@ abstract contract VoteCheckpoints is ERC20 {
         view
         returns (uint256)
     {
-        // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
+        // We run a binary search to look for the last checkpoint taken before `blockNumber`.
         //
         // During the loop, the index of the wanted checkpoint remains in the range [low-1, high).
         // With each iteration, either `low` or `high` is moved towards the middle of the range to maintain the invariant.
@@ -174,7 +173,6 @@ abstract contract VoteCheckpoints is ERC20 {
         // past the end of the array, so we technically don't find a checkpoint after `blockNumber`, but it works out
         // the same.
 
-        // Early exit if this is a request for the most recent value or we have no checkpoints
         uint256 ckptsLength = ckpts.length;
         if (ckptsLength == 0) return 0;
         Checkpoint memory lastCkpt = ckpts[ckptsLength - 1];
@@ -182,6 +180,7 @@ abstract contract VoteCheckpoints is ERC20 {
 
         uint256 high = ckptsLength;
         uint256 low = 0;
+
         while (low < high) {
             uint256 mid = low + ((high - low) >> 1);
             if (ckpts[mid].fromBlock > blockNumber) {

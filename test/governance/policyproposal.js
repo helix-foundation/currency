@@ -25,6 +25,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
   let counter = 0;
   let policy;
   let eco;
+  let ecox;
   let initInflation;
   let timedPolicies;
 
@@ -32,6 +33,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
     ({
       policy,
       eco,
+      ecox,
       initInflation,
       timedPolicies,
     } = await util.deployPolicy(accounts[counter]));
@@ -48,8 +50,10 @@ contract('PolicyProposals [@group=7]', (accounts) => {
     const policySetter = await SimplePolicySetter.new();
     const implementation = await PolicyProposals.new(
       policy.address,
-      (await PolicyVotes.new(policy.address)).address,
+      (await PolicyVotes.new(policy.address, eco.address, ecox.address)).address,
       policySetter.address,
+      eco.address,
+      ecox.address,
     );
     const cloner = await Cloner.new(implementation.address);
     const policyProposalsClone = await PolicyProposals.at(await cloner.clone());
@@ -651,8 +655,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         const policySetter = await SimplePolicySetter.new();
         policyProposals = await PolicyProposals.new(
           policy.address,
-          (await PolicyVotes.new(policy.address)).address,
+          (await PolicyVotes.new(
+            policy.address,
+            eco.address,
+            ecox.address,
+          )).address,
           policySetter.address,
+          eco.address,
+          ecox.address,
         );
       });
     });

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "../utils/StringPacker.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -29,6 +29,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
+// internal _name and _symbol are stored immutable as bytes32 and unpacked via StringPacker
 contract ERC20 {
     mapping(address => uint256) internal _balances;
 
@@ -36,8 +37,8 @@ contract ERC20 {
 
     uint256 internal _totalSupply;
 
-    string internal _name;
-    string internal _symbol;
+    bytes32 internal immutable _name;
+    bytes32 internal immutable _symbol;
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -67,20 +68,15 @@ contract ERC20 {
      * construction.
      */
     constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
-    }
-
-    function copyTokenMetadata(address _target) internal {
-        _name = IERC20Metadata(_target).name();
-        _symbol = IERC20Metadata(_target).symbol();
+        _name = StringPacker.pack(name_);
+        _symbol = StringPacker.pack(symbol_);
     }
 
     /**
      * @dev Returns the name of the token.
      */
     function name() public view virtual returns (string memory) {
-        return _name;
+        return StringPacker.unpack(_name);
     }
 
     /**
@@ -88,7 +84,7 @@ contract ERC20 {
      * name.
      */
     function symbol() public view virtual returns (string memory) {
-        return _symbol;
+        return StringPacker.unpack(_symbol);
     }
 
     /**

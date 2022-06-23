@@ -11,10 +11,10 @@ import "../../contracts/governance/TrustedNodes.sol";
  */
 contract SingleTrusteeReplacement is Policy, Proposal {
     // the trustee that will be distrusted
-    address public oldTrustee;
+    address public immutable oldTrustee;
 
     // the trustee that will be trusted
-    address public newTrustee;
+    address public immutable newTrustee;
 
     /** Instantiate a new proposal.
      *
@@ -55,10 +55,7 @@ contract SingleTrusteeReplacement is Policy, Proposal {
         bytes32 _trustedNodesId = keccak256(abi.encodePacked("TrustedNodes"));
         TrustedNodes _trustedNodes = TrustedNodes(policyFor(_trustedNodesId));
 
-        address _oldTrustee = SingleTrusteeReplacement(_self).oldTrustee();
-        address _newTrustee = SingleTrusteeReplacement(_self).newTrustee();
-
-        _trustedNodes.distrust(_oldTrustee);
-        _trustedNodes.trust(_newTrustee);
+        _trustedNodes.distrust(oldTrustee);
+        _trustedNodes.trust(newTrustee);
     }
 }

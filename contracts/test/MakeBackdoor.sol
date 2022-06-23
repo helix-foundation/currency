@@ -11,7 +11,7 @@ import "../../contracts/governance/Proposal.sol";
 contract MakeBackdoor is Policy, Proposal {
     /** The address of the contract to grant backdoor privileges to.
      */
-    address public who;
+    address public immutable who;
 
     /** Instantiate a new proposal.
      *
@@ -46,8 +46,7 @@ contract MakeBackdoor is Policy, Proposal {
      * @param _self The address of the proposal instance.
      */
     function enacted(address _self) public override {
-        address _who = MakeBackdoor(_self).who();
         setters.push("Backdoor");
-        setInterfaceImplementation("Backdoor", _who);
+        setInterfaceImplementation("Backdoor", who);
     }
 }

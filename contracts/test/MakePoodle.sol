@@ -11,11 +11,15 @@ import "../../contracts/governance/Proposal.sol";
 contract MakePoodle is Policy, Proposal {
     /** The address of the updated CurrencyGovernance contract
      */
-    address public newGovernance;
+    address public immutable newGovernance;
 
     /** The address of the switcher contract for CurrencyTimer
      */
-    address public switcherCurrencyTimer;
+    address public immutable switcherCurrencyTimer;
+
+    // The ID hash for CurrencyTimer
+    bytes32 public constant currencyTimerId =
+        keccak256(abi.encodePacked("CurrencyTimer"));
 
     /** Instantiate a new proposal.
      *
@@ -51,16 +55,11 @@ contract MakePoodle is Policy, Proposal {
      * @param _self The address of the proposal.
      */
     function enacted(address _self) public override {
-        bytes32 _currencyTimerId = keccak256(abi.encodePacked("CurrencyTimer"));
-        address _currencyTimer = policyFor(_currencyTimerId);
-
-        address _newGovernance = MakePoodle(_self).newGovernance();
-        address _switcherCurrencyTimer = MakePoodle(_self)
-            .switcherCurrencyTimer();
+        address _currencyTimer = policyFor(currencyTimerId);
 
         Policed(_currencyTimer).policyCommand(
-            _switcherCurrencyTimer,
-            abi.encodeWithSignature("setBordaImpl(address)", _newGovernance)
+            switcherCurrencyTimer,
+            abi.encodeWithSignature("setBordaImpl(address)", newGovernance)
         );
     }
 }

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../currency/VoteCheckpoints.sol";
 import "../currency/ECOx.sol";
@@ -27,21 +26,26 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
      */
     event Withdrawal(address indexed destination, uint256 amount);
 
+    // the ECOx contract address
+    IERC20 public immutable ecoXToken;
+
     // marks each address's ability to withdraw, maps from address to last voted generation
     mapping(address => uint256) public votingTracker;
 
     uint256 public currentGeneration;
 
-    constructor(address _policy)
+    constructor(address _policy, address _ecoXAddr)
         VoteCheckpoints("S-Eco-X", "sECOx")
         PolicedUtils(_policy)
-    {}
+    {
+        ecoXToken = IERC20(_ecoXAddr);
+    }
 
     function deposit(uint256 _amount) external {
         address _source = msg.sender;
 
         require(
-            getToken().transferFrom(_source, address(this), _amount),
+            ecoXToken.transferFrom(_source, address(this), _amount),
             "Transfer failed"
         );
 
@@ -61,7 +65,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
 
         _burn(_destination, _amount);
 
-        require(getToken().transfer(_destination, _amount), "Transfer Failed");
+        require(ecoXToken.transfer(_destination, _amount), "Transfer Failed");
 
         emit Withdrawal(_destination, _amount);
     }
@@ -71,7 +75,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
         view
         returns (uint256)
     {
-        return getPastVotes(_voter, _blockNumber);
+        return getPastVotingGons(_voter, _blockNumber);
     }
 
     function totalVotingECOx(uint256 _blockNumber)
@@ -94,7 +98,6 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        copyTokenMetadata(_self);
         currentGeneration = IGeneration(policyFor(ID_TIMED_POLICIES))
             .generation();
     }
@@ -115,9 +118,5 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
         uint256
     ) public pure override returns (bool) {
         revert("sECOx is non-transferrable");
-    }
-
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ECOX));
     }
 }

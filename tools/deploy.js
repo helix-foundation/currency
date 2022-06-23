@@ -67,8 +67,18 @@ async function parseFlags(options) {
   // we currently require 6 proxies for deployment
   options.numPlaceholders = '6';
 
+  if (!options.gasMultiplier) {
+    options.gasMultiplier = 5;
+  }
+
   if (!options.gasPrice) {
-    options.gasPrice = web3.utils.toBN(await web3.eth.getGasPrice()).muln(2);
+    options.gasPrice = `0x${web3.utils.toBN(await web3.eth.getGasPrice()).muln(options.gasMultiplier).toString(16)}`;
+  } else {
+    options.gasPrice = web3.utils.toBN(options.gasPrice);
+  }
+
+  if (!options.randomVDFDifficulty) {
+    options.randomVDFDifficulty = 3;
   }
 
   if (options.production) {
@@ -103,6 +113,7 @@ async function parseFlags(options) {
 
   // set CI parameters for automated tests
   if (options.test) {
+    options.randomVDFDifficulty = 3;
     options.initialECOSupply = '0';
     options.initialECOAddr = [];
     options.initialECOAmount = [];
@@ -321,6 +332,7 @@ async function deployStage2(options) {
         options.policyProxyAddress,
         ecoxInit.options.address,
         options.initialECOxSupply,
+        ecoProxyAddress,
       ],
     })
     .send({
@@ -448,6 +460,10 @@ async function deployStage3(options) {
   const identifiers = [];
   const addresses = [];
 
+  const ecoProxyAddress = options.bootstrap.placeholders[1];
+  const ecoxProxyAddress = options.bootstrap.placeholders[2];
+  const currencyTimerProxyAddress = options.bootstrap.placeholders[3];
+
   if (options.verbose) {
     console.log('deploying policy initialization contract...');
   }
@@ -501,6 +517,7 @@ async function deployStage3(options) {
       data: rootHashProposalABI.bytecode,
       arguments: [
         options.policyProxy.options.address,
+        ecoProxyAddress,
       ],
     })
     .send({
@@ -533,7 +550,11 @@ async function deployStage3(options) {
   )
     .deploy({
       data: LockupContractABI.bytecode,
-      arguments: [options.policyProxy.options.address],
+      arguments: [
+        options.policyProxy.options.address,
+        ecoProxyAddress,
+        currencyTimerProxyAddress,
+      ],
     })
     .send({
       from: options.account,
@@ -549,7 +570,9 @@ async function deployStage3(options) {
       arguments: [
         options.policyProxy.options.address,
         options.vdfContract.options.address,
-        3,
+        options.randomVDFDifficulty,
+        ecoProxyAddress,
+        currencyTimerProxyAddress,
       ],
     })
     .send({
@@ -581,7 +604,11 @@ async function deployStage3(options) {
   )
     .deploy({
       data: PolicyVotesContractABI.bytecode,
-      arguments: [options.policyProxy.options.address],
+      arguments: [
+        options.policyProxy.options.address,
+        ecoProxyAddress,
+        ecoxProxyAddress,
+      ],
     })
     .send({
       from: options.account,
@@ -613,6 +640,8 @@ async function deployStage3(options) {
         options.policyProxy.options.address,
         options.policyVotesContract.options.address,
         options.simplePolicySetterContract.options.address,
+        ecoProxyAddress,
+        ecoxProxyAddress,
       ],
     })
     .send({
@@ -628,7 +657,10 @@ async function deployStage3(options) {
   )
     .deploy({
       data: ECOxLockupContractABI.bytecode,
-      arguments: [options.policyProxy.options.address],
+      arguments: [
+        options.policyProxy.options.address,
+        ecoxProxyAddress,
+      ],
     })
     .send({
       from: options.account,
@@ -659,6 +691,7 @@ async function deployStage3(options) {
         options.depositCertificatesContract.options.address,
         options.simplePolicySetterContract.options.address,
         options.rootHashProposal.options.address,
+        ecoProxyAddress,
       ],
     })
     .send({
@@ -669,7 +702,6 @@ async function deployStage3(options) {
   options.currencyTimerImpl = currencyTimerImpl;
 
   // Update the proxy targets to the implementation contract addresses
-  const currencyTimerProxyAddress = options.bootstrap.placeholders[3];
   if (options.verbose) {
     console.log(
       'binding proxy 3 to the CurrencyTimer implementation contract...',

@@ -143,8 +143,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
     constructor(
         address _policy,
         address _policyvotes,
-        address _simplepolicy
-    ) VotingPower(_policy) {
+        address _simplepolicy,
+        address _ecoAddr,
+        address _ecoXAddr
+    ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {
         policyVotesImpl = _policyvotes;
         simplePolicyImpl = _simplepolicy;
     }
@@ -159,6 +161,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
 
+        // implementation addresses are left as mutable for easier governance
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
         simplePolicyImpl = PolicyProposals(_self).simplePolicyImpl();
 
@@ -207,7 +210,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "A proposal may only be registered once"
         );
         require(
-            getToken().transferFrom(msg.sender, address(this), COST_REGISTER),
+            ecoToken.transferFrom(msg.sender, address(this), COST_REGISTER),
             "The token cost of registration must be approved to transfer prior to calling registerProposal"
         );
 
@@ -348,10 +351,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         delete proposals[_prop];
         totalproposals = totalproposals - 1;
 
-        require(
-            getToken().transfer(receiver, REFUND_IF_LOST),
-            "Transfer Failed"
-        );
+        require(ecoToken.transfer(receiver, REFUND_IF_LOST), "Transfer Failed");
 
         emit ProposalRefunded(receiver);
     }
@@ -370,17 +370,11 @@ contract PolicyProposals is VotingPower, TimeUtils {
         Policy(policy).removeSelf(ID_POLICY_PROPOSALS);
 
         require(
-            getToken().transfer(
+            ecoToken.transfer(
                 address(uint160(policy)),
-                getToken().balanceOf(address(this))
+                ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"
         );
-    }
-
-    /** Get the associated ERC20 token address.
-     */
-    function getToken() private view returns (IERC20) {
-        return IERC20(policyFor(ID_ECO));
     }
 }

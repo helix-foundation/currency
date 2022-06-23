@@ -52,7 +52,7 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     bytes32 public seed;
 
-    /** Difficulty of VDF for random process */
+    /** Difficulty of VDF for random process. This is left mutable for easier governance */
     uint256 public randomVDFDifficulty;
 
     /** Timestamp to start claim period from */
@@ -64,6 +64,12 @@ contract Inflation is PolicedUtils, TimeUtils {
 
     /** The base VDF implementation */
     VDFVerifier public vdfVerifier;
+
+    // the ECO token address
+    IECO public immutable ecoToken;
+
+    // the CurrencyTimer address
+    CurrencyTimer public immutable currencyTimer;
 
     /** Fired when a user claims their reward */
     event Claimed(address indexed who, uint256 sequence);
@@ -79,10 +85,14 @@ contract Inflation is PolicedUtils, TimeUtils {
     constructor(
         address _policy,
         VDFVerifier _vdfVerifierImpl,
-        uint256 _randomDifficulty
+        uint256 _randomDifficulty,
+        address _ecoAddr,
+        address _timerAddr
     ) PolicedUtils(_policy) {
         vdfVerifier = _vdfVerifierImpl;
         randomVDFDifficulty = _randomDifficulty;
+        ecoToken = IECO(_ecoAddr);
+        currencyTimer = CurrencyTimer(_timerAddr);
     }
 
     /** Clean up the inflation contract.
@@ -106,9 +116,9 @@ contract Inflation is PolicedUtils, TimeUtils {
         }
 
         require(
-            getToken().transfer(
+            ecoToken.transfer(
                 address(uint160(policy)),
-                getToken().balanceOf(address(this))
+                ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"
         );
@@ -123,7 +133,7 @@ contract Inflation is PolicedUtils, TimeUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        generation = getTimer().currentGeneration() - 1;
+        generation = currencyTimer.currentGeneration() - 1;
         blockNumber = block.number;
         vdfVerifier = VDFVerifier(
             VDFVerifier(Inflation(_self).vdfVerifier()).clone()
@@ -180,7 +190,7 @@ contract Inflation is PolicedUtils, TimeUtils {
             "Contract must have rewards"
         );
         require(
-            getToken().balanceOf(address(this)) >= _numRecipients * _reward,
+            ecoToken.balanceOf(address(this)) >= _numRecipients * _reward,
             "The contract must have a token balance at least the total rewards"
         );
         require(numRecipients == 0, "The sale can only be started once");
@@ -246,7 +256,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         );
 
         InflationRootHashProposal rootHashContract = InflationRootHashProposal(
-            getTimer().rootHashAddressPerGeneration(generation)
+            currencyTimer.rootHashAddressPerGeneration(generation)
         );
 
         require(
@@ -266,7 +276,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         ) % rootHashContract.acceptedTotalSum();
 
         require(
-            claimable < getToken().balanceAt(_who, blockNumber) + _sum,
+            claimable < ecoToken.getPastVotes(_who, blockNumber) + _sum,
             "The provided address cannot claim this reward."
         );
         require(
@@ -274,7 +284,7 @@ contract Inflation is PolicedUtils, TimeUtils {
             "The provided address cannot claim this reward."
         );
 
-        require(getToken().transfer(_who, reward), "Transfer Failed");
+        require(ecoToken.transfer(_who, reward), "Transfer Failed");
 
         emit Claimed(_who, _sequence);
     }
@@ -292,17 +302,5 @@ contract Inflation is PolicedUtils, TimeUtils {
         uint256 _index
     ) external {
         claimFor(msg.sender, _sequence, _proof, _sum, _index);
-    }
-
-    /** Get the token address.
-     */
-    function getToken() private view returns (IECO) {
-        return IECO(policyFor(ID_ECO));
-    }
-
-    /** Get the currency timer address.
-     */
-    function getTimer() private view returns (CurrencyTimer) {
-        return CurrencyTimer(policyFor(ID_CURRENCY_TIMER));
     }
 }

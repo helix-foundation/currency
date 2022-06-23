@@ -89,8 +89,14 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     const policySetter = await SimplePolicySetter.new();
     const implementation = await PolicyProposals.new(
       policy.address,
-      (await PolicyVotes.new(policy.address)).address,
+      (await PolicyVotes.new(
+        policy.address,
+        eco.address,
+        ecox.address,
+      )).address,
       policySetter.address,
+      eco.address,
+      ecox.address,
     );
     const cloner = await Cloner.new(implementation.address);
     const policyProposalsClone = await PolicyProposals.at(await cloner.clone());
@@ -143,7 +149,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
       });
 
       it('Can get a past balance', async () => {
-        const pastBalance = await ecoXLockup.balanceAt(alice, blockNumber);
+        const pastBalance = await ecoXLockup.getPastVotes(alice, blockNumber);
         expect(pastBalance).to.be.eq.BN(one.muln(10));
       });
     });

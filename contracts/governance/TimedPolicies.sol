@@ -61,8 +61,10 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
 
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
+        // implementations are left mutable for easier governance
         policyProposalImpl = TimedPolicies(_self).policyProposalImpl();
         simplePolicyImpl = TimedPolicies(_self).simplePolicyImpl();
+
         internalGeneration = TimedPolicies(_self).internalGeneration();
         bytes32[] memory hashes = TimedPolicies(_self).getNotificationHashes();
         for (uint256 i = 0; i < hashes.length; ++i) {

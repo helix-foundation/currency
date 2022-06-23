@@ -17,7 +17,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer {
      * This address can be used for ERC1820 lookup of other components, ERC1820
      * lookup of role policies, and interaction with the policy hierarchy.
      */
-    address public policy;
+    address public immutable policy;
 
     /** Restrict method access to the root policy instance only.
      */
@@ -68,7 +68,6 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer {
         onlyConstruction
     {
         super.initialize(_self);
-        policy = Policed(_self).policy();
     }
 
     /** Execute code as indicated by the managing policy contract
