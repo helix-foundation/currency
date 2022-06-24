@@ -3,8 +3,10 @@
 /* eslint-disable no-console */
 
 const Web3 = require('web3');
+const ethers = require('ethers');
 
 global.web3 = new Web3();
+let ethersProvider;
 
 const commandLineArgs = require('command-line-args');
 const fs = require('fs');
@@ -14,9 +16,8 @@ const { hdkey } = require('ethereumjs-wallet');
 const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
-const { Supervisor } = require('./supervisor');
 
-const defaultRpc = 'ws://localhost:8545';
+const defaultRpc = 'http://localhost:8545';
 
 function reqArtifact(contract) {
   return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
@@ -111,21 +112,14 @@ async function parseOptions() {
   }
 
   if (options.config) {
+    const s = options.supervise;
     options = loadConfig(options.config);
+    options.supervise = s;
     console.log('loaded config from file, CLI options not used');
   }
 
   if ((!options.ganache) === (!options.webrpc)) {
     throw new Error('Must specify exactly one of --ganache and --webrpc');
-  }
-  if (options.ganache) {
-    if (options.supervise && !options.deploy) {
-      throw new Error('For ganache, must specify --deploy when using --supervise');
-    }
-  } else if (options.supervise) {
-    if ((!options.erc20) === (!options.deploy)) {
-      throw new Error('For supervise, must specify either --deploy or --erc20');
-    }
   }
 }
 
@@ -135,10 +129,13 @@ async function initWeb3() {
     let serverPort;
     if (options.deployTokens) {
       serverPort = 8545;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000 });
+      options.ganacheServer = ganache.server({
+        default_balance_ether: 1000000,
+        blockTime: 0.1,
+      });
     } else if (options.deployGovernance) {
       serverPort = 8546;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, fork: `${serverAddr}:${serverPort - 1}` });
+      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, blockTime: 0.1, fork: `${serverAddr}:${serverPort - 1}` });
     }
     /* eslint-disable global-require, import/no-extraneous-dependencies */
     options.ganacheServer.listen(serverPort, serverAddr, (err) => {
@@ -150,8 +147,9 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
+    ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc);
   } else {
-    global.web3 = new Web3(options.webrpc || defaultRpc);
+    ethersProvider = new ethers.providers.JsonRpcProvider(options.webrpc || defaultRpc);
   }
 
   const sync = await web3.eth.isSyncing();
@@ -164,8 +162,11 @@ async function initUsers() {
   let account;
   let chumpAccount;
   if (!options.production) {
-    [chumpAccount] = await web3.eth.getAccounts();
+    [chumpAccount] = await ethersProvider.listAccounts();
     options.chumpAccount = chumpAccount;
+    console.log(`chump account is ${options.chumpAccount}`);
+
+    options.signer = await ethersProvider.getSigner();
   }
 
   if (options.from) {
@@ -195,7 +196,9 @@ async function initUsers() {
     account = a.address;
   }
 
-  const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
+  // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
+  const balance = await ethersProvider.getBalance(account);
+
   if (balance < 1) {
     console.log(`Deployment account ${account} should have at least 1 Ether, has only ${balance}`);
     const chumpBalance = web3.utils.fromWei(await web3.eth.getBalance(chumpAccount), 'ether');
@@ -280,12 +283,20 @@ async function startExpress() {
 async function supervise() {
   if (options.supervise) {
     if (options.selftest) {
-      const supervisor = new Supervisor(options.policy, options.account);
-      await supervisor.processAllBlocks();
+      // const supervisor = new Supervisor(defaultRpc, options.policy);
+      // await supervisor.processAllBlocks();
     } else {
-      await Supervisor.start({
-        root: options.policy,
+      console.log('storing supervisor inputs');
+      const content = `${defaultRpc}\n${options.policy}`;
+      fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
+        if (e) {
+          console.log(e);
+        }
       });
+      // await Supervisor.start(
+      //   defaultRpc,
+      //   options.policy,
+      // );
     }
   }
 }
