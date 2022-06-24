@@ -181,7 +181,7 @@ class Supervisor {
     this.timestamp = block.timestamp;
     const drift = Math.abs(Math.floor(Date.now() / 1000) - this.timestamp);
     if (drift > 300) {
-      // pretty primitive logging here, but it'll work for now?
+      // pretty primitive logging here, but it'll work for now
       const content = `current timestamp: ${Math.floor(Date.now() / 1000)}, block timestamp: ${this.timestamp}, drift: ${drift}`;
       fs.writeFile('tools/timedrift.txt', content, (e) => {
         if (e) {
@@ -230,13 +230,13 @@ class Supervisor {
 
 let args = fs.readFileSync('tools/supervisorInputs.txt');
 args = args.toString().split('\n');
-const jsonrpcProviderString = args[0];
+const rpc = args[0];
 const rootPolicy = args[1];
 
-console.log(jsonrpcProviderString);
+console.log(rpc);
 console.log(rootPolicy);
 
-Supervisor.start(jsonrpcProviderString, rootPolicy);
+Supervisor.start(rpc, rootPolicy);
 
 module.exports = {
   Supervisor,

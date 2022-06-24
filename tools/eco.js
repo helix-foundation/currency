@@ -7,7 +7,6 @@ const ethers = require('ethers');
 
 global.web3 = new Web3();
 let ethersProvider;
-let JsonrpcProviderString; // passes to supervisor so that it can connect to the same provider
 
 const commandLineArgs = require('command-line-args');
 const fs = require('fs');
@@ -18,7 +17,7 @@ const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
 
-const defaultRpc = 'ws://localhost:8545';
+let defaultRpc = 'ws://localhost:8545';
 
 function reqArtifact(contract) {
   return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
@@ -113,10 +112,7 @@ async function parseOptions() {
   }
 
   if (options.config) {
-    let s = false;
-    if (options.supervise) {
-      s = true;
-    }
+    const s = options.supervise;
     options = loadConfig(options.config);
     options.supervise = s;
     console.log('loaded config from file, CLI options not used');
@@ -151,10 +147,10 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
-    JsonrpcProviderString = 'http://localhost:8545';
-    ethersProvider = new ethers.providers.JsonRpcProvider(JsonrpcProviderString);
+    defaultRpc = 'http://localhost:8545';
+    ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc);
   } else {
-    JsonrpcProviderString = options.webrpc || defaultRpc;
+    defaultRpc = options.webrpc || defaultRpc;
     ethersProvider = new ethers.providers.JsonRpcProvider(options.webrpc || defaultRpc);
   }
 
@@ -289,18 +285,18 @@ async function startExpress() {
 async function supervise() {
   if (options.supervise) {
     if (options.selftest) {
-      // const supervisor = new Supervisor(JsonrpcProviderString, options.policy);
+      // const supervisor = new Supervisor(defaultRpc, options.policy);
       // await supervisor.processAllBlocks();
     } else {
       console.log('storing supervisor inputs');
-      const content = `${JsonrpcProviderString}\n${options.policy}`;
+      const content = `${defaultRpc}\n${options.policy}`;
       fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
         if (e) {
           console.log(e);
         }
       });
       // await Supervisor.start(
-      //   JsonrpcProviderString,
+      //   defaultRpc,
       //   options.policy,
       // );
     }
