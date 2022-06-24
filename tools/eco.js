@@ -17,7 +17,7 @@ const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
 
-let defaultRpc = 'ws://localhost:8545';
+let defaultRpc = 'http://localhost:8545';
 
 function reqArtifact(contract) {
   return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
@@ -147,7 +147,6 @@ async function initWeb3() {
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`);
     });
     global.web3 = new Web3(options.ganacheServer.provider);
-    defaultRpc = 'http://localhost:8545';
     ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc);
   } else {
     defaultRpc = options.webrpc || defaultRpc;

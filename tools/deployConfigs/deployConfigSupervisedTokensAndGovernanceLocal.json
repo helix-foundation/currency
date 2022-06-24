@@ -1,0 +1,38 @@
+{
+    "production": false,
+    "verbose": true,
+    "ganache": true,
+    "supervise": true,
+    "deployTokens": true,
+    "deployGovernance": true,
+    "initialECO": [
+      {
+        "address": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
+        "amount": "1000"
+      },
+      {
+        "address": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
+        "amount": "2000"
+      },
+      {
+        "address": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
+        "amount": "3000"
+      }
+    ],
+    "initialECOx": [
+      {
+        "address": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
+        "amount": "10"
+      },
+      {
+        "address": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
+        "amount": "20"
+      },
+      {
+        "address": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
+        "amount": "30"
+      }
+    ],
+    "trustednodes": ["0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78", "0x5b3F85f21E22D93B37767a687C096b24914C24fc", "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6", "0x5DdDE902065C0217bC871D19dA1aA7dAae27C7A5", "0x4F298Bdf5745DEB8CD6B4D094a0A5dBbC8E4764f", "0x6BFA48796115DFBA3005d5e14A0d1776cA4143c2", "0xe348d01c6408B13912823f31D99269fD8DBB0Dd5"],
+    "trustedvotereward": "1000"
+  }
