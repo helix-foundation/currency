@@ -17,7 +17,7 @@ const express = require('express');
 const ganache = require('ganache-cli');
 const { deployTokens, deployGovernance } = require('./deploy');
 
-let defaultRpc = 'http://localhost:8545';
+const defaultRpc = 'http://localhost:8545';
 
 function reqArtifact(contract) {
   return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
