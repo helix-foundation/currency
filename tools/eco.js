@@ -149,7 +149,6 @@ async function initWeb3() {
     global.web3 = new Web3(options.ganacheServer.provider);
     ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc);
   } else {
-    defaultRpc = options.webrpc || defaultRpc;
     ethersProvider = new ethers.providers.JsonRpcProvider(options.webrpc || defaultRpc);
   }
 
