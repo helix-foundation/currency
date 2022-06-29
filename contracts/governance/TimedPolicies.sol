@@ -66,12 +66,13 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     }
 
     function incrementGeneration() external {
+        uint256 time = getTime();
         require(
-            getTime() > nextGenerationStart,
+            time > nextGenerationStart,
             "Cannot update the generation counter so soon; please try later"
         );
 
-        nextGenerationStart = getTime() + GENERATION_DURATION;
+        nextGenerationStart = time + GENERATION_DURATION;
         internalGeneration++;
 
         for (uint256 i = 0; i < notificationHashes.length; ++i) {
