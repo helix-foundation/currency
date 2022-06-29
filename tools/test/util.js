@@ -15,7 +15,6 @@ const TrustedNodes = artifacts.require('TrustedNodes');
 const EcoFaucet = artifacts.require('EcoFaucet');
 const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 const CurrencyTimer = artifacts.require('CurrencyTimer');
-const SimplePolicySetter = artifacts.require('SimplePolicySetter');
 const Lockup = artifacts.require('Lockup');
 const PolicyVotes = artifacts.require('PolicyVotes');
 const PolicyProposals = artifacts.require('PolicyProposals');

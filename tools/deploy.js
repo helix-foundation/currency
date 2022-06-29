@@ -52,7 +52,6 @@ const LockupContractABI = require(`../${importPath}/contracts/Lockup.json`);
 const PolicyProposalContractABI = require(`../${importPath}/contracts/PolicyProposals.json`);
 const PolicyVotesContractABI = require(`../${importPath}/contracts/PolicyVotes.json`);
 const ECOxLockupContractABI = require(`../${importPath}/contracts/ECOxLockup.json`);
-const SimplePolicySetterABI = require(`../${importPath}/contracts/SimplePolicySetter.json`);
 const ECOABI = require(`../${importPath}/contracts/ECO.json`);
 // const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
 const EcoFaucetABI = require(`../${importPath}/contracts/EcoFaucet.json`);
@@ -441,7 +440,7 @@ async function deployStage2(options) {
 // Template contracts deployed in this stage are: InflationRootHashProposal, Lockup,
 // Inflation, CurrencyGovernance, PolicyProposals, and PolicyVotes
 //
-// Helper contracts deployed here are: VDFVerifier, ECOxLockup, and SimplePolicySetter
+// Helper contracts deployed here are: VDFVerifier, and ECOxLockup
 //
 // The test-only contracts EcoFaucet and EcoTestCleanup are deployed here if the deploy
 // is not a production-type deploy (i.e. for CI and local testing).
@@ -617,20 +616,6 @@ async function deployStage3(options) {
     });
   options.policyVotesContract = policyVotesContract;
 
-  const simplePolicySetterContract = await new web3.eth.Contract(
-    SimplePolicySetterABI.abi,
-  )
-    .deploy({
-      data: SimplePolicySetterABI.bytecode,
-      arguments: [],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    });
-  options.simplePolicySetterContract = simplePolicySetterContract;
-
   const policyProposalContract = await new web3.eth.Contract(
     PolicyProposalContractABI.abi,
   )
@@ -639,7 +624,6 @@ async function deployStage3(options) {
       arguments: [
         options.policyProxy.options.address,
         options.policyVotesContract.options.address,
-        options.simplePolicySetterContract.options.address,
         ecoProxyAddress,
         ecoxProxyAddress,
       ],
@@ -689,7 +673,6 @@ async function deployStage3(options) {
         options.governanceContract.options.address,
         options.inflationContract.options.address,
         options.depositCertificatesContract.options.address,
-        options.simplePolicySetterContract.options.address,
         options.rootHashProposal.options.address,
         ecoProxyAddress,
       ],
@@ -741,7 +724,6 @@ async function deployStage3(options) {
       arguments: [
         options.policyProxy.options.address,
         options.policyProposalContract.options.address,
-        options.simplePolicySetterContract.options.address,
         [
           ecoHash,
           currencyTimerHash,

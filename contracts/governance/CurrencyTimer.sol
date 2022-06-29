@@ -5,7 +5,6 @@ import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "./PolicyProposals.sol";
 import "./CurrencyGovernance.sol";
-import "./SimplePolicySetter.sol";
 import "../currency/InflationRootHashProposal.sol";
 import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
@@ -27,8 +26,6 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
 
     address public inflationImpl;
     address public lockupImpl;
-
-    address public simplePolicyImpl;
 
     address public inflationRootHashProposalImpl;
 
@@ -59,14 +56,12 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         address _borda,
         address _inflation,
         address _lockup,
-        address _simplepolicy,
         address _inflationRootHashProposal,
         address _ecoAddr
     ) PolicedUtils(_policy) {
         bordaImpl = _borda;
         inflationImpl = _inflation;
         lockupImpl = _lockup;
-        simplePolicyImpl = _simplepolicy;
         inflationRootHashProposalImpl = _inflationRootHashProposal;
         ecoToken = IECO(_ecoAddr);
     }
@@ -78,7 +73,6 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         bordaImpl = CurrencyTimer(_self).bordaImpl();
         inflationImpl = CurrencyTimer(_self).inflationImpl();
         lockupImpl = CurrencyTimer(_self).lockupImpl();
-        simplePolicyImpl = CurrencyTimer(_self).simplePolicyImpl();
         inflationRootHashProposalImpl = CurrencyTimer(_self)
             .inflationRootHashProposalImpl();
     }
@@ -115,13 +109,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
 
         {
             address _clone = CurrencyGovernance(bordaImpl).clone();
-            SimplePolicySetter sps = SimplePolicySetter(
-                SimplePolicySetter(simplePolicyImpl).clone(
-                    ID_CURRENCY_GOVERNANCE,
-                    _clone
-                )
-            );
-            Policy(policy).internalCommand(address(sps));
+            Policy(policy).setPolicy(ID_CURRENCY_GOVERNANCE, _clone);
             emit NewCurrencyGovernance(_clone);
         }
 

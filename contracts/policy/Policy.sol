@@ -13,6 +13,34 @@ import "./ERC1820Client.sol";
 contract Policy is ForwardTarget, ERC1820Client {
     bytes32[] public setters;
 
+    modifier onlySetter() {
+        bool authed;
+
+        /*
+         * Amount of setters is predefined by ECO and is reasonable
+         * from gas consumption standpoint. Change to amount of setter
+         * Have to go through reviewed policy proposal framework
+         */
+        for (uint256 i = 0; i < setters.length; ++i) {
+            if (
+                ERC1820REGISTRY.getInterfaceImplementer(
+                    address(this),
+                    setters[i]
+                ) == msg.sender
+            ) {
+                authed = true;
+                break;
+            }
+        }
+
+        require(
+            authed,
+            "Failed to find an appropriate permission for this action."
+        );
+
+        _;
+    }
+
     /** Remove the specified role from the contract calling this function.
      * This is for cleanup only, so if another contract has taken the
      * role, this does nothing.
@@ -52,35 +80,30 @@ contract Policy is ForwardTarget, ERC1820Client {
             );
     }
 
+    /** Set the policy label for a contract
+     *
+     * @param _key The label to apply to the contract.
+     *
+     * @param _implementer The contract to assume the label.
+     */
+    function setPolicy(bytes32 _key, address _implementer) public onlySetter {
+        ERC1820REGISTRY.setInterfaceImplementer(
+            address(this),
+            _key,
+            _implementer
+        );
+    }
+
     /** Enact the code of one of the governance contracts.
      *
      * @param _delegate The contract code to delegate execution to.
      */
-    function internalCommand(address _delegate) public {
-        /*
-         * Amount of setters is predefined by ECO and is reasonable
-         * from gas consumption standpoint. Change to amount of setter
-         * Have to go through reviewed policy proposal framework
-         */
-        for (uint256 i = 0; i < setters.length; ++i) {
-            if (
-                ERC1820REGISTRY.getInterfaceImplementer(
-                    address(this),
-                    setters[i]
-                ) == msg.sender
-            ) {
-                // solhint-disable-next-line avoid-low-level-calls
-                (bool _success, ) = _delegate.delegatecall(
-                    abi.encodeWithSignature("enacted(address)", _delegate)
-                );
-                require(_success, "Command failed during delegatecall");
-                return;
-            }
-        }
-        require(
-            false,
-            "Failed to find an appropriate permission for the delegate address."
+    function internalCommand(address _delegate) public onlySetter {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool _success, ) = _delegate.delegatecall(
+            abi.encodeWithSignature("enacted(address)", _delegate)
         );
+        require(_success, "Command failed during delegatecall");
     }
 
     /** Initialize the contract (replaces constructor)

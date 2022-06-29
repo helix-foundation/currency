@@ -113,7 +113,7 @@ contract('Policed [@group=11]', (accounts) => {
     const cmd = await FakeCommander.new(policy.address);
     await expectRevert(
       cmd.command(testPoliced.address, policer.address),
-      'Failed to find an appropriate permission for the delegate address.',
+      'Failed to find an appropriate permission',
     );
   });
 

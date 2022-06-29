@@ -6,7 +6,6 @@ import "../currency/IECO.sol";
 import "../policy/PolicedUtils.sol";
 import "./Proposal.sol";
 import "./PolicyVotes.sol";
-import "./SimplePolicySetter.sol";
 import "./VotingPower.sol";
 import "../utils/TimeUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -90,11 +89,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     address public policyVotesImpl;
 
-    /** The address of a `SimplePolicySetter` contract used to grant permissions
-     * for the voting phase.
-     */
-    address public simplePolicyImpl;
-
     /** An event indicating a proposal has been proposed
      *
      * @param proposalAddress The address of the PolicyVotes contract instance.
@@ -134,21 +128,19 @@ contract PolicyProposals is VotingPower, TimeUtils {
     /** Construct a new PolicyProposals instance using the provided supervising
      * policy (root) and supporting contracts.
      *
-     * @param _policy The root policy contract.
+     * @param _policy The address of the root policy contract.
      * @param _policyvotes The address of the contract that will be cloned to
      *                     oversee the voting phase.
-     * @param _simplepolicy The address of the `SimplePolicySetter` contract to
-     *                      be used in managing permissions.
+     * @param _ecoAddr The address of the ECO token contract.
+     * @param _ecoXAddr The address of the ECOx token contract.
      */
     constructor(
         address _policy,
         address _policyvotes,
-        address _simplepolicy,
         address _ecoAddr,
         address _ecoXAddr
     ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {
         policyVotesImpl = _policyvotes;
-        simplePolicyImpl = _simplepolicy;
     }
 
     /** Initialize the storage context using parameters copied from the original
@@ -163,7 +155,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         // implementation addresses are left as mutable for easier governance
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
-        simplePolicyImpl = PolicyProposals(_self).simplePolicyImpl();
 
         proposalEnds = getTime() + PROPOSAL_TIME;
         blockNumber = block.number;
@@ -309,14 +300,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
         pv.configure(address(votingProposal), blockNumber);
-
-        SimplePolicySetter sps = SimplePolicySetter(
-            SimplePolicySetter(simplePolicyImpl).clone(
-                ID_POLICY_VOTES,
-                address(pv)
-            )
-        );
-        Policy(policy).internalCommand(address(sps));
+        Policy(policy).setPolicy(ID_POLICY_VOTES, address(pv));
 
         emit VotingStarted(address(pv));
 

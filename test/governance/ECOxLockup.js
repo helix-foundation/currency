@@ -4,7 +4,6 @@ const bnChai = require('bn-chai');
 const Empty = artifacts.require('Empty');
 const PolicyProposals = artifacts.require('PolicyProposals');
 const PolicyVotes = artifacts.require('PolicyVotes');
-const SimplePolicySetter = artifacts.require('SimplePolicySetter');
 const Cloner = artifacts.require('Cloner');
 
 const { expect } = chai;
@@ -86,7 +85,6 @@ contract('ecoXLockup [@group=12]', (accounts) => {
   });
 
   async function makeProposals() {
-    const policySetter = await SimplePolicySetter.new();
     const implementation = await PolicyProposals.new(
       policy.address,
       (await PolicyVotes.new(
@@ -94,7 +92,6 @@ contract('ecoXLockup [@group=12]', (accounts) => {
         eco.address,
         ecox.address,
       )).address,
-      policySetter.address,
       eco.address,
       ecox.address,
     );

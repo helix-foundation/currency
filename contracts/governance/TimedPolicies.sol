@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
-import "./SimplePolicySetter.sol";
 import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
@@ -29,14 +28,6 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      */
     address public policyProposalImpl;
 
-    /** The on-chain address of a policy permission management contract. The
-     * contract is cloned, initialized, executed, and destroyed every time
-     * policy permissions need to be modified.
-     *
-     * See `internalCommand` in the policy framework for additional details.
-     */
-    address public simplePolicyImpl;
-
     /** An event indicating that a policy decision process has started. The
      * address included indicates where on chain the relevant contract can be
      * found. This event is emitted by `startPolicyProposals` to indicate that
@@ -50,11 +41,9 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     constructor(
         address _policy,
         address _policyproposal,
-        address _simplepolicy,
         bytes32[] memory _notificationHashes
     ) PolicedUtils(_policy) {
         policyProposalImpl = _policyproposal;
-        simplePolicyImpl = _simplepolicy;
         internalGeneration = GENERATION_START;
         notificationHashes = _notificationHashes;
     }
@@ -63,7 +52,6 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         super.initialize(_self);
         // implementations are left mutable for easier governance
         policyProposalImpl = TimedPolicies(_self).policyProposalImpl();
-        simplePolicyImpl = TimedPolicies(_self).simplePolicyImpl();
 
         internalGeneration = TimedPolicies(_self).internalGeneration();
         bytes32[] memory hashes = TimedPolicies(_self).getNotificationHashes();
@@ -112,13 +100,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      */
     function startPolicyProposal() internal {
         address _proposals = PolicedUtils(policyProposalImpl).clone();
-        SimplePolicySetter sps = SimplePolicySetter(
-            SimplePolicySetter(simplePolicyImpl).clone(
-                ID_POLICY_PROPOSALS,
-                _proposals
-            )
-        );
-        Policy(policy).internalCommand(address(sps));
+        Policy(policy).setPolicy(ID_POLICY_PROPOSALS, _proposals);
         emit PolicyDecisionStarted(_proposals);
     }
 }

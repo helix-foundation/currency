@@ -1,6 +1,5 @@
 const PolicyProposals = artifacts.require('PolicyProposals');
 const PolicyVotes = artifacts.require('PolicyVotes');
-const SimplePolicySetter = artifacts.require('SimplePolicySetter');
 const Empty = artifacts.require('Empty');
 const Cloner = artifacts.require('Cloner');
 const chai = require('chai');
@@ -47,11 +46,9 @@ contract('PolicyProposals [@group=7]', (accounts) => {
   });
 
   async function makeProposals() {
-    const policySetter = await SimplePolicySetter.new();
     const implementation = await PolicyProposals.new(
       policy.address,
       (await PolicyVotes.new(policy.address, eco.address, ecox.address)).address,
-      policySetter.address,
       eco.address,
       ecox.address,
     );
@@ -652,7 +649,6 @@ contract('PolicyProposals [@group=7]', (accounts) => {
 
     context('on the implementation contract itself', () => {
       beforeEach(async () => {
-        const policySetter = await SimplePolicySetter.new();
         policyProposals = await PolicyProposals.new(
           policy.address,
           (await PolicyVotes.new(
@@ -660,7 +656,6 @@ contract('PolicyProposals [@group=7]', (accounts) => {
             eco.address,
             ecox.address,
           )).address,
-          policySetter.address,
           eco.address,
           ecox.address,
         );
