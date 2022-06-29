@@ -75,7 +75,8 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         nextGenerationStart = time + GENERATION_DURATION;
         internalGeneration++;
 
-        for (uint256 i = 0; i < notificationHashes.length; ++i) {
+        uint256 notificationHashesLength = notificationHashes.length;
+        for (uint256 i = 0; i < notificationHashesLength; ++i) {
             IGenerationIncrease notified = IGenerationIncrease(
                 policy.policyFor(notificationHashes[i])
             );
