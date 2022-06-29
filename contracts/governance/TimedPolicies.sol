@@ -12,7 +12,7 @@ import "./PolicyProposals.sol";
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
+contract TimedPolicies is PolicedUtils, TimeUtils {
     /** The minimum number of days between inflation votes.
      */
     uint256 public constant CURRENCY_TIME = 14 days;
@@ -87,10 +87,6 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         startPolicyProposal();
     }
 
-    function generation() external view override returns (uint256) {
-        return internalGeneration;
-    }
-
     /** Begin a policies decision process.
      *
      * The proposals contract specified by `policyProposalImpl` is cloned and
@@ -99,13 +95,13 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      * The decision process begins immediately.
      *
      * Use `policyFor(ID_POLICY_PROPOSALS)` to find the resulting contract
-     * address, or watch for the PolicyDecisionStarted event.
+     * address, or watch for the PolicyDecisionStart event.
      */
     function startPolicyProposal() internal {
         PolicyProposals _proposals = PolicyProposals(
             policyProposalImpl.clone()
         );
         policy.setPolicy(ID_POLICY_PROPOSALS, address(_proposals));
-        emit PolicyDecisionStarted(address(_proposals));
+        emit PolicyDecisionStart(address(_proposals));
     }
 }

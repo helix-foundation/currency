@@ -20,6 +20,13 @@ module.exports = {
       accounts: 100,
       defaultEtherBalance: 100,
     },
+    test: {
+      host: '127.0.0.1',
+      port: 8545,
+      network_id: 5777,
+      accounts: 10,
+      defaultEtherBalance: 10,
+    },
   },
   mocha: {
     enableTimeouts: false,
