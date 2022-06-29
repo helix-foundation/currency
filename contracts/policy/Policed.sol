@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "../proxy/ForwardTarget.sol";
+import "./Policy.sol";
 
 /** @title Policed Contracts
  *
@@ -17,19 +18,19 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer {
      * This address can be used for ERC1820 lookup of other components, ERC1820
      * lookup of role policies, and interaction with the policy hierarchy.
      */
-    address public immutable policy;
+    Policy public immutable policy;
 
     /** Restrict method access to the root policy instance only.
      */
     modifier onlyPolicy() {
         require(
-            msg.sender == policy,
+            msg.sender == address(policy),
             "Only the policy contract may call this method."
         );
         _;
     }
 
-    constructor(address _policy) {
+    constructor(Policy _policy) {
         policy = _policy;
     }
 
@@ -45,7 +46,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer {
         returns (bytes32)
     {
         require(
-            _addr == policy,
+            _addr == address(policy),
             "This contract only implements interfaces for the policy contract."
         );
         return ERC1820_ACCEPT_MAGIC;

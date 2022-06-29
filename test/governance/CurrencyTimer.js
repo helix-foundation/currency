@@ -110,7 +110,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
     });
 
     it('has inflation', async () => {
-      const [evt] = await currencyTimer.getPastEvents('InflationStarted');
+      const [evt] = await currencyTimer.getPastEvents('NewInflation');
       const infl = await Inflation.at(evt.args.addr);
       expect(await infl.reward()).to.eq.BN(20);
       expect(await infl.numRecipients()).to.eq.BN(10);
@@ -118,7 +118,7 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
     });
 
     it('has lockup', async () => {
-      const [evt] = await currencyTimer.getPastEvents('LockupOffered');
+      const [evt] = await currencyTimer.getPastEvents('NewLockup');
       const lockup = await Lockup.at(evt.args.addr);
       expect(await eco.balanceOf(lockup.address)).to.eq.BN(0);
 

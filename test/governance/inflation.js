@@ -77,7 +77,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   );
 
   async function configureInflationRootHash() {
-    const [event] = (await currencyTimer.getPastEvents('InflationRootHashProposalStarted'));
+    const [event] = (await currencyTimer.getPastEvents('NewInflationRootHashProposal'));
     addressRootHashProposal = event.args.inflationRootHashProposalContract;
     tree = getTree(map);
     proposedRootHash = tree.hash;
@@ -179,7 +179,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     await governance.compute();
     await time.increase(3600 * 24 * 3);
     await timedPolicies.incrementGeneration();
-    const [evt] = await currencyTimer.getPastEvents('InflationStarted');
+    const [evt] = await currencyTimer.getPastEvents('NewInflation');
     inflation = await Inflation.at(evt.args.addr);
     vdf = await VDFVerifier.at(await inflation.vdfVerifier());
     await configureInflationRootHash();

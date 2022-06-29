@@ -14,7 +14,7 @@ import "../currency/ECOx.sol";
  */
 contract EcoFaucet is PolicedUtils {
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     function mint(address _who, uint256 _amount) external {
         IECO(policyFor(ID_ECO)).mint(_who, _amount);

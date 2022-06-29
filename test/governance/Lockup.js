@@ -70,7 +70,7 @@ contract('Lockup [@group=3]', (accounts) => {
     await time.increase(3600 * 24 * 3);
     await timedPolicies.incrementGeneration();
 
-    const [evt] = await currencyTimer.getPastEvents('LockupOffered');
+    const [evt] = await currencyTimer.getPastEvents('NewLockup');
     lockup = await Lockup.at(evt.args.addr);
 
     await faucet.mint(charlie, 1000000000, { from: charlie });

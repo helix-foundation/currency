@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./ILockups.sol";
 import "./Lockup.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/IECO.sol";
+import "../currency/ECO.sol";
 import "../currency/ECOx.sol";
 import "./ECOxLockup.sol";
 
@@ -13,18 +13,18 @@ import "./ECOxLockup.sol";
  */
 contract VotingPower is PolicedUtils {
     // the ECO contract address
-    IECO public immutable ecoToken;
+    ECO public immutable ecoToken;
 
     // the ECOx contract address
     ECOx public immutable ecoXToken;
 
     constructor(
-        address _policy,
-        address _ecoAddr,
-        address _ecoXAddr
+        Policy _policy,
+        ECO _ecoAddr,
+        ECOx _ecoXAddr
     ) PolicedUtils(_policy) {
-        ecoToken = IECO(_ecoAddr);
-        ecoXToken = ECOx(_ecoXAddr);
+        ecoToken = _ecoAddr;
+        ecoXToken = _ecoXAddr;
     }
 
     function totalVotingPower(uint256 _blockNumber)

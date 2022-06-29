@@ -25,7 +25,7 @@ contract ECOx is ERC20, PolicedUtils {
     IECO public immutable ecoToken;
 
     constructor(
-        address _policy,
+        Policy _policy,
         address _distributor,
         uint256 _initialSupply,
         address _ecoAddr

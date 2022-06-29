@@ -86,7 +86,7 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
 
   it('Constructs the proposals', async () => {
     poodleCurrencyGovernance = await PoodleCurrencyGovernance.new(policy.address);
-    poodleCurrencyTimer = await PoodleCurrencyTimer.new(poodleCurrencyGovernance.address);
+    poodleCurrencyTimer = await PoodleCurrencyTimer.new();
     makePoodle = await MakePoodle.new(
       poodleCurrencyGovernance.address,
       poodleCurrencyTimer.address,

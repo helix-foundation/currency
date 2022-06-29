@@ -53,10 +53,8 @@ contract MakeTrustedPoodles is Policy, Proposal {
     /** Enact the proposal.
      *
      * This is executed in the storage context of the root policy contract.
-     *
-     * @param _self The address of the proposal.
      */
-    function enacted(address _self) public override {
+    function enacted(address) public override {
         address _trustedNodes = policyFor(trustedNodesId);
 
         Policed(_trustedNodes).policyCommand(

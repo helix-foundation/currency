@@ -35,7 +35,7 @@ abstract contract InflationCheckpoints is
      * contracts to be configured/deployed after the balance store contract.
      */
     constructor(
-        address _policy,
+        Policy _policy,
         string memory _name,
         string memory _symbol
     ) VoteCheckpoints(_name, _symbol) PolicedUtils(_policy) {

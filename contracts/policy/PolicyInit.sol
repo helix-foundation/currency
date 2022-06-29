@@ -25,7 +25,7 @@ contract PolicyInit is Policy, Ownable {
      * //param _tokenResolvers Identifiers for the token contracts
      */
     function fusedInit(
-        address _policy,
+        Policy _policy,
         bytes32[] calldata _setters,
         bytes32[] calldata _keys,
         address[] calldata _values //, bytes32[] calldata _tokenResolvers
@@ -35,7 +35,7 @@ contract PolicyInit is Policy, Ownable {
             "_keys and _values must correspond exactly (length)"
         );
 
-        setImplementation(_policy);
+        setImplementation(address(_policy));
         setters = _setters;
         // This contract is for internal ECO use only,
         // loops boundaries are reasonable.

@@ -12,7 +12,7 @@ import "../governance/CurrencyGovernance.sol";
  */
 contract PoodleCurrencyGovernance is CurrencyGovernance {
     // because the data is not preserved, some information must be copied
-    constructor(address _policy) CurrencyGovernance(_policy) {}
+    constructor(Policy _policy) CurrencyGovernance(_policy) {}
 
     function provePoodles() public pure returns (bool) {
         return true;

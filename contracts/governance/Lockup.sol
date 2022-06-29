@@ -58,7 +58,7 @@ contract Lockup is PolicedUtils, TimeUtils {
     mapping(address => uint256) public depositLockupEnds;
 
     constructor(
-        address _policy,
+        Policy _policy,
         address _ecoAddr,
         address _timerAddr
     ) PolicedUtils(_policy) {

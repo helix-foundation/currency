@@ -20,7 +20,7 @@ contract SampleForward is ForwardTarget {
     /** @notice Chained storage initializer */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        value = SampleForward(payable(address(uint160(_self)))).value();
+        value = SampleForward(payable(address(_self))).value();
     }
 
     /** @notice Increment value */

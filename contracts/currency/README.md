@@ -181,7 +181,7 @@ The `ECO` contract manages the function of our primary token, ECO. Its construct
 
 #### Events
 
-##### InflationRootHashProposalStarted
+##### NewInflationRootHashProposal
 Attributes:
  - `inflationRootHashProposalContract` (address) - the address of the newly created `InflationRootHashProposal` contract.
  - `generation` (uint256) - the generation in which the decision to add random inflation would be made. This is generally the generation before the call to `notifyGenerationIncrease` is made.

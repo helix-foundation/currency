@@ -73,7 +73,7 @@ contract FakeCommandAction is Policy {
  * Object that is allowed by policy to take its role
  */
 contract FakeCommander is PolicedUtils {
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     // public function to check each of the identifiers
     function GET_ID_FAUCET() external pure returns (bytes32) {
@@ -130,7 +130,7 @@ contract FakeCommander is PolicedUtils {
      * @param _action The action to enact.
      */
     function command(address _policed, address _action) public {
-        Policy(policy).internalCommand(
+        policy.internalCommand(
             address(new FakeCommandAction(_policed, _action))
         );
     }
@@ -144,7 +144,7 @@ contract DummyPoliced is Policed {
      */
     uint256 public value = 1;
 
-    constructor(address _policy) Policed(_policy) {}
+    constructor(Policy _policy) Policed(_policy) {}
 
     /** Initialize a contract as a clone/proxy of DummyPolicedUtils.
      *
@@ -168,7 +168,7 @@ contract DummyPolicedUtils is PolicedUtils {
      */
     address public c;
 
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     modifier onlyInflation() {
         require(
@@ -205,7 +205,7 @@ contract DummyPolicedUtils is PolicedUtils {
  * Object that will act as inflation to test modifier
  */
 contract DummyInflation is PolicedUtils {
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     /** Ask a policed contract to modify itself, verifying that having the
      * Inflation role is sufficient.
@@ -221,7 +221,7 @@ contract DummyInflation is PolicedUtils {
  * Inherits from DummyPolicedUtils to have easy access to storage layout
  */
 contract Policer is DummyPolicedUtils {
-    constructor(address _policy) DummyPolicedUtils(_policy) {}
+    constructor(Policy _policy) DummyPolicedUtils(_policy) {}
 
     /** Set the value to 3. This is intended as a test policy action to be run
      * in the context of some other contract.
@@ -238,7 +238,7 @@ contract Policer is DummyPolicedUtils {
  * delegatecall results in a revert.
  */
 contract RevertingAction is PolicedUtils {
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     function doit() public view onlyPolicy {
         revert("failing as it should");

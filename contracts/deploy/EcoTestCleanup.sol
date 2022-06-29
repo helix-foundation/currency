@@ -24,7 +24,7 @@ contract EcoTestCleanup is Policed, Ownable, Destructable {
      * @param _policy The root policy contract in the relevant policy hierarchy.
      */
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) Policed(_policy) {}
+    constructor(Policy _policy) Policed(_policy) {}
 
     /** Instruct a specified contract to destruct itself.
      *

@@ -186,14 +186,14 @@ Attributes:
 
 Indicates the location of the new CurrencyGovernance contract.
 
-###### InflationStarted
+###### NewInflation
 Attributes:
   - `addr` (address) - the address of the `Inflation` contract facilitating
     the distribution of random inflation.
 
 Indicates the start of a random inflation decision.
 
-###### LockupOffered
+###### NewLockup
 Attributes:
   - `addr` (address) - the address of the `Lockup` contract being offered
 

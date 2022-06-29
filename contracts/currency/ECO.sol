@@ -7,6 +7,8 @@ import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 // import "../currency/InflationRootHashProposal.sol";
 import "../governance/CurrencyTimer.sol";
+import "../governance/CurrencyGovernance.sol";
+import "../governance/IGeneration.sol";
 
 /** @title An ERC20 token interface to the Eco currency system.
  */
@@ -26,7 +28,7 @@ contract ECO is InflationCheckpoints, TimeUtils {
     uint256 public immutable initialSupply;
 
     constructor(
-        address _policy,
+        Policy _policy,
         address _distributor,
         uint256 _initialSupply
     ) InflationCheckpoints(_policy, "Eco", "ECO") {

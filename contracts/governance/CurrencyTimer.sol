@@ -12,7 +12,7 @@ import "./IGeneration.sol";
 import "./Lockup.sol";
 import "./Inflation.sol";
 import "./ILockups.sol";
-import "../currency/IECO.sol";
+import "../currency/ECO.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
@@ -22,48 +22,49 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     /** The on-chain address for the currency voting contract. This contract is
      * cloned for each new currency vote.
      */
-    address public bordaImpl;
+    CurrencyGovernance public bordaImpl;
 
-    address public inflationImpl;
-    address public lockupImpl;
+    Inflation public inflationImpl;
+    Lockup public lockupImpl;
 
-    address public inflationRootHashProposalImpl;
+    InflationRootHashProposal public inflationRootHashProposalImpl;
 
     // the ECO contract address
-    IECO public immutable ecoToken;
+    ECO public immutable ecoToken;
 
-    mapping(uint256 => address) public rootHashAddressPerGeneration;
+    mapping(uint256 => InflationRootHashProposal)
+        public rootHashAddressPerGeneration;
 
     /* Current generation of the balance store. */
     uint256 public currentGeneration;
 
-    mapping(uint256 => address) public override lockups;
+    mapping(uint256 => Lockup) public override lockups;
     mapping(address => bool) public isLockup;
 
-    event InflationStarted(address indexed addr);
-    event LockupOffered(address indexed addr);
-    event NewCurrencyGovernance(address indexed addr);
+    event NewInflation(Inflation indexed addr);
+    event NewLockup(Lockup indexed addr);
+    event NewCurrencyGovernance(CurrencyGovernance indexed addr);
 
-    /* Event to be emitted when InflationRootHashProposalStarted contract spawned.
+    /* Event to be emitted when InflationRootHashProposal contract spawned.
      */
-    event InflationRootHashProposalStarted(
-        address inflationRootHashProposalContract,
+    event NewInflationRootHashProposal(
+        InflationRootHashProposal indexed inflationRootHashProposalContract,
         uint256 indexed generation
     );
 
     constructor(
-        address _policy,
-        address _borda,
-        address _inflation,
-        address _lockup,
-        address _inflationRootHashProposal,
-        address _ecoAddr
+        Policy _policy,
+        CurrencyGovernance _borda,
+        Inflation _inflation,
+        Lockup _lockup,
+        InflationRootHashProposal _inflationRootHashProposal,
+        ECO _ecoAddr
     ) PolicedUtils(_policy) {
         bordaImpl = _borda;
         inflationImpl = _inflation;
         lockupImpl = _lockup;
         inflationRootHashProposalImpl = _inflationRootHashProposal;
-        ecoToken = IECO(_ecoAddr);
+        ecoToken = _ecoAddr;
     }
 
     function initialize(address _self) public override onlyConstruction {
@@ -108,42 +109,40 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         }
 
         {
-            address _clone = CurrencyGovernance(bordaImpl).clone();
-            Policy(policy).setPolicy(ID_CURRENCY_GOVERNANCE, _clone);
+            CurrencyGovernance _clone = CurrencyGovernance(bordaImpl.clone());
+            policy.setPolicy(ID_CURRENCY_GOVERNANCE, address(_clone));
             emit NewCurrencyGovernance(_clone);
         }
 
         // new root hash
         // better tests could allow this to only need to be done in the next if statement
         rootHashAddressPerGeneration[_old] = InflationRootHashProposal(
-            inflationRootHashProposalImpl
-        ).clone();
-        InflationRootHashProposal(rootHashAddressPerGeneration[_old]).configure(
-                block.number
-            );
+            inflationRootHashProposalImpl.clone()
+        );
+        rootHashAddressPerGeneration[_old].configure(block.number);
 
-        emit InflationRootHashProposalStarted(
+        emit NewInflationRootHashProposal(
             rootHashAddressPerGeneration[_old],
             _old
         );
 
         if (_numberOfRecipients > 0 && _randomInflationReward > 0) {
             // new inflation contract
-            address _clone = Inflation(inflationImpl).clone();
-            ecoToken.mint(_clone, _numberOfRecipients * _randomInflationReward);
-            Inflation(_clone).startInflation(
-                _numberOfRecipients,
-                _randomInflationReward
+            Inflation _clone = Inflation(inflationImpl.clone());
+            ecoToken.mint(
+                address(_clone),
+                _numberOfRecipients * _randomInflationReward
             );
-            emit InflationStarted(_clone);
+            _clone.startInflation(_numberOfRecipients, _randomInflationReward);
+            emit NewInflation(_clone);
         }
 
         if (_lockupDuration > 0 && _lockupInterest > 0) {
             Lockup lockup = Lockup(
-                Lockup(lockupImpl).clone(_lockupDuration, _lockupInterest)
+                lockupImpl.clone(_lockupDuration, _lockupInterest)
             );
-            emit LockupOffered(address(lockup));
-            lockups[_new] = address(lockup);
+            emit NewLockup(lockup);
+            lockups[_new] = lockup;
             isLockup[address(lockup)] = true;
         }
     }

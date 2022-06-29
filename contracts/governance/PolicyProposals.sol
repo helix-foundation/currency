@@ -87,7 +87,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
     /** The address of the `PolicyVotes` contract, to be cloned for the voting
      * phase.
      */
-    address public policyVotesImpl;
+    PolicyVotes public policyVotesImpl;
 
     /** An event indicating a proposal has been proposed
      *
@@ -117,7 +117,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param contractAddress The address of the PolicyVotes contract instance.
      */
-    event VotingStarted(address contractAddress);
+    event VotingStarted(PolicyVotes contractAddress);
 
     /** An event indicating that proposal fee was partially refunded.
      *
@@ -135,10 +135,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
      * @param _ecoXAddr The address of the ECOx token contract.
      */
     constructor(
-        address _policy,
-        address _policyvotes,
-        address _ecoAddr,
-        address _ecoXAddr
+        Policy _policy,
+        PolicyVotes _policyvotes,
+        ECO _ecoAddr,
+        ECOx _ecoXAddr
     ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {
         policyVotesImpl = _policyvotes;
     }
@@ -298,11 +298,11 @@ contract PolicyProposals is VotingPower, TimeUtils {
         address votingProposal = proposalToConfigure;
         delete proposalToConfigure;
 
-        PolicyVotes pv = PolicyVotes(PolicyVotes(policyVotesImpl).clone());
-        pv.configure(address(votingProposal), blockNumber);
-        Policy(policy).setPolicy(ID_POLICY_VOTES, address(pv));
+        PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
+        pv.configure(votingProposal, blockNumber);
+        policy.setPolicy(ID_POLICY_VOTES, address(pv));
 
-        emit VotingStarted(address(pv));
+        emit VotingStarted(pv);
 
         delete proposals[address(votingProposal)];
         totalproposals = totalproposals - 1;
@@ -351,11 +351,11 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         require(totalproposals == 0, "Must refund all missed proposals first");
 
-        Policy(policy).removeSelf(ID_POLICY_PROPOSALS);
+        policy.removeSelf(ID_POLICY_PROPOSALS);
 
         require(
             ecoToken.transfer(
-                address(uint160(policy)),
+                address(policy),
                 ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"

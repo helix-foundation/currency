@@ -165,7 +165,7 @@ contract('InflationRootHashProposal', () => {
       await time.increase(31557600 / 10);
       txProposal = await timedPolicies.incrementGeneration();
     }
-    const [event] = (await currencyTimer.getPastEvents('InflationRootHashProposalStarted'));
+    const [event] = (await currencyTimer.getPastEvents('NewInflationRootHashProposal'));
     const addressRootHashProposal = event.args.inflationRootHashProposalContract;
     for (let i = 0; i < 10; i += 1) {
       eco.approve(addressRootHashProposal, (await eco.balanceOf(accounts[i])).mul(

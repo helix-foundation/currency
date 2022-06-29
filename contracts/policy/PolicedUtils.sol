@@ -62,8 +62,8 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
 
     address internal expectedInterfaceSet;
 
-    constructor(address _policy) Policed(_policy) {
-        ERC1820REGISTRY.setManager(address(this), _policy);
+    constructor(Policy _policy) Policed(_policy) {
+        ERC1820REGISTRY.setManager(address(this), address(_policy));
     }
 
     /** ERC1820 permissioning interface
@@ -77,7 +77,7 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
         returns (bytes32)
     {
         require(
-            _addr == policy || _addr == expectedInterfaceSet,
+            _addr == address(policy) || _addr == expectedInterfaceSet,
             "Only the policy or interface contract can set the interface."
         );
         return ERC1820_ACCEPT_MAGIC;
@@ -98,7 +98,7 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
         onlyConstruction
     {
         super.initialize(_self);
-        ERC1820REGISTRY.setManager(address(this), policy);
+        ERC1820REGISTRY.setManager(address(this), address(policy));
     }
 
     /** Set the expected interface set
@@ -146,6 +146,6 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
      * ```
      */
     function policyFor(bytes32 _id) internal view returns (address) {
-        return ERC1820REGISTRY.getInterfaceImplementer(policy, _id);
+        return ERC1820REGISTRY.getInterfaceImplementer(address(policy), _id);
     }
 }

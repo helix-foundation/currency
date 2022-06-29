@@ -14,5 +14,5 @@ contract Token is ERC20, PolicedUtils {
      *
      * @param _policy The root policy address.
      */
-    constructor(address _policy) ERC20("Test", "TEST") PolicedUtils(_policy) {}
+    constructor(Policy _policy) ERC20("Test", "TEST") PolicedUtils(_policy) {}
 }

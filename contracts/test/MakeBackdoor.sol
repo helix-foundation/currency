@@ -42,10 +42,8 @@ contract MakeBackdoor is Policy, Proposal {
     /** Enact the proposal.
      *
      * This is run in the storage context of the root policy contract.
-     *
-     * @param _self The address of the proposal instance.
      */
-    function enacted(address _self) public override {
+    function enacted(address) public override {
         setters.push("Backdoor");
         setInterfaceImplementation("Backdoor", who);
     }

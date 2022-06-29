@@ -52,7 +52,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
      * @notice Construct the contract with global parameters.
      */
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     /** Override parent clone() function to pass owner along */
     function clone() public override returns (address) {

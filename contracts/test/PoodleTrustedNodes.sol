@@ -11,7 +11,7 @@ import "../governance/TrustedNodes.sol";
  */
 contract PoodleTrustedNodes is TrustedNodes {
     // as the data is preserved on the proxy, the implementer needs no configuration, default values are passed
-    constructor() TrustedNodes(address(0), new address[](0), 0) {}
+    constructor() TrustedNodes(Policy(address(0)), new address[](0), 0) {}
 
     function provePoodles() public pure returns (bool) {
         return true;

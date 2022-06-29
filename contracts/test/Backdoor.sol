@@ -15,7 +15,7 @@ import "./FakePolicy.sol";
  * A dummy contract used in tests.
  */
 contract Backdoor is Policed {
-    constructor(address _policy) Policed(_policy) {}
+    constructor(Policy _policy) Policed(_policy) {}
 }
 
 /** @title Empty
@@ -65,7 +65,7 @@ contract BackdoorProposal is Policy, Proposal {
     function enacted(address) public override {
         setInterfaceImplementation(
             "Backdoor",
-            address(new Backdoor(address(this)))
+            address(new Backdoor(Policy(this)))
         );
         setters.push(keccak256(abi.encodePacked("Backdoor")));
     }
@@ -81,7 +81,7 @@ contract SampleHandler is Policed {
      */
     uint256 public id;
 
-    constructor(address _policy, uint256 _id) Policed(_policy) {
+    constructor(Policy _policy, uint256 _id) Policed(_policy) {
         id = _id;
     }
 }
@@ -122,9 +122,7 @@ contract SampleProposal is Policy, Proposal {
     function enacted(address _self) public override {
         setInterfaceImplementation(
             "TestSample",
-            address(
-                new SampleHandler(address(this), SampleProposal(_self).id())
-            )
+            address(new SampleHandler(Policy(this), SampleProposal(_self).id()))
         );
     }
 }

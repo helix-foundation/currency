@@ -34,7 +34,7 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
 
     uint256 public currentGeneration;
 
-    constructor(address _policy, address _ecoXAddr)
+    constructor(Policy _policy, address _ecoXAddr)
         VoteCheckpoints("S-Eco-X", "sECOx")
         PolicedUtils(_policy)
     {

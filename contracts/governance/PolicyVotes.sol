@@ -5,6 +5,8 @@ import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "./VotingPower.sol";
+import "../currency/ECO.sol";
+import "../currency/ECOx.sol";
 
 /** @title PolicyVotes
  * This implements the voting and implementation phases of the policy decision process.
@@ -71,9 +73,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
-        address _policy,
-        address _ecoAddr,
-        address _ecoXAddr
+        Policy _policy,
+        ECO _ecoAddr,
+        ECOx _ecoXAddr
     ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {}
 
     /** Submit your yes/no support
@@ -242,16 +244,16 @@ contract PolicyVotes is VotingPower, TimeUtils {
             _res = Result.Rejected;
         } else {
             // Vote passed
-            Policy(policy).internalCommand(proposal);
+            policy.internalCommand(proposal);
             _res = Result.Accepted;
         }
 
         emit VoteCompleted(_res);
-        Policy(policy).removeSelf(ID_POLICY_VOTES);
+        policy.removeSelf(ID_POLICY_VOTES);
 
         require(
             ecoToken.transfer(
-                address(uint160(policy)),
+                address(policy),
                 ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"

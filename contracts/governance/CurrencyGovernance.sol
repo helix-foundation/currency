@@ -107,7 +107,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         }
     }
 
-    constructor(address _policy) PolicedUtils(_policy) {}
+    constructor(Policy _policy) PolicedUtils(_policy) {}
 
     /** Restrict access to trusted nodes only.
      */

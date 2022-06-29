@@ -319,7 +319,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         _;
     }
 
-    constructor(address _policy, address _ecoAddr) PolicedUtils(_policy) {
+    constructor(Policy _policy, address _ecoAddr) PolicedUtils(_policy) {
         ecoToken = IECO(_ecoAddr);
     }
 
@@ -725,7 +725,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         );
         require(
             ecoToken.transfer(
-                address(uint160(policy)),
+                address(policy),
                 ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"

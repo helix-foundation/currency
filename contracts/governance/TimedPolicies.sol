@@ -6,6 +6,7 @@ import "../policy/Policy.sol";
 import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
+import "./PolicyProposals.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
@@ -26,7 +27,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     /** The on-chain address for the policy proposal process contract. The
      * contract is cloned for every policy decision process.
      */
-    address public policyProposalImpl;
+    PolicyProposals public policyProposalImpl;
 
     /** An event indicating that a policy decision process has started. The
      * address included indicates where on chain the relevant contract can be
@@ -39,8 +40,8 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     event PolicyDecisionStarted(address contractAddress);
 
     constructor(
-        address _policy,
-        address _policyproposal,
+        Policy _policy,
+        PolicyProposals _policyproposal,
         bytes32[] memory _notificationHashes
     ) PolicedUtils(_policy) {
         policyProposalImpl = _policyproposal;
@@ -75,7 +76,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
 
         for (uint256 i = 0; i < notificationHashes.length; ++i) {
             IGenerationIncrease notified = IGenerationIncrease(
-                Policy(policy).policyFor(notificationHashes[i])
+                policy.policyFor(notificationHashes[i])
             );
             // require(address(notifier) != address(0), "Broken state");
             notified.notifyGenerationIncrease();
@@ -99,8 +100,10 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      * address, or watch for the PolicyDecisionStarted event.
      */
     function startPolicyProposal() internal {
-        address _proposals = PolicedUtils(policyProposalImpl).clone();
-        Policy(policy).setPolicy(ID_POLICY_PROPOSALS, _proposals);
-        emit PolicyDecisionStarted(_proposals);
+        PolicyProposals _proposals = PolicyProposals(
+            policyProposalImpl.clone()
+        );
+        policy.setPolicy(ID_POLICY_PROPOSALS, address(_proposals));
+        emit PolicyDecisionStarted(address(_proposals));
     }
 }

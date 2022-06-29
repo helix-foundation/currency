@@ -30,9 +30,7 @@ contract EcoBootstrap is Ownable {
     constructor(address _owner, uint8 _numPlaceholders) {
         transferOwnership(_owner);
         NUM_PLACEHOLDERS = _numPlaceholders;
-        ForwardTarget init = new EcoInitializable(
-            payable(address(uint160(owner())))
-        );
+        ForwardTarget init = new EcoInitializable(payable(address(owner())));
 
         /* Create 20 uninitialized addresses for future use. 20 is plenty for
          * now, and there is no particular reason why 20 was selected other than

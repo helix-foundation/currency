@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/IECO.sol";
+import "../currency/ECO.sol";
 import "./CurrencyTimer.sol";
 import "../utils/TimeUtils.sol";
 import "../VDF/VDFVerifier.sol";
@@ -66,7 +66,7 @@ contract Inflation is PolicedUtils, TimeUtils {
     VDFVerifier public vdfVerifier;
 
     // the ECO token address
-    IECO public immutable ecoToken;
+    ECO public immutable ecoToken;
 
     // the CurrencyTimer address
     CurrencyTimer public immutable currencyTimer;
@@ -83,16 +83,16 @@ contract Inflation is PolicedUtils, TimeUtils {
     event EntropySeedRevealed(bytes32 seed);
 
     constructor(
-        address _policy,
+        Policy _policy,
         VDFVerifier _vdfVerifierImpl,
         uint256 _randomDifficulty,
-        address _ecoAddr,
-        address _timerAddr
+        ECO _ecoAddr,
+        CurrencyTimer _timerAddr
     ) PolicedUtils(_policy) {
         vdfVerifier = _vdfVerifierImpl;
         randomVDFDifficulty = _randomDifficulty;
-        ecoToken = IECO(_ecoAddr);
-        currencyTimer = CurrencyTimer(_timerAddr);
+        ecoToken = _ecoAddr;
+        currencyTimer = _timerAddr;
     }
 
     /** Clean up the inflation contract.
@@ -117,7 +117,7 @@ contract Inflation is PolicedUtils, TimeUtils {
 
         require(
             ecoToken.transfer(
-                address(uint160(policy)),
+                address(policy),
                 ecoToken.balanceOf(address(this))
             ),
             "Transfer Failed"
@@ -135,9 +135,7 @@ contract Inflation is PolicedUtils, TimeUtils {
         super.initialize(_self);
         generation = currencyTimer.currentGeneration() - 1;
         blockNumber = block.number;
-        vdfVerifier = VDFVerifier(
-            VDFVerifier(Inflation(_self).vdfVerifier()).clone()
-        );
+        vdfVerifier = VDFVerifier(Inflation(_self).vdfVerifier().clone());
         randomVDFDifficulty = Inflation(_self).randomVDFDifficulty();
     }
 
