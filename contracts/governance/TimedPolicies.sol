@@ -37,7 +37,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      *
      * @param contractAddress The address of the PolicyProposals contract.
      */
-    event PolicyDecisionStarted(address contractAddress);
+    event PolicyDecisionStart(address contractAddress);
 
     constructor(
         Policy _policy,
