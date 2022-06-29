@@ -18,9 +18,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     mapping(address => uint256) public stake;
 
-    /** Per voter that votes yes
+    /** Per voter that votes yes, by amount voted yes
      */
-    mapping(address => bool) public yesVote;
+    mapping(address => uint256) public yesVotes;
 
     /** Total currency staked in all ongoing votes in basic unit of 10^{-18} ECO (weico).
      */
@@ -53,9 +53,17 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     event VoteCompleted(Result result);
 
-    /** Event emitted when vote is revealed.
+    /** Event emitted when vote is submitted.
      */
     event PolicyVoteCast(address indexed voter, bool vote, uint256 amount);
+
+    /** Event emitted when split vote is.
+     */
+    event PolicySplitVoteCast(
+        address indexed voter,
+        uint256 votesYes,
+        uint256 votesNo
+    );
 
     /** The store block number to use when checking account balances for staking.
      */
@@ -87,33 +95,87 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
         require(
             _amount > 0,
-            "Voters must have held tokens before the block number of the proposal"
+            "Voters must have held tokens before this voting cycle"
         );
 
         uint256 _oldStake = stake[msg.sender];
-        uint256 _stakeDelta = _amount - _oldStake;
+        uint256 _oldYesVotes = yesVotes[msg.sender];
+        bool _prevVote = _oldYesVotes != 0;
 
         if (_oldStake != 0) {
             require(
-                yesVote[msg.sender] != _vote,
+                _prevVote != _vote || _oldStake != _oldYesVotes,
                 "Your vote has already been recorded"
             );
-            if (yesVote[msg.sender]) {
-                yesStake = yesStake - _oldStake;
-                yesVote[msg.sender] = false;
+
+            if (_prevVote) {
+                yesStake = yesStake - _oldYesVotes;
+                yesVotes[msg.sender] = 0;
             }
         }
 
-        recordVote(msg.sender);
-        emit PolicyVoteCast(msg.sender, _vote, _amount);
-
         if (_vote) {
             yesStake = yesStake + _amount;
-            yesVote[msg.sender] = true;
+            yesVotes[msg.sender] = _amount;
         }
-        stake[msg.sender] = _amount;
 
-        totalStake = totalStake + _stakeDelta;
+        stake[msg.sender] = _amount;
+        totalStake = totalStake + _amount - _oldStake;
+
+        recordVote(msg.sender);
+        emit PolicyVoteCast(msg.sender, _vote, _amount);
+    }
+
+    /** Submit a mixed vote of yes/no support
+     *
+     * Useful for contracts that wish to vote for an agregate of users
+     *
+     * Note As not voting is not equivalent to voting no it matters recording the no votes
+     * The total amount of votes in favor is relevant for early enaction and the total percentage
+     * of voting power that voted is necessary for determining a winner.
+     *
+     * Note As this is designed for contracts, the onus is on the contract designer to correctly
+     * understand and take responsibility for its input parameters. The only check is to stop
+     * someone from voting with more power than they have.
+     *
+     * @param _votesYes The amount of votes in favor of the proposal
+     * @param _votesNo The amount of votes against the proposal
+     */
+    function voteSplit(uint256 _votesYes, uint256 _votesNo) external {
+        require(
+            getTime() < voteEnds,
+            "Votes can only be recorded during the voting period"
+        );
+
+        uint256 _amount = votingPower(msg.sender, blockNumber);
+
+        require(
+            _amount > 0,
+            "Voters must have held tokens before this voting cycle"
+        );
+
+        uint256 _totalVotes = _votesYes + _votesNo;
+
+        require(
+            _amount >= _totalVotes,
+            "Your voting power is less than submitted yes + no votes"
+        );
+
+        uint256 _oldStake = stake[msg.sender];
+        uint256 _oldYesVotes = yesVotes[msg.sender];
+
+        if (_oldYesVotes > 0) {
+            yesStake = yesStake - _oldYesVotes;
+        }
+
+        yesVotes[msg.sender] = _votesYes;
+        yesStake = yesStake + _votesYes;
+
+        stake[msg.sender] = _totalVotes;
+        totalStake = totalStake + _totalVotes - _oldStake;
+
+        recordVote(msg.sender);
+        emit PolicySplitVoteCast(msg.sender, _votesYes, _votesNo);
     }
 
     /** Initialize a cloned/proxied copy of this contract.

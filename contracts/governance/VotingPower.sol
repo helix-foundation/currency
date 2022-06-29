@@ -33,13 +33,9 @@ contract VotingPower is PolicedUtils {
         returns (uint256)
     {
         uint256 total = ecoToken.totalSupplyAt(_blockNumber);
-
         uint256 totalx = getXLockup().totalVotingECOx(_blockNumber);
-        if (totalx > 0) {
-            total = total + ecoXToken.valueAt(totalx, _blockNumber);
-        }
 
-        return total;
+        return total + totalx;
     }
 
     function votingPower(address _who, uint256 _blockNumber)
@@ -48,13 +44,9 @@ contract VotingPower is PolicedUtils {
         returns (uint256)
     {
         uint256 _power = ecoToken.getPastVotes(_who, _blockNumber);
+        uint256 _powerx = getXLockup().votingECOx(_who, _blockNumber);
 
-        uint256 _x = getXLockup().votingECOx(_who, _blockNumber);
-        if (_x > 0) {
-            _power = _power + ecoXToken.valueAt(_x, _blockNumber);
-        }
-
-        return _power;
+        return _power + _powerx;
     }
 
     function recordVote(address _who) internal {

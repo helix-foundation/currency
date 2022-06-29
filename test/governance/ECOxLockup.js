@@ -112,8 +112,8 @@ contract('ecoXLockup [@group=12]', (accounts) => {
       await ecox.approve(ecoXLockup.address, one.muln(10), { from: alice });
       await ecoXLockup.deposit(one.muln(10), { from: alice });
 
-      await ecox.approve(ecoXLockup.address, one.muln(100), { from: bob });
-      await ecoXLockup.deposit(one.muln(100), { from: bob });
+      await ecox.approve(ecoXLockup.address, one.muln(100), { from: charlie });
+      await ecoXLockup.deposit(one.muln(100), { from: charlie });
 
       blockNumber = await time.latestBlock();
 
@@ -137,7 +137,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     context('basic token and checkpoints data', async () => {
       // Confirm the internal balance method works
       it('can get the balance', async () => {
-        expect(await ecoXLockup.balanceOf(alice)).to.eq.BN(await ecoXLockup.balanceOf(alice));
+        expect(await ecoXLockup.balanceOf(alice)).to.eq.BN(one.muln(10));
       });
 
       it('Can get the past total supply', async () => {
@@ -158,7 +158,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
       it('alice successfully added voting support to the proposal', async () => {
         const testProposalObj = await proposals.proposals(testProposal.address);
-        expect(testProposalObj.totalstake).to.eq.BN(toBN('5201003341683361150843'));
+        expect(testProposalObj.totalstake).to.eq.BN(toBN('5010000000000000000000'));
       });
 
       it('alice cannot withdraw', async () => {
@@ -176,18 +176,18 @@ contract('ecoXLockup [@group=12]', (accounts) => {
       });
     });
 
-    context('bob supports a proposal into a vote', () => {
+    context('charlie supports a proposal into a vote', () => {
       beforeEach(async () => {
-        await proposals.support(testProposal.address, { from: bob });
-        const tx = await proposals.deployProposalVoting({ from: bob });
+        await proposals.support(testProposal.address, { from: charlie });
+        const tx = await proposals.deployProposalVoting({ from: charlie });
 
         const votesAddress = tx.logs.find((t) => t.event === 'VotingStarted').args.contractAddress;
         votes = await PolicyVotes.at(votesAddress);
       });
 
-      it('bob can vote', async () => {
-        await votes.vote(true, { from: bob });
-        expect(await votes.yesStake()).to.eq.BN(toBN('7103418361512952496234'));
+      it('charlie can vote', async () => {
+        await votes.vote(true, { from: charlie });
+        expect(await votes.yesStake()).to.eq.BN(toBN('10100000000000000000000'));
       });
 
       it('alice can withdraw then vote', async () => {
@@ -200,24 +200,24 @@ contract('ecoXLockup [@group=12]', (accounts) => {
         await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote in the generation on or before withdrawing');
       });
 
-      it('bob supported, so cannot withdraw', async () => {
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: bob }), 'Must not vote in the generation on or before withdrawing');
+      it('charlie supported, so cannot withdraw', async () => {
+        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote in the generation on or before withdrawing');
       });
 
-      it('bob supported, so cannot withdraw in the next generation', async () => {
+      it('charlie supported, so cannot withdraw in the next generation', async () => {
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
 
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: bob }), 'Must not vote in the generation on or before withdrawing');
+        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote in the generation on or before withdrawing');
       });
 
-      it('bob supported, but can withdraw the generation after next', async () => {
+      it('charlie supported, but can withdraw the generation after next', async () => {
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
 
-        await ecoXLockup.withdraw(one.muln(10), { from: bob });
+        await ecoXLockup.withdraw(one.muln(10), { from: charlie });
       });
     });
   });

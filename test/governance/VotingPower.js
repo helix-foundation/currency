@@ -24,7 +24,6 @@ contract('VotingPower [@group=2]', (accounts) => {
   let ecox;
   let ecoXLockup;
   let one;
-  let totalPower;
   let alicePower;
 
   const alice = accounts[0];
@@ -43,9 +42,9 @@ contract('VotingPower [@group=2]', (accounts) => {
       ecoXLockup,
     } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
 
-    await faucet.mint(alice, one.muln(5000));
-    await faucet.mint(bob, one.muln(5000));
-    await faucet.mint(charlie, one.muln(10000));
+    await faucet.mint(alice, one.muln(250));
+    await faucet.mint(bob, one.muln(250));
+    await faucet.mint(charlie, one.muln(500));
 
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
@@ -54,9 +53,8 @@ contract('VotingPower [@group=2]', (accounts) => {
     await ecox.transfer(bob, one.muln(400), { from: accounts[counter] });
     await ecox.transfer(charlie, one.muln(200), { from: accounts[counter] });
 
-    // calculated from the above variables
-    totalPower = '54365636569180904707205';
-    alicePower = '14836493952825406356497';
+    // calculated from the above variables for when ECOx is exchanged
+    alicePower = '741824697641270317824';
 
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
@@ -73,13 +71,13 @@ contract('VotingPower [@group=2]', (accounts) => {
   context('with nothing locked up', () => {
     describe('only ECO power', () => {
       it('Has the correct total power', async () => {
-        // 20k total, no ECOx power
-        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(one.muln(20000));
+        // 1000 total, no ECOx power
+        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(one.muln(1000));
       });
 
       it('Has the right power for alice', async () => {
-        // 5k, no ECOx power
-        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(one.muln(5000));
+        // 250, no ECOx power
+        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(one.muln(250));
       });
     });
 
@@ -93,14 +91,14 @@ contract('VotingPower [@group=2]', (accounts) => {
       });
 
       it('Has the correct total power', async () => {
-        // The original 20k plus all of alice's power as ECO
+        // The original 750 plus all of alice's power as ECO
         expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(
-          one.muln(15000).add(toBN(alicePower)),
+          one.muln(750).add(toBN(alicePower)),
         );
       });
 
       it('Has the right power for alice', async () => {
-        // full power, but all in ECO
+        // correctly includes all the converted ECOx
         expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(toBN(alicePower));
       });
     });
@@ -118,8 +116,8 @@ contract('VotingPower [@group=2]', (accounts) => {
 
       // net zero transfer
       for (let i = 0; i < iterations1; i++) {
-        promises1.push(eco.transfer(alice, one.muln(40), { from: bob }));
-        promises1.push(eco.transfer(bob, one.muln(40), { from: alice }));
+        promises1.push(eco.transfer(alice, one.muln(4), { from: bob }));
+        promises1.push(eco.transfer(bob, one.muln(4), { from: alice }));
       }
       await Promise.all(promises1);
 
@@ -128,13 +126,13 @@ contract('VotingPower [@group=2]', (accounts) => {
 
       // net zero transfer
       for (let i = 0; i < iterations2; i++) {
-        promises2.push(eco.transfer(alice, one.muln(40), { from: bob }));
-        promises2.push(eco.transfer(bob, one.muln(40), { from: alice }));
+        promises2.push(eco.transfer(alice, one.muln(4), { from: bob }));
+        promises2.push(eco.transfer(bob, one.muln(4), { from: alice }));
       }
       await Promise.all(promises2);
 
       // the only net transfer
-      await eco.transfer(alice, one.muln(400), { from: bob });
+      await eco.transfer(alice, one.muln(40), { from: bob });
       const blockNumber3 = await time.latestBlock();
       await time.advanceBlock();
 
@@ -146,36 +144,36 @@ contract('VotingPower [@group=2]', (accounts) => {
       /* eslint-enable no-console */
 
       // before everything
-      expect(await proposals.votingPower(alice, blockNumber1)).to.eq.BN(one.muln(5000));
+      expect(await proposals.votingPower(alice, blockNumber1)).to.eq.BN(one.muln(250));
       expect(await proposals.votingPower(bob, blockNumber1)).to.eq.BN(toBN(0));
-      expect(await proposals.votingPower(charlie, blockNumber1)).to.eq.BN(one.muln(15000));
+      expect(await proposals.votingPower(charlie, blockNumber1)).to.eq.BN(one.muln(750));
       // in the middle
-      expect(await proposals.votingPower(alice, blockNumber2)).to.eq.BN(one.muln(5000));
+      expect(await proposals.votingPower(alice, blockNumber2)).to.eq.BN(one.muln(250));
       expect(await proposals.votingPower(bob, blockNumber2)).to.eq.BN(toBN(0));
-      expect(await proposals.votingPower(charlie, blockNumber2)).to.eq.BN(one.muln(15000));
+      expect(await proposals.votingPower(charlie, blockNumber2)).to.eq.BN(one.muln(750));
       // after with a net transfer
-      expect(await proposals.votingPower(alice, blockNumber3)).to.eq.BN(one.muln(5400));
+      expect(await proposals.votingPower(alice, blockNumber3)).to.eq.BN(one.muln(290));
       expect(await proposals.votingPower(bob, blockNumber3)).to.eq.BN(toBN(0));
-      expect(await proposals.votingPower(charlie, blockNumber3)).to.eq.BN(one.muln(14600));
+      expect(await proposals.votingPower(charlie, blockNumber3)).to.eq.BN(one.muln(710));
     });
 
     it('test of flashloan attacks', async () => {
       const flashLoaner = await FlashLoaner.new(eco.address);
 
-      await eco.approve(flashLoaner.address, one.muln(3000), { from: bob });
-      await eco.approve(flashLoaner.address, one.muln(3050), { from: alice });
+      await eco.approve(flashLoaner.address, one.muln(200), { from: bob });
+      await eco.approve(flashLoaner.address, one.muln(205), { from: alice });
       const blockNumber1 = await time.latestBlock();
 
-      await flashLoaner.flashLoan(bob, alice, one.muln(3000), one.muln(3050));
+      await flashLoaner.flashLoan(bob, alice, one.muln(200), one.muln(205));
       const blockNumber2 = await time.latestBlock();
       await time.advanceBlock();
 
       // before everything
-      expect(await proposals.votingPower(alice, blockNumber1)).to.eq.BN(one.muln(5000));
-      expect(await proposals.votingPower(bob, blockNumber1)).to.eq.BN(one.muln(5000));
+      expect(await proposals.votingPower(alice, blockNumber1)).to.eq.BN(one.muln(250));
+      expect(await proposals.votingPower(bob, blockNumber1)).to.eq.BN(one.muln(250));
       // in the middle
-      expect(await proposals.votingPower(alice, blockNumber2)).to.eq.BN(one.muln(4950));
-      expect(await proposals.votingPower(bob, blockNumber2)).to.eq.BN(one.muln(5050));
+      expect(await proposals.votingPower(alice, blockNumber2)).to.eq.BN(one.muln(245));
+      expect(await proposals.votingPower(bob, blockNumber2)).to.eq.BN(one.muln(255));
     });
   });
 
@@ -185,7 +183,7 @@ contract('VotingPower [@group=2]', (accounts) => {
         await eco.delegate(bob, { from: alice });
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
-        expect(await proposals.votingPower(bob, blockNumber)).to.eq.BN(one.muln(10000));
+        expect(await proposals.votingPower(bob, blockNumber)).to.eq.BN(one.muln(500));
       });
     });
   });
@@ -213,49 +211,14 @@ contract('VotingPower [@group=2]', (accounts) => {
       });
 
       it('Has the correct total power', async () => {
-        // 20k total + ECOx power
-        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(toBN(totalPower));
+        // 10k ECO total + 10k ECOx total
+        expect(await proposals.totalVotingPower(blockNumber)).to.eq.BN(one.muln(2000));
       });
 
       it('Has the right power for alice', async () => {
-        // 5k + ECOx power
-        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(toBN(alicePower));
+        // 2.5k ECO + 4k ECOx
+        expect(await proposals.votingPower(alice, blockNumber)).to.eq.BN(one.muln(650));
       });
     });
-
-    // describe('After alice converts to ECO', async () => {
-    //   beforeEach(async () => {
-    //     await ecox.exchange(one.muln(100), { from: alice });
-    //     generation = await eco.currentGeneration();
-    //     await time.increase(3600 * 24 * 14 + 1);
-    //     await timedPolicies.incrementGeneration();
-
-    //     await ecox.exchange(one.muln(100), { from: alice });
-    //   });
-
-    //   it('Has the right balances for alice', async () => {
-    //     expect(await ecox.balanceOf(alice)).to.eq.BN(one.muln(200));
-    //     expect(await eco.balanceOf(alice)).to.eq.BN(toBN('9428055163203396678421'));
-    //   });
-
-    //   it('Had the right balance on the previous generation', async () => {
-    //     expect(await ecox.getPastVotes(alice, generation)).to.eq.BN(one.muln(300));
-    //     expect(await eco.getPastVotes(alice, generation)).to.eq.BN(
-    //      toBN('7103418361512952496234')
-    //     );
-    //   });
-
-    //   it('Has the correct total power', async () => {
-    //     // exchanging ecox does not change total power
-    //     expect(await proposals.totalVotingPower(generation)).to.eq.BN(toBN(totalPower));
-    //   });
-
-    //   it('Has the right power for alice', async () => {
-    //     // exchanging ecox does not change your voting power
-    //     // we allow a tolerance of 1 eco wei of error
-    //     expect(await proposals.votingPower(alice, generation, []))
-    //       .to.eq.BN(toBN(alicePower).sub(toBN(1)));
-    //   });
-    // });
   });
 });
