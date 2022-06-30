@@ -72,6 +72,7 @@
     "@openzeppelin/test-helpers": "^0.5.10",
     "bip39": "^3.0.3",
     "command-line-args": "^5.1.1",
+    "dotenv": "^16.0.1",
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.7",
     "ethereumjs-wallet": "^1.0.1",

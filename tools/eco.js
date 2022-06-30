@@ -114,7 +114,7 @@ async function parseOptions() {
   if (options.config) {
     const s = options.supervise;
     options = loadConfig(options.config);
-    options.supervise = s;
+    options.supervise = s || options.supervise;
     console.log('loaded config from file, CLI options not used');
   }
 
