@@ -20,7 +20,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     uint256 public constant GENERATION_DURATION = 14 days;
     uint256 private constant GENERATION_START = 1000;
     // Work around the bug in prettier for now
-    uint256 public generation;
+    uint256 public override generation;
     uint256 public nextGenerationStart;
     bytes32[] public notificationHashes;
 
