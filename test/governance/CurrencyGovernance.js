@@ -28,6 +28,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
   let trustedNodes;
   let faucet;
   let ecox;
+  let timedPolicies;
 
   beforeEach(async () => {
     // console.log(accounts[counter]);
@@ -36,6 +37,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       trustedNodes,
       faucet,
       ecox,
+      timedPolicies,
     } = await util.deployPolicy(accounts[counter], { trustednodes: [bob, charlie, dave] }));
     counter += 1;
 
@@ -116,6 +118,11 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
         'VoteCast',
         { trustee: dave },
       );
+    });
+
+    it('Allows for generation to increment if CurrencyGovernance is abandoned', async () => {
+      await time.increase(3600 * 24 * 4);
+      await timedPolicies.incrementGeneration();
     });
   });
 

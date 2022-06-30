@@ -89,53 +89,106 @@ contract('CurrencyTimer [@group=6]', (accounts) => {
       await borda.reveal(alicevote[0], alicevote[2], { from: alice });
       await borda.reveal(bobvote[0], bobvote[2], { from: bob });
       await time.increase(3600 * 24 * 1);
-      await borda.updateStage();
-      await borda.compute();
-      await time.increase(3600 * 24 * 3);
-      await timedPolicies.incrementGeneration();
     });
 
-    it('changed borda', async () => {
-      expect(
-        await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
-      ).to.not.eq.BN(borda.address);
+    context('without compute', () => {
+      beforeEach(async () => {
+        await timedPolicies.incrementGeneration();
+      });
+
+      it('changed borda', async () => {
+        expect(
+          await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+        ).to.not.eq.BN(borda.address);
+      });
+
+      it('Emitted NewCurrencyGovernance event correctly', async () => {
+        const [evt] = await currencyTimer.getPastEvents('NewCurrencyGovernance');
+        const gov = evt.args.addr;
+        expect(
+          await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+        ).to.eq.BN(gov);
+      });
+
+      it('has inflation', async () => {
+        const [evt] = await currencyTimer.getPastEvents('NewInflation');
+        const infl = await Inflation.at(evt.args.addr);
+        expect(await infl.reward()).to.eq.BN(20);
+        expect(await infl.numRecipients()).to.eq.BN(10);
+        expect(await eco.balanceOf(infl.address)).to.eq.BN(200);
+      });
+
+      it('has lockup', async () => {
+        const [evt] = await currencyTimer.getPastEvents('NewLockup');
+        const lockup = await Lockup.at(evt.args.addr);
+        expect(await eco.balanceOf(lockup.address)).to.eq.BN(0);
+
+        await faucet.mint(charlie, 1000000000, { from: charlie });
+        await eco.approve(lockup.address, 1000000000, { from: charlie });
+        await lockup.deposit(1000000000, { from: charlie });
+        expect(await eco.balanceOf(lockup.address)).to.eq.BN(1000000000);
+
+        expect(await currencyTimer.isLockup(lockup.address)).to.be.true;
+      });
+
+      it('has new inflation', async () => {
+        const [evt] = await eco.getPastEvents('NewInflationMultiplier');
+        expect(evt.args.inflationMultiplier).to.eq.BN(proposedInflationMult);
+        const newAliceBal = await eco.balanceOf(alice);
+        const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER();
+        expect(newAliceBal).to.eq.BN((aliceBal * inflationDigits) / proposedInflationMult);
+      });
     });
 
-    it('Emitted NewCurrencyGovernance event correctly', async () => {
-      const [evt] = await currencyTimer.getPastEvents('NewCurrencyGovernance');
-      const gov = evt.args.addr;
-      expect(
-        await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
-      ).to.eq.BN(gov);
-    });
+    context('with compute', () => {
+      beforeEach(async () => {
+        await borda.updateStage();
+        await borda.compute();
+        await timedPolicies.incrementGeneration();
+      });
 
-    it('has inflation', async () => {
-      const [evt] = await currencyTimer.getPastEvents('NewInflation');
-      const infl = await Inflation.at(evt.args.addr);
-      expect(await infl.reward()).to.eq.BN(20);
-      expect(await infl.numRecipients()).to.eq.BN(10);
-      expect(await eco.balanceOf(infl.address)).to.eq.BN(200);
-    });
+      it('changed borda', async () => {
+        expect(
+          await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+        ).to.not.eq.BN(borda.address);
+      });
 
-    it('has lockup', async () => {
-      const [evt] = await currencyTimer.getPastEvents('NewLockup');
-      const lockup = await Lockup.at(evt.args.addr);
-      expect(await eco.balanceOf(lockup.address)).to.eq.BN(0);
+      it('Emitted NewCurrencyGovernance event correctly', async () => {
+        const [evt] = await currencyTimer.getPastEvents('NewCurrencyGovernance');
+        const gov = evt.args.addr;
+        expect(
+          await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+        ).to.eq.BN(gov);
+      });
 
-      await faucet.mint(charlie, 1000000000, { from: charlie });
-      await eco.approve(lockup.address, 1000000000, { from: charlie });
-      await lockup.deposit(1000000000, { from: charlie });
-      expect(await eco.balanceOf(lockup.address)).to.eq.BN(1000000000);
+      it('has inflation', async () => {
+        const [evt] = await currencyTimer.getPastEvents('NewInflation');
+        const infl = await Inflation.at(evt.args.addr);
+        expect(await infl.reward()).to.eq.BN(20);
+        expect(await infl.numRecipients()).to.eq.BN(10);
+        expect(await eco.balanceOf(infl.address)).to.eq.BN(200);
+      });
 
-      expect(await currencyTimer.isLockup(lockup.address)).to.be.true;
-    });
+      it('has lockup', async () => {
+        const [evt] = await currencyTimer.getPastEvents('NewLockup');
+        const lockup = await Lockup.at(evt.args.addr);
+        expect(await eco.balanceOf(lockup.address)).to.eq.BN(0);
 
-    it('has new inflation', async () => {
-      const [evt] = await eco.getPastEvents('NewInflationMultiplier');
-      expect(evt.args.inflationMultiplier).to.eq.BN(proposedInflationMult);
-      const newAliceBal = await eco.balanceOf(alice);
-      const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER();
-      expect(newAliceBal).to.eq.BN((aliceBal * inflationDigits) / proposedInflationMult);
+        await faucet.mint(charlie, 1000000000, { from: charlie });
+        await eco.approve(lockup.address, 1000000000, { from: charlie });
+        await lockup.deposit(1000000000, { from: charlie });
+        expect(await eco.balanceOf(lockup.address)).to.eq.BN(1000000000);
+
+        expect(await currencyTimer.isLockup(lockup.address)).to.be.true;
+      });
+
+      it('has new inflation', async () => {
+        const [evt] = await eco.getPastEvents('NewInflationMultiplier');
+        expect(evt.args.inflationMultiplier).to.eq.BN(proposedInflationMult);
+        const newAliceBal = await eco.balanceOf(alice);
+        const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER();
+        expect(newAliceBal).to.eq.BN((aliceBal * inflationDigits) / proposedInflationMult);
+      });
     });
   });
 });

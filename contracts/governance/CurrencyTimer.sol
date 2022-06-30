@@ -95,6 +95,12 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         uint256 _lockupInterest = 0;
 
         if (address(bg) != address(0)) {
+            if (uint8(bg.stage()) < 3) {
+                bg.updateStage();
+            }
+            if (uint8(bg.stage()) == 3) {
+                bg.compute();
+            }
             address winner = bg.winner();
             if (winner != address(0)) {
                 (
