@@ -158,7 +158,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
       it('alice successfully added voting support to the proposal', async () => {
         const testProposalObj = await proposals.proposals(testProposal.address);
-        expect(testProposalObj.totalstake).to.eq.BN(toBN('5010000000000000000000'));
+        expect(testProposalObj.totalStake).to.eq.BN(toBN('5010000000000000000000'));
       });
 
       it('alice cannot withdraw', async () => {
@@ -181,7 +181,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
         await proposals.support(testProposal.address, { from: charlie });
         const tx = await proposals.deployProposalVoting({ from: charlie });
 
-        const votesAddress = tx.logs.find((t) => t.event === 'VotingStarted').args.contractAddress;
+        const votesAddress = tx.logs.find((t) => t.event === 'VoteStart').args.contractAddress;
         votes = await PolicyVotes.at(votesAddress);
       });
 

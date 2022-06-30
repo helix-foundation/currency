@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../policy/Policy.sol";
+import "./Proposal.sol";
 import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "./VotingPower.sol";
@@ -14,7 +15,7 @@ import "../currency/ECOx.sol";
  */
 contract PolicyVotes is VotingPower, TimeUtils {
     /** The proposal being voted on */
-    address public proposal;
+    Proposal public proposal;
 
     /** Per voter power.
      */
@@ -198,7 +199,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _proposal The proposal to vote on.
      */
-    function configure(address _proposal, uint256 _cutoffBlockNumber) external {
+    function configure(Proposal _proposal, uint256 _cutoffBlockNumber)
+        external
+    {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
@@ -244,7 +247,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             _res = Result.Rejected;
         } else {
             // Vote passed
-            policy.internalCommand(proposal);
+            policy.internalCommand(address(proposal));
             _res = Result.Accepted;
         }
 

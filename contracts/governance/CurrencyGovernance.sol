@@ -64,7 +64,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     /** Fired when the voting stage begins.
      * Triggered by updateStage().
      */
-    event VotingStarted();
+    event VoteStart();
 
     /** Fired when a trustee casts a vote.
      */
@@ -96,7 +96,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 time = getTime();
         if (stage == Stages.Propose && time >= proposalEnds) {
             stage = Stages.Commit;
-            emit VotingStarted();
+            emit VoteStart();
         }
         if (stage == Stages.Commit && time >= votingEnds) {
             stage = Stages.Reveal;

@@ -275,7 +275,7 @@ Attributes:
 Indicates that a new proposal has been created, with arguments corresponding to 
 intended new values for monetary policy levers.
 
-###### VotingStarted
+###### VoteStart
 Attributes: None
 
 Indicates that the stage has been updated to Commit, and proposals will no longer
@@ -1088,14 +1088,14 @@ proposal must be submitted again during the next generation, but its submitter
 is able to recoup some of the fee.
 
 ##### Events
-###### ProposalAdded
+###### Register
 Attributes:
   - `proposer` (address) - the address submitting the proposal
   - `proposalAddress` (address) - the address of the submitted proposal
 
 Emitted on successful submission of a new proposal.
 
-###### ProposalSupported
+###### Support
 Attributes:
   - `supporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
@@ -1103,7 +1103,7 @@ Attributes:
 Emitted when `support` is successfully called. Helps external systems keep tabs
 on the supporting process.
 
-###### ProposalUnsupported
+###### Unsupport
 Attributes:
   - `unsupporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
@@ -1118,13 +1118,13 @@ Attributes:
 Emitted when a proposal crosses the support threshold and is ready to be voted on.
 Indicates that deployProposalVoting can and should now be called.
 
-###### VotingStarted
+###### VoteStart
 Attributes:
   - `contractAddress` (address) - the address of the `PolicyVotes` contract, overseeing the vote.
 
 Emitted once a proposal has reached sufficient support and voting has been started.
 
-###### ProposalRefunded
+###### ProposalRefund
 Attributes:
   - `proposer` (address) - the address of the proposal's initial submitter
 
@@ -1136,7 +1136,7 @@ Arguments:
 
 Register a new proposal for community review. Registration is necessary but does not
 guarantee a vote for its implementation. The proposal is stored in `allProposals`
-which is an array of all submissions. A `ProposalAdded` event is emitted.
+which is an array of all submissions. A `Register` event is emitted.
 
 Registering a proposal requires a deposit of 1000 ECO (`COST_REGISTER`), which is
 transferred from the caller's balance to this contract. Approval of the transfer
@@ -1194,7 +1194,7 @@ Will revert if called before a proposal reaches the support threshold.
 It configures the `PolicyVotes` contract for the specific proposal, creates
 a cloned copy of the contract for voting, removes the proposal to be voted on
 from its own store (the submitter is not able to get a refund), emits a
-`VotingStarted` event, and finally removes the `PolicyProposals` contract
+`VoteStart` event, and finally removes the `PolicyProposals` contract
 from having any policy permissions, ending the proposing process and making
 room for the next one at the start of the next generation. 
 
@@ -1210,7 +1210,7 @@ Arguments:
   - `_prop` (address) - the proposal to refund the fee for
 
 Partially refunds (80%) the fee for the registration of a proposal that did not
-make it to voting. Emits a `ProposalRefunded` event.
+make it to voting. Emits a `ProposalRefund` event.
 
 ###### Security Notes
   - Can only be called after the proposal time.

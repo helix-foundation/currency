@@ -93,12 +93,12 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       await time.increase(3600 * 24 * 10.1);
     });
 
-    it('Emits VotingStarted when stage is updated to Commit', async () => {
+    it('Emits VoteStart when stage is updated to Commit', async () => {
       const result = await borda.updateStage();
       await expectEvent.inTransaction(
         result.tx,
         borda,
-        'VotingStarted',
+        'VoteStart',
       );
     });
 
