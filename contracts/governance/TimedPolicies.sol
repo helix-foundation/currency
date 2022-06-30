@@ -12,7 +12,7 @@ import "./PolicyProposals.sol";
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract TimedPolicies is PolicedUtils, TimeUtils {
+contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     /** The minimum number of days between inflation votes.
      */
     uint256 public constant CURRENCY_TIME = 14 days;
@@ -20,7 +20,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils {
     uint256 public constant GENERATION_DURATION = 14 days;
     uint256 private constant GENERATION_START = 1000;
     // Work around the bug in prettier for now
-    uint256 public internalGeneration;
+    uint256 public generation;
     uint256 public nextGenerationStart;
     bytes32[] public notificationHashes;
 
@@ -45,7 +45,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils {
         bytes32[] memory _notificationHashes
     ) PolicedUtils(_policy) {
         policyProposalImpl = _policyproposal;
-        internalGeneration = GENERATION_START;
+        generation = GENERATION_START;
         notificationHashes = _notificationHashes;
     }
 
@@ -54,7 +54,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils {
         // implementations are left mutable for easier governance
         policyProposalImpl = TimedPolicies(_self).policyProposalImpl();
 
-        internalGeneration = TimedPolicies(_self).internalGeneration();
+        generation = TimedPolicies(_self).generation();
         bytes32[] memory hashes = TimedPolicies(_self).getNotificationHashes();
         for (uint256 i = 0; i < hashes.length; ++i) {
             notificationHashes.push(hashes[i]);
@@ -73,7 +73,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils {
         );
 
         nextGenerationStart = time + GENERATION_DURATION;
-        internalGeneration++;
+        generation++;
 
         uint256 notificationHashesLength = notificationHashes.length;
         for (uint256 i = 0; i < notificationHashesLength; ++i) {
