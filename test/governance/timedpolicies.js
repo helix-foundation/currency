@@ -54,13 +54,13 @@ contract('TimedPolicies [@group=12]', (accounts) => {
 
   describe('startPolicyProposal', () => {
     context("when it's time to start a new cycle", () => {
-      it('emits a PolicyDecisionStarted event', async () => {
+      it('emits a PolicyDecisionStart event', async () => {
         await time.increase(3600 * 24 * 15);
         const tx = await timedPolicies.incrementGeneration();
         await expectEvent.inTransaction(
           tx.tx,
           timedPolicies.constructor,
-          'PolicyDecisionStarted',
+          'PolicyDecisionStart',
         );
       });
     });

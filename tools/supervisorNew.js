@@ -163,7 +163,7 @@ class Supervisor {
     );
     console.log(`ECO address is: ${this.eco.address}`);
 
-    const filter = this.timedPolicies.filters.PolicyDecisionStarted();
+    const filter = this.timedPolicies.filters.PolicyDecisionStart();
     filter.fromBlock = 0;
     filter.toBlock = 'latest';
     const events = await this.timedPolicies.queryFilter(filter);

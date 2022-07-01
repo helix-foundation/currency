@@ -20,7 +20,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     uint256 public constant GENERATION_DURATION = 14 days;
     uint256 private constant GENERATION_START = 1000;
     // Work around the bug in prettier for now
-    uint256 public internalGeneration;
+    uint256 public override generation;
     uint256 public nextGenerationStart;
     bytes32[] public notificationHashes;
 
@@ -37,7 +37,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      *
      * @param contractAddress The address of the PolicyProposals contract.
      */
-    event PolicyDecisionStarted(address contractAddress);
+    event PolicyDecisionStart(address contractAddress);
 
     constructor(
         Policy _policy,
@@ -45,7 +45,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         bytes32[] memory _notificationHashes
     ) PolicedUtils(_policy) {
         policyProposalImpl = _policyproposal;
-        internalGeneration = GENERATION_START;
+        generation = GENERATION_START;
         notificationHashes = _notificationHashes;
     }
 
@@ -54,7 +54,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         // implementations are left mutable for easier governance
         policyProposalImpl = TimedPolicies(_self).policyProposalImpl();
 
-        internalGeneration = TimedPolicies(_self).internalGeneration();
+        generation = TimedPolicies(_self).generation();
         bytes32[] memory hashes = TimedPolicies(_self).getNotificationHashes();
         for (uint256 i = 0; i < hashes.length; ++i) {
             notificationHashes.push(hashes[i]);
@@ -66,15 +66,17 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     }
 
     function incrementGeneration() external {
+        uint256 time = getTime();
         require(
-            getTime() > nextGenerationStart,
+            time > nextGenerationStart,
             "Cannot update the generation counter so soon; please try later"
         );
 
-        nextGenerationStart = getTime() + GENERATION_DURATION;
-        internalGeneration++;
+        nextGenerationStart = time + GENERATION_DURATION;
+        generation++;
 
-        for (uint256 i = 0; i < notificationHashes.length; ++i) {
+        uint256 notificationHashesLength = notificationHashes.length;
+        for (uint256 i = 0; i < notificationHashesLength; ++i) {
             IGenerationIncrease notified = IGenerationIncrease(
                 policy.policyFor(notificationHashes[i])
             );
@@ -85,10 +87,6 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         startPolicyProposal();
     }
 
-    function generation() external view override returns (uint256) {
-        return internalGeneration;
-    }
-
     /** Begin a policies decision process.
      *
      * The proposals contract specified by `policyProposalImpl` is cloned and
@@ -97,13 +95,13 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      * The decision process begins immediately.
      *
      * Use `policyFor(ID_POLICY_PROPOSALS)` to find the resulting contract
-     * address, or watch for the PolicyDecisionStarted event.
+     * address, or watch for the PolicyDecisionStart event.
      */
     function startPolicyProposal() internal {
         PolicyProposals _proposals = PolicyProposals(
             policyProposalImpl.clone()
         );
         policy.setPolicy(ID_POLICY_PROPOSALS, address(_proposals));
-        emit PolicyDecisionStarted(address(_proposals));
+        emit PolicyDecisionStart(address(_proposals));
     }
 }
