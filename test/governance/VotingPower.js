@@ -106,10 +106,11 @@ contract('VotingPower [@group=2]', (accounts) => {
 
   context('voting checkpoint stress tests', () => {
     it('gets the right voting power despite multiple transfers', async () => {
+      await eco.enableDelegation({ from: charlie });
       await eco.delegate(charlie, { from: bob });
       const blockNumber1 = await time.latestBlock();
 
-      // don't go much above 100 on iterations1
+      // don't go much above 60 on iterations
       const iterations1 = 50;
       const iterations2 = 6;
       const promises1 = [];
@@ -180,6 +181,7 @@ contract('VotingPower [@group=2]', (accounts) => {
   context('by delegating', () => {
     describe('only ECO power', () => {
       it('Has the right power for bob after alice delegates here votes to him', async () => {
+        await eco.enableDelegation({ from: bob });
         await eco.delegate(bob, { from: alice });
         blockNumber = await time.latestBlock();
         await time.advanceBlock();

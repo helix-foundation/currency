@@ -1015,6 +1015,38 @@ contract('InflationRootHashProposal', () => {
         await rootHashProposal.destruct();
       });
 
+      it('success rejects alternative proposed hashes', async () => {
+        await time.increase(86401);
+        expect((await currencyTimer.rootHashAddressPerGeneration((
+          await eco.currentGeneration()) - 1)).toString(10) === '0');
+        await expectEvent.inTransaction(
+          (await rootHashProposal.checkRootHashStatus(
+            accounts[0],
+          )).tx,
+          InflationRootHashProposal,
+          'RootHashAccepted',
+          {
+            proposer: accounts[0],
+            proposedRootHash,
+            totalSum: totalSum.toString(),
+            amountOfAccounts: amountOfAccounts.toString(),
+          },
+        );
+        expect((await currencyTimer.rootHashAddressPerGeneration((
+          await eco.currentGeneration()) - 1)).toString(10)
+          === rootHashProposal.address.toString(10));
+
+        await rootHashProposal.claimFee(accounts[0], { from: accounts[0] });
+
+        await expectRevert(
+          rootHashProposal.claimFee(accounts[0], { from: accounts[1] }),
+          'challenger may claim fee on rejected proposal only',
+        );
+
+        await time.increase(86400000);
+        await rootHashProposal.destruct();
+      });
+
       it('cannot destruct before fee collection period ends', async () => {
         await time.increase(86401);
         await rootHashProposal.checkRootHashStatus(

@@ -57,13 +57,14 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
     function withdraw(uint256 _amount) external {
         address _destination = msg.sender;
 
+        // do this first to ensure that any undelegations in this function are caught
+        _burn(_destination, _amount);
+
         // generation indexing starts at 1000 so this will succeed for new addreses
         require(
             votingTracker[_destination] < currentGeneration - 1,
-            "Must not vote in the generation on or before withdrawing"
+            "Must not vote or undelegate in the generation on or before withdrawing"
         );
-
-        _burn(_destination, _amount);
 
         require(ecoXToken.transfer(_destination, _amount), "Transfer Failed");
 
@@ -94,6 +95,17 @@ contract ECOxLockup is VoteCheckpoints, PolicedUtils {
         );
 
         votingTracker[_who] = currentGeneration;
+    }
+
+    function _undelegate(
+        address delegator,
+        address delegatee,
+        uint256 amount
+    ) internal override {
+        // undelegating makes sure that voting is copied over
+        votingTracker[delegator] = votingTracker[delegatee];
+
+        super._undelegate(delegator, delegatee, amount);
     }
 
     function initialize(address _self) public override onlyConstruction {

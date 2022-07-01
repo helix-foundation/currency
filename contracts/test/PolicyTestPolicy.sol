@@ -21,6 +21,16 @@ contract PolicyTestPolicy is Policy {
         setInterfaceImplementation(_label, _impl);
     }
 
+    /** Set the expected interface setter for a given policedutils to the given
+     * address.
+     *
+     * @param _policedUtils The interface name.
+     * @param _setter The interface implementation.
+     */
+    function setExpected(PolicedUtils _policedUtils, address _setter) external {
+        _policedUtils.setExpectedInterfaceSet(_setter);
+    }
+
     /** Force the execution of a function by the provided policed contract.
      *
      * @param _pol The contract to act as.

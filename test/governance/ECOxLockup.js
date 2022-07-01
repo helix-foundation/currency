@@ -162,7 +162,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
       });
 
       it('alice cannot withdraw', async () => {
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote in the generation on or before withdrawing');
+        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
       });
 
       it('alice can still deposit', async () => {
@@ -197,18 +197,18 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
       it('alice cannot vote then withdraw', async () => {
         await votes.vote(true, { from: alice });
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote in the generation on or before withdrawing');
+        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
       });
 
       it('charlie supported, so cannot withdraw', async () => {
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote in the generation on or before withdrawing');
+        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote or undelegate in the generation on or before withdrawing');
       });
 
       it('charlie supported, so cannot withdraw in the next generation', async () => {
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
 
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote in the generation on or before withdrawing');
+        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote or undelegate in the generation on or before withdrawing');
       });
 
       it('charlie supported, but can withdraw the generation after next', async () => {
@@ -218,6 +218,138 @@ contract('ecoXLockup [@group=12]', (accounts) => {
         await timedPolicies.incrementGeneration();
 
         await ecoXLockup.withdraw(one.muln(10), { from: charlie });
+      });
+    });
+  });
+
+  context('delegation and withdrawals', () => {
+    beforeEach(async () => {
+      // we need to get the addresses some voting power
+      await ecox.approve(ecoXLockup.address, one.muln(10), { from: alice });
+      await ecoXLockup.deposit(one.muln(10), { from: alice });
+
+      await ecox.approve(ecoXLockup.address, one.muln(100), { from: bob });
+      await ecoXLockup.deposit(one.muln(100), { from: bob });
+
+      await ecoXLockup.enableDelegation({ from: bob });
+    });
+
+    it('delegate works as expected', async () => {
+      await ecoXLockup.delegate(bob, { from: alice });
+      const blockNumber = await time.latestBlock();
+      await time.increase(10);
+      expect(await ecoXLockup.getVotingGons(bob)).to.eq.BN(one.muln(110));
+      expect(await ecoXLockup.votingECOx(bob, blockNumber)).to.eq.BN(one.muln(110));
+    });
+
+    context('undelegate transfers voting record', () => {
+      beforeEach(async () => {
+        await time.increase(3600 * 24 * 14 + 1);
+        await timedPolicies.incrementGeneration();
+        await time.increase(3600 * 24 * 14 + 1);
+        await timedPolicies.incrementGeneration();
+
+        proposals = await makeProposals();
+
+        testProposal = await Empty.new(1);
+
+        await eco.approve(
+          proposals.address,
+          await proposals.COST_REGISTER(),
+        );
+
+        await proposals.registerProposal(testProposal.address);
+      });
+
+      context('delegatee did not vote', () => {
+        beforeEach(async () => {
+          await ecoXLockup.delegate(bob, { from: alice });
+        });
+
+        it('no effect on withdrawal', async () => {
+          await ecoXLockup.undelegate({ from: alice });
+          await ecoXLockup.withdraw(one.muln(10), { from: alice });
+        });
+
+        it('can withdraw without undelegating', async () => {
+          await ecoXLockup.withdraw(one.muln(10), { from: alice });
+        });
+      });
+
+      context('delegatee did vote', () => {
+        beforeEach(async () => {
+          await ecoXLockup.delegate(bob, { from: alice });
+          await proposals.support(testProposal.address, { from: bob });
+          await time.advanceBlock();
+        });
+
+        context('immediately after the vote', () => {
+          it('blocks if delegatee did vote', async () => {
+            await ecoXLockup.undelegate({ from: alice });
+            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+          });
+
+          it('cannot withdraw without undelegating', async () => {
+            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+          });
+
+          it('undelegateFromAddress blocks withdrawal', async () => {
+            await ecoXLockup.undelegateFromAddress(bob, { from: alice });
+            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+          });
+        });
+
+        context('1 generation after the vote', () => {
+          beforeEach(async () => {
+            await time.increase(3600 * 24 * 14 + 1);
+            await timedPolicies.incrementGeneration();
+          });
+
+          it('blocks if delegatee did vote', async () => {
+            await ecoXLockup.undelegate({ from: alice });
+            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+          });
+
+          it('cannot withdraw without undelegating', async () => {
+            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+          });
+
+          it('undelegateFromAddress blocks withdrawal', async () => {
+            await ecoXLockup.undelegateFromAddress(bob, { from: alice });
+            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+          });
+        });
+
+        context('2 generations after the vote', () => {
+          beforeEach(async () => {
+            await time.increase(3600 * 24 * 14 + 1);
+            await timedPolicies.incrementGeneration();
+            await time.increase(3600 * 24 * 14 + 1);
+            await timedPolicies.incrementGeneration();
+          });
+
+          it('can now withdraw', async () => {
+            await ecoXLockup.undelegate({ from: alice });
+            await ecoXLockup.withdraw(one.muln(10), { from: alice });
+          });
+
+          it('can withdraw without undelegating', async () => {
+            await ecoXLockup.withdraw(one.muln(10), { from: alice });
+          });
+
+          it('undelegateFromAddress dose not block withdrawal', async () => {
+            await ecoXLockup.undelegateFromAddress(bob, { from: alice });
+            await ecoXLockup.withdraw(one.muln(10), { from: alice });
+          });
+        });
+      });
+
+      context('partial delegation', () => {
+        it('can still withdraw if delegation is partial', async () => {
+          await ecoXLockup.delegateAmount(bob, one.muln(5), { from: alice });
+          await proposals.support(testProposal.address, { from: bob });
+          await ecoXLockup.withdraw(one.muln(5), { from: alice });
+        });
       });
     });
   });
