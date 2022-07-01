@@ -71,7 +71,6 @@ cover-run
 coverage.json
 .jsbeautifyrc
 .vscode
-<<<<<<< HEAD
 artifacts
 cache/
 out/

@@ -148,7 +148,7 @@ describe('ECOx', () => {
 
       it('emits an Approval event', async () => {
         const result = await permit(
-          eco,
+          ecox,
           owner,
           spender,
           await web3.eth.getChainId(),
@@ -156,7 +156,7 @@ describe('ECOx', () => {
         );
         await expectEvent.inTransaction(
           result.tx,
-          eco.constructor,
+          ecox.constructor,
           'Approval',
         );
       });
@@ -164,7 +164,7 @@ describe('ECOx', () => {
       context('when there is no existing allowance', () => {
         it('sets the allowance', async () => {
           const result = await permit(
-            eco,
+            ecox,
             owner,
             spender,
             await web3.eth.getChainId(),
@@ -172,10 +172,10 @@ describe('ECOx', () => {
           );
           await expectEvent.inTransaction(
             result.tx,
-            eco.constructor,
+            ecox.constructor,
             'Approval',
           );
-          const allowance = await eco.allowance(owner.address, spender.address);
+          const allowance = await ecox.allowance(owner.address, spender.address);
           expect(allowance).to.eq.BN(amount);
         });
       });
@@ -183,7 +183,7 @@ describe('ECOx', () => {
       context('when there is a pre-existing allowance', () => {
         beforeEach(async () => {
           await permit(
-            eco,
+            ecox,
             owner,
             spender,
             await web3.eth.getChainId(),
@@ -193,20 +193,20 @@ describe('ECOx', () => {
 
         it('replaces the existing allowance', async () => {
           await permit(
-            eco,
+            ecox,
             owner,
             spender,
             await web3.eth.getChainId(),
             amount,
           );
-          const allowance = await eco.allowance(owner.address, spender.address);
+          const allowance = await ecox.allowance(owner.address, spender.address);
 
           expect(allowance).to.eq.BN(amount);
         });
 
         it('emits the Approval event', async () => {
           const result = await permit(
-            eco,
+            ecox,
             owner,
             spender,
             await web3.eth.getChainId(),
@@ -214,7 +214,7 @@ describe('ECOx', () => {
           );
           await expectEvent.inTransaction(
             result.tx,
-            eco.constructor,
+            ecox.constructor,
             'Approval',
           );
         });
