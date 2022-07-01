@@ -7,6 +7,7 @@ const CurrencyGovernance = artifacts.require('CurrencyGovernance');
 
 const { expect } = chai;
 const { expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants');
 const util = require('../../tools/test/util');
 
 let one;
@@ -177,7 +178,7 @@ contract('ECO [@group=1]', (accounts) => {
 
       it('prevents a transfer to the 0 address', async () => {
         await expectRevert(
-          eco.transfer('0x0000000000000000000000000000000000000000', amount, meta),
+          eco.transfer(ZERO_ADDRESS, amount, meta),
           'ERC20: transfer to the zero address',
           eco.constructor,
         );
@@ -240,7 +241,7 @@ contract('ECO [@group=1]', (accounts) => {
           result.tx,
           eco.constructor,
           'Transfer',
-          { from: source, to: '0x0000000000000000000000000000000000000000', value: amount.toString() },
+          { from: source, to: ZERO_ADDRESS, value: amount.toString() },
         );
       });
     });
@@ -265,7 +266,7 @@ contract('ECO [@group=1]', (accounts) => {
 
       it('prevents an approve for the 0 address', async () => {
         await expectRevert(
-          eco.approve('0x0000000000000000000000000000000000000000', amount, meta),
+          eco.approve(ZERO_ADDRESS, amount, meta),
           'ERC20: approve to the zero address',
           eco.constructor,
         );
@@ -532,7 +533,7 @@ contract('ECO [@group=1]', (accounts) => {
         tx.tx,
         eco.constructor,
         'Transfer',
-        { from: '0x0000000000000000000000000000000000000000', to: accounts[1], value: amount.toString() },
+        { from: ZERO_ADDRESS, to: accounts[1], value: amount.toString() },
       );
     });
 
@@ -544,7 +545,7 @@ contract('ECO [@group=1]', (accounts) => {
         tx.tx,
         eco.constructor,
         'Transfer',
-        { to: '0x0000000000000000000000000000000000000000', from: accounts[1], value: burnAmount.toString() },
+        { to: ZERO_ADDRESS, from: accounts[1], value: burnAmount.toString() },
       );
     });
   });
@@ -632,6 +633,335 @@ contract('ECO [@group=1]', (accounts) => {
           'ERC20: decreased allowance below zero',
           eco.constructor,
         );
+      });
+    });
+  });
+
+  describe('delegation', () => {
+    const amount = one.muln(1000);
+    let voteAmount;
+
+    beforeEach(async () => {
+      await faucet.mint(accounts[1], amount);
+      await faucet.mint(accounts[2], amount);
+      await faucet.mint(accounts[3], amount);
+      await faucet.mint(accounts[4], amount);
+      await eco.enableDelegation({ from: accounts[3] });
+      await eco.enableDelegation({ from: accounts[4] });
+
+      voteAmount = (new BN(proposedInflationMult)).mul(amount);
+    });
+
+    context('delegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct votes when delegated', async () => {
+        const tx1 = await eco.delegate(accounts[3], meta);
+        console.log(tx1.receipt.gasUsed);
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.muln(2));
+
+        const tx2 = await eco.delegate(accounts[4], meta);
+        console.log(tx2.receipt.gasUsed);
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount);
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(2));
+      });
+
+      it('does not allow delegation if not enabled', async () => {
+        await expectRevert(eco.delegate(accounts[5], meta), 'Primary delegates must enable delegation');
+      });
+
+      it('does not allow delegation to yourself', async () => {
+        await expectRevert(eco.delegate(accounts[1], meta), 'Use undelegate instead of delegating to yourself');
+      });
+
+      it('does not allow delegation if you are a delegatee', async () => {
+        await expectRevert(eco.delegate(accounts[4], { from: accounts[3] }), 'Cannot delegate if you have enabled primary delegation to yourself');
+      });
+    });
+
+    context('undelegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct state when undelegated after delegating', async () => {
+        await eco.delegate(accounts[3], meta);
+
+        const tx2 = await eco.undelegate(meta);
+        console.log(tx2.receipt.gasUsed);
+
+        const votes1 = await eco.getVotingGons(accounts[1]);
+        expect(votes1).to.eq.BN(voteAmount);
+        const votes2 = await eco.getVotingGons(accounts[3]);
+        expect(votes2).to.eq.BN(voteAmount);
+      });
+    });
+
+    context('isOwnDelegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+
+        await eco.delegate(accounts[3], meta);
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+
+        await eco.undelegate(meta);
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+      });
+    });
+
+    context('getPrimaryDelegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[1]);
+
+        await eco.delegate(accounts[3], meta);
+        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[3]);
+
+        await eco.undelegate(meta);
+        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[1]);
+      });
+    });
+
+    context('delegate then transfer', () => {
+      const meta = { from: accounts[1] };
+
+      it('sender delegated', async () => {
+        await eco.delegate(accounts[3], { from: accounts[1] });
+        await eco.transfer(accounts[2], amount, meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(2));
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount);
+      });
+
+      it('reciever delegated', async () => {
+        await eco.delegate(accounts[4], { from: accounts[2] });
+        await eco.transfer(accounts[2], amount, meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3));
+      });
+
+      it('both delegated', async () => {
+        await eco.delegate(accounts[3], { from: accounts[1] });
+        await eco.delegate(accounts[4], { from: accounts[2] });
+        await eco.transfer(accounts[2], amount, meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount);
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3));
+      });
+    });
+
+    context('transfer gas testing', () => {
+      const meta = { from: accounts[1] };
+
+      it('no delegations', async () => {
+        const tx = await eco.transfer(accounts[2], amount, meta);
+        console.log(tx.receipt.gasUsed);
+      });
+
+      it('sender delegated', async () => {
+        await eco.delegate(accounts[3], { from: accounts[1] });
+        const tx = await eco.transfer(accounts[2], amount, meta);
+        console.log(tx.receipt.gasUsed);
+      });
+
+      it('reciever delegated', async () => {
+        await eco.delegate(accounts[4], { from: accounts[2] });
+        const tx = await eco.transfer(accounts[2], amount, meta);
+        console.log(tx.receipt.gasUsed);
+      });
+
+      it('both delegated', async () => {
+        await eco.delegate(accounts[3], { from: accounts[1] });
+        await eco.delegate(accounts[4], { from: accounts[2] });
+        const tx = await eco.transfer(accounts[2], amount, meta);
+        console.log(tx.receipt.gasUsed);
+      });
+    });
+  });
+
+  describe('partial delegation', () => {
+    const amount = one.muln(1000);
+    let voteAmount;
+
+    beforeEach(async () => {
+      await faucet.mint(accounts[1], amount);
+      await faucet.mint(accounts[2], amount);
+      await faucet.mint(accounts[3], amount);
+      await faucet.mint(accounts[4], amount);
+      await eco.enableDelegation({ from: accounts[3] });
+      await eco.enableDelegation({ from: accounts[4] });
+
+      voteAmount = (new BN(proposedInflationMult)).mul(amount);
+    });
+
+    context('delegateAmount', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct votes when delegated', async () => {
+        const tx1 = await eco.delegateAmount(accounts[3], voteAmount.divn(2), meta);
+        console.log(tx1.receipt.gasUsed);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(voteAmount.divn(2));
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.divn(2).muln(3));
+
+        const tx2 = await eco.delegateAmount(accounts[4], voteAmount.divn(4), meta);
+        console.log(tx2.receipt.gasUsed);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(voteAmount.divn(4));
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.divn(2).muln(3));
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.divn(4).muln(5));
+      });
+
+      it('does not allow delegation to yourself', async () => {
+        await expectRevert(eco.delegateAmount(accounts[1], voteAmount.divn(5), meta), 'Do not delegate to yourself');
+      });
+
+      it('does not allow delegation if you are a delegatee', async () => {
+        await expectRevert(eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[3] }), 'Cannot delegate if you have enabled primary delegation to yourself');
+      });
+
+      it('does not allow you to delegate more than your balance', async () => {
+        await expectRevert(eco.delegateAmount(accounts[4], voteAmount.muln(3), meta), 'Must have an undelegated amount available to cover delegation');
+
+        await eco.delegateAmount(accounts[4], voteAmount.muln(2).divn(3), meta);
+
+        await expectRevert(eco.delegateAmount(accounts[3], voteAmount.divn(2), meta), 'Must have an undelegated amount available to cover delegation');
+      });
+
+      it('having a primary delegate means you cannot delegate an amount', async () => {
+        await eco.delegate(accounts[4], meta);
+
+        await expectRevert(eco.delegateAmount(accounts[3], voteAmount.divn(1000000), meta), 'Must have an undelegated amount available to cover delegation');
+      });
+
+      it('having delegated an amount does not allow you to full delegate', async () => {
+        await eco.delegateAmount(accounts[4], voteAmount.divn(1000000), meta);
+
+        await expectRevert(eco.delegate(accounts[3], meta), 'Must have an undelegated amount available to cover delegation');
+        await expectRevert(eco.delegate(accounts[4], meta), 'Must have an undelegated amount available to cover delegation');
+      });
+    });
+
+    context('undelegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct state when undelegated after delegating', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), meta);
+        await eco.delegateAmount(accounts[4], voteAmount.divn(4), meta);
+
+        const tx1 = await eco.undelegateFromAddress(accounts[4], meta);
+        console.log(tx1.receipt.gasUsed);
+
+        expect(await eco.getVotingGons(accounts[1], meta)).to.eq.BN(voteAmount.divn(2));
+        expect(await eco.getVotingGons(accounts[3], meta)).to.eq.BN(voteAmount.divn(2).muln(3));
+        expect(await eco.getVotingGons(accounts[4], meta)).to.eq.BN(voteAmount);
+
+        const tx2 = await eco.undelegateFromAddress(accounts[3], meta);
+        console.log(tx2.receipt.gasUsed);
+
+        expect(await eco.getVotingGons(accounts[1], meta)).to.eq.BN(voteAmount);
+        expect(await eco.getVotingGons(accounts[3], meta)).to.eq.BN(voteAmount);
+        expect(await eco.getVotingGons(accounts[4], meta)).to.eq.BN(voteAmount);
+      });
+    });
+
+    context('isOwnDelegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+
+        await eco.delegateAmount(accounts[2], voteAmount.divn(4), meta);
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+
+        await eco.delegateAmount(accounts[3], voteAmount.divn(4), meta);
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+
+        await eco.undelegateFromAddress(accounts[3], meta);
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+
+        await eco.undelegateFromAddress(accounts[2], meta);
+        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+      });
+    });
+
+    context('getPrimaryDelegate', () => {
+      const meta = { from: accounts[1] };
+
+      it('delegateAmount does not give you a primary delegate', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), meta);
+        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[1]);
+      });
+    });
+
+    context('delegate then transfer', () => {
+      const meta = { from: accounts[1] };
+
+      it('sender delegated with enough to cover', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
+        await eco.transfer(accounts[2], amount.divn(2), meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(3).divn(2));
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.muln(3).divn(2));
+      });
+
+      it('sender delegated without enough to cover', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
+        await expectRevert(eco.transfer(accounts[2], amount, meta), 'Delegation too complicated to transfer. Undelegate and simplify before trying again');
+      });
+
+      it('reciever delegated', async () => {
+        await eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[2] });
+        await eco.transfer(accounts[2], amount.divn(2), meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(voteAmount.divn(2));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount);
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3).divn(2));
+
+        await eco.transfer(accounts[2], amount.divn(2), meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(3).divn(2));
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3).divn(2));
+      });
+
+      it('both delegated', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
+        await eco.delegateAmount(accounts[4], voteAmount.divn(4), { from: accounts[2] });
+        await eco.transfer(accounts[2], amount.divn(2), meta);
+        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
+        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(5).divn(4));
+        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.muln(3).divn(2));
+        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(5).divn(4));
+      });
+    });
+
+    context('transfer gas testing', () => {
+      const meta = { from: accounts[1] };
+
+      it('sender delegated', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
+        const tx = await eco.transfer(accounts[2], amount.divn(3), meta);
+        console.log(tx.receipt.gasUsed);
+      });
+
+      it('reciever delegated', async () => {
+        await eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[2] });
+        const tx = await eco.transfer(accounts[2], amount, meta);
+        console.log(tx.receipt.gasUsed);
+      });
+
+      it('both delegated', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
+        await eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[2] });
+        const tx = await eco.transfer(accounts[2], amount.divn(3), meta);
+        console.log(tx.receipt.gasUsed);
+      });
+
+      it('both delegated with reciever primary delegate', async () => {
+        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
+        await eco.delegate(accounts[4], { from: accounts[2] });
+        const tx = await eco.transfer(accounts[2], amount.divn(3), meta);
+        console.log(tx.receipt.gasUsed);
       });
     });
   });

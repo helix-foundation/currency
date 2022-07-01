@@ -31,29 +31,29 @@ contract PolicyProposals is VotingPower, TimeUtils {
         address proposer;
         /* The address of the proposal contract.
          */
-        address proposal;
+        Proposal proposal;
         /* The amount of tokens staked in support of this proposal.
          */
-        uint256 totalstake;
+        uint256 totalStake;
     }
 
     /* A record of which addresses have already staked in support of each proposal
      */
-    mapping(address => mapping(address => bool)) public staked;
+    mapping(Proposal => mapping(address => bool)) public staked;
 
     /** The set of proposals under consideration.
      * maps from addresses of proposals to structs containing with info and
      * the staking data (struct defined above)
      */
-    mapping(address => Prop) public proposals;
+    mapping(Proposal => Prop) public proposals;
 
     /** The total number of proposals made.
      */
-    uint256 public totalproposals;
+    uint256 public totalProposals;
 
     /** A list of the addresses of all proposals made.
      */
-    address[] public allProposals;
+    Proposal[] public allProposals;
 
     /** The duration of the proposal portion of the proposal phase.
      */
@@ -65,15 +65,23 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** selected proposal awaiting configuration before voting
      */
-    address public proposalToConfigure;
+    Proposal public proposalToConfigure;
 
     /** The minimum cost to register a proposal.
      */
-    uint256 public constant COST_REGISTER = 1000000000000000000000;
+    uint256 public constant COST_REGISTER = 1000e18;
 
     /** The amount refunded if a proposal does not get selected.
      */
-    uint256 public constant REFUND_IF_LOST = 800000000000000000000;
+    uint256 public constant REFUND_IF_LOST = 800e18;
+
+    /** The percentage of total voting power required to push to a vote.
+     */
+    uint256 public constant SUPPORT_THRESHOLD = 30;
+
+    /** The divisor for the above constant, tracks the digits of precision.
+     */
+    uint256 public constant SUPPORT_THRESHOLD_DIVISOR = 100;
 
     /** The time at which the proposal portion of the proposals phase ends.
      */
@@ -91,39 +99,42 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** An event indicating a proposal has been proposed
      *
-     * @param proposalAddress The address of the PolicyVotes contract instance.
+     * @param proposalAddress The address of the Proposal contract instance that was added
      */
-    event ProposalAdded(address proposer, address proposalAddress);
+    event Register(address indexed proposer, Proposal indexed proposalAddress);
 
     /** An event indicating that proposal have been supported by stake.
      *
-     * @param proposalAddress The address of the PolicyVotes contract instance that was supported
+     * @param proposalAddress The address of the Proposal contract instance that was supported
      */
-    event ProposalSupported(address supporter, address proposalAddress);
+    event Support(address indexed supporter, Proposal indexed proposalAddress);
 
     /** An event indicating that support has been removed from a proposal.
      *
-     * @param proposalAddress The address of the PolicyVotes contract instance that was supported
+     * @param proposalAddress The address of the Proposal contract instance that was unsupported
      */
-    event ProposalUnsupported(address unsupporter, address proposalAddress);
+    event Unsupport(
+        address indexed unsupporter,
+        Proposal indexed proposalAddress
+    );
 
     /** An event indicating a proposal has reached its support threshold
      *
-     * @param proposalAddress The address of the PolicyVotes contract instance.
+     * @param proposalAddress The address of the Proposal contract instance.
      */
-    event SupportThresholdReached(address proposalAddress);
+    event SupportThresholdReached(Proposal indexed proposalAddress);
 
-    /** An event indicating that proposals have been accepted for voting
+    /** An event indicating that a proposal has been accepted for voting
      *
      * @param contractAddress The address of the PolicyVotes contract instance.
      */
-    event VotingStarted(PolicyVotes contractAddress);
+    event VoteStart(PolicyVotes indexed contractAddress);
 
     /** An event indicating that proposal fee was partially refunded.
      *
      * @param proposer The address of the proposee which was refunded
      */
-    event ProposalRefunded(address proposer);
+    event ProposalRefund(address indexed proposer);
 
     /** Construct a new PolicyProposals instance using the provided supervising
      * policy (root) and supporting contracts.
@@ -162,15 +173,15 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** A list of addresses for all proposed policies
      */
-    function allProposalAddresses() public view returns (address[] memory) {
+    function allProposalAddresses() public view returns (Proposal[] memory) {
         return allProposals;
     }
 
     /** A list of all proposed policies
      */
     function allProposalData() public view returns (Prop[] memory) {
-        Prop[] memory proposalData = new Prop[](totalproposals);
-        for (uint256 index = 0; index < totalproposals; index++) {
+        Prop[] memory proposalData = new Prop[](totalProposals);
+        for (uint256 index = 0; index < totalProposals; index++) {
             proposalData[index] = proposals[allProposals[index]];
         }
 
@@ -187,17 +198,21 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The address of the proposal to submit.
      */
-    function registerProposal(address _prop) external {
-        Prop storage _p = proposals[_prop];
-
-        require(_prop != address(0), "The proposal address can't be 0");
+    function registerProposal(Proposal _prop) external returns (uint256) {
+        require(
+            address(_prop) != address(0),
+            "The proposal address can't be 0"
+        );
 
         require(
             getTime() < proposalEnds && !proposalSelected,
             "Proposals may no longer be registered because the registration period has ended"
         );
+
+        Prop storage _p = proposals[_prop];
+
         require(
-            _p.proposal == address(0),
+            address(_p.proposal) == address(0),
             "A proposal may only be registered once"
         );
         require(
@@ -209,9 +224,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
         _p.proposer = msg.sender;
 
         allProposals.push(_prop);
-        totalproposals = totalproposals + 1;
+        totalProposals += 1;
 
-        emit ProposalAdded(msg.sender, _prop);
+        emit Register(msg.sender, _prop);
+
+        // returns the index of the proposal in the allProposals array
+        return totalProposals - 1;
     }
 
     /** Stake in support of an existing proposal.
@@ -222,7 +240,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The proposal to support.
      */
-    function support(address _prop) external {
+    function support(Proposal _prop) external {
         require(
             policyFor(ID_POLICY_PROPOSALS) == address(this),
             "Proposal contract no longer active"
@@ -234,16 +252,16 @@ contract PolicyProposals is VotingPower, TimeUtils {
         );
 
         uint256 _amount = votingPower(msg.sender, blockNumber);
-        uint256 _total = totalVotingPower(blockNumber);
-
-        Prop storage _p = proposals[address(_prop)];
 
         require(
             _amount > 0,
             "In order to support a proposal you must stake a non-zero amount of tokens"
         );
+
+        Prop storage _p = proposals[_prop];
+
         require(
-            _p.proposal != address(0),
+            address(_p.proposal) != address(0),
             "The supported proposal is not registered"
         );
         require(
@@ -251,20 +269,25 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "You may not stake in support of a proposal twice"
         );
 
-        _p.totalstake = _p.totalstake + _amount;
+        _p.totalStake = _p.totalStake + _amount;
         staked[_p.proposal][msg.sender] = true;
 
         recordVote(msg.sender);
-        emit ProposalSupported(msg.sender, _prop);
+        emit Support(msg.sender, _prop);
 
-        if (_p.totalstake > (_total * 30) / 100) {
+        uint256 _total = totalVotingPower(blockNumber);
+
+        if (
+            _p.totalStake >
+            (_total * SUPPORT_THRESHOLD) / SUPPORT_THRESHOLD_DIVISOR
+        ) {
             emit SupportThresholdReached(_prop);
             proposalSelected = true;
             proposalToConfigure = _prop;
         }
     }
 
-    function unsupport(address _prop) external {
+    function unsupport(Proposal _prop) external {
         require(
             policyFor(ID_POLICY_PROPOSALS) == address(this),
             "Proposal contract no longer active"
@@ -275,37 +298,37 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "Proposals may no longer be supported because the registration period has ended"
         );
 
-        uint256 _amount = votingPower(msg.sender, blockNumber);
-        Prop storage _p = proposals[address(_prop)];
+        Prop storage _p = proposals[_prop];
 
         require(
             staked[_p.proposal][msg.sender],
             "You have not staked this proposal"
         );
 
-        _p.totalstake = _p.totalstake - _amount;
+        uint256 _amount = votingPower(msg.sender, blockNumber);
+        _p.totalStake = _p.totalStake - _amount;
         staked[_p.proposal][msg.sender] = false;
 
-        emit ProposalUnsupported(msg.sender, _prop);
+        emit Unsupport(msg.sender, _prop);
     }
 
     function deployProposalVoting() external {
         require(proposalSelected, "no proposal has been selected");
         require(
-            proposalToConfigure != address(0),
+            address(proposalToConfigure) != address(0),
             "voting has already been deployed"
         );
-        address votingProposal = proposalToConfigure;
+        Proposal votingProposal = proposalToConfigure;
         delete proposalToConfigure;
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
         pv.configure(votingProposal, blockNumber);
         policy.setPolicy(ID_POLICY_VOTES, address(pv));
 
-        emit VotingStarted(pv);
+        emit VoteStart(pv);
 
-        delete proposals[address(votingProposal)];
-        totalproposals = totalproposals - 1;
+        delete proposals[votingProposal];
+        totalProposals = totalProposals - 1;
     }
 
     /** Refund the fee for a proposal that was not selected.
@@ -316,13 +339,16 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The proposal to issue a refund for.
      */
-    function refund(address _prop) external {
+    function refund(Proposal _prop) external {
         require(
             proposalSelected || getTime() > proposalEnds,
             "Refunds may not be distributed until the period is over"
         );
 
-        require(_prop != address(0), "The proposal address can't be 0");
+        require(
+            address(_prop) != address(0),
+            "The proposal address can't be 0"
+        );
 
         Prop storage _p = proposals[_prop];
         require(
@@ -333,11 +359,11 @@ contract PolicyProposals is VotingPower, TimeUtils {
         address receiver = _p.proposer;
 
         delete proposals[_prop];
-        totalproposals = totalproposals - 1;
+        totalProposals = totalProposals - 1;
 
         require(ecoToken.transfer(receiver, REFUND_IF_LOST), "Transfer Failed");
 
-        emit ProposalRefunded(receiver);
+        emit ProposalRefund(receiver);
     }
 
     /** Reclaim tokens after end time
@@ -349,7 +375,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "The destruct operation can only be performed when the period is over"
         );
 
-        require(totalproposals == 0, "Must refund all missed proposals first");
+        require(totalProposals == 0, "Must refund all missed proposals first");
 
         policy.removeSelf(ID_POLICY_PROPOSALS);
 

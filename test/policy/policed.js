@@ -163,4 +163,20 @@ contract('Policed [@group=11]', (accounts) => {
     const clone = await DummyPolicedUtils.at(await testPoliced.c());
     await expectRevert(clone.cloneMe(), 'This method cannot be called on clones');
   });
+
+  it('responds to setExpectedInterfaceSet', async () => {
+    const testRawPolicedUtils = await DummyPolicedUtils.new(policy.address);
+    await policy.setExpected(testRawPolicedUtils.address, accounts[1]);
+  });
+
+  it('reverts on setExpectedInterfaceSet from non-policy', async () => {
+    const testRawPolicedUtils = await DummyPolicedUtils.new(policy.address);
+    await expectRevert(testRawPolicedUtils.setExpectedInterfaceSet(accounts[1], { from: accounts[1] }), 'Only the policy contract may call this method.');
+  });
+
+  it('setExpectedInterfaceSet allows delegated canImplementInterfaceForAddress', async () => {
+    const testRawPolicedUtils = await DummyPolicedUtils.new(policy.address);
+    await policy.setExpected(testRawPolicedUtils.address, accounts[1]);
+    await testRawPolicedUtils.canImplementInterfaceForAddress('0x00', accounts[1]);
+  });
 });

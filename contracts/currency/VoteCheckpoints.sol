@@ -20,27 +20,56 @@ import "./ERC20.sol";
  * _Available since v4.2._
  */
 abstract contract VoteCheckpoints is ERC20 {
+    // structure for saving past voting balances, accounting for delegation
     struct Checkpoint {
         uint32 fromBlock;
         uint224 value;
     }
 
-    bytes32 private constant _DELEGATION_TYPEHASH =
-        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
+    // the mapping from an address to each address that it delegates to, then mapped to the amount delegated
+    mapping(address => mapping(address => uint256)) internal _delegates;
 
-    mapping(address => address) private _delegates;
+    // a mapping that aggregates the total delegated amounts in the mapping above
+    mapping(address => uint256) internal _delegatedTotals;
+
+    /** a mapping that tracks the primaryDelegates of each user
+     *
+     * Primary delegates can only be chosen using delegate() which sends the full balance
+     * The exist to maintain the functionality that recieving tokens gives those votes to the delegate
+     */
+    mapping(address => address) internal _primaryDelegates;
+
+    // mapping that tracks if an address is willing to be delegated to
+    // if you have been delegated to, you cannot delegate
+    mapping(address => bool) public delegationEnabled;
+
+    // mapping to the ordered arrays of voting checkpoints for each address
     mapping(address => Checkpoint[]) public checkpoints;
+
+    // the checkpoints to track the token total supply
     Checkpoint[] private _totalSupplyCheckpoints;
 
     /**
-     * @dev Emitted when an account changes their delegate.
+     * @dev Emitted when a delegatee is delegated new votes.
      */
-    event ChangeDelegate(address indexed delegator, address indexed toDelegate);
+    event DelegatedVotes(
+        address indexed delegator,
+        address indexed delegatee,
+        uint256 amount
+    );
 
     /**
      * @dev Emitted when a token transfer or delegate change results in changes to an account's voting power.
      */
-    event ChangeDelegateVotes(address indexed delegate, uint256 newBalance);
+    event UpdatedVotes(address indexed voter, uint256 newVotes);
+
+    /**
+     * @dev Emitted when an account denotes a primary delegate.
+     */
+    event NewPrimaryDelegate(
+        address indexed delegator,
+        address indexed primaryDelegate
+    );
 
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
@@ -94,24 +123,74 @@ abstract contract VoteCheckpoints is ERC20 {
     }
 
     /**
-     * @dev Get the address `account` is currently delegating to. Defaults to the account address itself if none specified
+     * @dev Set yourself as willing to recieve delegates.
      */
-    function getDelegate(address account)
+    function enableDelegation() public {
+        require(
+            isOwnDelegate(msg.sender),
+            "Cannot enable delegation if you have outstanding delegation"
+        );
+
+        delegationEnabled[msg.sender] = true;
+    }
+
+    /**
+     * @dev Set yourself as no longer recieving delegates.
+     * NOTE: the condition for this is not easy and cannot be unilaterally achieved
+     */
+    function disableDelegation() public {
+        require(
+            _balances[msg.sender] == getVotingGons(msg.sender) &&
+                isOwnDelegate(msg.sender),
+            "Cannot disable delegation if you have outstanding delegations to you"
+        );
+
+        delegationEnabled[msg.sender] = false;
+    }
+
+    /**
+     * @dev Returns true if the user has no amount of their balance delegated, otherwise false.
+     */
+    function isOwnDelegate(address account) public view returns (bool) {
+        return _delegatedTotals[account] == 0;
+    }
+
+    /**
+     * @dev Get the primary address `account` is currently delegating to. Defaults to the account address itself if none specified.
+     * The primary delegate is the one that is delegated any new funds the address recieves.
+     */
+    function getPrimaryDelegate(address account)
         public
         view
         virtual
         returns (address)
     {
-        address _voter = _delegates[account];
+        address _voter = _primaryDelegates[account];
         return _voter == address(0) ? account : _voter;
+    }
+
+    /**
+     * @dev Get the primary address `account` is currently delegating to. Defaults to the account address itself if none specified.
+     * The primary delegate is the one that is delegated any new funds the address recieves.
+     */
+    function _setPrimaryDelegate(address delegator, address delegatee)
+        internal
+    {
+        _primaryDelegates[delegator] = delegatee;
+
+        emit NewPrimaryDelegate(
+            delegator,
+            delegatee == address(0) ? delegator : delegatee
+        );
     }
 
     /**
      * @dev Gets the current votes balance in gons for `account`
      */
     function getVotingGons(address account) public view returns (uint256) {
-        uint256 pos = checkpoints[account].length;
-        return pos == 0 ? 0 : checkpoints[account][pos - 1].value;
+        Checkpoint[] memory accountCheckpoints = checkpoints[account];
+        uint256 pos = accountCheckpoints.length;
+        return pos == 0 ? 0 : accountCheckpoints[pos - 1].value;
     }
 
     /**
@@ -194,10 +273,92 @@ abstract contract VoteCheckpoints is ERC20 {
     }
 
     /**
-     * @dev Delegate votes from the sender to `delegatee`.
+     * @dev Delegate all votes from the sender to `delegatee`.
      */
-    function delegate(address delegatee) public virtual {
-        return _delegate(msg.sender, delegatee);
+    function delegate(address delegatee) public {
+        require(
+            delegatee != msg.sender,
+            "Use undelegate instead of delegating to yourself"
+        );
+
+        require(
+            delegationEnabled[delegatee],
+            "Primary delegates must enable delegation"
+        );
+
+        if (!isOwnDelegate(msg.sender)) {
+            undelegateFromAddress(getPrimaryDelegate(msg.sender));
+        }
+
+        uint256 _amount = _balances[msg.sender];
+        _delegate(msg.sender, delegatee, _amount);
+        _setPrimaryDelegate(msg.sender, delegatee);
+    }
+
+    /**
+     * @dev Delegate an `amount` of votes from the sender to `delegatee`.
+     */
+    function delegateAmount(address delegatee, uint256 amount) public {
+        require(delegatee != msg.sender, "Do not delegate to yourself");
+
+        _delegate(msg.sender, delegatee, amount);
+    }
+
+    /**
+     * @dev Change delegation for `delegator` to `delegatee`.
+     *
+     * Emits events {NewDelegatedAmount} and {UpdatedVotes}.
+     */
+    function _delegate(
+        address delegator,
+        address delegatee,
+        uint256 amount
+    ) internal virtual {
+        require(
+            amount <= _balances[delegator] - _delegatedTotals[delegator],
+            "Must have an undelegated amount available to cover delegation"
+        );
+
+        require(
+            !delegationEnabled[delegator],
+            "Cannot delegate if you have enabled primary delegation to yourself"
+        );
+
+        emit DelegatedVotes(delegator, delegatee, amount);
+
+        _delegates[delegator][delegatee] += amount;
+        _delegatedTotals[delegator] += amount;
+
+        _moveVotingPower(delegator, delegatee, amount);
+    }
+
+    /**
+     * @dev Undelegate all votes from the sender's primary delegate.
+     */
+    function undelegate() public {
+        undelegateFromAddress(getPrimaryDelegate(msg.sender));
+    }
+
+    /**
+     * @dev Undelegate votes from the `delegatee` back to the sender.
+     */
+    function undelegateFromAddress(address delegatee) public {
+        uint256 _amount = _delegates[msg.sender][delegatee];
+        _undelegate(msg.sender, delegatee, _amount);
+        if (delegatee == getPrimaryDelegate(msg.sender)) {
+            _setPrimaryDelegate(msg.sender, address(0));
+        }
+    }
+
+    function _undelegate(
+        address delegator,
+        address delegatee,
+        uint256 amount
+    ) internal virtual {
+        _delegatedTotals[delegator] -= amount;
+        _delegates[delegator][delegatee] -= amount;
+
+        _moveVotingPower(delegatee, delegator, amount);
     }
 
     /**
@@ -244,29 +405,48 @@ abstract contract VoteCheckpoints is ERC20 {
     /**
      * @dev Move voting power when tokens are transferred.
      *
-     * Emits a {ChangeDelegateVotes} event.
+     * Emits a {UpdatedVotes} event.
      */
     function _afterTokenTransfer(
         address from,
         address to,
         uint256 amount
     ) internal virtual override {
-        _moveVotingPower(getDelegate(from), getDelegate(to), amount);
-    }
+        // if the address has delegated, they might be transfering tokens allotted to someone else
+        if (!isOwnDelegate(from)) {
+            uint256 _undelegatedAmount = _balances[from] +
+                amount -
+                _delegatedTotals[from];
 
-    /**
-     * @dev Change delegation for `delegator` to `delegatee`.
-     *
-     * Emits events {ChangeDelegate} and {ChangeDelegateVotes}.
-     */
-    function _delegate(address delegator, address delegatee) internal virtual {
-        address currentDelegate = getDelegate(delegator);
-        uint256 delegatorBalance = _balances[delegator];
-        _delegates[delegator] = delegatee;
+            // check to see if tokens must be undelegated to transefer
+            if (_undelegatedAmount < amount) {
+                address _sourcePrimaryDelegate = getPrimaryDelegate(from);
+                uint256 _sourcePrimaryDelegatement = _delegates[from][
+                    _sourcePrimaryDelegate
+                ];
 
-        emit ChangeDelegate(delegator, delegatee);
+                require(
+                    amount <= _undelegatedAmount + _sourcePrimaryDelegatement,
+                    "Delegation too complicated to transfer. Undelegate and simplify before trying again"
+                );
 
-        _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
+                _undelegate(
+                    from,
+                    _sourcePrimaryDelegate,
+                    amount - _undelegatedAmount
+                );
+            }
+        }
+
+        address _destPrimaryDelegate = _primaryDelegates[to];
+        // saving gas by manually doing isOwnDelegate since we already need to read the data for this conditional
+        if (_destPrimaryDelegate != address(0)) {
+            _delegates[to][_destPrimaryDelegate] += amount;
+            _delegatedTotals[to] += amount;
+            _moveVotingPower(from, _destPrimaryDelegate, amount);
+        } else {
+            _moveVotingPower(from, to, amount);
+        }
     }
 
     function _moveVotingPower(
@@ -281,7 +461,7 @@ abstract contract VoteCheckpoints is ERC20 {
                     _subtract,
                     amount
                 );
-                emit ChangeDelegateVotes(src, newWeight);
+                emit UpdatedVotes(src, newWeight);
             }
 
             if (dst != address(0)) {
@@ -290,7 +470,7 @@ abstract contract VoteCheckpoints is ERC20 {
                     _add,
                     amount
                 );
-                emit ChangeDelegateVotes(dst, newWeight);
+                emit UpdatedVotes(dst, newWeight);
             }
         }
     }

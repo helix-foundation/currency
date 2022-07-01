@@ -259,7 +259,7 @@ proposal.
 
 ##### Events
 
-###### ProposalCreated
+###### ProposalCreation
 Attributes:
   - `trusteeAddress` (address) - address of the trustee that created this proposal.
   - `_numberOfRecipients` (uint256) - number of random inflation recipients for this
@@ -275,7 +275,7 @@ Attributes:
 Indicates that a new proposal has been created, with arguments corresponding to 
 intended new values for monetary policy levers.
 
-###### VotingStarted
+###### VoteStart
 Attributes: None
 
 Indicates that the stage has been updated to Commit, and proposals will no longer
@@ -288,13 +288,13 @@ Attributes:
 Indicates that a vote has been cast, and the trustee who cast it. Reveals nothing
 about the content of the vote. 
 
-###### RevealStarted
+###### RevealStart
 Attributes: None
 
 Indicates that the stage has been updated to Reveal, and commits will no longer
 be accepted.
 
-###### VoteRevealed
+###### VoteReveal
 Attributes:
   - `_voter` (indexed address) - the address of the trustee that cast the
     ballot
@@ -304,7 +304,7 @@ Attributes:
 Indicates that an inflation/deflation vote participant has revealed their vote,
 and creates a permanent record of a vote.
 
-###### VoteResults
+###### VoteResult
 Attributes:
   - `winner` (address) the address of the trustee to propose the winning proposal
 
@@ -411,13 +411,13 @@ new `leader`.
 > If a vote is found to be invalid after decryption the vote will be discarded
 > with no opportunity for adjustment or correction.
 
-Emits the `VoteRevealed` event to create a record of the vote in the log. These
+Emits the `VoteReveal` event to create a record of the vote in the log. These
 events are used by the client to display information about the historical voting
 decisions of each participant.
 
 Reverts in the case of an invalid vote. Invalid votes are ones that vote for
 invalid proposals (see `propose`/`unpropose`) or ones that vote for the same
-proposal multiple times.
+proposal multiple times. The proposals must be sorted in the votes array in ascending order.
 
 ###### Security Notes
   - Can only be called by accounts that have previously committed to a ballot by
@@ -430,7 +430,7 @@ proposal multiple times.
 Arguments: none
 
 Sets the `winner` to be whatever the current `leader` is. Sets the `stage` to
-`Finished`. Emits the `VoteResults` event to indicate the end of the voting process
+`Finished`. Emits the `VoteResult` event to indicate the end of the voting process
 and establish an accessible permanent record of the outcome.
 
 ###### Security Notes
@@ -1088,14 +1088,14 @@ proposal must be submitted again during the next generation, but its submitter
 is able to recoup some of the fee.
 
 ##### Events
-###### ProposalAdded
+###### Register
 Attributes:
   - `proposer` (address) - the address submitting the proposal
   - `proposalAddress` (address) - the address of the submitted proposal
 
 Emitted on successful submission of a new proposal.
 
-###### ProposalSupported
+###### Support
 Attributes:
   - `supporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
@@ -1103,7 +1103,7 @@ Attributes:
 Emitted when `support` is successfully called. Helps external systems keep tabs
 on the supporting process.
 
-###### ProposalUnsupported
+###### Unsupport
 Attributes:
   - `unsupporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
@@ -1118,13 +1118,13 @@ Attributes:
 Emitted when a proposal crosses the support threshold and is ready to be voted on.
 Indicates that deployProposalVoting can and should now be called.
 
-###### VotingStarted
+###### VoteStart
 Attributes:
   - `contractAddress` (address) - the address of the `PolicyVotes` contract, overseeing the vote.
 
 Emitted once a proposal has reached sufficient support and voting has been started.
 
-###### ProposalRefunded
+###### ProposalRefund
 Attributes:
   - `proposer` (address) - the address of the proposal's initial submitter
 
@@ -1136,7 +1136,7 @@ Arguments:
 
 Register a new proposal for community review. Registration is necessary but does not
 guarantee a vote for its implementation. The proposal is stored in `allProposals`
-which is an array of all submissions. A `ProposalAdded` event is emitted.
+which is an array of all submissions. A `Register` event is emitted.
 
 Registering a proposal requires a deposit of 1000 ECO (`COST_REGISTER`), which is
 transferred from the caller's balance to this contract. Approval of the transfer
@@ -1194,7 +1194,7 @@ Will revert if called before a proposal reaches the support threshold.
 It configures the `PolicyVotes` contract for the specific proposal, creates
 a cloned copy of the contract for voting, removes the proposal to be voted on
 from its own store (the submitter is not able to get a refund), emits a
-`VotingStarted` event, and finally removes the `PolicyProposals` contract
+`VoteStart` event, and finally removes the `PolicyProposals` contract
 from having any policy permissions, ending the proposing process and making
 room for the next one at the start of the next generation. 
 
@@ -1210,7 +1210,7 @@ Arguments:
   - `_prop` (address) - the proposal to refund the fee for
 
 Partially refunds (80%) the fee for the registration of a proposal that did not
-make it to voting. Emits a `ProposalRefunded` event.
+make it to voting. Emits a `ProposalRefund` event.
 
 ###### Security Notes
   - Can only be called after the proposal time.

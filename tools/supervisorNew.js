@@ -1,7 +1,10 @@
+require('dotenv').config();
 const web3 = require('web3');
 const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 // const { getTree, answer, arrayToTree } = require('./randomInflationUtils');
 
@@ -122,7 +125,13 @@ class Supervisor {
   async manageCurrencyGovernance() {
     // updates the stage of the currency governance process
 
-    return this.null;
+    const stage = await this.currencyGovernance.stage();
+
+    if ((stage === 0 && this.timestamp >= await this.currencyGovernance.proposalEnds())
+        || (stage === 1 && this.timestamp >= await this.currencyGovernance.votingEnds())
+        || (stage === 2 && this.timestamp >= await this.currencyGovernance.revealEnds())) {
+      await this.currencyGovernance.updateStage();
+    }
   }
 
   async manageRandomInflation() {
@@ -211,7 +220,13 @@ class Supervisor {
 
   static async start(_jsonrpcProviderString, _rootPolicy) {
     provider = new ethers.providers.JsonRpcProvider(_jsonrpcProviderString);
-    const signer = await provider.getSigner();
+    let signer = null;
+    if (_jsonrpcProviderString.includes('localhost')) {
+      signer = await provider.getSigner();
+    } else {
+      const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+      signer = wallet.connect(provider);
+    }
 
     const supervisor = await new Supervisor(
       _rootPolicy,

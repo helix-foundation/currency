@@ -468,7 +468,7 @@
 //         { from: this.account },
 //       );
 
-//       const votesAddress = (await proposals.getPastEvents('VotingStarted', { fromBlock: 0, toBlock: 'latest' }))
+//       const votesAddress = (await proposals.getPastEvents('VoteStart', { fromBlock: 0, toBlock: 'latest' }))
 //         .map((x) => x.returnValues.contractAddress)
 //         .shift();
 
@@ -488,7 +488,7 @@
 //           return true;
 //         }
 //       } else if (await proposals.methods.proposalEnds().call() < this.timeStamp) {
-//         const props = (await proposals.getPastEvents('ProposalAdded', { fromBlock: 0, toBlock: 'latest' }))
+//         const props = (await proposals.getPastEvents('Register', { fromBlock: 0, toBlock: 'latest' }))
 //           .map((x) => x.returnValues.proposalAddress);
 //         for (let i = 0; i < props.length; i += 1) {
 //           const prop = await proposals.methods.proposals(props[i]).call();

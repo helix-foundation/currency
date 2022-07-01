@@ -120,12 +120,12 @@ contract('PolicyProposals [@group=7]', (accounts) => {
           );
         });
 
-        it('emits the ProposalAdded event', async () => {
+        it('emits the Register event', async () => {
           const result = await policyProposals.registerProposal(testProposal.address);
           await expectEvent.inTransaction(
             result.tx,
             policyProposals.constructor,
-            'ProposalAdded',
+            'Register',
           );
         });
       });
@@ -237,7 +237,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         await expectEvent.inTransaction(
           tx.tx,
           policyProposals.constructor,
-          'ProposalSupported',
+          'Support',
           { supporter: alice, proposalAddress: testProposal.address },
         );
       });
@@ -379,7 +379,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         await expectEvent.inTransaction(
           tx.tx,
           policyProposals.constructor,
-          'ProposalUnsupported',
+          'Unsupport',
           { unsupporter: alice, proposalAddress: testProposal.address },
         );
       });
@@ -459,14 +459,14 @@ contract('PolicyProposals [@group=7]', (accounts) => {
     });
 
     context('when still holds the policy role and proposals made', () => {
-      it('emits the VotingStarted event', async () => {
+      it('emits the VoteStart event', async () => {
         await policyProposals.support(testProposal.address, { from: charlie });
         const result = await policyProposals.deployProposalVoting();
 
         await expectEvent.inTransaction(
           result.tx,
           policyProposals.constructor,
-          'VotingStarted',
+          'VoteStart',
         );
       });
 
@@ -593,7 +593,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         await expectEvent.inTransaction(
           tx.tx,
           policyProposals.constructor,
-          'ProposalRefunded',
+          'ProposalRefund',
           { proposer: alice },
         );
       });
@@ -616,7 +616,7 @@ contract('PolicyProposals [@group=7]', (accounts) => {
         await expectEvent.inTransaction(
           tx.tx,
           policyProposals.constructor,
-          'ProposalRefunded',
+          'ProposalRefund',
           { proposer: alice },
         );
       });
