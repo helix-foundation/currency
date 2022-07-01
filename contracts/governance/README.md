@@ -259,7 +259,7 @@ proposal.
 
 ##### Events
 
-###### ProposalCreated
+###### ProposalCreation
 Attributes:
   - `trusteeAddress` (address) - address of the trustee that created this proposal.
   - `_numberOfRecipients` (uint256) - number of random inflation recipients for this
@@ -288,13 +288,13 @@ Attributes:
 Indicates that a vote has been cast, and the trustee who cast it. Reveals nothing
 about the content of the vote. 
 
-###### RevealStarted
+###### RevealStart
 Attributes: None
 
 Indicates that the stage has been updated to Reveal, and commits will no longer
 be accepted.
 
-###### VoteRevealed
+###### VoteReveal
 Attributes:
   - `_voter` (indexed address) - the address of the trustee that cast the
     ballot
@@ -304,7 +304,7 @@ Attributes:
 Indicates that an inflation/deflation vote participant has revealed their vote,
 and creates a permanent record of a vote.
 
-###### VoteResults
+###### VoteResult
 Attributes:
   - `winner` (address) the address of the trustee to propose the winning proposal
 
@@ -411,13 +411,13 @@ new `leader`.
 > If a vote is found to be invalid after decryption the vote will be discarded
 > with no opportunity for adjustment or correction.
 
-Emits the `VoteRevealed` event to create a record of the vote in the log. These
+Emits the `VoteReveal` event to create a record of the vote in the log. These
 events are used by the client to display information about the historical voting
 decisions of each participant.
 
 Reverts in the case of an invalid vote. Invalid votes are ones that vote for
 invalid proposals (see `propose`/`unpropose`) or ones that vote for the same
-proposal multiple times.
+proposal multiple times. The proposals must be sorted in the votes array in ascending order.
 
 ###### Security Notes
   - Can only be called by accounts that have previously committed to a ballot by
@@ -430,7 +430,7 @@ proposal multiple times.
 Arguments: none
 
 Sets the `winner` to be whatever the current `leader` is. Sets the `stage` to
-`Finished`. Emits the `VoteResults` event to indicate the end of the voting process
+`Finished`. Emits the `VoteResult` event to indicate the end of the voting process
 and establish an accessible permanent record of the outcome.
 
 ###### Security Notes

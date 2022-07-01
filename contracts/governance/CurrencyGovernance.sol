@@ -2,12 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./TrustedNodes.sol";
-import "../policy/Policy.sol";
 import "../policy/PolicedUtils.sol";
-import "../currency/IECO.sol";
-import "./Inflation.sol";
 import "../utils/TimeUtils.sol";
-import "../VDF/VDFVerifier.sol";
 
 /** @title Inflation/Deflation Process
  *
@@ -16,7 +12,7 @@ import "../VDF/VDFVerifier.sol";
  * to manage the relative price of Eco tokens.
  */
 contract CurrencyGovernance is PolicedUtils, TimeUtils {
-    enum Stages {
+    enum Stage {
         Propose,
         Commit,
         Reveal,
@@ -24,42 +20,59 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         Finished
     }
 
-    Stages public stage;
+    // tracks the progress of the contract
+    Stage public currentStage;
 
+    // data structure for monetary policy proposals
     struct GovernanceProposal {
-        bool valid;
+        // random inflation recipients
         uint256 numberOfRecipients;
+        // amount of weico recieved by each random inflation recipient
         uint256 randomInflationReward;
+        // duration in seconds
         uint256 lockupDuration;
+        // lockup interest as a 9 digit fixed point number
         uint256 lockupInterest;
+        // multiplier for linear inflation as an 18 digit fixed point number
         uint256 inflationMultiplier;
     }
 
+    // timescales
     uint256 public constant PROPOSAL_TIME = 10 days;
     uint256 public constant VOTING_TIME = 3 days;
     uint256 public constant REVEAL_TIME = 1 days;
 
-    mapping(address => GovernanceProposal) public proposals;
-    mapping(address => bytes32) public commitments;
-    mapping(address => uint256) public score;
-
-    mapping(address => bool) internal voteCheck;
-
-    address public leader;
-    address public winner;
-
+    // timestamps for the above periods
     uint256 public proposalEnds;
     uint256 public votingEnds;
     uint256 public revealEnds;
 
-    event ProposalCreated(
-        address trusteeAddress,
+    uint256 public constant IDEMPOTENT_INFLATION_MULTIPLIER = 1e18;
+
+    // mapping of proposing trustee addresses to their submitted proposals
+    mapping(address => GovernanceProposal) public proposals;
+    // mapping of trustee addresses to their hash commits for voting
+    mapping(address => bytes32) public commitments;
+    // mapping of proposals (indexed by the submitting trustee) to their voting score, accumulated during reveal
+    mapping(address => uint256) public score;
+
+    // used to track the leading proposal during the vote totalling
+    address public leader;
+    // used to denote the winning proposal when the vote is finalized
+    address public winner;
+
+    // emitted when a proposal is submitted to track the values
+    event ProposalCreation(
+        address indexed trusteeAddress,
         uint256 _numberOfRecipients,
         uint256 _randomInflationReward,
         uint256 _lockupDuration,
         uint256 _lockupInterest,
         uint256 _inflationMultiplier
     );
+
+    // emitted when a trustee unproposes their proposal
+    event ProposalRetraction(address indexed trustee);
 
     /** Fired when the voting stage begins.
      * Triggered by updateStage().
@@ -68,42 +81,45 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
     /** Fired when a trustee casts a vote.
      */
-    event VoteCast(address trustee);
+    event VoteCast(address indexed trustee);
 
     /** Fired when the reveal stage begins.
      * Triggered by updateStage().
      */
-    event RevealStarted();
+    event RevealStart();
 
     /** Fired when a vote is revealed, to create a voting history for all
      * participants. Records the voter, as well as all of the parameters of
      * the vote cast.
      */
-    event VoteRevealed(address indexed voter, address[] votes);
+    event VoteReveal(address indexed voter, address[] votes);
 
     /** Fired when vote results are computed, creating a permanent record of
      * vote outcomes.
      */
-    event VoteResults(address winner);
+    event VoteResult(address indexed winner);
 
-    modifier atStage(Stages _stage) {
+    modifier atStage(Stage _stage) {
         updateStage();
-        require(stage == _stage, "This call is not allowed at this stage.");
+        require(
+            currentStage == _stage,
+            "This call is not allowed at this stage."
+        );
         _;
     }
 
     function updateStage() public {
         uint256 time = getTime();
-        if (stage == Stages.Propose && time >= proposalEnds) {
-            stage = Stages.Commit;
+        if (currentStage == Stage.Propose && time >= proposalEnds) {
+            currentStage = Stage.Commit;
             emit VoteStart();
         }
-        if (stage == Stages.Commit && time >= votingEnds) {
-            stage = Stages.Reveal;
-            emit RevealStarted();
+        if (currentStage == Stage.Commit && time >= votingEnds) {
+            currentStage = Stage.Reveal;
+            emit RevealStart();
         }
-        if (stage == Stages.Reveal && time >= revealEnds) {
-            stage = Stages.Compute;
+        if (currentStage == Stage.Reveal && time >= revealEnds) {
+            currentStage = Stage.Compute;
         }
     }
 
@@ -125,16 +141,20 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _lockupDuration,
         uint256 _lockupInterest,
         uint256 _inflationMultiplier
-    ) external onlyTrusted atStage(Stages.Propose) {
+    ) external onlyTrusted atStage(Stage.Propose) {
+        require(
+            _inflationMultiplier > 0,
+            "Inflation multiplier cannot be zero."
+        );
+
         GovernanceProposal storage p = proposals[msg.sender];
-        p.valid = true;
         p.numberOfRecipients = _numberOfRecipients;
         p.randomInflationReward = _randomInflationReward;
         p.lockupDuration = _lockupDuration;
         p.lockupInterest = _lockupInterest;
         p.inflationMultiplier = _inflationMultiplier;
 
-        emit ProposalCreated(
+        emit ProposalCreation(
             msg.sender,
             _numberOfRecipients,
             _randomInflationReward,
@@ -144,14 +164,15 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         );
     }
 
-    function unpropose() external atStage(Stages.Propose) {
+    function unpropose() external atStage(Stage.Propose) {
         delete proposals[msg.sender];
+        emit ProposalRetraction(msg.sender);
     }
 
     function commit(bytes32 _commitment)
         external
         onlyTrusted
-        atStage(Stages.Commit)
+        atStage(Stage.Commit)
     {
         commitments[msg.sender] = _commitment;
         emit VoteCast(msg.sender);
@@ -159,51 +180,69 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
     function reveal(bytes32 _seed, address[] calldata _votes)
         external
-        atStage(Stages.Reveal)
+        atStage(Stage.Reveal)
     {
+        uint256 numVotes = _votes.length;
+        require(numVotes > 0, "Cannot vote empty");
         require(
             commitments[msg.sender] != bytes32(0),
             "No unrevealed commitment exists"
         );
-        require(_votes.length > 0, "Cannot vote empty");
         require(
             keccak256(abi.encodePacked(_seed, msg.sender, _votes)) ==
                 commitments[msg.sender],
             "Commitment mismatch"
         );
 
+        address[] memory voteCheck = _votes;
+
+        if (numVotes > 1) {
+            for (uint256 i = 1; i < numVotes; ++i) {
+                for (uint256 j = i; j > 0; --j) {
+                    address right = voteCheck[j];
+                    address left = voteCheck[j - 1];
+                    require(right != left, "Invalid vote, repeated address");
+                    if (right < left) {
+                        voteCheck[j] = left;
+                        voteCheck[j - 1] = right;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        delete commitments[msg.sender];
+
         // remove the trustee's default vote
         score[address(0)] -= 1;
 
-        for (uint256 i = 0; i < _votes.length; ++i) {
+        for (uint256 i = 0; i < numVotes; ++i) {
             address v = _votes[i];
-            require(!voteCheck[v], "Repeated vote");
-            require(proposals[v].valid, "Invalid vote");
 
-            voteCheck[v] = true;
-            score[v] += _votes.length - i;
+            require(
+                proposals[v].inflationMultiplier > 0,
+                "Invalid vote, missing proposal"
+            );
+
+            score[v] += numVotes - i;
 
             if (score[v] > score[leader]) {
                 leader = v;
             }
         }
 
-        for (uint256 i = 0; i < _votes.length; ++i) {
-            voteCheck[_votes[i]] = false;
-        }
-
-        // record the trustee's vote
+        // record the trustee's vote for compensation purposes
         getTrustedNodes().recordVote(msg.sender);
 
-        delete commitments[msg.sender];
-        emit VoteRevealed(msg.sender, _votes);
+        emit VoteReveal(msg.sender, _votes);
     }
 
-    function compute() external atStage(Stages.Compute) {
+    function compute() external atStage(Stage.Compute) {
         winner = leader;
-        stage = Stages.Finished;
+        currentStage = Stage.Finished;
 
-        emit VoteResults(winner);
+        emit VoteResult(winner);
     }
 
     /** Initialize the storage context using parameters copied from the
@@ -220,12 +259,10 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         revealEnds = votingEnds + REVEAL_TIME;
 
         GovernanceProposal storage p = proposals[address(0)];
-        p.valid = true;
-        // the default values for everything are currently 0
+        p.inflationMultiplier = IDEMPOTENT_INFLATION_MULTIPLIER;
 
         // sets the default votes for the default proposal
         score[address(0)] = getTrustedNodes().numTrustees();
-        leader = address(0);
     }
 
     function getTrustedNodes() private view returns (TrustedNodes) {
