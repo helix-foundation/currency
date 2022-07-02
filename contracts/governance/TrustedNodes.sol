@@ -87,7 +87,8 @@ contract TrustedNodes is PolicedUtils {
     }
 
     function getTrustedNodeFromCohort(uint256 _cohort, uint256 _indexInCohort)
-        public view
+        public
+        view
         returns (address trustee)
     {
         return cohorts[_cohort].trustedNodes[_indexInCohort];
