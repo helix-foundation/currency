@@ -138,5 +138,118 @@ describe('BigNumber [@group=3]', () => {
         });
       });
     });
+
+    describe('gas [ @skip-on-coverage ]', () => {
+      describe('fromBytes', async () => {
+        it('0x', async () => {
+          await snapshotGasCost(bignum.fromBytes.estimateGas('0x'));
+        });
+
+        it('0x1234', async () => {
+          await snapshotGasCost(bignum.fromBytes.estimateGas('0x1234'));
+        });
+
+        it('Max Uint256', async () => {
+          await snapshotGasCost(
+            bignum.fromBytes.estimateGas(ethers.constants.MaxUint256.toHexString()),
+          );
+        });
+      });
+
+      describe('fromUint', async () => {
+        it('0', async () => {
+          await snapshotGasCost(bignum.fromUint.estimateGas(0));
+        });
+
+        it('1234', async () => {
+          await snapshotGasCost(bignum.fromUint.estimateGas(1234));
+        });
+
+        it('Max Uint256', async () => {
+          await snapshotGasCost(bignum.fromUint.estimateGas(ethers.constants.MaxUint256));
+        });
+      });
+
+      describe('add', async () => {
+        it('1 + 5', async () => {
+          const one = `0x${'00'.repeat(31)}01`;
+          const five = `0x${'00'.repeat(31)}05`;
+          await snapshotGasCost(bignum.add.estimateGas(one, five));
+        });
+
+        it('Max Uint256 + Max Uint256', async () => {
+          await snapshotGasCost(bignum.add.estimateGas(
+            ethers.constants.MaxUint256.toHexString(),
+            ethers.constants.MaxUint256.toHexString(),
+          ));
+        });
+      });
+
+      describe('absdiff', async () => {
+        it('1 - 5', async () => {
+          const one = `0x${'00'.repeat(31)}01`;
+          const five = `0x${'00'.repeat(31)}05`;
+          await snapshotGasCost(bignum.absdiff.estimateGas(one, five));
+        });
+
+        it('Max Uint256 - Max Uint256', async () => {
+          await snapshotGasCost(bignum.absdiff.estimateGas(
+            ethers.constants.MaxUint256.toHexString(),
+            ethers.constants.MaxUint256.toHexString(),
+          ));
+        });
+      });
+
+      describe('modmul', async () => {
+        it('5 % 2 * 3', async () => {
+          const five = `0x${'00'.repeat(31)}05`;
+          const two = `0x${'00'.repeat(31)}02`;
+          const three = `0x${'00'.repeat(31)}03`;
+          await snapshotGasCost(bignum.modmul.estimateGas(five, two, three));
+        });
+
+        it('Max Uint256 % 7 * Max Uint256', async () => {
+          const seven = `0x${'00'.repeat(31)}07`;
+          await snapshotGasCost(bignum.modmul.estimateGas(
+            ethers.constants.MaxUint256.toHexString(),
+            seven,
+            ethers.constants.MaxUint256.toHexString(),
+          ));
+        });
+      });
+
+      describe('modexp', async () => {
+        it('5 % 2 ** 3', async () => {
+          const five = `0x${'00'.repeat(31)}05`;
+          const two = `0x${'00'.repeat(31)}02`;
+          const three = `0x${'00'.repeat(31)}03`;
+          await snapshotGasCost(bignum.modexp.estimateGas(five, two, three));
+        });
+
+        it('Max Uint256 % 7 ** Max Uint256', async () => {
+          const seven = `0x${'00'.repeat(31)}07`;
+          await snapshotGasCost(bignum.modexp.estimateGas(
+            ethers.constants.MaxUint256.toHexString(),
+            seven,
+            ethers.constants.MaxUint256.toHexString(),
+          ));
+        });
+      });
+
+      describe('cmp', async () => {
+        it('5 cmp 2', async () => {
+          const five = `0x${'00'.repeat(31)}05`;
+          const two = `0x${'00'.repeat(31)}02`;
+          await snapshotGasCost(bignum.cmp.estimateGas(five, two));
+        });
+
+        it('Max Uint256 cmp Max Uint256', async () => {
+          await snapshotGasCost(bignum.cmp.estimateGas(
+            ethers.constants.MaxUint256.toHexString(),
+            ethers.constants.MaxUint256.toHexString(),
+          ));
+        });
+      });
+    });
   });
 });
