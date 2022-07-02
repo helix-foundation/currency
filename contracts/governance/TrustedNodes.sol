@@ -15,20 +15,15 @@ contract TrustedNodes is PolicedUtils {
     /** Tracks the current trustee cohort
      * each trustee election cycle corresponds to a new trustee cohort.
      */
-    uint256 public cohort;
 
     struct Cohort {
         address[] trustedNodes;
         mapping(address => uint256) trusteeNumbers;
     }
 
+    uint256 public cohort;
+
     mapping(uint256 => Cohort) internal cohorts;
-
-    /** The list of trusted nodes per cohort*/
-    // mapping(uint256 => address[]) public trustedNodes;
-
-    /** @dev cohort number to address of trusted node to index in cohort */
-    // mapping(uint256 => mapping(address => uint256)) public trusteeNumber;
 
     /** Increments each time the trustee votes */
     mapping(address => uint256) public votingRecord;
@@ -106,33 +101,24 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to stop trusting.
      */
     function distrust(address _node) external onlyPolicy {
-        // require(trusteeNumber[cohort][_node] > 0, "Node already not trusted");
         require(
             cohorts[cohort].trusteeNumbers[_node] > 0,
             "Node already not trusted"
         );
 
-        // uint256 oldIndex = trusteeNumber[cohort][_node];
         uint256 oldIndex = cohorts[cohort].trusteeNumbers[_node];
-        // uint256 lastIndex = trustedNodes[cohort].length - 1;
         uint256 lastIndex = cohorts[cohort].trustedNodes.length - 1;
 
-        // delete trusteeNumber[cohort][_node];
         delete cohorts[cohort].trusteeNumbers[_node];
 
         if (oldIndex != lastIndex) {
-            // address lastNode = trustedNodes[cohort][lastIndex];
             address lastNode = cohorts[cohort].trustedNodes[lastIndex];
 
-            // trustedNodes[cohort][oldIndex] = lastNode;
             cohorts[cohort].trustedNodes[oldIndex] = lastNode;
-            // trusteeNumber[cohort][lastNode] = oldIndex;
             cohorts[cohort].trusteeNumbers[lastNode] = oldIndex;
         }
 
-        // delete trustedNodes[cohort][lastIndex];
         delete cohorts[cohort].trustedNodes[lastIndex];
-        // trustedNodes[cohort].pop();
         cohorts[cohort].trustedNodes.pop();
         emit TrustedNodeRemoved(_node);
     }
@@ -169,7 +155,6 @@ contract TrustedNodes is PolicedUtils {
      * you subtract by 1.
      */
     function numTrustees() external view returns (uint256) {
-        // return trustedNodes[cohort].length - 1;
         return cohorts[cohort].trustedNodes.length - 1;
     }
 
@@ -178,22 +163,18 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to add to the trusted set.
      */
     function _trust(address _node) private {
-        // require(trusteeNumber[cohort][_node] == 0, "Node is already trusted");
         require(
             cohorts[cohort].trusteeNumbers[_node] == 0,
             "Node is already trusted"
         );
 
-        // trusteeNumber[cohort][_node] = trustedNodes[cohort].length;
         cohorts[cohort].trusteeNumbers[_node] = cohorts[cohort]
             .trustedNodes
             .length;
-        // trustedNodes[cohort].push(_node);
         cohorts[cohort].trustedNodes.push(_node);
     }
 
     function isTrusted(address _node) public view returns (bool) {
-        // return trusteeNumber[cohort][_node] > 0;
         return cohorts[cohort].trusteeNumbers[_node] > 0;
     }
 
