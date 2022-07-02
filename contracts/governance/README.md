@@ -1007,13 +1007,13 @@ Trusted nodes participate in the inflation/deflation voting process. They can be
 added and removed using policy proposals.
 
 ##### Events
-###### TrustedNodeAdded
+###### TrustedNodeAddition
 Attributes:
   - `node` (address) the address of the new trusted node
 
 Emitted by the `trust` function.
 
-###### TrustedNodeRemoved
+###### TrustedNodeRemoval
 Attributes:
   - `node` (address) the address of the old trusted node removed
 

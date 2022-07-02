@@ -17,26 +17,36 @@ contract TrustedNodes is PolicedUtils {
      */
 
     struct Cohort {
+        /** The list of trusted nodes in the cohort*/
         address[] trustedNodes;
+        /** @dev address of trusted node to index in trustedNodes */
         mapping(address => uint256) trusteeNumbers;
     }
 
+    /** The list of trusted nodes per cohort*/
+    // mapping(uint256 => address[]) public trustedNodes;
+
+    /** @dev cohort number to address of trusted node to index in cohort */
+    // mapping(uint256 => mapping(address => uint256)) public trusteeNumber;
+
     uint256 public cohort;
 
+    /** cohort number to cohort */
     mapping(uint256 => Cohort) internal cohorts;
 
-    /** Increments each time the trustee votes */
+    /** Represents the number of votes for which the trustee can claim rewards.
+    Increments each time the trustee votes, set to zero upon redemption */
     mapping(address => uint256) public votingRecord;
 
     uint256 public voteReward;
 
     /** Event emitted when a node added to a list of trusted nodes.
      */
-    event TrustedNodeAdded(address indexed node);
+    event TrustedNodeAddition(address indexed node);
 
     /** Event emitted when a node removed from a list of trusted nodes
      */
-    event TrustedNodeRemoved(address indexed node);
+    event TrustedNodeRemoval(address indexed node);
 
     /** Event emitted when a trustee redeems their voting rewards */
     event VotingRewardRedeemed(address indexed trustee, uint256 amount);
@@ -91,7 +101,7 @@ contract TrustedNodes is PolicedUtils {
      */
     function trust(address _node) external onlyPolicy {
         _trust(_node);
-        emit TrustedNodeAdded(_node);
+        emit TrustedNodeAddition(_node);
     }
 
     /** Stop trusting a node.
@@ -120,7 +130,7 @@ contract TrustedNodes is PolicedUtils {
 
         delete cohorts[cohort].trustedNodes[lastIndex];
         cohorts[cohort].trustedNodes.pop();
-        emit TrustedNodeRemoved(_node);
+        emit TrustedNodeRemoval(_node);
     }
 
     /** Incements the counter when the trustee reveals their vote

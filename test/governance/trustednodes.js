@@ -47,7 +47,7 @@ contract('TrustedNodes [@group=7]', (accounts) => {
         context('when there are no empty slots', () => {
           it('succeeds', async () => {
             const tx = await policy.testTrust(trustedNodes.address, alice);
-            await expectEvent.inTransaction(tx.tx, trustedNodes.constructor, 'TrustedNodeAdded', {
+            await expectEvent.inTransaction(tx.tx, trustedNodes.constructor, 'TrustedNodeAddition', {
               node: alice,
             });
           });
@@ -92,7 +92,7 @@ contract('TrustedNodes [@group=7]', (accounts) => {
       context('on an address that is in the set', () => {
         it('succeeds', async () => {
           const tx = await policy.testDistrust(trustedNodes.address, bob);
-          await expectEvent.inTransaction(tx.tx, trustedNodes.constructor, 'TrustedNodeRemoved', {
+          await expectEvent.inTransaction(tx.tx, trustedNodes.constructor, 'TrustedNodeRemoval', {
             node: bob,
           });
         });
