@@ -49,20 +49,20 @@ contract TrustedNodes is PolicedUtils {
     event TrustedNodeRemoval(address indexed node);
 
     /** Event emitted when a trustee redeems their voting rewards */
-    event VotingRewardRedeemed(address indexed trustee, uint256 amount);
+    event VotingRewardRedemption(address indexed trustee, uint256 amount);
 
     /** Creates a new trusted node registry, populated with some initial nodes.
      */
     constructor(
         Policy _policy,
-        address[] memory _initial,
+        address[] memory _initialTrustedNodes,
         uint256 _voteReward
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
 
         _trust(address(0));
-        for (uint256 i = 0; i < _initial.length; ++i) {
-            _trust(_initial[i]);
+        for (uint256 i = 0; i < _initialTrustedNodes.length; ++i) {
+            _trust(_initialTrustedNodes[i]);
         }
     }
 
@@ -87,7 +87,7 @@ contract TrustedNodes is PolicedUtils {
     }
 
     function getTrustedNodeFromCohort(uint256 _cohort, uint256 _indexInCohort)
-        public
+        public view
         returns (address trustee)
     {
         return cohorts[_cohort].trustedNodes[_indexInCohort];
@@ -157,7 +157,7 @@ contract TrustedNodes is PolicedUtils {
             ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward),
             "Transfer Failed"
         );
-        emit VotingRewardRedeemed(msg.sender, _reward);
+        emit VotingRewardRedemption(msg.sender, _reward);
     }
 
     /** Return the number of entries in trustedNodes
