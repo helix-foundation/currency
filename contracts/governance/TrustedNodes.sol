@@ -23,12 +23,7 @@ contract TrustedNodes is PolicedUtils {
         mapping(address => uint256) trusteeNumbers;
     }
 
-    /** The list of trusted nodes per cohort*/
-    // mapping(uint256 => address[]) public trustedNodes;
-
-    /** @dev cohort number to address of trusted node to index in cohort */
-    // mapping(uint256 => mapping(address => uint256)) public trusteeNumber;
-
+    /** cohort number */
     uint256 public cohort;
 
     /** cohort number to cohort */
@@ -38,6 +33,7 @@ contract TrustedNodes is PolicedUtils {
     Increments each time the trustee votes, set to zero upon redemption */
     mapping(address => uint256) public votingRecord;
 
+    /** reward earned per completed and revealed vote */
     uint256 public voteReward;
 
     /** Event emitted when a node added to a list of trusted nodes.
@@ -151,7 +147,19 @@ contract TrustedNodes is PolicedUtils {
 
         uint256 _votesRedeemed = votingRecord[msg.sender];
         uint256 _reward = _votesRedeemed * voteReward;
+        // uint256 _reward;
+        // unchecked{
+        //     _reward = _votesRedeemed * voteReward;
+        //     }
+        // if (_reward / _votesRedeemed != votingRecord[msg.sender]) {
+        //     // overflow
+        //     uint256 redeemedVotes = type(uint256).max / voteReward;
+        //     _reward = voteReward * redeemedVotes;
+        //     votingRecord[msg.sender] -= redeemedVotes;
 
+        // } else {
+        //     votingRecord[msg.sender] = 0;
+        // }
         votingRecord[msg.sender] = 0;
 
         require(

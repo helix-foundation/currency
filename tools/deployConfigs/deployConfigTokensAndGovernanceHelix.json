@@ -26,5 +26,5 @@
     }
   ],
   "trustednodes": ["address1", "address2"],
-  "trustedvotereward": "1000000000000000000"
+  "trusteeVoteReward": "1000000000000000000"
 }

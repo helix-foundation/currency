@@ -34,11 +34,12 @@ const { trace } = require('./trace');
 exports.deployPolicy = async (
   account,
   { trustednodes = [] } = { trustednodes: [] },
+  voteReward = '1001',
   production = false,
   verbose = false,
 ) => {
   const options = await Deploy.deploy({
-    account, trustednodes, production, verbose, test: true,
+    account, trustednodes, trusteeVoteReward: voteReward, production, verbose, test: true, 
   });
 
   const policyAd = options.policyProxy._address;
