@@ -56,7 +56,6 @@ contract TrustedNodes is PolicedUtils {
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
 
-        _trust(address(0));
         for (uint256 i = 0; i < _initialTrustedNodes.length; ++i) {
             _trust(_initialTrustedNodes[i]);
             emit TrustedNodeAddition(_initialTrustedNodes[i]);
@@ -202,8 +201,6 @@ contract TrustedNodes is PolicedUtils {
      */
     function newCohort(address[] memory _newCohort) external onlyPolicy {
         cohort++;
-
-        _trust(address(0));
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
