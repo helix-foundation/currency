@@ -20,13 +20,12 @@ contract('TrustedNodes [@group=7]', (accounts) => {
       accounts[counter],
       { trustednodes: [bob] },
     ));
-    console.log(await trustedNodes.numTrustees());
     counter++;
   });
 
   describe('trust', () => {
     context('when called directly', () => {
-      it.only('reverts', async () => {
+      it('reverts', async () => {
         await expectRevert(
           trustedNodes.trust(alice),
           'Only the policy contract',

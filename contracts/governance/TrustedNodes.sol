@@ -119,7 +119,7 @@ contract TrustedNodes is PolicedUtils {
 
         delete cohorts[cohort].trusteeNumbers[_node];
 
-        if (oldIndex != lastIndex) {
+        if (oldIndex - 1 != lastIndex) {
             address lastNode = cohorts[cohort].trustedNodes[lastIndex];
 
             cohorts[cohort].trustedNodes[oldIndex] = lastNode;
@@ -203,7 +203,7 @@ contract TrustedNodes is PolicedUtils {
     function newCohort(address[] memory _newCohort) external onlyPolicy {
         cohort++;
 
-        _trust(address(0));
+        // _trust(address(0));
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
