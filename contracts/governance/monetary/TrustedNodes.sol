@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../policy/PolicedUtils.sol";
-import "../currency/ECOx.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../currency/ECOx.sol";
 
 /** @title TrustedNodes
  *

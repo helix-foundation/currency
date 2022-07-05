@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../currency/VoteCheckpoints.sol";
-import "../currency/ECOx.sol";
-import "../policy/PolicedUtils.sol";
-import "../governance/IGeneration.sol";
+import "../../currency/VoteCheckpoints.sol";
+import "../../currency/ECOx.sol";
+import "../../policy/PolicedUtils.sol";
+import "../IGeneration.sol";
 
 /** @title ECOxLockup
  *

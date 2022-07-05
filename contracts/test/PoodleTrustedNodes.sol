@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../governance/TrustedNodes.sol";
+import "../governance/monetary/TrustedNodes.sol";
 
 /** @title Template Upgrading Process
  *

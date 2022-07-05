@@ -99,7 +99,7 @@ describe('CurrencyTimer [@group=6]', () => {
 
       it('has inflation', async () => {
         const [evt] = await currencyTimer.queryFilter('NewInflation');
-        const infl = await ethers.getContractAt('Inflation', evt.args.addr);
+        const infl = await ethers.getContractAt('RandomInflation', evt.args.addr);
         expect(await infl.reward()).to.equal(20);
         expect(await infl.numRecipients()).to.equal(10);
         expect(await eco.balanceOf(infl.address)).to.equal(200);
@@ -146,7 +146,7 @@ describe('CurrencyTimer [@group=6]', () => {
 
       it('has inflation', async () => {
         const [evt] = await currencyTimer.queryFilter('NewInflation');
-        const infl = await ethers.getContractAt('Inflation', evt.args.addr);
+        const infl = await ethers.getContractAt('RandomInflation', evt.args.addr);
         expect(await infl.reward()).to.equal(20);
         expect(await infl.numRecipients()).to.equal(10);
         expect(await eco.balanceOf(infl.address)).to.equal(200);

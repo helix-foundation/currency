@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./CurrencyTimer.sol";
-import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
-import "./IGeneration.sol";
-import "../currency/IECO.sol";
+import "../CurrencyTimer.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../utils/TimeUtils.sol";
+import "../IGeneration.sol";
+import "../../currency/IECO.sol";
 
 /** @title Lockup
  * This provides deposit certificate functionality for the purpose of countering

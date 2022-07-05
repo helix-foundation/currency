@@ -43,15 +43,15 @@ const PolicyInitABI = require(`../${importPath}/contracts/policy/PolicyInit.sol/
 const EcoBootstrapABI = require(`../${importPath}/contracts/deploy/EcoBootstrap.sol/EcoBootstrap.json`);
 const EcoInitializableABI = require(`../${importPath}/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`);
 const TimedPoliciesABI = require(`../${importPath}/contracts/governance/TimedPolicies.sol/TimedPolicies.json`);
-const TrustedNodesABI = require(`../${importPath}/contracts/governance/TrustedNodes.sol/TrustedNodes.json`);
-const rootHashProposalABI = require(`../${importPath}/contracts/currency/InflationRootHashProposal.sol/InflationRootHashProposal.json`);
-const InflationContractABI = require(`../${importPath}/contracts/governance/Inflation.sol/Inflation.json`);
-const CurrencyGovernanceABI = require(`../${importPath}/contracts/governance/CurrencyGovernance.sol/CurrencyGovernance.json`);
+const TrustedNodesABI = require(`../${importPath}/contracts/governance/monetary/TrustedNodes.sol/TrustedNodes.json`);
+const rootHashProposalABI = require(`../${importPath}/contracts/governance/monetary/InflationRootHashProposal.sol/InflationRootHashProposal.json`);
+const InflationContractABI = require(`../${importPath}/contracts/governance/monetary/RandomInflation.sol/RandomInflation.json`);
+const CurrencyGovernanceABI = require(`../${importPath}/contracts/governance/monetary/CurrencyGovernance.sol/CurrencyGovernance.json`);
 const CurrencyTimerContractABI = require(`../${importPath}/contracts/governance/CurrencyTimer.sol/CurrencyTimer.json`);
-const LockupContractABI = require(`../${importPath}/contracts/governance/Lockup.sol/Lockup.json`);
-const PolicyProposalContractABI = require(`../${importPath}/contracts/governance/PolicyProposals.sol/PolicyProposals.json`);
-const PolicyVotesContractABI = require(`../${importPath}/contracts/governance/PolicyVotes.sol/PolicyVotes.json`);
-const ECOxLockupContractABI = require(`../${importPath}/contracts/governance/ECOxLockup.sol/ECOxLockup.json`);
+const LockupContractABI = require(`../${importPath}/contracts/governance/monetary/Lockup.sol/Lockup.json`);
+const PolicyProposalContractABI = require(`../${importPath}/contracts/governance/community/PolicyProposals.sol/PolicyProposals.json`);
+const PolicyVotesContractABI = require(`../${importPath}/contracts/governance/community/PolicyVotes.sol/PolicyVotes.json`);
+const ECOxLockupContractABI = require(`../${importPath}/contracts/governance/community/ECOxLockup.sol/ECOxLockup.json`);
 const ECOABI = require(`../${importPath}/contracts/currency/ECO.sol/ECO.json`);
 // const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
 const EcoFaucetABI = require(`../${importPath}/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`);
@@ -437,7 +437,7 @@ async function deployStage2(options) {
 // root Policy contract itself are bound to proxies here.
 //
 // Template contracts deployed in this stage are: InflationRootHashProposal, Lockup,
-// Inflation, CurrencyGovernance, PolicyProposals, and PolicyVotes
+// RandomInflation, CurrencyGovernance, PolicyProposals, and PolicyVotes
 //
 // Helper contracts deployed here are: VDFVerifier, and ECOxLockup
 //

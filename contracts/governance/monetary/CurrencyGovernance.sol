@@ -2,8 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "./TrustedNodes.sol";
-import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
+import "../../policy/Policy.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../currency/IECO.sol";
+import "./RandomInflation.sol";
+import "../../utils/TimeUtils.sol";
+import "../../VDF/VDFVerifier.sol";
 
 /** @title Inflation/Deflation Process
  *

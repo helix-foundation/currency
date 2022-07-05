@@ -6,7 +6,7 @@ const ForwardProxy = artifacts.require('ForwardProxy');
 const ECO = artifacts.require('ECO');
 const ECOx = artifacts.require('ECOx');
 const ECOxLockup = artifacts.require('ECOxLockup');
-const Inflation = artifacts.require('Inflation');
+const RandomInflation = artifacts.require('RandomInflation');
 const Policy = artifacts.require('PolicyTest');
 const VDFVerifier = artifacts.require('VDFVerifier');
 const RootHashProposal = artifacts.require('InflationRootHashProposal');
@@ -58,7 +58,7 @@ exports.deployPolicy = async (
 
   const policy = await Policy.at(policyAd);
   const eco = await ECO.at(ecoAd);
-  const inflation = await Inflation.at(inflationAd);
+  const inflation = await RandomInflation.at(inflationAd);
   const vdf = await VDFVerifier.at(vdfAd);
   const ecox = await ECOx.at(ecoxAd);
   const rootHashProposal = await RootHashProposal.at(rootHashProposalAd);

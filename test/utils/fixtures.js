@@ -240,7 +240,7 @@ exports.deployPeripheralContracts = async (
 
   const inflation = await deployFrom(
     wallet,
-    'Inflation',
+    'RandomInflation',
     policyProxy.address,
     vdfVerifier.address,
     3,

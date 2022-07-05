@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../policy/Policy.sol";
-import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
-import "./IECO.sol";
+import "../../policy/Policy.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../utils/TimeUtils.sol";
+import "../../currency/IECO.sol";
 
 /** @title Inflation Root Hash Proposal
  * This implements a root hash proposal contract to be used by the ECO network to

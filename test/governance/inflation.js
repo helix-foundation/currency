@@ -17,7 +17,7 @@ const { ecoFixture } = require('../utils/fixtures');
 const time = require('../utils/time');
 const util = require('../../tools/test/util');
 
-describe('Inflation [@group=6]', () => {
+describe('RandomInflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;
@@ -180,7 +180,7 @@ describe('Inflation [@group=6]', () => {
     await timedPolicies.incrementGeneration();
     const events = await currencyTimer.queryFilter('NewInflation');
     const evt = events[events.length - 1];
-    inflation = await ethers.getContractAt('Inflation', evt.args.addr);
+    inflation = await ethers.getContractAt('RandomInflation', evt.args.addr);
     vdf = await ethers.getContractAt('VDFVerifier', await inflation.vdfVerifier());
     await configureInflationRootHash();
   });

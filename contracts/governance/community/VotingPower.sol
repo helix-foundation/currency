@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ILockups.sol";
-import "./Lockup.sol";
-import "../policy/PolicedUtils.sol";
-import "../currency/ECO.sol";
-import "../currency/ECOx.sol";
+import "../monetary/ILockups.sol";
+import "../monetary/Lockup.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../currency/ECO.sol";
+import "../../currency/ECOx.sol";
 import "./ECOxLockup.sol";
 
 /** @title VotingPower

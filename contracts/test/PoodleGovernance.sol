@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../governance/CurrencyGovernance.sol";
+import "../governance/monetary/CurrencyGovernance.sol";
 
 /** @title Template Upgrading Process
  *

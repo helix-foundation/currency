@@ -67,7 +67,7 @@
 // const VDFVerifierABI = req('VDFVerifier');
 // const CurrencyGovernanceABI = req('CurrencyGovernance');
 // // const CurrencyTimerABI = req('CurrencyTimer');
-// const InflationABI = req('Inflation');
+// const RandomInflationABI = req('RandomInflation');
 // const LockupContractABI = req('Lockup');
 // const InflationRootHashProposal = req('InflationRootHashProposal');
 
@@ -534,7 +534,7 @@
 
 //       if (inflationAddress) {
 //         const inflation = new web3.eth.Contract(
-//           InflationABI.abi,
+//           RandomInflationABI.abi,
 //           inflationAddress,
 //           { from: this.account },
 //         );
@@ -636,7 +636,7 @@
 //         }
 //       } else if (await isAlive(inflationAddress)) {
 //         const inflation = new web3.eth.Contract(
-//           InflationABI.abi,
+//           RandomInflationABI.abi,
 //           inflationAddress,
 //           { from: this.account },
 //         );

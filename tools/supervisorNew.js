@@ -38,7 +38,7 @@ const PolicyProposalsABI = getABI('PolicyProposals');
 // const VDFVerifierABI = getABI('VDFVerifier');
 const CurrencyGovernanceABI = getABI('CurrencyGovernance');
 const CurrencyTimerABI = getABI('CurrencyTimer');
-const InflationABI = getABI('Inflation');
+const RandomInflationABI = getABI('RandomInflation');
 const InflationRootHashProposalABI = getABI('InflationRootHashProposal');
 
 const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
@@ -104,7 +104,7 @@ class Supervisor {
       const inflationAddress = events[events.length - 1].args[0];
       this.randomInflation = new ethers.Contract(
         inflationAddress,
-        InflationABI.abi,
+        RandomInflationABI.abi,
         this.signer,
       );
       console.log(`randomInflation address is: ${this.randomInflation.address}`);

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../../contracts/policy/Policy.sol";
-import "../../contracts/governance/Proposal.sol";
+import "../../contracts/governance/community/Proposal.sol";
 
 /** @title MakeBackdoor
  *

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../policy/Policy.sol";
-import "../policy/PolicedUtils.sol";
-import "../currency/ECO.sol";
-import "./CurrencyTimer.sol";
-import "../utils/TimeUtils.sol";
-import "../VDF/VDFVerifier.sol";
-import "../currency/InflationRootHashProposal.sol";
+import "../../policy/Policy.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../currency/ECO.sol";
+import "../CurrencyTimer.sol";
+import "../../utils/TimeUtils.sol";
+import "../../VDF/VDFVerifier.sol";
+import "./InflationRootHashProposal.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/** @title Inflation
+/** @title RandomInflation
  *
  * This contract oversees the currency random inflation process and is spawned
  * on demand by the CurrencyTimer.
  */
-contract Inflation is PolicedUtils, TimeUtils {
+contract RandomInflation is PolicedUtils, TimeUtils {
     // Change this so nodes vote on total_eco and eco_per_claimNumber, compute
     // claim numbers and distribute over 28 days (2 generations).
     /** The time period over which inflation reward is spread to prevent
@@ -135,8 +135,8 @@ contract Inflation is PolicedUtils, TimeUtils {
         super.initialize(_self);
         generation = currencyTimer.currentGeneration() - 1;
         blockNumber = block.number;
-        vdfVerifier = VDFVerifier(Inflation(_self).vdfVerifier().clone());
-        randomVDFDifficulty = Inflation(_self).randomVDFDifficulty();
+        vdfVerifier = VDFVerifier(RandomInflation(_self).vdfVerifier().clone());
+        randomVDFDifficulty = RandomInflation(_self).randomVDFDifficulty();
     }
 
     /** Commit to a VDF seed for inflation distribution entropy.
