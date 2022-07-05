@@ -6,8 +6,4 @@ module.exports = {
     total_accounts: '100'
   },
   skipFiles: ['test/'],
-  mocha: {
-    grep: "@skip-on-coverage",
-    invert: true,
-  },
 };

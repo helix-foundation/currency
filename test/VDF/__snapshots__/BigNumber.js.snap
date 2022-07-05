@@ -1,33 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] absdiff 1 - 5 1`] = `32491`;
+exports[`BigNumber [@group=3] Math gas absdiff 1 - 5 1`] = `31891`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] absdiff Max Uint256 - Max Uint256 1`] = `25680`;
+exports[`BigNumber [@group=3] Math gas absdiff Max Uint256 - Max Uint256 1`] = `25674`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] add 1 + 5 1`] = `32158`;
+exports[`BigNumber [@group=3] Math gas add 1 + 5 1`] = `31564`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] add Max Uint256 + Max Uint256 1`] = `43264`;
+exports[`BigNumber [@group=3] Math gas add Max Uint256 + Max Uint256 1`] = `42190`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] cmp 5 cmp 2 1`] = `23942`;
+exports[`BigNumber [@group=3] Math gas cmp 5 cmp 2 1`] = `23942`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] cmp Max Uint256 cmp Max Uint256 1`] = `24811`;
+exports[`BigNumber [@group=3] Math gas cmp Max Uint256 cmp Max Uint256 1`] = `24811`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] fromBytes 0x 1`] = `22652`;
+exports[`BigNumber [@group=3] Math gas fromBytes 0x 1`] = `22649`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] fromBytes 0x1234 1`] = `37829`;
+exports[`BigNumber [@group=3] Math gas fromBytes 0x1234 1`] = `36713`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] fromBytes Max Uint256 1`] = `33818`;
+exports[`BigNumber [@group=3] Math gas fromBytes Max Uint256 1`] = `33320`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] fromUint 0 1`] = `22233`;
+exports[`BigNumber [@group=3] Math gas fromUint 0 1`] = `22230`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] fromUint 1234 1`] = `29596`;
+exports[`BigNumber [@group=3] Math gas fromUint 1234 1`] = `29008`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] fromUint Max Uint256 1`] = `33202`;
+exports[`BigNumber [@group=3] Math gas fromUint Max Uint256 1`] = `32704`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] modexp 5 % 2 ** 3 1`] = `35715`;
+exports[`BigNumber [@group=3] Math gas modexp 5 % 2 ** 3 1`] = `32870`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] modexp Max Uint256 % 7 ** Max Uint256 1`] = `35412`;
+exports[`BigNumber [@group=3] Math gas modexp Max Uint256 % 7 ** Max Uint256 1`] = `27103`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] modmul 5 % 2 * 3 1`] = `55161`;
+exports[`BigNumber [@group=3] Math gas modmul 5 % 2 * 3 1`] = `43106`;
 
-exports[`Contract: BigNumber [@group=3] Math gas [ @skip-on-coverage ] modmul Max Uint256 % 7 * Max Uint256 1`] = `55855`;
+exports[`BigNumber [@group=3] Math gas modmul Max Uint256 % 7 * Max Uint256 1`] = `37863`;
