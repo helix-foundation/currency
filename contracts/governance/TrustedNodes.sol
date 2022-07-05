@@ -56,6 +56,7 @@ contract TrustedNodes is PolicedUtils {
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
 
+        // _trust(address(0));
         for (uint256 i = 0; i < _initialTrustedNodes.length; ++i) {
             _trust(_initialTrustedNodes[i]);
             emit TrustedNodeAddition(_initialTrustedNodes[i]);
@@ -77,17 +78,17 @@ contract TrustedNodes is PolicedUtils {
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
         uint256 _cohort = TrustedNodes(_self).cohort();
 
-        for (uint256 i = 0; i <= _numTrustees; ++i) {
+        for (uint256 i = 0; i < _numTrustees; ++i) {
             _trust(TrustedNodes(_self).getTrustedNodeFromCohort(_cohort, i));
         }
     }
 
-    function getTrustedNodeFromCohort(uint256 _cohort, uint256 _indexInCohort)
+    function getTrustedNodeFromCohort(uint256 _cohort, uint256 _trusteeNumber)
         public
         view
         returns (address trustee)
     {
-        return cohorts[_cohort].trustedNodes[_indexInCohort];
+        return cohorts[_cohort].trustedNodes[_trusteeNumber];
     }
 
     /** Grant trust to a node.
@@ -173,7 +174,7 @@ contract TrustedNodes is PolicedUtils {
      * you subtract by 1.
      */
     function numTrustees() external view returns (uint256) {
-        return cohorts[cohort].trustedNodes.length - 1;
+        return cohorts[cohort].trustedNodes.length;
     }
 
     /** Helper function for adding a node to the trusted set.
@@ -185,10 +186,10 @@ contract TrustedNodes is PolicedUtils {
             cohorts[cohort].trusteeNumbers[_node] == 0,
             "Node is already trusted"
         );
-
+        // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
         cohorts[cohort].trusteeNumbers[_node] = cohorts[cohort]
             .trustedNodes
-            .length;
+            .length + 1;
         cohorts[cohort].trustedNodes.push(_node);
     }
 
@@ -201,6 +202,8 @@ contract TrustedNodes is PolicedUtils {
      */
     function newCohort(address[] memory _newCohort) external onlyPolicy {
         cohort++;
+
+        _trust(address(0));
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);

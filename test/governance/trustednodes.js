@@ -20,12 +20,13 @@ contract('TrustedNodes [@group=7]', (accounts) => {
       accounts[counter],
       { trustednodes: [bob] },
     ));
+    console.log(await trustedNodes.numTrustees());
     counter++;
   });
 
   describe('trust', () => {
     context('when called directly', () => {
-      it('reverts', async () => {
+      it.only('reverts', async () => {
         await expectRevert(
           trustedNodes.trust(alice),
           'Only the policy contract',
@@ -36,6 +37,7 @@ contract('TrustedNodes [@group=7]', (accounts) => {
     context('when called by the policy contract', () => {
       context('on an address that is in the set', () => {
         it('reverts', async () => {
+          // console.log(await trustedNodes.)
           await expectRevert(
             policy.testTrust(trustedNodes.address, bob),
             'already trusted',
@@ -128,7 +130,7 @@ contract('TrustedNodes [@group=7]', (accounts) => {
           expect(await trustedNodes.isTrusted(bob)).to.be.false;
         });
 
-        it('Can remove and readd both addresses', async () => {
+        it('Can remove and read both addresses', async () => {
           await policy.testDistrust(trustedNodes.address, bob);
           await policy.testDistrust(trustedNodes.address, alice);
           await policy.testTrust(trustedNodes.address, alice);
