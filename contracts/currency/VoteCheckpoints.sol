@@ -206,7 +206,7 @@ abstract contract VoteCheckpoints is ERC20 {
         returns (uint256)
     {
         require(
-            blockNumber < block.number,
+            blockNumber <= block.number,
             "VoteCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(checkpoints[account], blockNumber);
@@ -226,7 +226,7 @@ abstract contract VoteCheckpoints is ERC20 {
         returns (uint256)
     {
         require(
-            blockNumber < block.number,
+            blockNumber <= block.number,
             "VoteCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);

@@ -134,7 +134,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param proposer The address of the proposee which was refunded
      */
-    event ProposalRefund(address indexed proposer);
+    event ProposalRefund(
+        address indexed proposer,
+        Proposal indexed proposalAddress
+    );
 
     /** Construct a new PolicyProposals instance using the provided supervising
      * policy (root) and supporting contracts.
@@ -363,7 +366,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         require(ecoToken.transfer(receiver, REFUND_IF_LOST), "Transfer Failed");
 
-        emit ProposalRefund(receiver);
+        emit ProposalRefund(receiver, _prop);
     }
 
     /** Reclaim tokens after end time

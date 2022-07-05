@@ -165,6 +165,10 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     }
 
     function unpropose() external atStage(Stage.Propose) {
+        require(
+            proposals[msg.sender].inflationMultiplier != 0,
+            "You do not have a proposal to retract"
+        );
         delete proposals[msg.sender];
         emit ProposalRetraction(msg.sender);
     }

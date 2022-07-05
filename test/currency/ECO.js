@@ -586,7 +586,7 @@ contract('ECO [@group=1]', (accounts) => {
 
     it('cannot get the internal votes for an account until the block requestsed has been mined', async () => {
       await expectRevert(
-        eco.getPastVotingGons(from, await time.latestBlock(), { from }),
+        eco.getPastVotingGons(from, (await time.latestBlock()) + 1, { from }),
         'VoteCheckpoints: block not yet mined',
         eco.constructor,
       );
@@ -594,7 +594,7 @@ contract('ECO [@group=1]', (accounts) => {
 
     it('cannot get the past supply until the block requestsed has been mined', async () => {
       await expectRevert(
-        eco.getPastTotalSupply(await time.latestBlock(), { from }),
+        eco.getPastTotalSupply((await time.latestBlock()) + 1, { from }),
         'VoteCheckpoints: block not yet mined',
         eco.constructor,
       );
