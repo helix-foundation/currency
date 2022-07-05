@@ -202,5 +202,4 @@ contract('TrustedNodes [@group=7]', (accounts) => {
       });
     });
   });
-
 });

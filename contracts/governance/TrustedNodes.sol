@@ -146,21 +146,20 @@ contract TrustedNodes is PolicedUtils {
         require(votingRecord[msg.sender] > 0, "No rewards to redeem");
 
         uint256 _votesRedeemed = votingRecord[msg.sender];
-        uint256 _reward = _votesRedeemed * voteReward;
-        // uint256 _reward;
-        // unchecked{
-        //     _reward = _votesRedeemed * voteReward;
-        //     }
-        // if (_reward / _votesRedeemed != votingRecord[msg.sender]) {
-        //     // overflow
-        //     uint256 redeemedVotes = type(uint256).max / voteReward;
-        //     _reward = voteReward * redeemedVotes;
-        //     votingRecord[msg.sender] -= redeemedVotes;
-
-        // } else {
-        //     votingRecord[msg.sender] = 0;
-        // }
-        votingRecord[msg.sender] = 0;
+        // uint256 _reward = _votesRedeemed * voteReward;
+        uint256 _reward;
+        unchecked {
+            _reward = _votesRedeemed * voteReward;
+        }
+        if (_reward / voteReward != votingRecord[msg.sender]) {
+            // overflow
+            uint256 redeemedVotes = type(uint256).max / voteReward;
+            _reward = voteReward * redeemedVotes;
+            votingRecord[msg.sender] -= redeemedVotes;
+        } else {
+            votingRecord[msg.sender] = 0;
+        }
+        // votingRecord[msg.sender] = 0;
 
         require(
             ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward),

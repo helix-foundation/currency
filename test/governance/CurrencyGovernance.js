@@ -33,8 +33,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
 
   const hash = (x) => web3.utils.soliditySha3({ type: 'bytes32', value: x[0] }, { type: 'address', value: x[1] }, { type: 'address', value: x[2] });
   // 2^255
-  const veryHighTrusteeVotingReward = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-
+  const veryHighTrusteeVotingReward = '57896044618658097711785492504343953926634992332820282019728792003956564819968';
 
   context('3 trustees', () => {
     beforeEach(async () => {
@@ -44,7 +43,11 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
         faucet,
         ecox,
         timedPolicies,
-      } = await util.deployPolicy(accounts[counter], { trustednodes: [bob, charlie, dave] }, voteReward = veryHighTrusteeVotingReward));
+      } = await util.deployPolicy(
+        accounts[counter],
+        { trustednodes: [bob, charlie, dave] },
+        veryHighTrusteeVotingReward,
+      ));
       counter += 1;
 
       const originalBorda = await CurrencyGovernance.new(policy.address);
@@ -309,9 +312,8 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
             expect(await trustedNodes.votingRecord(charlie)).to.eq.BN(new BN(0));
           });
 
-          it.only('Can pay out trustee vote rewards', async () => {
+          it('Can pay out trustee vote rewards', async () => {
             await faucet.mintx(trustedNodes.address, toBN(veryHighTrusteeVotingReward));
-            console.log(await trustedNodes.voteReward());
             await trustedNodes.redeemVoteRewards({ from: dave });
             expect(await ecox.balanceOf(dave)).to.eq.BN(new BN(veryHighTrusteeVotingReward));
             expect(await trustedNodes.votingRecord(dave)).to.eq.BN(new BN(0));
@@ -321,12 +323,10 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
           it('handles potential overflow of trustee rewards with grace', async () => {
             await time.increase(3600 * 24 * 1.1);
             await timedPolicies.incrementGeneration();
-            console.log(await trustedNodes.votingRecord[bob])
 
             const originalBorda2 = await CurrencyGovernance.new(policy.address);
             const bordaCloner2 = await Cloner.new(originalBorda2.address);
             borda = await CurrencyGovernance.at(await bordaCloner2.clone());
-            // console.log(borda.address);
             await policy.testDirectSet('CurrencyGovernance', borda.address);
 
             await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
@@ -338,19 +338,15 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
             await time.increase(3600 * 24 * 3.1);
 
             await borda.reveal(bobvote[0], bobvote[2], { from: bob });
-            
-            await faucet.mintx(trustedNodes.address, toBN(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord[bob].to.eq.BN(new BN(2)));
-            await trustedNodes.redeemVoteRewards({ from: bob });
-            expect(await ecox.balanceOf(bob)).to.eq.BN(new BN(veryHighTrusteeVotingReward));
+            const oldBobBalance = await ecox.balanceOf(bob);
 
             await faucet.mintx(trustedNodes.address, toBN(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord[bob].to.eq.BN(new BN(1)));
+            expect(await trustedNodes.votingRecord(bob)).to.eq.BN(new BN(2));
             await trustedNodes.redeemVoteRewards({ from: bob });
-
-            expect(await trustedNodes.votingRecord[bob].to.eq.BN(new BN(0)));
-          })
-
+            expect(await ecox.balanceOf(bob)).to.eq
+              .BN(new BN(veryHighTrusteeVotingReward).add(oldBobBalance));
+            expect(await trustedNodes.votingRecord(bob)).to.eq.BN(new BN(1));
+          });
         });
       });
     });
