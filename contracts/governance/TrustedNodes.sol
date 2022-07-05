@@ -56,7 +56,6 @@ contract TrustedNodes is PolicedUtils {
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
 
-        // _trust(address(0));
         for (uint256 i = 0; i < _initialTrustedNodes.length; ++i) {
             _trust(_initialTrustedNodes[i]);
             emit TrustedNodeAddition(_initialTrustedNodes[i]);
@@ -109,25 +108,23 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to stop trusting.
      */
     function distrust(address _node) external onlyPolicy {
-        require(
-            cohorts[cohort].trusteeNumbers[_node] > 0,
-            "Node already not trusted"
-        );
+        Cohort storage currentCohort = cohorts[cohort];
+        uint256 trusteeNumber = currentCohort.trusteeNumbers[_node];
+        require(trusteeNumber > 0, "Node already not trusted");
 
-        uint256 oldIndex = cohorts[cohort].trusteeNumbers[_node];
-        uint256 lastIndex = cohorts[cohort].trustedNodes.length - 1;
+        uint256 lastIndex = currentCohort.trustedNodes.length - 1;
 
-        delete cohorts[cohort].trusteeNumbers[_node];
+        delete currentCohort.trusteeNumbers[_node];
 
-        if (oldIndex - 1 != lastIndex) {
-            address lastNode = cohorts[cohort].trustedNodes[lastIndex];
+        if (trusteeNumber - 1 != lastIndex) {
+            address lastNode = currentCohort.trustedNodes[lastIndex];
 
-            cohorts[cohort].trustedNodes[oldIndex] = lastNode;
-            cohorts[cohort].trusteeNumbers[lastNode] = oldIndex;
+            currentCohort.trustedNodes[trusteeNumber] = lastNode;
+            currentCohort.trusteeNumbers[lastNode] = trusteeNumber;
         }
 
-        delete cohorts[cohort].trustedNodes[lastIndex];
-        cohorts[cohort].trustedNodes.pop();
+        delete currentCohort.trustedNodes[lastIndex];
+        currentCohort.trustedNodes.pop();
         emit TrustedNodeRemoval(_node);
     }
 
@@ -187,9 +184,9 @@ contract TrustedNodes is PolicedUtils {
             "Node is already trusted"
         );
         // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
-        cohorts[cohort].trusteeNumbers[_node] = cohorts[cohort]
-            .trustedNodes
-            .length + 1;
+        cohorts[cohort].trusteeNumbers[_node] =
+            cohorts[cohort].trustedNodes.length +
+            1;
         cohorts[cohort].trustedNodes.push(_node);
     }
 
@@ -202,8 +199,6 @@ contract TrustedNodes is PolicedUtils {
      */
     function newCohort(address[] memory _newCohort) external onlyPolicy {
         cohort++;
-
-        // _trust(address(0));
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
