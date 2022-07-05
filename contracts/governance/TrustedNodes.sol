@@ -59,6 +59,7 @@ contract TrustedNodes is PolicedUtils {
         _trust(address(0));
         for (uint256 i = 0; i < _initialTrustedNodes.length; ++i) {
             _trust(_initialTrustedNodes[i]);
+            emit TrustedNodeAddition(_initialTrustedNodes[i]);
         }
     }
 
@@ -206,6 +207,7 @@ contract TrustedNodes is PolicedUtils {
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
+            emit TrustedNodeAddition(_newCohort[i]);
         }
     }
 }
