@@ -314,8 +314,8 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
             console.log(await trustedNodes.voteReward());
             await trustedNodes.redeemVoteRewards({ from: dave });
             expect(await ecox.balanceOf(dave)).to.eq.BN(new BN(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord(dave).to.eq.BN(new BN(0)));
-            expect(await trustedNodes.votingRecord(bob).to.eq.BN(new BN(1)));
+            expect(await trustedNodes.votingRecord(dave)).to.eq.BN(new BN(0));
+            expect(await trustedNodes.votingRecord(bob)).to.eq.BN(new BN(1));
           });
 
           it('handles potential overflow of trustee rewards with grace', async () => {
