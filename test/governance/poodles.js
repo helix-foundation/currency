@@ -10,26 +10,14 @@
  * (the number of poodles at the current generation).
  */
 
-const chai = require('chai');
-
-const { expect } = chai;
-
-const PolicyProposals = artifacts.require('PolicyProposals');
-const PolicyVotes = artifacts.require('PolicyVotes');
-const MakePoodle = artifacts.require('MakePoodle');
-const PoodleCurrencyGovernance = artifacts.require('PoodleCurrencyGovernance');
-const PoodleCurrencyTimer = artifacts.require('PoodleCurrencyTimer');
-const {
-  expectRevert,
-  time,
-} = require('@openzeppelin/test-helpers');
-
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
+const { ecoFixture } = require('../utils/fixtures');
+const time = require('../utils/time');
+const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
-const { isCoverage } = require('../../tools/test/coverage');
 
-const { toBN } = web3.utils;
-
-contract('Governance Policy Change [@group=9]', (accounts) => {
+describe('Governance Policy Change [@group=9]', () => {
   let policy;
   let eco;
   let timedPolicies;
@@ -42,31 +30,35 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
   let poodleCurrencyTimer;
   let poodleBorda;
 
-  const alice = accounts[0];
-  const bob = accounts[1];
-  const charlie = accounts[2];
-  const dave = accounts[3];
-  let counter = 0;
+  let alice;
+  let bob;
+  let charlie;
+  let dave;
 
   it('Deploys the production system', async () => {
+    const accounts = await ethers.getSigners();
+    [alice, bob, charlie, dave] = accounts;
     ({
       policy,
       eco,
-      initInflation,
+      faucet: initInflation,
       timedPolicies,
-    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob, charlie, dave] }));
-    counter += 1;
+    } = await ecoFixture([
+      await bob.getAddress(),
+      await charlie.getAddress(),
+      await dave.getAddress(),
+    ]));
   });
 
   it('Stakes accounts', async () => {
-    const stake = toBN(10).pow(toBN(18)).muln(5000);
+    const stake = ethers.utils.parseEther('5000');
     /* Until we have some idea how initial distribution is done, this *does* use
      *a test-function
      */
-    await initInflation.mint(eco.address, alice, stake);
-    await initInflation.mint(eco.address, bob, stake);
-    await initInflation.mint(eco.address, charlie, stake);
-    await initInflation.mint(eco.address, dave, stake);
+    await initInflation.mint(await alice.getAddress(), stake);
+    await initInflation.mint(await bob.getAddress(), stake);
+    await initInflation.mint(await charlie.getAddress(), stake);
+    await initInflation.mint(await dave.getAddress(), stake);
   });
 
   it('Waits a generation', async () => {
@@ -75,82 +67,70 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
   });
 
   it('Checks that the current governance contract is not poodles', async () => {
-    poodleBorda = await PoodleCurrencyGovernance.at(
+    poodleBorda = await ethers.getContractAt(
+      'PoodleCurrencyGovernance',
       await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
-    await expectRevert.unspecified(
-      poodleBorda.provePoodles(),
-    );
+    await expect(poodleBorda.provePoodles()).to.be.reverted;
   });
 
   it('Constructs the proposals', async () => {
-    poodleCurrencyGovernance = await PoodleCurrencyGovernance.new(policy.address);
-    poodleCurrencyTimer = await PoodleCurrencyTimer.new();
-    makePoodle = await MakePoodle.new(
+    poodleCurrencyGovernance = await deploy('PoodleCurrencyGovernance', policy.address);
+    poodleCurrencyTimer = await deploy('PoodleCurrencyTimer');
+    makePoodle = await deploy(
+      'MakePoodle',
       poodleCurrencyGovernance.address,
       poodleCurrencyTimer.address,
-      { from: alice },
     );
     const name = await makePoodle.name();
     expect(name).to.equal('MakePoodle');
   });
 
-  it('Checks that the 820 workaround for coverage is correct', async () => {
+  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
     const ecoHash = web3.utils.soliditySha3('ECO');
     const pf = await policy.policyFor(ecoHash);
     const erc = await util.policyFor(policy, ecoHash);
-    if (await isCoverage()) {
-      return;
-    }
     assert.equal(erc, pf);
   });
 
   it('Kicks off a proposal round', async () => {
     const proposalsHash = web3.utils.soliditySha3('PolicyProposals');
-    policyProposals = await PolicyProposals.at(
+    policyProposals = await ethers.getContractAt(
+      'PolicyProposals',
       await util.policyFor(policy, proposalsHash),
     );
   });
 
   it('Accepts new proposals', async () => {
-    await eco.approve(
-      policyProposals.address,
-      await policyProposals.COST_REGISTER(),
-      { from: alice },
-    );
-    await policyProposals.registerProposal(makePoodle.address, {
-      from: alice,
-    });
+    await eco
+      .connect(alice)
+      .approve(policyProposals.address, await policyProposals.COST_REGISTER());
+    await policyProposals.connect(alice).registerProposal(makePoodle.address);
 
     await time.increase(3600 * 24 * 2);
   });
 
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
-    await policyProposals.support(makePoodle.address, { from: alice });
-    await policyProposals.support(makePoodle.address, { from: bob });
-    await policyProposals.deployProposalVoting({ from: bob });
+    await policyProposals.connect(alice).support(makePoodle.address);
+    await policyProposals.connect(bob).support(makePoodle.address);
+    await policyProposals.connect(bob).deployProposalVoting();
   });
 
   it('Transitions from proposing to voting', async () => {
     const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
-    policyVotes = await PolicyVotes.at(
+    policyVotes = await ethers.getContractAt(
+      'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash),
     );
   });
 
   it('Allows all users to vote', async () => {
-    await policyVotes.vote(
-      true,
-      { from: alice },
-    );
-    await policyVotes.vote(
-      true,
-      { from: bob },
-    );
+    await policyVotes.connect(alice).vote(true);
+    await policyVotes.connect(bob).vote(true);
   });
 
   it('Waits another week (end of commit period)', async () => {
@@ -167,7 +147,8 @@ contract('Governance Policy Change [@group=9]', (accounts) => {
   });
 
   it('Checks that the new governance contract is poodles', async () => {
-    poodleBorda = await PoodleCurrencyGovernance.at(
+    poodleBorda = await ethers.getContractAt(
+      'PoodleCurrencyGovernance',
       await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
     const poodles = await poodleBorda.provePoodles();

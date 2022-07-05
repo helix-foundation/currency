@@ -13,17 +13,15 @@ const bytecode = '0x608060405234801561001057600080fd5b50604051602080610210833981
 contract('Nicks Method', ([account]) => {
   describe('generateTx', () => {
     it('generates a usable transaction', async () => {
-      const tx = generateTx(bytecode, web3.utils.randomHex(16), 800000, 1000);
+      const tx = generateTx(bytecode, web3.utils.randomHex(16), 800000, 100000000000);
 
       await web3.eth.sendTransaction({
         from: account,
         to: EthereumUtil.bufferToHex(tx.from),
-        value: '8000000000',
+        value: '800000000000000000',
       });
 
-      await web3.eth.sendSignedTransaction(
-        EthereumUtil.bufferToHex(tx.serialize()),
-      );
+      await web3.eth.sendSignedTransaction(EthereumUtil.bufferToHex(tx.serialize()));
     });
   });
 
@@ -31,7 +29,7 @@ contract('Nicks Method', ([account]) => {
     let tx;
 
     beforeEach(() => {
-      tx = generateTx(bytecode, web3.utils.randomHex(16), 800000, 1000);
+      tx = generateTx(bytecode, web3.utils.randomHex(16), 800000, 100000000000);
     });
 
     it('attaches sender information', async () => {
@@ -45,9 +43,7 @@ contract('Nicks Method', ([account]) => {
 
       assert.equal(
         decorated.to,
-        EthereumUtil.bufferToHex(
-          EthereumUtil.generateAddress(tx.from, tx.nonce),
-        ),
+        EthereumUtil.bufferToHex(EthereumUtil.generateAddress(tx.from, tx.nonce)),
       );
     });
   });

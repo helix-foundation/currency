@@ -1,77 +1,88 @@
-const chai = require('chai');
-const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
-const bnChai = require('bn-chai');
-const util = require('../../tools/test/util');
+const { ethers } = require('hardhat');
 
-const { BN, toBN } = web3.utils;
-chai.use(bnChai(BN));
-const { expect } = chai;
+const { BigNumber } = ethers;
+const { expect } = require('chai');
+const { deploy } = require('../utils/contracts');
+const { singletonsFixture } = require('../utils/fixtures');
 
-contract('TrustedNodes [@group=7]', (accounts) => {
+describe('TrustedNodes [@group=7]', () => {
+  const fixture = async () => {
+    const accounts = await ethers.getSigners();
+    const alice = accounts[0];
+    const bob = accounts[1];
+    await singletonsFixture(alice);
+    const policy = await deploy('PolicyTest');
+    const trustedNodes = await deploy(
+      'TrustedNodes',
+      policy.address,
+      [await bob.getAddress()],
+      100,
+    );
+    return {
+      policy,
+      trustedNodes,
+      alice,
+      bob,
+    };
+  };
+
   let policy;
   let trustedNodes;
-
-  const alice = accounts[0];
-  const bob = accounts[1];
-  let counter = 0;
+  let alice;
+  let bob;
 
   beforeEach(async () => {
-    ({ policy, trustedNodes } = await util.deployPolicy(
-      accounts[counter],
-      { trustednodes: [bob] },
-    ));
-    counter++;
+    ({
+      policy, trustedNodes, alice, bob,
+    } = await fixture());
   });
 
   describe('trust', () => {
-    context('when called directly', () => {
+    describe('when called directly', () => {
       it('reverts', async () => {
-        await expectRevert(
-          trustedNodes.trust(alice),
+        await expect(trustedNodes.trust(await alice.getAddress())).to.be.revertedWith(
           'Only the policy contract',
         );
       });
     });
 
-    context('when called by the policy contract', () => {
-      context('on an address that is in the set', () => {
+    describe('when called by the policy contract', () => {
+      describe('on an address that is in the set', () => {
         it('reverts', async () => {
-          await expectRevert(
-            policy.testTrust(trustedNodes.address, bob),
-            'already trusted',
-          );
+          await expect(
+            policy.testTrust(trustedNodes.address, await bob.getAddress()),
+          ).to.be.revertedWith('already trusted');
         });
       });
 
-      context('on an address that is not in the set', () => {
-        context('when there are no empty slots', () => {
+      describe('on an address that is not in the set', () => {
+        describe('when there are no empty slots', () => {
           it('succeeds', async () => {
-            const tx = await policy.testTrust(trustedNodes.address, alice);
-            await expectEvent.inTransaction(tx.tx, trustedNodes.constructor, 'TrustedNodeAdded', {
-              node: alice,
-            });
+            await expect(policy.testTrust(trustedNodes.address, await alice.getAddress()))
+              .to.emit(trustedNodes, 'TrustedNodeAdded')
+              .withArgs(await alice.getAddress());
           });
 
           it('adds the address to the set', async () => {
-            await policy.testTrust(trustedNodes.address, alice);
+            await policy.testTrust(trustedNodes.address, await alice.getAddress());
 
-            expect(await trustedNodes.isTrusted(alice)).to.be.true;
+            expect(await trustedNodes.isTrusted(await alice.getAddress())).to.be.true;
           });
         });
 
-        context('when there are empty slots', () => {
+        describe('when there are empty slots', () => {
           beforeEach(async () => {
-            await policy.testDistrust(trustedNodes.address, bob);
+            await policy.testDistrust(trustedNodes.address, await bob.getAddress());
           });
 
           it('succeeds', async () => {
-            await policy.testTrust(trustedNodes.address, alice);
+            await policy.testTrust(trustedNodes.address, await alice.getAddress());
           });
 
           it('adds the address to the set', async () => {
-            await policy.testTrust(trustedNodes.address, alice);
+            await policy.testTrust(trustedNodes.address, await alice.getAddress());
 
-            expect(await trustedNodes.isTrusted(alice)).to.be.true;
+            expect(await trustedNodes.isTrusted(await alice.getAddress())).to.be.true;
           });
         });
       });
@@ -79,113 +90,103 @@ contract('TrustedNodes [@group=7]', (accounts) => {
   });
 
   describe('distrust', () => {
-    context('when called directly', () => {
+    describe('when called directly', () => {
       it('reverts', async () => {
-        await expectRevert(
-          trustedNodes.distrust(bob),
+        await expect(trustedNodes.distrust(await bob.getAddress())).to.be.revertedWith(
           'Only the policy contract',
         );
       });
     });
 
-    context('when called by the policy contract', () => {
-      context('on an address that is in the set', () => {
+    describe('when called by the policy contract', () => {
+      describe('on an address that is in the set', () => {
         it('succeeds', async () => {
-          const tx = await policy.testDistrust(trustedNodes.address, bob);
-          await expectEvent.inTransaction(tx.tx, trustedNodes.constructor, 'TrustedNodeRemoved', {
-            node: bob,
-          });
+          await expect(policy.testDistrust(trustedNodes.address, await bob.getAddress()))
+            .to.emit(trustedNodes, 'TrustedNodeRemoved')
+            .withArgs(await bob.getAddress());
         });
 
         it('removes the address from the set', async () => {
-          await policy.testDistrust(trustedNodes.address, bob);
+          await policy.testDistrust(trustedNodes.address, await bob.getAddress());
 
-          expect(await trustedNodes.isTrusted(bob)).to.be.false;
+          expect(await trustedNodes.isTrusted(await bob.getAddress())).to.be.false;
         });
       });
 
-      context('when there are multiple addresses in the set', () => {
+      describe('when there are multiple addresses in the set', () => {
         beforeEach(async () => {
-          await policy.testTrust(trustedNodes.address, alice);
+          await policy.testTrust(trustedNodes.address, await alice.getAddress());
         });
 
         it('Can remove the first address', async () => {
-          await policy.testDistrust(trustedNodes.address, bob);
-          expect(await trustedNodes.isTrusted(alice)).to.be.true;
-          expect(await trustedNodes.isTrusted(bob)).to.be.false;
+          await policy.testDistrust(trustedNodes.address, await bob.getAddress());
+          expect(await trustedNodes.isTrusted(await alice.getAddress())).to.be.true;
+          expect(await trustedNodes.isTrusted(await bob.getAddress())).to.be.false;
         });
 
         it('Can remove the second address', async () => {
-          await policy.testDistrust(trustedNodes.address, alice);
-          expect(await trustedNodes.isTrusted(alice)).to.be.false;
-          expect(await trustedNodes.isTrusted(bob)).to.be.true;
+          await policy.testDistrust(trustedNodes.address, await alice.getAddress());
+          expect(await trustedNodes.isTrusted(await alice.getAddress())).to.be.false;
+          expect(await trustedNodes.isTrusted(await bob.getAddress())).to.be.true;
         });
 
         it('Can remove both addresses', async () => {
-          await policy.testDistrust(trustedNodes.address, bob);
-          await policy.testDistrust(trustedNodes.address, alice);
-          expect(await trustedNodes.isTrusted(alice)).to.be.false;
-          expect(await trustedNodes.isTrusted(bob)).to.be.false;
+          await policy.testDistrust(trustedNodes.address, await bob.getAddress());
+          await policy.testDistrust(trustedNodes.address, await alice.getAddress());
+          expect(await trustedNodes.isTrusted(await alice.getAddress())).to.be.false;
+          expect(await trustedNodes.isTrusted(await bob.getAddress())).to.be.false;
         });
 
         it('Can remove and readd both addresses', async () => {
-          await policy.testDistrust(trustedNodes.address, bob);
-          await policy.testDistrust(trustedNodes.address, alice);
-          await policy.testTrust(trustedNodes.address, alice);
-          await policy.testTrust(trustedNodes.address, bob);
+          await policy.testDistrust(trustedNodes.address, await bob.getAddress());
+          await policy.testDistrust(trustedNodes.address, await alice.getAddress());
+          await policy.testTrust(trustedNodes.address, await alice.getAddress());
+          await policy.testTrust(trustedNodes.address, await bob.getAddress());
 
-          expect(await trustedNodes.isTrusted(alice)).to.be.true;
-          expect(await trustedNodes.isTrusted(bob)).to.be.true;
+          expect(await trustedNodes.isTrusted(await alice.getAddress())).to.be.true;
+          expect(await trustedNodes.isTrusted(await bob.getAddress())).to.be.true;
         });
       });
 
-      context('on an address that is not in the set', () => {
+      describe('on an address that is not in the set', () => {
         it('reverts', async () => {
-          await expectRevert(
-            policy.testDistrust(trustedNodes.address, alice),
-            'Node already not trusted',
-          );
+          await expect(
+            policy.testDistrust(trustedNodes.address, await alice.getAddress()),
+          ).to.be.revertedWith('Node already not trusted');
         });
       });
     });
   });
 
   describe('numTrustees', () => {
-    context('adding adding an address to the set', () => {
-      context('that is not already present', () => {
+    describe('adding adding an address to the set', () => {
+      describe('that is not already present', () => {
         it('increases the nodes length', async () => {
-          const preAddLength = toBN(await trustedNodes.numTrustees());
+          const preAddLength = BigNumber.from(await trustedNodes.numTrustees());
 
-          await policy.testTrust(trustedNodes.address, alice);
+          await policy.testTrust(trustedNodes.address, await alice.getAddress());
 
-          expect(
-            toBN(await trustedNodes.numTrustees())
-              .sub(preAddLength),
-          ).to.eq.BN(1);
+          expect(BigNumber.from(await trustedNodes.numTrustees()).sub(preAddLength)).to.equal(1);
         });
       });
     });
 
-    context('removing an address from the set', () => {
+    describe('removing an address from the set', () => {
       it('decreases the nodes length', async () => {
-        await policy.testTrust(trustedNodes.address, alice);
-        const preAddLength = toBN(await trustedNodes.numTrustees());
+        await policy.testTrust(trustedNodes.address, await alice.getAddress());
+        const preAddLength = BigNumber.from(await trustedNodes.numTrustees());
 
-        await policy.testDistrust(trustedNodes.address, alice);
+        await policy.testDistrust(trustedNodes.address, await alice.getAddress());
 
-        expect(
-          preAddLength
-            .sub(toBN(await trustedNodes.numTrustees())),
-        ).to.eq.BN(1);
+        expect(preAddLength.sub(BigNumber.from(await trustedNodes.numTrustees()))).to.equal(1);
       });
     });
   });
 
   describe('redeemVoteRewards', () => {
-    context('checking revert on no reward to redeem', () => {
+    describe('checking revert on no reward to redeem', () => {
       it('reverts', async () => {
-        await expectRevert(
-          trustedNodes.redeemVoteRewards({ from: bob }),
+        await expect(trustedNodes.connect(bob).redeemVoteRewards()).to.be.revertedWith(
           'No rewards to redeem',
         );
       });
@@ -193,12 +194,11 @@ contract('TrustedNodes [@group=7]', (accounts) => {
   });
 
   describe('recordVote', () => {
-    context('checking revert on non-authorized call', () => {
+    describe('checking revert on non-authorized call', () => {
       it('reverts', async () => {
-        await expectRevert(
-          trustedNodes.recordVote(bob, { from: alice }),
-          'Must be the monetary policy contract to call',
-        );
+        await expect(
+          trustedNodes.connect(alice).recordVote(await bob.getAddress()),
+        ).to.be.revertedWith('Must be the monetary policy contract to call');
       });
     });
   });

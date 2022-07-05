@@ -1,107 +1,89 @@
-const SampleForward = artifacts.require('SampleForward');
-const ForwardProxy = artifacts.require('ForwardProxy');
-const FailingInitializeContract = artifacts.require('FailingInitializeContract');
-const EcoInitializable = artifacts.require('EcoInitializable');
+const { ethers } = require('hardhat');
+const { assert, expect } = require('chai');
+const { deploy, deployProxy } = require('../utils/contracts');
 
-const { expectRevert } = require('@openzeppelin/test-helpers');
+describe('EcoInitializable [@group=5]', () => {
+  let accounts = [];
 
-contract('EcoInitializable [@group=5]', (accounts) => {
-  it('fuses forward', async () => {
-    const initializationContract = await EcoInitializable.new(accounts[1]);
-    const proxy = await ForwardProxy.new(initializationContract.address);
-    const initializableProxy = await EcoInitializable.at(proxy.address);
-
-    const newTarget = await SampleForward.new();
-    await initializableProxy.fuseImplementation(
-      newTarget.address,
-      { from: accounts[1] },
-    );
-
-    const proxiedTargetContract = await SampleForward.at(proxy.address);
-
-    assert.deepEqual(
-      await newTarget.value(),
-      await proxiedTargetContract.value(),
-    );
+  before(async () => {
+    accounts = await ethers.getSigners();
   });
 
-  context('when called by the owner', async () => {
-    const [, owner] = accounts;
-    const meta = { from: owner };
+  it('fuses forward', async () => {
+    const ecoInitializable = await deploy('EcoInitializable', await accounts[1].getAddress());
+    const proxy = await deploy('ForwardProxy', ecoInitializable.address);
+    const initializableProxy = await ethers.getContractAt('EcoInitializable', proxy.address);
+
+    const newTarget = await deploy('SampleForward');
+    await initializableProxy.connect(accounts[1]).fuseImplementation(newTarget.address);
+
+    const proxiedTargetContract = await ethers.getContractAt('SampleForward', proxy.address);
+
+    assert.deepEqual(await newTarget.value(), await proxiedTargetContract.value());
+  });
+
+  describe('when called by the owner', async () => {
     let initializableProxy;
+    let owner;
 
     beforeEach(async () => {
-      const initializationContract = await EcoInitializable.new(owner);
-      const proxyContract = await ForwardProxy.new(
-        initializationContract.address,
-      );
-      initializableProxy = await EcoInitializable.at(proxyContract.address);
+      owner = accounts[1];
+
+      initializableProxy = await deployProxy('EcoInitializable', await owner.getAddress());
     });
 
     it('should copy the owner', async () => {
-      assert.equal(owner, await initializableProxy.owner());
+      assert.equal(await owner.getAddress(), await initializableProxy.owner());
     });
 
     it('should allow setting the implementation', async () => {
-      const targetContract = await SampleForward.new();
+      const targetContract = await (await ethers.getContractFactory('SampleForward')).deploy();
 
-      await initializableProxy.fuseImplementation(
-        targetContract.address,
-        meta,
-      );
+      await initializableProxy.connect(owner).fuseImplementation(targetContract.address);
 
-      assert.equal(
-        await initializableProxy.implementation(),
-        targetContract.address,
-      );
+      assert.equal(await initializableProxy.implementation(), targetContract.address);
     });
 
-    context('and the new target fails to initialize', () => {
+    describe('and the new target fails to initialize', () => {
       let failingInitializeTarget;
 
       beforeEach(async () => {
-        failingInitializeTarget = await FailingInitializeContract.new();
+        failingInitializeTarget = await (
+          await ethers.getContractFactory('FailingInitializeContract')
+        ).deploy();
       });
 
       it('reverts', async () => {
-        await expectRevert(
-          initializableProxy.fuseImplementation(
-            failingInitializeTarget.address,
-            meta,
-          ),
-          'initialize call failed',
-        );
+        await expect(
+          initializableProxy.connect(owner).fuseImplementation(failingInitializeTarget.address),
+        ).to.be.revertedWith('initialize call failed');
       });
     });
   });
 
-  context('when called by an other', async () => {
-    const [, owner, other] = accounts;
-    const meta = { from: other };
+  describe('when called by an other', async () => {
     let root;
     let initializableProxy;
+    let owner;
+    let other;
 
     beforeEach(async () => {
-      root = await EcoInitializable.new(owner);
-      const proxyContract = await ForwardProxy.new(root.address);
-      initializableProxy = await EcoInitializable.at(proxyContract.address);
+      [, owner, other] = accounts;
+      root = await deploy('EcoInitializable', await owner.getAddress());
+      const proxyContract = await deploy('ForwardProxy', root.address);
+      initializableProxy = await ethers.getContractAt('EcoInitializable', proxyContract.address);
     });
 
     it('should not allow setting the implementation', async () => {
-      const targetContract = await SampleForward.new();
-      await expectRevert(
-        initializableProxy.fuseImplementation(
-          targetContract.address,
-          meta,
-        ),
-        'Only owner can change implementation',
-      );
+      const targetContract = await deploy('SampleForward');
+      await expect(
+        initializableProxy.connect(other).fuseImplementation(targetContract.address),
+      ).to.be.revertedWith('Only owner can change implementation');
     });
 
-    context('to the root contract', () => {
+    describe('to the root contract', () => {
       it('should not allow calling initialize', async () => {
-        await expectRevert(
-          root.initialize(root.address, meta),
+        await expect(root.connect(other).initialize(root.address)).to.be.revertedWith(
           'Can only be called during initialization',
         );
       });

@@ -27,39 +27,39 @@
 const nick = require('./nicks');
 
 let BLOCK_GAS_LIMIT = 6000000;
-let importPath;
+const importPath = 'artifacts';
 
-if (process.env.IS_COVERAGE === '1') {
-  importPath = '.coverage_artifacts';
-} else {
-  importPath = 'build';
-}
+// if (process.env.IS_COVERAGE === '1') {
+//  importPath = '.coverage_artifacts';
+// } else {
+//  importPath = 'build';
+// }
 
 // ### Contract ABIs and Bytecode
 /* eslint-disable import/no-unresolved, import/no-dynamic-require */
-const PolicyABI = require(`../${importPath}/contracts/Policy.json`);
-const PolicyTestABI = require(`../${importPath}/contracts/PolicyTest.json`);
-const PolicyInitABI = require(`../${importPath}/contracts/PolicyInit.json`);
-const EcoBootstrapABI = require(`../${importPath}/contracts/EcoBootstrap.json`);
-const EcoInitializableABI = require(`../${importPath}/contracts/EcoInitializable.json`);
-const TimedPoliciesABI = require(`../${importPath}/contracts/TimedPolicies.json`);
-const TrustedNodesABI = require(`../${importPath}/contracts/TrustedNodes.json`);
-const rootHashProposalABI = require(`../${importPath}/contracts/InflationRootHashProposal.json`);
-const InflationContractABI = require(`../${importPath}/contracts/Inflation.json`);
-const CurrencyGovernanceABI = require(`../${importPath}/contracts/CurrencyGovernance.json`);
-const CurrencyTimerContractABI = require(`../${importPath}/contracts/CurrencyTimer.json`);
-const LockupContractABI = require(`../${importPath}/contracts/Lockup.json`);
-const PolicyProposalContractABI = require(`../${importPath}/contracts/PolicyProposals.json`);
-const PolicyVotesContractABI = require(`../${importPath}/contracts/PolicyVotes.json`);
-const ECOxLockupContractABI = require(`../${importPath}/contracts/ECOxLockup.json`);
-const ECOABI = require(`../${importPath}/contracts/ECO.json`);
+const PolicyABI = require(`../${importPath}/contracts/policy/Policy.sol/Policy.json`);
+const PolicyTestABI = require(`../${importPath}/contracts/test/Backdoor.sol/PolicyTest.json`);
+const PolicyInitABI = require(`../${importPath}/contracts/policy/PolicyInit.sol/PolicyInit.json`);
+const EcoBootstrapABI = require(`../${importPath}/contracts/deploy/EcoBootstrap.sol/EcoBootstrap.json`);
+const EcoInitializableABI = require(`../${importPath}/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`);
+const TimedPoliciesABI = require(`../${importPath}/contracts/governance/TimedPolicies.sol/TimedPolicies.json`);
+const TrustedNodesABI = require(`../${importPath}/contracts/governance/TrustedNodes.sol/TrustedNodes.json`);
+const rootHashProposalABI = require(`../${importPath}/contracts/currency/InflationRootHashProposal.sol/InflationRootHashProposal.json`);
+const InflationContractABI = require(`../${importPath}/contracts/governance/Inflation.sol/Inflation.json`);
+const CurrencyGovernanceABI = require(`../${importPath}/contracts/governance/CurrencyGovernance.sol/CurrencyGovernance.json`);
+const CurrencyTimerContractABI = require(`../${importPath}/contracts/governance/CurrencyTimer.sol/CurrencyTimer.json`);
+const LockupContractABI = require(`../${importPath}/contracts/governance/Lockup.sol/Lockup.json`);
+const PolicyProposalContractABI = require(`../${importPath}/contracts/governance/PolicyProposals.sol/PolicyProposals.json`);
+const PolicyVotesContractABI = require(`../${importPath}/contracts/governance/PolicyVotes.sol/PolicyVotes.json`);
+const ECOxLockupContractABI = require(`../${importPath}/contracts/governance/ECOxLockup.sol/ECOxLockup.json`);
+const ECOABI = require(`../${importPath}/contracts/currency/ECO.sol/ECO.json`);
 // const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
-const EcoFaucetABI = require(`../${importPath}/contracts/EcoFaucet.json`);
-const EcoTestCleanupABI = require(`../${importPath}/contracts/EcoTestCleanup.json`);
-const EcoTokenInitABI = require(`../${importPath}/contracts/EcoTokenInit.json`);
-const EcoXTokenInitABI = require(`../${importPath}/contracts/EcoXTokenInit.json`);
-const VDFVerifierABI = require(`../${importPath}/contracts/VDFVerifier.json`);
-const ECOxABI = require(`../${importPath}/contracts/ECOx.json`);
+const EcoFaucetABI = require(`../${importPath}/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`);
+const EcoTestCleanupABI = require(`../${importPath}/contracts/deploy/EcoTestCleanup.sol/EcoTestCleanup.json`);
+const EcoTokenInitABI = require(`../${importPath}/contracts/deploy/EcoTokenInit.sol/EcoTokenInit.json`);
+const EcoXTokenInitABI = require(`../${importPath}/contracts/deploy/EcoXTokenInit.sol/EcoXTokenInit.json`);
+const VDFVerifierABI = require(`../${importPath}/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`);
+const ECOxABI = require(`../${importPath}/contracts/currency/ECOx.sol/ECOx.json`);
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
@@ -174,7 +174,6 @@ async function deployStage1(options) {
   if (options.verbose) {
     console.log(`Deploying with gasPrice ${web3.utils.fromWei(options.gasPrice, 'gwei')} gwei and limit of ${BLOCK_GAS_LIMIT}/${limit} gas`);
   }
-
   // ### Bootstrap Transaction Data
   const stage1 = JSON.parse(
     JSON.stringify(

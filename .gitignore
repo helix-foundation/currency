@@ -67,3 +67,8 @@ cover-run
 coverage.json
 .jsbeautifyrc
 .vscode
+typechain/
+artifacts
+cache/
+out/
+yarn.lock

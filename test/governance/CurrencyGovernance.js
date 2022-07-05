@@ -1,67 +1,71 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-underscore-dangle, no-console */
+const { expect } = require('chai');
 
-const CurrencyGovernance = artifacts.require('CurrencyGovernance');
-const Cloner = artifacts.require('Cloner');
+const { ethers } = require('hardhat');
 
-const chai = require('chai');
-const bnChai = require('bn-chai');
+const { BigNumber } = ethers;
+const { ecoFixture } = require('../utils/fixtures');
 
-const { expect } = chai;
+const time = require('../utils/time');
+const { deploy } = require('../utils/contracts');
 
-const { BN, toBN } = web3.utils;
-const {
-  expectEvent, expectRevert, time,
-} = require('@openzeppelin/test-helpers');
-
-const util = require('../../tools/test/util');
-
-chai.use(bnChai(BN));
-
-contract('CurrencyGovernance [@group=4]', (accounts) => {
-  const alice = accounts[0];
-  const bob = accounts[1];
-  const charlie = accounts[2];
-  const dave = accounts[3];
-  const additionalTrustees = accounts.slice(4, 11);
-  let counter = 1;
+describe('CurrencyGovernance [@group=4]', () => {
+  let alice;
+  let bob;
+  let charlie;
+  let dave;
+  let additionalTrustees = [];
   let policy;
   let borda;
-  let trustedNodes;
+  let trustedNodes = [];
   let faucet;
   let ecox;
   let timedPolicies;
 
-  const hash = (x) => web3.utils.soliditySha3({ type: 'bytes32', value: x[0] }, { type: 'address', value: x[1] }, { type: 'address', value: x[2] });
+  const hash = (x) => web3.utils.soliditySha3(
+    { type: 'bytes32', value: x[0] },
+    { type: 'address', value: x[1] },
+    { type: 'address', value: x[2] },
+  );
+
+  before(async () => {
+    const accounts = await ethers.getSigners();
+    [alice, bob, charlie, dave] = accounts;
+    additionalTrustees = accounts.slice(4, 11);
+  });
 
   context('3 trustees', () => {
     beforeEach(async () => {
-      ({
-        policy,
-        trustedNodes,
-        faucet,
-        ecox,
-        timedPolicies,
-      } = await util.deployPolicy(accounts[counter], { trustednodes: [bob, charlie, dave] }));
-      counter += 1;
+      const trustednodes = [
+        await bob.getAddress(),
+        await charlie.getAddress(),
+        await dave.getAddress(),
+      ];
 
-      const originalBorda = await CurrencyGovernance.new(policy.address);
-      const bordaCloner = await Cloner.new(originalBorda.address);
-      borda = await CurrencyGovernance.at(await bordaCloner.clone());
+      ({
+        policy, trustedNodes, faucet, ecox, timedPolicies,
+      } = await ecoFixture(trustednodes));
+
+      const originalBorda = await deploy('CurrencyGovernance', policy.address);
+      const bordaCloner = await deploy('Cloner', originalBorda.address);
+      borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner.clone());
       // console.log(borda.address);
       await policy.testDirectSet('CurrencyGovernance', borda.address);
     });
 
     describe('Propose phase', () => {
-      it('Doesn\'t allow non-trustee to propose', async () => {
-        await expectRevert(borda.propose(33, 34, 35, 36, toBN('1000000000000000000')), 'Only trusted nodes can call this method');
+      it("Doesn't allow non-trustee to propose", async () => {
+        await expect(
+          borda.propose(33, 34, 35, 36, BigNumber.from('1000000000000000000')),
+        ).to.be.revertedWith('Only trusted nodes can call this method');
       });
 
       it('Allows trustees to propose', async () => {
-        await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'));
 
-        const p = await borda.proposals(bob);
-        expect(p.inflationMultiplier).to.eq.BN('1000000000000000000');
-        expect(p.numberOfRecipients).to.eq.BN(33);
+        const p = await borda.proposals(await bob.getAddress());
+        expect(p.inflationMultiplier).to.equal('1000000000000000000');
+        expect(p.numberOfRecipients).to.equal(33);
       });
 
       it('Allows for generation to increment if CurrencyGovernance is abandoned', async () => {
@@ -69,63 +73,58 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
         await timedPolicies.incrementGeneration();
       });
 
-      it('Doesn\'t allow voting yet', async () => {
-        await expectRevert(borda.commit(web3.utils.randomHex(32), { from: bob }), 'This call is not allowed at this stage');
+      it("Doesn't allow voting yet", async () => {
+        await expect(borda.connect(bob).commit(web3.utils.randomHex(32))).to.be.revertedWith(
+          'This call is not allowed at this stage',
+        );
       });
 
       it('Allows removing proposals', async () => {
-        await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
-        await borda.unpropose({ from: bob });
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).unpropose();
 
-        const p = await borda.proposals(bob);
-        expect(p.inflationMultiplier).to.eq.BN(0);
+        const p = await borda.proposals(await bob.getAddress());
+        expect(p.inflationMultiplier).to.equal(0);
       });
 
       it('Emits ProposalCreation event when proposal is created', async () => {
-        await borda.propose(33, 34, 35, 36, toBN('1000000000000000000'), { from: bob });
-        const [evt] = await borda.getPastEvents('ProposalCreation');
-        expect(evt.args.trusteeAddress).to.eq.BN(bob);
-        expect(evt.args._numberOfRecipients).to.eq.BN(33);
-        expect(evt.args._randomInflationReward).to.eq.BN(34);
-        expect(evt.args._lockupDuration).to.eq.BN(35);
-        expect(evt.args._lockupInterest).to.eq.BN(36);
-        expect(evt.args._inflationMultiplier).to.eq.BN('1000000000000000000');
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'));
+        const [evt] = await borda.queryFilter('ProposalCreation');
+        expect(evt.args.trusteeAddress).to.equal(await bob.getAddress());
+        expect(evt.args._numberOfRecipients).to.equal(33);
+        expect(evt.args._randomInflationReward).to.equal(34);
+        expect(evt.args._lockupDuration).to.equal(35);
+        expect(evt.args._lockupInterest).to.equal(36);
+        expect(evt.args._inflationMultiplier).to.equal('1000000000000000000');
       });
     });
 
     describe('Voting phase', () => {
       beforeEach(async () => {
-        await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
-        await borda.propose(20, 20, 20, 20, toBN('1000000000000000000'), { from: charlie });
-        await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+        await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+        await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
       });
 
       it('Emits VoteStart when stage is updated to Commit', async () => {
-        const result = await borda.updateStage();
-        await expectEvent.inTransaction(
-          result.tx,
-          borda,
-          'VoteStart',
-        );
+        await expect(borda.updateStage()).to.emit(borda, 'VoteStart');
       });
 
-      it('Doesn\'t allow non-trustee to vote', async () => {
-        await expectRevert(borda.commit(web3.utils.randomHex(32)), 'Only trusted nodes can call this method');
+      it("Doesn't allow non-trustee to vote", async () => {
+        await expect(borda.commit(web3.utils.randomHex(32))).to.be.revertedWith(
+          'Only trusted nodes can call this method',
+        );
       });
 
       it('Allows trustees to vote', async () => {
-        await borda.commit(web3.utils.randomHex(32), { from: bob });
+        await borda.connect(bob).commit(web3.utils.randomHex(32));
       });
 
       it('Emits VoteCast event when commit is called', async () => {
-        const result = await borda.commit(web3.utils.randomHex(32), { from: dave });
-        await expectEvent.inTransaction(
-          result.tx,
-          borda,
-          'VoteCast',
-          { trustee: dave },
-        );
+        await expect(borda.connect(dave).commit(web3.utils.randomHex(32)))
+          .to.emit(borda, 'VoteCast')
+          .withArgs(await dave.getAddress());
       });
     });
 
@@ -134,12 +133,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
         await time.increase(3600 * 24 * 10.1);
         await borda.updateStage();
         await time.increase(3600 * 24 * 3);
-        const result = await borda.updateStage();
-        await expectEvent.inTransaction(
-          result.tx,
-          borda,
-          'RevealStart',
-        );
+        await expect(borda.updateStage()).to.emit(borda, 'RevealStart');
       });
 
       it('Cannot reveal without voting', async () => {
@@ -147,114 +141,157 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
         await borda.updateStage();
         await time.increase(3600 * 24 * 3);
 
-        await expectRevert(borda.reveal(web3.utils.randomHex(32), [bob, charlie]), 'No unrevealed commitment exists');
+        await expect(
+          borda.reveal(web3.utils.randomHex(32), [
+            await bob.getAddress(),
+            await charlie.getAddress(),
+          ]),
+        ).to.be.revertedWith('No unrevealed commitment exists');
       });
 
       it('Rejects empty votes', async () => {
         const seed = web3.utils.randomHex(32);
         await time.increase(3600 * 24 * 10.1);
-        await borda.commit(hash([seed, bob, []]), { from: bob });
+        await borda.connect(bob).commit(hash([seed, await bob.getAddress(), []]));
         await time.increase(3600 * 24 * 3);
-        await expectRevert(borda.reveal(seed, [], { from: bob }), 'Cannot vote empty');
+        await expect(borda.connect(bob).reveal(seed, [])).to.be.revertedWith('Cannot vote empty');
       });
 
       it('Rejects invalid votes', async () => {
         const seed = web3.utils.randomHex(32);
         await time.increase(3600 * 24 * 10.1);
-        await borda.commit(hash([seed, bob, [alice]]), { from: bob });
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), [await alice.getAddress()]]));
         await time.increase(3600 * 24 * 3);
-        await expectRevert(borda.reveal(seed, [alice], { from: bob }), 'Invalid vote, missing proposal');
+        await expect(
+          borda.connect(bob).reveal(seed, [await alice.getAddress()]),
+        ).to.be.revertedWith('Invalid vote, missing proposal');
       });
 
       it('Reject duplicate votes', async () => {
         const seed = web3.utils.randomHex(32);
-        await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
-        await borda.commit(hash([seed, bob, [bob, bob]]), { from: bob });
+        await borda
+          .connect(bob)
+          .commit(
+            hash([seed, await bob.getAddress(), [await bob.getAddress(), await bob.getAddress()]]),
+          );
         await time.increase(3600 * 24 * 3);
-        await expectRevert(borda.reveal(seed, [bob, bob], { from: bob }), 'Invalid vote, repeated address');
+        await expect(
+          borda.connect(bob).reveal(seed, [await bob.getAddress(), await bob.getAddress()]),
+        ).to.be.revertedWith('Invalid vote, repeated address');
       });
 
       it('Rejects changed votes', async () => {
         const seed = web3.utils.randomHex(32);
         await time.increase(3600 * 24 * 10.1);
-        await borda.commit(hash([seed, bob, [bob]]), { from: bob });
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), [await bob.getAddress()]]));
         await time.increase(3600 * 24 * 3);
-        await expectRevert(borda.reveal(seed, [charlie], { from: bob }), 'Commitment mismatch');
+        await expect(
+          borda.connect(bob).reveal(seed, [await charlie.getAddress()]),
+        ).to.be.revertedWith('Commitment mismatch');
       });
 
       it('Emits VoteReveal when vote is correctly revealed', async () => {
         const seed = web3.utils.randomHex(32);
-        await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
-        await borda.commit(hash([seed, bob, [bob]]), { from: bob });
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), [await bob.getAddress()]]));
         await time.increase(3600 * 24 * 3);
-        const result = await borda.reveal(seed, [bob], { from: bob });
-        await expectEvent.inTransaction(
-          result.tx,
-          borda,
-          'VoteReveal',
-          { voter: bob, votes: [bob] },
-        );
+        await expect(borda.connect(bob).reveal(seed, [await bob.getAddress()]))
+          .to.emit(borda, 'VoteReveal')
+          .withArgs(await bob.getAddress(), [await bob.getAddress()]);
       });
 
       it('Allows reveals of correct votes', async () => {
         const seed = web3.utils.randomHex(32);
-        await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
-        await borda.commit(hash([seed, bob, [bob]]), { from: bob });
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), [await bob.getAddress()]]));
         await time.increase(3600 * 24 * 3);
-        await borda.reveal(seed, [bob], { from: bob });
+        await borda.connect(bob).reveal(seed, [await bob.getAddress()]);
       });
 
       describe('With valid commits', async () => {
-        const bobvote = [web3.utils.randomHex(32), bob, [bob, charlie, dave]];
-        const charlievote = [web3.utils.randomHex(32), charlie, [charlie]];
-        const davevote = [web3.utils.randomHex(32), dave, [dave, bob, charlie]];
+        let bobvote;
+        let charlievote;
+        let davevote;
+
+        before(async () => {
+          bobvote = [
+            web3.utils.randomHex(32),
+            await bob.getAddress(),
+            [await bob.getAddress(), await charlie.getAddress(), await dave.getAddress()],
+          ];
+          charlievote = [
+            web3.utils.randomHex(32),
+            await charlie.getAddress(),
+            [await charlie.getAddress()],
+          ];
+          davevote = [
+            web3.utils.randomHex(32),
+            await dave.getAddress(),
+            [await dave.getAddress(), await bob.getAddress(), await charlie.getAddress()],
+          ];
+        });
 
         beforeEach(async () => {
-          await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
-          await borda.propose(20, 20, 20, 20, toBN('1000000000000000000'), { from: charlie });
-          await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+          await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+          await borda
+            .connect(charlie)
+            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
+          await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
           await time.increase(3600 * 24 * 10.1);
 
-          await borda.commit(hash(bobvote), { from: bob });
-          await borda.commit(hash(charlievote), { from: charlie });
-          await borda.commit(hash(davevote), { from: dave });
+          await borda.connect(bob).commit(hash(bobvote));
+          await borda.connect(charlie).commit(hash(charlievote));
+          await borda.connect(dave).commit(hash(davevote));
 
           await time.increase(3600 * 24 * 3);
         });
 
         it('Updates state after bob reveals', async () => {
-          const tx = await borda.reveal(bobvote[0], bobvote[2], { from: bob });
-          console.log(tx.receipt.gasUsed);
-          expect(await borda.score(bob)).to.eq.BN(3);
-          expect(await borda.score(charlie)).to.eq.BN(2);
-          expect(await borda.score(dave)).to.eq.BN(1);
-          expect(await borda.leader()).to.equal(bob);
+          const tx = await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+          const receipt = await tx.wait();
+          console.log(receipt.gasUsed);
+          expect(await borda.score(await bob.getAddress())).to.equal(3);
+          expect(await borda.score(await charlie.getAddress())).to.equal(2);
+          expect(await borda.score(await dave.getAddress())).to.equal(1);
+          expect(await borda.leader()).to.equal(await bob.getAddress());
         });
 
         it('Updates state after bob and charlie reveals', async () => {
-          const tx1 = await borda.reveal(bobvote[0], bobvote[2], { from: bob });
-          console.log(tx1.receipt.gasUsed);
+          const tx1 = await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+          const receipt1 = await tx1.wait();
+          console.log(receipt1.gasUsed);
           // Charlie has only 1 vote, and as each vote gets n-1 points, this does nothing
-          const tx2 = await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
-          console.log(tx2.receipt.gasUsed);
-          expect(await borda.score(bob)).to.eq.BN(3);
-          expect(await borda.score(charlie)).to.eq.BN(3);
-          expect(await borda.score(dave)).to.eq.BN(1);
-          expect(await borda.leader()).to.equal(bob);
+          const tx2 = await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
+          const receipt2 = await tx2.wait();
+          console.log(receipt2.gasUsed);
+          expect(await borda.score(await bob.getAddress())).to.equal(3);
+          expect(await borda.score(await charlie.getAddress())).to.equal(3);
+          expect(await borda.score(await dave.getAddress())).to.equal(1);
+          expect(await borda.leader()).to.equal(await bob.getAddress());
         });
 
         it('Updates state after everyone reveals', async () => {
-          await borda.reveal(bobvote[0], bobvote[2], { from: bob });
-          await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
-          const tx = await borda.reveal(davevote[0], davevote[2], { from: dave });
-          console.log(tx.receipt.gasUsed);
-          expect(await borda.score(bob)).to.eq.BN(5);
-          expect(await borda.score(charlie)).to.eq.BN(4);
-          expect(await borda.score(dave)).to.eq.BN(4);
-          expect(await borda.leader()).to.equal(bob);
+          await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+          await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
+          const tx = await borda.connect(dave).reveal(davevote[0], davevote[2]);
+          const receipt = await tx.wait();
+          console.log(receipt.gasUsed);
+          expect(await borda.score(await bob.getAddress())).to.equal(5);
+          expect(await borda.score(await charlie.getAddress())).to.equal(4);
+          expect(await borda.score(await dave.getAddress())).to.equal(4);
+          expect(await borda.leader()).to.equal(await bob.getAddress());
         });
 
         it('Computing defaults if no one reveals', async () => {
@@ -265,7 +302,7 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
         });
 
         it('Charlie reveal should not override the default vote', async () => {
-          await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
+          await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
           await time.increase(3600 * 24 * 1);
           await borda.updateStage();
           await borda.compute();
@@ -274,42 +311,44 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
 
         describe('Compute Phase', async () => {
           beforeEach(async () => {
-            await borda.reveal(bobvote[0], bobvote[2], { from: bob });
+            await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
             // await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
-            await borda.reveal(davevote[0], davevote[2], { from: dave });
+            await borda.connect(dave).reveal(davevote[0], davevote[2]);
           });
           it('Emits VoteResult', async () => {
             await time.increase(3600 * 24 * 1);
             await borda.updateStage();
-            const result = await borda.compute();
-            await expectEvent.inTransaction(
-              result.tx,
-              borda,
-              'VoteResult',
-              { winner: bob },
-            );
+            await expect(borda.compute())
+              .to.emit(borda, 'VoteResult')
+              .withArgs(await bob.getAddress());
           });
 
           it('Picks a winner', async () => {
             await time.increase(3600 * 24 * 1);
             await borda.updateStage();
             await borda.compute();
-            expect(await borda.winner()).to.equal(bob);
+            expect(await borda.winner()).to.equal(await bob.getAddress());
           });
 
           it('Successfully records the vote of the trustees', async () => {
             // bob and dave do reveal
-            expect(await trustedNodes.votingRecord(bob)).to.eq.BN(new BN(1));
-            expect(await trustedNodes.votingRecord(dave)).to.eq.BN(new BN(1));
+            expect(await trustedNodes.votingRecord(await bob.getAddress())).to.equal(
+              BigNumber.from(1),
+            );
+            expect(await trustedNodes.votingRecord(await dave.getAddress())).to.equal(
+              BigNumber.from(1),
+            );
 
             // charlie didn't reveal
-            expect(await trustedNodes.votingRecord(charlie)).to.eq.BN(new BN(0));
+            expect(await trustedNodes.votingRecord(await charlie.getAddress())).to.equal(
+              BigNumber.from(0),
+            );
           });
 
           it('Can pay out trustee vote rewards', async () => {
             await faucet.mintx(trustedNodes.address, 3000);
-            await trustedNodes.redeemVoteRewards({ from: dave });
-            expect(await ecox.balanceOf(dave)).to.eq.BN(new BN(1000));
+            await trustedNodes.connect(dave).redeemVoteRewards();
+            expect(await ecox.balanceOf(await dave.getAddress())).to.equal(BigNumber.from(1000));
           });
         });
       });
@@ -318,20 +357,20 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
 
   context('many trustees', () => {
     beforeEach(async () => {
-      ({
-        policy,
-        trustedNodes,
-        faucet,
-        ecox,
-      } = await util.deployPolicy(
-        accounts[counter],
-        { trustednodes: [bob, charlie, dave, ...additionalTrustees] },
-      ));
-      counter += 1;
+      const trustednodes = [
+        await bob.getAddress(),
+        await charlie.getAddress(),
+        await dave.getAddress(),
+        ...additionalTrustees.map(async (t) => t.getAddress()),
+      ];
 
-      const originalBorda = await CurrencyGovernance.new(policy.address);
-      const bordaCloner = await Cloner.new(originalBorda.address);
-      borda = await CurrencyGovernance.at(await bordaCloner.clone());
+      ({
+        policy, trustedNodes, faucet, ecox, timedPolicies,
+      } = await ecoFixture(trustednodes));
+
+      const originalBorda = await deploy('CurrencyGovernance', policy.address);
+      const bordaCloner = await deploy('Cloner', originalBorda.address);
+      borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner.clone());
       // console.log(borda.address);
       await policy.testDirectSet('CurrencyGovernance', borda.address);
     });
@@ -340,26 +379,36 @@ contract('CurrencyGovernance [@group=4]', (accounts) => {
       /* eslint-disable no-loop-func, no-await-in-loop */
       for (let i = 0; i < additionalTrustees.length; i++) {
         it(`testing revealing with ${i + 4} proposals`, async () => {
-          await borda.propose(10, 10, 10, 10, toBN('1000000000000000000'), { from: dave });
-          await borda.propose(20, 20, 20, 20, toBN('1000000000000000000'), { from: charlie });
-          await borda.propose(30, 30, 30, 30, toBN('1000000000000000000'), { from: bob });
+          await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+          await borda
+            .connect(charlie)
+            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
+          await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
           for (let j = 0; j < additionalTrustees.length; j++) {
-            await borda.propose(40, 40, 40, 40, toBN('1000000000000000000'), { from: additionalTrustees[j] });
+            await borda
+              .connect(additionalTrustees[j])
+              .propose(40, 40, 40, 40, BigNumber.from('1000000000000000000'));
           }
           await time.increase(3600 * 24 * 10.1);
 
           const bobvote = [
             web3.utils.randomHex(32),
             bob,
-            [bob, charlie, dave, ...(additionalTrustees.slice(0, i + 1))],
+            [
+              await bob.getAddress(),
+              await charlie.getAddress(),
+              await dave.getAddress(),
+              ...additionalTrustees.slice(0, i + 1),
+            ],
           ];
           const bobreveal = [bobvote[0], bobvote[2]];
-          await borda.commit(hash(bobvote), { from: bob });
+          await borda.connect(bob).commit(hash(bobvote));
 
           await time.increase(3600 * 24 * 3);
 
-          const tx = await borda.reveal(...bobreveal, { from: bob });
-          console.log(tx.receipt.gasUsed);
+          const tx = await borda.connect(bob).reveal(...bobreveal);
+          const receipt = await tx.wait();
+          console.log(receipt.gasUsed);
         });
       }
     });

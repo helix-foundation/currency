@@ -1,22 +1,19 @@
-const chai = require('chai');
+/* eslint-disable no-console */
 
-const { BN, toBN } = web3.utils;
-const bnChai = require('bn-chai');
+const { expect } = require('chai');
 
-const CurrencyGovernance = artifacts.require('CurrencyGovernance');
+const { ethers } = require('hardhat');
 
-const { expect } = chai;
-const { expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
-const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants');
+const { BigNumber } = ethers;
+const { ecoFixture } = require('../utils/fixtures');
+
+const time = require('../utils/time');
 const util = require('../../tools/test/util');
 
-let one;
+describe('ECO [@group=1]', () => {
+  const one = ethers.utils.parseEther('1');
 
-chai.use(bnChai(BN));
-
-contract('ECO [@group=1]', (accounts) => {
-  one = toBN(10).pow(toBN(18));
-
+  let accounts;
   let eco;
   let faucet;
   let policy;
@@ -24,39 +21,39 @@ contract('ECO [@group=1]', (accounts) => {
   let proposedInflationMult;
   let inflationBlockNumber;
 
-  let counter = 0;
+  before(async () => {
+    accounts = await ethers.getSigners();
+  });
 
   beforeEach(async () => {
     const bob = accounts[2];
     const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000;
     const digits10to19 = Math.floor(Math.random() * 10000000000);
     proposedInflationMult = `${digits10to19}${digits1to9}`;
-    // console.log(digits10to19, digits1to9, proposedInflationMult);
+    const trustednodes = [await bob.getAddress()];
 
     ({
-      eco,
-      faucet,
-      policy,
-      timedPolicies,
-    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
+      policy, eco, faucet, timedPolicies,
+    } = await ecoFixture(trustednodes));
 
     // enact a random amount of linear inflation for all tests
-    const borda = await CurrencyGovernance.at(
+    const borda = await ethers.getContractAt(
+      'CurrencyGovernance',
       await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
-    await borda.propose(0, 0, 0, 0, new BN(proposedInflationMult), { from: bob });
+    await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult);
     await time.increase(3600 * 24 * 10.1);
 
-    const bobvote = [web3.utils.randomHex(32), bob, [bob]];
+    const bobvote = [web3.utils.randomHex(32), await bob.getAddress(), [await bob.getAddress()]];
     const bobvotehash = web3.utils.soliditySha3(
       { type: 'bytes32', value: bobvote[0] },
       { type: 'address', value: bobvote[1] },
       { type: 'address', value: bobvote[2] },
     );
-    await borda.commit(bobvotehash, { from: bob });
+    await borda.connect(bob).commit(bobvotehash);
     await time.increase(3600 * 24 * 3);
-    await borda.reveal(bobvote[0], bobvote[2], { from: bob });
+    await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
     await time.increase(3600 * 24 * 1);
     await borda.updateStage();
     await borda.compute();
@@ -68,391 +65,369 @@ contract('ECO [@group=1]', (accounts) => {
     await time.advanceBlock();
 
     // console.log((await eco.getPastLinearInflation(inflationBlockNumber)).toString())
-
-    counter += 1;
   });
 
   describe('total supply', () => {
-    const amount = one.muln(100);
+    const amount = one.mul(100);
 
     beforeEach(async () => {
-      await faucet.mint(accounts[1], amount);
+      await faucet.mint(await accounts[1].getAddress(), amount);
     });
 
     it('returns the total amount of tokens', async () => {
       const supply = await eco.totalSupply();
 
-      expect(supply).to.eq.BN(amount);
+      expect(supply).to.equal(amount);
     });
   });
 
   describe('balanceOf', () => {
-    const amount = one.muln(100);
+    const amount = one.mul(100);
 
     beforeEach(async () => {
-      await faucet.mint(accounts[1], amount);
+      await faucet.mint(await accounts[1].getAddress(), amount);
     });
 
     context('when the requrested account has no tokens', () => {
       it('returns 0', async () => {
-        const balance = await eco.balanceOf(accounts[2]);
+        const balance = await eco.balanceOf(await accounts[2].getAddress());
 
-        expect(balance).to.eq.BN(0);
+        expect(balance).to.equal(0);
       });
     });
 
     context('when there are tokens in the account', () => {
       it('returns the correct balance', async () => {
-        const balance = await eco.balanceOf(accounts[1]);
+        const balance = await eco.balanceOf(await accounts[1].getAddress());
 
-        expect(balance).to.eq.BN(amount);
+        expect(balance).to.equal(amount);
       });
     });
   });
 
   describe('transfer', () => {
-    const amount = one.muln(1000);
+    const amount = one.mul(1000);
 
     beforeEach(async () => {
-      await faucet.mint(accounts[1], amount);
+      await faucet.mint(await accounts[1].getAddress(), amount);
     });
 
-    context('when the sender doesn\'t have enough balance', () => {
-      const meta = { from: accounts[2] };
+    context("when the sender doesn't have enough balance", () => {
       it('reverts', async () => {
-        await expectRevert(
-          eco.transfer(accounts[3], amount, meta),
-          'ERC20: transfer amount exceeds balance',
-          eco.constructor,
-        );
+        await expect(
+          eco.connect(accounts[2]).transfer(await accounts[3].getAddress(), amount),
+        ).to.be.revertedWith('ERC20: transfer amount exceeds balance', eco.constructor);
       });
     });
 
     context('when the sender has enough balance', () => {
-      const meta = { from: accounts[1] };
+      it("reduces the sender's balance", async () => {
+        const startBalance = await eco.balanceOf(await accounts[1].getAddress());
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const endBalance = await eco.balanceOf(await accounts[1].getAddress());
 
-      it('reduces the sender\'s balance', async () => {
-        const startBalance = await eco.balanceOf(accounts[1]);
-        await eco.transfer(accounts[2], amount, meta);
-        const endBalance = await eco.balanceOf(accounts[1]);
-
-        expect(endBalance.add(amount)).to.eq.BN(startBalance);
+        expect(endBalance.add(amount)).to.equal(startBalance);
       });
 
       it('increases the balance of the recipient', async () => {
-        const startBalance = await eco.balanceOf(accounts[2]);
-        await eco.transfer(accounts[2], amount, meta);
-        const endBalance = await eco.balanceOf(accounts[2]);
+        const startBalance = await eco.balanceOf(await accounts[2].getAddress());
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const endBalance = await eco.balanceOf(await accounts[2].getAddress());
 
-        expect(endBalance.sub(amount)).to.eq.BN(startBalance);
+        expect(endBalance.sub(amount)).to.equal(startBalance);
       });
 
       it('emits a Transfer event', async () => {
-        const recipient = accounts[2];
-        const result = await eco.transfer(recipient, amount, meta);
-        await expectEvent.inTransaction(
-          result.tx,
-          eco.constructor,
-          'Transfer',
-          { from: meta.from, to: recipient, value: amount.toString() },
-        );
+        const recipient = await accounts[2].getAddress();
+        await expect(eco.connect(accounts[1]).transfer(recipient, amount))
+          .to.emit(eco, 'Transfer')
+          .withArgs(await accounts[1].getAddress(), recipient, amount.toString());
       });
 
       it('emits a BaseValueTransfer event', async () => {
-        const recipient = accounts[2];
+        const recipient = await accounts[2].getAddress();
         const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
         const gonsAmount = inflationMult.mul(amount);
-        const result = await eco.transfer(recipient, amount, meta);
-        await expectEvent.inTransaction(
-          result.tx,
-          eco.constructor,
-          'BaseValueTransfer',
-          { from: meta.from, to: recipient, value: gonsAmount.toString() },
-        );
+        await expect(eco.connect(accounts[1]).transfer(recipient, amount))
+          .to.emit(eco, 'BaseValueTransfer')
+          .withArgs(await accounts[1].getAddress(), recipient, gonsAmount.toString());
       });
 
       it('returns true', async () => {
-        const result = await eco.transfer.call(accounts[2], amount, meta);
+        const result = await eco
+          .connect(accounts[1])
+          .callStatic.transfer(await accounts[2].getAddress(), amount);
         expect(result).to.be.true;
       });
 
       it('prevents a transfer to the 0 address', async () => {
-        await expectRevert(
-          eco.transfer(ZERO_ADDRESS, amount, meta),
-          'ERC20: transfer to the zero address',
-          eco.constructor,
-        );
+        await expect(
+          eco.connect(accounts[1]).transfer(ethers.constants.AddressZero, amount),
+        ).to.be.revertedWith('ERC20: transfer to the zero address', eco.constructor);
       });
     });
   });
 
   describe('burn', () => {
-    const amount = one.muln(1000);
+    const amount = one.mul(1000);
 
     beforeEach(async () => {
-      await faucet.mint(accounts[1], amount);
+      await faucet.mint(await accounts[1].getAddress(), amount);
     });
 
-    context('when the sender doesn\'t have enough balance', () => {
-      const meta = { from: accounts[2] };
+    context("when the sender doesn't have enough balance", () => {
       it('reverts', async () => {
-        await expectRevert(
-          eco.burn(accounts[2], amount, meta),
-          'ERC20: burn amount exceeds balance',
-          eco.constructor,
-        );
+        await expect(
+          eco.connect(accounts[2]).burn(await accounts[2].getAddress(), amount),
+        ).to.be.revertedWith('ERC20: burn amount exceeds balance', eco.constructor);
       });
     });
 
     context('when the sender is not the burning address', () => {
-      const meta = { from: accounts[2] };
       it('reverts', async () => {
-        await expectRevert(
-          eco.burn(accounts[1], amount, meta),
-          'Caller not authorized to burn tokens',
-          eco.constructor,
-        );
+        await expect(
+          eco.connect(accounts[2]).burn(await accounts[1].getAddress(), amount),
+        ).to.be.revertedWith('Caller not authorized to burn tokens', eco.constructor);
       });
     });
 
     context('when the sender has enough balance', () => {
-      const meta = { from: accounts[1] };
+      it("reduces the sender's balance", async () => {
+        const startBalance = await eco.balanceOf(await accounts[1].getAddress());
+        await eco.connect(accounts[1]).burn(await accounts[1].getAddress(), amount);
+        const endBalance = await eco.balanceOf(await accounts[1].getAddress());
 
-      it('reduces the sender\'s balance', async () => {
-        const startBalance = await eco.balanceOf(accounts[1]);
-        await eco.burn(accounts[1], amount, meta);
-        const endBalance = await eco.balanceOf(accounts[1]);
-
-        expect(endBalance.add(amount)).to.eq.BN(startBalance);
+        expect(endBalance.add(amount)).to.equal(startBalance);
       });
 
       it('reduces totalsupply', async () => {
         const startSupply = await eco.totalSupply();
-        await eco.burn(accounts[1], amount, meta);
+        await eco.connect(accounts[1]).burn(await accounts[1].getAddress(), amount);
         const endSupply = await eco.totalSupply();
 
-        expect(startSupply.sub(amount)).to.eq.BN(endSupply);
+        expect(startSupply.sub(amount)).to.equal(endSupply);
       });
 
       it('emits a Transfer event', async () => {
-        const source = accounts[1];
-        const result = await eco.burn(source, amount, meta);
-        await expectEvent.inTransaction(
-          result.tx,
-          eco.constructor,
-          'Transfer',
-          { from: source, to: ZERO_ADDRESS, value: amount.toString() },
-        );
+        const source = await accounts[1].getAddress();
+        await expect(eco.connect(accounts[1]).burn(source, amount))
+          .to.emit(eco, 'Transfer')
+          .withArgs(source, ethers.constants.AddressZero, amount.toString());
       });
     });
   });
 
   describe('approve/allowance', () => {
-    const spender = accounts[2];
+    let spender;
+    let from;
+
+    before(async () => {
+      spender = await accounts[2].getAddress();
+      from = accounts[1];
+    });
 
     context('when the source address has enough balance', () => {
-      const from = accounts[1];
-      const meta = { from };
-      const amount = one.muln(1000);
+      const amount = one.mul(1000);
 
       it('emits an Approval event', async () => {
-        const result = await eco.approve(spender, amount, meta);
-        await expectEvent.inTransaction(
-          result.tx,
-          eco.constructor,
-          'Approval',
-        );
+        await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
       });
 
       it('prevents an approve for the 0 address', async () => {
-        await expectRevert(
-          eco.approve(ZERO_ADDRESS, amount, meta),
-          'ERC20: approve to the zero address',
-          eco.constructor,
-        );
+        await expect(
+          eco.connect(from).approve(ethers.constants.AddressZero, amount),
+        ).to.be.revertedWith('ERC20: approve to the zero address', eco.constructor);
       });
 
       context('when there is no existing allowance', () => {
         it('sets the allowance', async () => {
-          await eco.approve(spender, amount, meta);
-          const allowance = await eco.allowance(from, spender);
-          expect(allowance).to.eq.BN(amount);
+          await eco.connect(from).approve(spender, amount);
+          const allowance = await eco.allowance(await from.getAddress(), spender);
+          expect(allowance).to.equal(amount);
         });
       });
 
       context('when there is a pre-existing allowance', () => {
         beforeEach(async () => {
-          await eco.approve(spender, amount.sub(new BN(50)), meta);
+          await eco.connect(from).approve(spender, amount.sub(50));
         });
 
         it('replaces the existing allowance', async () => {
-          await eco.approve(spender, amount, meta);
-          const allowance = await eco.allowance(from, spender);
+          await eco.connect(from).approve(spender, amount);
+          const allowance = await eco.allowance(await from.getAddress(), spender);
 
-          expect(allowance).to.eq.BN(amount);
+          expect(allowance).to.equal(amount);
         });
 
         it('emits the Approval event', async () => {
-          const result = await eco.approve(spender, amount, meta);
-          await expectEvent.inTransaction(
-            result.tx,
-            eco.constructor,
-            'Approval',
-          );
+          await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
         });
       });
     });
 
     context('when the source address does not have enough balance', () => {
-      const [, from] = accounts;
-      const meta = { from };
-      const amount = one.muln(1000);
+      const amount = one.mul(1000);
+
+      before(() => {
+        from = accounts[1];
+      });
 
       it('emits an Approval event', async () => {
-        const result = await eco.approve(spender, amount, meta);
-        await expectEvent.inTransaction(
-          result.tx,
-          eco.constructor,
-          'Approval',
-        );
+        await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
       });
 
       context('when there is no existing allowance', () => {
         it('sets the allowance', async () => {
-          await eco.approve(spender, amount, meta);
-          const allowance = await eco.allowance(from, spender);
+          await eco.connect(from).approve(spender, amount);
+          const allowance = await eco.allowance(await from.getAddress(), spender);
 
-          expect(allowance).to.eq.BN(amount);
+          expect(allowance).to.equal(amount);
         });
       });
 
       context('when there is a pre-existing allowance', () => {
         beforeEach(async () => {
-          await eco.approve(spender, amount.sub(new BN(50)), meta);
+          await eco.connect(from).approve(spender, amount.sub(50));
         });
 
         it('replaces the existing allowance', async () => {
-          await eco.approve(spender, amount, meta);
-          const allowance = await eco.allowance(from, spender);
+          await eco.connect(from).approve(spender, amount);
+          const allowance = await eco.allowance(await from.getAddress(), spender);
 
-          expect(allowance).to.eq.BN(amount);
+          expect(allowance).to.equal(amount);
         });
 
         it('emits the Approval event', async () => {
-          const result = await eco.approve(spender, amount, meta);
-          await expectEvent.inTransaction(result.tx, eco.constructor, 'Approval');
+          await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
         });
       });
     });
   });
 
   describe('transferFrom', () => {
-    const [, from, to, authorized, unauthorized] = accounts;
-    const balance = one.muln(1000);
-    const allowance = one.muln(100);
-    const allowanceParts = [
-      one.muln(10), one.muln(50), one.muln(40),
-    ];
+    let from;
+    let to;
+    let authorized;
+    let unauthorized;
+    const balance = one.mul(1000);
+    const allowance = one.mul(100);
+    const allowanceParts = [one.mul(10), one.mul(50), one.mul(40)];
+
+    before(() => {
+      [, from, to, authorized, unauthorized] = accounts;
+    });
 
     beforeEach(async () => {
-      await faucet.mint(from, balance);
-      await eco.approve(authorized, allowance, { from });
+      await faucet.mint(await from.getAddress(), balance);
+      await eco.connect(from).approve(await authorized.getAddress(), allowance);
     });
 
     context('with an unauthorized account', () => {
-      const meta = { from: unauthorized };
-
       context('within the allowance', () => {
         it('reverts', async () => {
-          await expectRevert(
-            eco.transferFrom(from, to, allowanceParts[0], meta),
-            'ERC20: transfer amount exceeds allowance.',
-          );
+          await expect(
+            eco
+              .connect(unauthorized)
+              .transferFrom(await from.getAddress(), await to.getAddress(), allowanceParts[0]),
+          ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
         });
       });
 
       context('above the allowance', () => {
         it('reverts', async () => {
-          await expectRevert(
-            eco.transferFrom(from, to, allowance.add(one.muln(10)), meta),
-            'ERC20: transfer amount exceeds allowance.',
-          );
+          await expect(
+            eco
+              .connect(unauthorized)
+              .transferFrom(
+                await from.getAddress(),
+                await to.getAddress(),
+                allowance.add(one.mul(10)),
+              ),
+          ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
         });
       });
     });
 
     context('with an authorized account', () => {
-      const meta = { from: authorized };
-
       context('within the allowance', () => {
         it('emits a Transfer event', async () => {
-          const result = await eco.transferFrom(from, to, allowanceParts[0], meta);
-          await expectEvent.inTransaction(
-            result.tx,
-            eco.constructor,
-            'Transfer',
-            { from, to, value: allowanceParts[0].toString() },
-          );
+          await expect(
+            eco
+              .connect(authorized)
+              .transferFrom(await from.getAddress(), await to.getAddress(), allowanceParts[0]),
+          )
+            .to.emit(eco, 'Transfer')
+            .withArgs(await from.getAddress(), await to.getAddress(), allowanceParts[0].toString());
         });
 
         it('adds to the recipient balance', async () => {
           const amount = allowanceParts[1];
 
-          const startBalance = await eco.balanceOf(to);
-          await eco.transferFrom(from, to, amount, meta);
-          const endBalance = await eco.balanceOf(to);
+          const startBalance = await eco.balanceOf(await to.getAddress());
+          await eco
+            .connect(authorized)
+            .transferFrom(await from.getAddress(), await to.getAddress(), amount);
+          const endBalance = await eco.balanceOf(await to.getAddress());
 
-          expect(endBalance.sub(startBalance)).to.eq.BN(amount);
+          expect(endBalance.sub(startBalance)).to.equal(amount);
         });
 
         it('subtracts from the source balance', async () => {
           const amount = allowanceParts[1];
 
-          const startBalance = await eco.balanceOf(from);
-          await eco.transferFrom(from, to, amount, meta);
-          const endBalance = await eco.balanceOf(from);
+          const startBalance = await eco.balanceOf(await from.getAddress());
+          await eco
+            .connect(authorized)
+            .transferFrom(await from.getAddress(), await to.getAddress(), amount);
+          const endBalance = await eco.balanceOf(await from.getAddress());
 
-          expect(startBalance.sub(endBalance)).to.eq.BN(amount);
+          expect(startBalance.sub(endBalance)).to.equal(amount);
         });
 
         it('decreases the allowance', async () => {
           const amount = allowanceParts[1];
 
-          const startAllowance = await eco.allowance(from, authorized);
-          await eco.transferFrom(from, to, amount, meta);
-          const endAllowance = await eco.allowance(from, authorized);
+          const startAllowance = await eco.allowance(
+            await from.getAddress(),
+            await authorized.getAddress(),
+          );
+          await eco
+            .connect(authorized)
+            .transferFrom(await from.getAddress(), await to.getAddress(), amount);
+          const endAllowance = await eco.allowance(
+            await from.getAddress(),
+            await authorized.getAddress(),
+          );
 
-          expect(startAllowance.sub(endAllowance)).to.eq.BN(amount);
+          expect(startAllowance.sub(endAllowance)).to.equal(amount);
         });
 
         it('allows multiple transfers', async () => {
-          const startBalance = await eco.balanceOf(from);
+          const startBalance = await eco.balanceOf(await from.getAddress());
 
           await Promise.all(
-            allowanceParts.map(
-              (part) => eco.transferFrom(from, to, part, meta),
-            ),
+            allowanceParts.map(async (part) => eco
+              .connect(authorized)
+              .transferFrom(await from.getAddress(), await to.getAddress(), part)),
           );
 
-          const endBalance = await eco.balanceOf(from);
+          const endBalance = await eco.balanceOf(await from.getAddress());
 
-          expect(startBalance.sub(endBalance)).to.eq.BN(allowance);
+          expect(startBalance.sub(endBalance)).to.equal(allowance);
         });
 
         context('with multiple transfers', () => {
           it('emits multiple Transfer events', async () => {
             await Promise.all(
-              allowanceParts.map(
-                async (part) => {
-                  const result = await eco.transferFrom(from, to, part, meta);
-                  await expectEvent.inTransaction(
-                    result.tx,
-                    eco.constructor,
-                    'Transfer',
-                    { from, to, value: part.toString() },
-                  );
-                },
-              ),
+              allowanceParts.map(async (part) => {
+                await expect(
+                  eco
+                    .connect(authorized)
+                    .transferFrom(await from.getAddress(), await to.getAddress(), part),
+                )
+                  .to.emit(eco, 'Transfer')
+                  .withArgs(await from.getAddress(), await to.getAddress(), part.toString());
+              }),
             );
           });
         });
@@ -461,507 +436,643 @@ contract('ECO [@group=1]', (accounts) => {
       context('above the allowance', () => {
         context('with a single transfer', () => {
           it('reverts', async () => {
-            await expectRevert(
-              eco.transferFrom(from, to, allowance.add(new BN(1)), meta),
-              'ERC20: transfer amount exceeds allowance.',
-            );
+            await expect(
+              eco
+                .connect(authorized)
+                .transferFrom(await from.getAddress(), await to.getAddress(), allowance.add(1)),
+            ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
           });
         });
 
         context('with multiple transfers', () => {
-          it('can\'t exceed the allowance', async () => {
-            const extra = new BN(1);
+          it("can't exceed the allowance", async () => {
+            const extra = 1;
 
             await Promise.all(
-              allowanceParts.map(
-                (part) => eco.transferFrom(from, to, part, meta),
-              ),
+              allowanceParts.map(async (part) => eco
+                .connect(authorized)
+                .transferFrom(await from.getAddress(), await to.getAddress(), part)),
             );
 
-            await expectRevert(
-              eco.transferFrom(from, to, extra, meta),
-              'ERC20: transfer amount exceeds allowance.',
-            );
+            await expect(
+              eco
+                .connect(authorized)
+                .transferFrom(await from.getAddress(), await to.getAddress(), extra),
+            ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
           });
         });
       });
 
       context('when transferring 0', () => {
         it('emits a Transfer event', async () => {
-          const result = await eco.transferFrom(from, to, 0, meta);
-          await expectEvent.inTransaction(
-            result.tx,
-            eco.constructor,
-            'Transfer',
-            { from, to, value: '0' },
-          );
+          await expect(
+            eco.connect(authorized).transferFrom(await from.getAddress(), await to.getAddress(), 0),
+          )
+            .to.emit(eco, 'Transfer')
+            .withArgs(await from.getAddress(), await to.getAddress(), '0');
         });
 
         it('does not decrease the allowance', async () => {
-          const startAllowance = await eco.allowance(from, authorized);
-          await eco.transferFrom(from, to, 0, meta);
-          const endAllowance = await eco.allowance(from, authorized);
+          const startAllowance = await eco.allowance(
+            await from.getAddress(),
+            await authorized.getAddress(),
+          );
+          await eco
+            .connect(authorized)
+            .transferFrom(await from.getAddress(), await to.getAddress(), 0);
+          const endAllowance = await eco.allowance(
+            await from.getAddress(),
+            await authorized.getAddress(),
+          );
 
-          expect(endAllowance).to.eq.BN(startAllowance);
+          expect(endAllowance).to.equal(startAllowance);
         });
 
         it('does not change the sender balance', async () => {
-          const startBalance = await eco.balanceOf(from);
-          await eco.transferFrom(from, to, 0, meta);
-          const endBalance = await eco.balanceOf(from);
+          const startBalance = await eco.balanceOf(await from.getAddress());
+          await eco
+            .connect(authorized)
+            .transferFrom(await from.getAddress(), await to.getAddress(), 0);
+          const endBalance = await eco.balanceOf(await from.getAddress());
 
-          expect(endBalance).to.eq.BN(startBalance);
+          expect(endBalance).to.equal(startBalance);
         });
 
         it('does not change the recipient balance', async () => {
-          const startBalance = await eco.balanceOf(to);
-          await eco.transferFrom(from, to, 0, meta);
-          const endBalance = await eco.balanceOf(to);
+          const startBalance = await eco.balanceOf(await to.getAddress());
+          await eco
+            .connect(authorized)
+            .transferFrom(await from.getAddress(), await to.getAddress(), 0);
+          const endBalance = await eco.balanceOf(await to.getAddress());
 
-          expect(endBalance).to.eq.BN(startBalance);
+          expect(endBalance).to.equal(startBalance);
         });
       });
     });
   });
 
   describe('Events from BalanceStore', () => {
-    const amount = one.muln(1000);
+    const amount = one.mul(1000);
 
     it('emits Transfer when minting', async () => {
-      const tx = await faucet.mint(accounts[1], amount);
-      await expectEvent.inTransaction(
-        tx.tx,
-        eco.constructor,
-        'Transfer',
-        { from: ZERO_ADDRESS, to: accounts[1], value: amount.toString() },
-      );
+      await expect(faucet.mint(await accounts[1].getAddress(), amount))
+        .to.emit(eco, 'Transfer')
+        .withArgs(ethers.constants.AddressZero, await accounts[1].getAddress(), amount.toString());
     });
 
     it('emits Transfer when burning', async () => {
-      await faucet.mint(accounts[1], amount);
-      const burnAmount = one.muln(100);
-      const tx = await eco.burn(accounts[1], burnAmount, { from: accounts[1] });
-      await expectEvent.inTransaction(
-        tx.tx,
-        eco.constructor,
-        'Transfer',
-        { to: ZERO_ADDRESS, from: accounts[1], value: burnAmount.toString() },
-      );
+      await faucet.mint(await accounts[1].getAddress(), amount);
+      const burnAmount = one.mul(100);
+      await expect(eco.connect(accounts[1]).burn(await accounts[1].getAddress(), burnAmount))
+        .to.emit(eco, 'Transfer')
+        .withArgs(
+          await accounts[1].getAddress(),
+          ethers.constants.AddressZero,
+          burnAmount.toString(),
+        );
     });
   });
 
   describe('Metadata', () => {
     it('has the standard 18 decimals', async () => {
       const decimals = await eco.decimals();
-      expect(decimals).to.be.eq.BN(18);
+      expect(decimals).to.be.equal(18);
     });
   });
 
   describe('Checkpoint data', () => {
-    const [, from] = accounts;
-    const deposit = one.muln(1000);
-    const balance = deposit.muln(2);
+    let from;
+    const deposit = one.mul(1000);
+    const balance = deposit.mul(2);
+
+    before(() => {
+      from = accounts[1];
+    });
 
     beforeEach(async () => {
-      await faucet.mint(from, deposit);
-      await faucet.mint(from, deposit);
+      await faucet.mint(await from.getAddress(), deposit);
+      await faucet.mint(await from.getAddress(), deposit);
     });
 
     it('can get a checkpoint value', async () => {
       const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
-      const checkpoint = await eco.checkpoints(from, 1);
-      expect(checkpoint.value).to.be.eq.BN(inflationMult.mul(balance));
+      const checkpoint = await eco.checkpoints(await from.getAddress(), 1);
+      expect(checkpoint.value).to.be.equal(inflationMult.mul(balance));
     });
 
     it('can get the number of checkpoints', async () => {
-      const numCheckpoints = await eco.numCheckpoints(from);
-      expect(numCheckpoints).to.be.eq.BN(2);
+      const numCheckpoints = await eco.numCheckpoints(await from.getAddress());
+      expect(numCheckpoints).to.be.equal(2);
     });
 
     it('can get the internal votes for an account', async () => {
       const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
-      const votes = await eco.getVotingGons(from);
-      expect(votes).to.be.eq.BN(inflationMult.mul(balance));
+      const votes = await eco.getVotingGons(await from.getAddress());
+      expect(votes).to.be.equal(inflationMult.mul(balance));
     });
 
-    it('cannot get the internal votes for an account until the block requestsed has been mined', async () => {
-      await expectRevert(
-        eco.getPastVotingGons(from, (await time.latestBlock()) + 1, { from }),
-        'VoteCheckpoints: block not yet mined',
-        eco.constructor,
-      );
+    it('cannot get the internal votes for an account until the block requested has been mined', async () => {
+      await expect(
+        eco
+          .connect(from)
+          .getPastVotingGons(await from.getAddress(), (await time.latestBlock()) + 1),
+      ).to.be.revertedWith('VoteCheckpoints: block not yet mined', eco.constructor);
     });
 
     it('cannot get the past supply until the block requestsed has been mined', async () => {
-      await expectRevert(
-        eco.getPastTotalSupply((await time.latestBlock()) + 1, { from }),
-        'VoteCheckpoints: block not yet mined',
-        eco.constructor,
-      );
+      await expect(
+        eco.connect(from).getPastTotalSupply((await time.latestBlock()) + 1),
+      ).to.be.revertedWith('VoteCheckpoints: block not yet mined', eco.constructor);
     });
   });
 
   describe('increase and decrease allowance', () => {
-    const [, from, authorized] = accounts;
-    const balance = one.muln(1000);
-    const allowanceAmount = one.muln(100);
-    const increment = one.muln(10);
+    let from;
+    let authorized;
+    const balance = one.mul(1000);
+    const allowanceAmount = one.mul(100);
+    const increment = one.mul(10);
+
+    before(() => {
+      [, from, authorized] = accounts;
+    });
 
     beforeEach(async () => {
-      await faucet.mint(from, balance);
-      await eco.approve(authorized, allowanceAmount, { from });
+      await faucet.mint(await from.getAddress(), balance);
+      await eco.connect(from).approve(await authorized.getAddress(), allowanceAmount);
     });
 
     context('we can increase the allowance', () => {
       it('increases the allowance', async () => {
-        await eco.increaseAllowance(authorized, increment, { from });
-        const allowance = await eco.allowance(from, authorized);
-        expect(allowance).to.be.eq.BN(allowanceAmount.add(increment));
+        await eco.connect(from).increaseAllowance(await authorized.getAddress(), increment);
+        const allowance = await eco.allowance(
+          await from.getAddress(),
+          await authorized.getAddress(),
+        );
+        expect(allowance).to.be.equal(allowanceAmount.add(increment));
       });
     });
 
     context('we can decrease the allowance', () => {
       it('decreases the allowance', async () => {
-        await eco.decreaseAllowance(authorized, increment, { from });
-        const allowance = await eco.allowance(from, authorized);
-        expect(allowance).to.be.eq.BN(allowanceAmount.sub(increment));
+        await eco.connect(from).decreaseAllowance(await authorized.getAddress(), increment);
+        const allowance = await eco.allowance(
+          await from.getAddress(),
+          await authorized.getAddress(),
+        );
+        expect(allowance).to.be.equal(allowanceAmount.sub(increment));
       });
 
       it('cant decreases the allowance into negative values', async () => {
-        await expectRevert(
-          eco.decreaseAllowance(authorized, allowanceAmount.add(new BN(1)), { from }),
-          'ERC20: decreased allowance below zero',
-          eco.constructor,
-        );
+        await expect(
+          eco
+            .connect(from)
+            .decreaseAllowance(await authorized.getAddress(), allowanceAmount.add(1)),
+        ).to.be.revertedWith('ERC20: decreased allowance below zero', eco.constructor);
       });
     });
   });
 
   describe('delegation', () => {
-    const amount = one.muln(1000);
+    const amount = one.mul(1000);
     let voteAmount;
 
     beforeEach(async () => {
-      await faucet.mint(accounts[1], amount);
-      await faucet.mint(accounts[2], amount);
-      await faucet.mint(accounts[3], amount);
-      await faucet.mint(accounts[4], amount);
-      await eco.enableDelegation({ from: accounts[3] });
-      await eco.enableDelegation({ from: accounts[4] });
+      await faucet.mint(await accounts[1].getAddress(), amount);
+      await faucet.mint(await accounts[2].getAddress(), amount);
+      await faucet.mint(await accounts[3].getAddress(), amount);
+      await faucet.mint(await accounts[4].getAddress(), amount);
+      await eco.connect(accounts[3]).enableDelegation();
+      await eco.connect(accounts[4]).enableDelegation();
 
-      voteAmount = (new BN(proposedInflationMult)).mul(amount);
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount);
     });
 
     context('delegate', () => {
-      const meta = { from: accounts[1] };
-
       it('correct votes when delegated', async () => {
-        const tx1 = await eco.delegate(accounts[3], meta);
-        console.log(tx1.receipt.gasUsed);
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.muln(2));
+        const tx1 = await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount.mul(2));
 
-        const tx2 = await eco.delegate(accounts[4], meta);
-        console.log(tx2.receipt.gasUsed);
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount);
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(2));
+        const tx2 = await eco.connect(accounts[1]).delegate(await accounts[4].getAddress());
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount);
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(voteAmount.mul(2));
       });
 
       it('does not allow delegation if not enabled', async () => {
-        await expectRevert(eco.delegate(accounts[5], meta), 'Primary delegates must enable delegation');
+        await expect(
+          eco.connect(accounts[1]).delegate(await accounts[5].getAddress()),
+        ).to.be.revertedWith('Primary delegates must enable delegation');
       });
 
       it('does not allow delegation to yourself', async () => {
-        await expectRevert(eco.delegate(accounts[1], meta), 'Use undelegate instead of delegating to yourself');
+        await expect(
+          eco.connect(accounts[1]).delegate(await accounts[1].getAddress()),
+        ).to.be.revertedWith('Use undelegate instead of delegating to yourself');
       });
 
       it('does not allow delegation if you are a delegatee', async () => {
-        await expectRevert(eco.delegate(accounts[4], { from: accounts[3] }), 'Cannot delegate if you have enabled primary delegation to yourself');
+        await expect(
+          eco.connect(accounts[3]).delegate(await accounts[4].getAddress()),
+        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
       });
     });
 
     context('undelegate', () => {
-      const meta = { from: accounts[1] };
-
       it('correct state when undelegated after delegating', async () => {
-        await eco.delegate(accounts[3], meta);
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
 
-        const tx2 = await eco.undelegate(meta);
-        console.log(tx2.receipt.gasUsed);
+        const tx2 = await eco.connect(accounts[1]).undelegate();
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
 
-        const votes1 = await eco.getVotingGons(accounts[1]);
-        expect(votes1).to.eq.BN(voteAmount);
-        const votes2 = await eco.getVotingGons(accounts[3]);
-        expect(votes2).to.eq.BN(voteAmount);
+        const votes1 = await eco.getVotingGons(await accounts[1].getAddress());
+        expect(votes1).to.equal(voteAmount);
+        const votes2 = await eco.getVotingGons(await accounts[3].getAddress());
+        expect(votes2).to.equal(voteAmount);
       });
     });
 
     context('isOwnDelegate', () => {
-      const meta = { from: accounts[1] };
-
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
 
-        await eco.delegate(accounts[3], meta);
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
 
-        await eco.undelegate(meta);
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+        await eco.connect(accounts[1]).undelegate();
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
       });
     });
 
     context('getPrimaryDelegate', () => {
-      const meta = { from: accounts[1] };
-
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[1]);
+        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
+          await accounts[1].getAddress(),
+        );
 
-        await eco.delegate(accounts[3], meta);
-        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[3]);
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
+          await accounts[3].getAddress(),
+        );
 
-        await eco.undelegate(meta);
-        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[1]);
+        await eco.connect(accounts[1]).undelegate();
+        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
+          await accounts[1].getAddress(),
+        );
       });
     });
 
     context('delegate then transfer', () => {
-      const meta = { from: accounts[1] };
-
       it('sender delegated', async () => {
-        await eco.delegate(accounts[3], { from: accounts[1] });
-        await eco.transfer(accounts[2], amount, meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(2));
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount);
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(voteAmount.mul(2));
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount);
       });
 
-      it('reciever delegated', async () => {
-        await eco.delegate(accounts[4], { from: accounts[2] });
-        await eco.transfer(accounts[2], amount, meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3));
+      it('receiver delegated', async () => {
+        await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(voteAmount.mul(3));
       });
 
       it('both delegated', async () => {
-        await eco.delegate(accounts[3], { from: accounts[1] });
-        await eco.delegate(accounts[4], { from: accounts[2] });
-        await eco.transfer(accounts[2], amount, meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount);
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3));
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount);
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(voteAmount.mul(3));
       });
     });
 
     context('transfer gas testing', () => {
-      const meta = { from: accounts[1] };
-
       it('no delegations', async () => {
-        const tx = await eco.transfer(accounts[2], amount, meta);
-        console.log(tx.receipt.gasUsed);
+        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
 
       it('sender delegated', async () => {
-        await eco.delegate(accounts[3], { from: accounts[1] });
-        const tx = await eco.transfer(accounts[2], amount, meta);
-        console.log(tx.receipt.gasUsed);
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
 
-      it('reciever delegated', async () => {
-        await eco.delegate(accounts[4], { from: accounts[2] });
-        const tx = await eco.transfer(accounts[2], amount, meta);
-        console.log(tx.receipt.gasUsed);
+      it('receiver delegated', async () => {
+        await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
+        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
 
       it('both delegated', async () => {
-        await eco.delegate(accounts[3], { from: accounts[1] });
-        await eco.delegate(accounts[4], { from: accounts[2] });
-        const tx = await eco.transfer(accounts[2], amount, meta);
-        console.log(tx.receipt.gasUsed);
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
+        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
     });
   });
 
   describe('partial delegation', () => {
-    const amount = one.muln(1000);
+    const amount = one.mul(1000);
     let voteAmount;
 
     beforeEach(async () => {
-      await faucet.mint(accounts[1], amount);
-      await faucet.mint(accounts[2], amount);
-      await faucet.mint(accounts[3], amount);
-      await faucet.mint(accounts[4], amount);
-      await eco.enableDelegation({ from: accounts[3] });
-      await eco.enableDelegation({ from: accounts[4] });
+      await faucet.mint(await accounts[1].getAddress(), amount);
+      await faucet.mint(await accounts[2].getAddress(), amount);
+      await faucet.mint(await accounts[3].getAddress(), amount);
+      await faucet.mint(await accounts[4].getAddress(), amount);
+      await eco.connect(accounts[3]).enableDelegation();
+      await eco.connect(accounts[4]).enableDelegation();
 
-      voteAmount = (new BN(proposedInflationMult)).mul(amount);
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount);
     });
 
     context('delegateAmount', () => {
-      const meta = { from: accounts[1] };
-
       it('correct votes when delegated', async () => {
-        const tx1 = await eco.delegateAmount(accounts[3], voteAmount.divn(2), meta);
-        console.log(tx1.receipt.gasUsed);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(voteAmount.divn(2));
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.divn(2).muln(3));
+        const tx1 = await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(voteAmount.div(2));
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
+          voteAmount.div(2).mul(3),
+        );
 
-        const tx2 = await eco.delegateAmount(accounts[4], voteAmount.divn(4), meta);
-        console.log(tx2.receipt.gasUsed);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(voteAmount.divn(4));
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.divn(2).muln(3));
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.divn(4).muln(5));
+        const tx2 = await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(4));
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(voteAmount.div(4));
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
+          voteAmount.div(2).mul(3),
+        );
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
+          voteAmount.div(4).mul(5),
+        );
       });
 
       it('does not allow delegation to yourself', async () => {
-        await expectRevert(eco.delegateAmount(accounts[1], voteAmount.divn(5), meta), 'Do not delegate to yourself');
+        await expect(
+          eco
+            .connect(accounts[1])
+            .delegateAmount(await accounts[1].getAddress(), voteAmount.div(5)),
+        ).to.be.revertedWith('Do not delegate to yourself');
       });
 
       it('does not allow delegation if you are a delegatee', async () => {
-        await expectRevert(eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[3] }), 'Cannot delegate if you have enabled primary delegation to yourself');
+        await expect(
+          eco
+            .connect(accounts[3])
+            .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2)),
+        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
       });
 
       it('does not allow you to delegate more than your balance', async () => {
-        await expectRevert(eco.delegateAmount(accounts[4], voteAmount.muln(3), meta), 'Must have an undelegated amount available to cover delegation');
+        await expect(
+          eco
+            .connect(accounts[1])
+            .delegateAmount(await accounts[4].getAddress(), voteAmount.mul(3)),
+        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
 
-        await eco.delegateAmount(accounts[4], voteAmount.muln(2).divn(3), meta);
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.mul(2).div(3));
 
-        await expectRevert(eco.delegateAmount(accounts[3], voteAmount.divn(2), meta), 'Must have an undelegated amount available to cover delegation');
+        await expect(
+          eco
+            .connect(accounts[1])
+            .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2)),
+        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
       });
 
       it('having a primary delegate means you cannot delegate an amount', async () => {
-        await eco.delegate(accounts[4], meta);
+        await eco.connect(accounts[1]).delegate(await accounts[4].getAddress());
 
-        await expectRevert(eco.delegateAmount(accounts[3], voteAmount.divn(1000000), meta), 'Must have an undelegated amount available to cover delegation');
+        await expect(
+          eco
+            .connect(accounts[1])
+            .delegateAmount(await accounts[3].getAddress(), voteAmount.div(1000000)),
+        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
       });
 
       it('having delegated an amount does not allow you to full delegate', async () => {
-        await eco.delegateAmount(accounts[4], voteAmount.divn(1000000), meta);
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(1000000));
 
-        await expectRevert(eco.delegate(accounts[3], meta), 'Must have an undelegated amount available to cover delegation');
-        await expectRevert(eco.delegate(accounts[4], meta), 'Must have an undelegated amount available to cover delegation');
+        await expect(
+          eco.connect(accounts[1]).delegate(await accounts[3].getAddress()),
+        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
+        await expect(
+          eco.connect(accounts[1]).delegate(await accounts[4].getAddress()),
+        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
       });
     });
 
     context('undelegate', () => {
-      const meta = { from: accounts[1] };
-
       it('correct state when undelegated after delegating', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), meta);
-        await eco.delegateAmount(accounts[4], voteAmount.divn(4), meta);
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(4));
 
-        const tx1 = await eco.undelegateFromAddress(accounts[4], meta);
-        console.log(tx1.receipt.gasUsed);
+        const tx1 = await eco
+          .connect(accounts[1])
+          .undelegateFromAddress(await accounts[4].getAddress());
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
 
-        expect(await eco.getVotingGons(accounts[1], meta)).to.eq.BN(voteAmount.divn(2));
-        expect(await eco.getVotingGons(accounts[3], meta)).to.eq.BN(voteAmount.divn(2).muln(3));
-        expect(await eco.getVotingGons(accounts[4], meta)).to.eq.BN(voteAmount);
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+        ).to.equal(voteAmount.div(2));
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+        ).to.equal(voteAmount.div(2).mul(3));
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+        ).to.equal(voteAmount);
 
-        const tx2 = await eco.undelegateFromAddress(accounts[3], meta);
-        console.log(tx2.receipt.gasUsed);
+        const tx2 = await eco
+          .connect(accounts[1])
+          .undelegateFromAddress(await accounts[3].getAddress());
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
 
-        expect(await eco.getVotingGons(accounts[1], meta)).to.eq.BN(voteAmount);
-        expect(await eco.getVotingGons(accounts[3], meta)).to.eq.BN(voteAmount);
-        expect(await eco.getVotingGons(accounts[4], meta)).to.eq.BN(voteAmount);
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+        ).to.equal(voteAmount);
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+        ).to.equal(voteAmount);
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+        ).to.equal(voteAmount);
       });
     });
 
     context('isOwnDelegate', () => {
-      const meta = { from: accounts[1] };
-
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
 
-        await eco.delegateAmount(accounts[2], voteAmount.divn(4), meta);
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[2].getAddress(), voteAmount.div(4));
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
 
-        await eco.delegateAmount(accounts[3], voteAmount.divn(4), meta);
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(4));
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
 
-        await eco.undelegateFromAddress(accounts[3], meta);
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.false;
+        await eco.connect(accounts[1]).undelegateFromAddress(await accounts[3].getAddress());
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
 
-        await eco.undelegateFromAddress(accounts[2], meta);
-        expect(await eco.isOwnDelegate(accounts[1])).to.be.true;
+        await eco.connect(accounts[1]).undelegateFromAddress(await accounts[2].getAddress());
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
       });
     });
 
     context('getPrimaryDelegate', () => {
-      const meta = { from: accounts[1] };
-
       it('delegateAmount does not give you a primary delegate', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), meta);
-        expect(await eco.getPrimaryDelegate(accounts[1])).to.equal(accounts[1]);
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
+          await accounts[1].getAddress(),
+        );
       });
     });
 
     context('delegate then transfer', () => {
-      const meta = { from: accounts[1] };
-
       it('sender delegated with enough to cover', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
-        await eco.transfer(accounts[2], amount.divn(2), meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(3).divn(2));
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.muln(3).divn(2));
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(
+          voteAmount.mul(3).div(2),
+        );
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
+          voteAmount.mul(3).div(2),
+        );
       });
 
       it('sender delegated without enough to cover', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
-        await expectRevert(eco.transfer(accounts[2], amount, meta), 'Delegation too complicated to transfer. Undelegate and simplify before trying again');
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await expect(
+          eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount),
+        ).to.be.revertedWith(
+          'Delegation too complicated to transfer. Undelegate and simplify before trying again',
+        );
       });
 
-      it('reciever delegated', async () => {
-        await eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[2] });
-        await eco.transfer(accounts[2], amount.divn(2), meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(voteAmount.divn(2));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount);
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3).divn(2));
+      it('receiver delegated', async () => {
+        await eco
+          .connect(accounts[2])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2));
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(voteAmount.div(2));
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(voteAmount);
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
+          voteAmount.mul(3).div(2),
+        );
 
-        await eco.transfer(accounts[2], amount.divn(2), meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(3).divn(2));
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(3).divn(2));
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(
+          voteAmount.mul(3).div(2),
+        );
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
+          voteAmount.mul(3).div(2),
+        );
       });
 
       it('both delegated', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
-        await eco.delegateAmount(accounts[4], voteAmount.divn(4), { from: accounts[2] });
-        await eco.transfer(accounts[2], amount.divn(2), meta);
-        expect(await eco.getVotingGons(accounts[1])).to.eq.BN(new BN(0));
-        expect(await eco.getVotingGons(accounts[2])).to.eq.BN(voteAmount.muln(5).divn(4));
-        expect(await eco.getVotingGons(accounts[3])).to.eq.BN(voteAmount.muln(3).divn(2));
-        expect(await eco.getVotingGons(accounts[4])).to.eq.BN(voteAmount.muln(5).divn(4));
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await eco
+          .connect(accounts[2])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(4));
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(
+          voteAmount.mul(5).div(4),
+        );
+        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
+          voteAmount.mul(3).div(2),
+        );
+        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
+          voteAmount.mul(5).div(4),
+        );
       });
     });
 
     context('transfer gas testing', () => {
-      const meta = { from: accounts[1] };
-
       it('sender delegated', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
-        const tx = await eco.transfer(accounts[2], amount.divn(3), meta);
-        console.log(tx.receipt.gasUsed);
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[3].getAddress(), amount.div(3));
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
 
-      it('reciever delegated', async () => {
-        await eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[2] });
-        const tx = await eco.transfer(accounts[2], amount, meta);
-        console.log(tx.receipt.gasUsed);
+      it('receiver delegated', async () => {
+        await eco
+          .connect(accounts[2])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2));
+        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
 
       it('both delegated', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
-        await eco.delegateAmount(accounts[4], voteAmount.divn(2), { from: accounts[2] });
-        const tx = await eco.transfer(accounts[2], amount.divn(3), meta);
-        console.log(tx.receipt.gasUsed);
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await eco
+          .connect(accounts[2])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2));
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount.div(3));
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
 
-      it('both delegated with reciever primary delegate', async () => {
-        await eco.delegateAmount(accounts[3], voteAmount.divn(2), { from: accounts[1] });
-        await eco.delegate(accounts[4], { from: accounts[2] });
-        const tx = await eco.transfer(accounts[2], amount.divn(3), meta);
-        console.log(tx.receipt.gasUsed);
+      it('both delegated with receiver primary delegate', async () => {
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount.div(3));
+        const receipt = await tx.wait();
+        console.log(receipt.gasUsed);
       });
     });
   });

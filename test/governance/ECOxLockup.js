@@ -1,27 +1,15 @@
-const chai = require('chai');
-const bnChai = require('bn-chai');
+const { expect } = require('chai');
 
-const Empty = artifacts.require('Empty');
-const PolicyProposals = artifacts.require('PolicyProposals');
-const PolicyVotes = artifacts.require('PolicyVotes');
-const Cloner = artifacts.require('Cloner');
+const { ethers } = require('hardhat');
+const { ecoFixture } = require('../utils/fixtures');
 
-const { expect } = chai;
-const {
-  expectRevert,
-  time,
-} = require('@openzeppelin/test-helpers');
+const time = require('../utils/time');
+const { deploy } = require('../utils/contracts');
 
-const util = require('../../tools/test/util');
-
-const { BN, toBN } = web3.utils;
-chai.use(bnChai(BN));
-
-contract('ecoXLockup [@group=12]', (accounts) => {
-  const alice = accounts[0];
-  const bob = accounts[1];
-  const charlie = accounts[2];
-  let counter = 0;
+describe('ecoXLockup [@group=12]', () => {
+  let alice;
+  let bob;
+  let charlie;
   let policy;
   let eco;
   let faucet;
@@ -34,24 +22,22 @@ contract('ecoXLockup [@group=12]', (accounts) => {
   let one;
 
   beforeEach(async () => {
-    one = toBN(10).pow(toBN(18));
+    one = ethers.utils.parseEther('1');
+    const accounts = await ethers.getSigners();
+    [alice, bob, charlie] = accounts;
+    const trustednodes = [await bob.getAddress()];
+
     ({
-      policy,
-      eco,
-      faucet,
-      timedPolicies,
-      ecox,
-      ecoXLockup,
-    } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
-    counter += 1;
+      policy, eco, faucet, timedPolicies, ecox, ecoXLockup,
+    } = await ecoFixture(trustednodes));
 
-    await faucet.mint(alice, one.muln(5000));
-    await faucet.mint(bob, one.muln(5000));
-    await faucet.mint(charlie, one.muln(10000));
+    await faucet.mint(await alice.getAddress(), one.mul(5000));
+    await faucet.mint(await bob.getAddress(), one.mul(5000));
+    await faucet.mint(await charlie.getAddress(), one.mul(10000));
 
-    await faucet.mintx(alice, one.muln(400));
-    await faucet.mintx(bob, one.muln(400));
-    await faucet.mintx(charlie, one.muln(200));
+    await faucet.mintx(await alice.getAddress(), one.mul(400));
+    await faucet.mintx(await bob.getAddress(), one.mul(400));
+    await faucet.mintx(await charlie.getAddress(), one.mul(200));
 
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
@@ -61,8 +47,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
   describe('unauthorized call of recordVote', () => {
     it('reverts', async () => {
-      await expectRevert(
-        ecoXLockup.recordVote(alice),
+      await expect(ecoXLockup.recordVote(await alice.getAddress())).to.be.revertedWith(
         'Must be a voting contract to call',
       );
     });
@@ -70,37 +55,34 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
   describe('disabled ERC20 functionality', () => {
     it('reverts on transfer', async () => {
-      await expectRevert(
-        ecoXLockup.transfer(alice, 1000),
+      await expect(ecoXLockup.transfer(await alice.getAddress(), 1000)).to.be.revertedWith(
         'sECOx is non-transferrable',
       );
     });
 
     it('reverts on transferFrom', async () => {
-      await expectRevert(
-        ecoXLockup.transferFrom(alice, bob, 1000),
-        'sECOx is non-transferrable',
-      );
+      await expect(
+        ecoXLockup.transferFrom(await alice.getAddress(), await bob.getAddress(), 1000),
+      ).to.be.revertedWith('sECOx is non-transferrable');
     });
   });
 
   async function makeProposals() {
-    const implementation = await PolicyProposals.new(
+    const implementation = await deploy(
+      'PolicyProposals',
       policy.address,
-      (await PolicyVotes.new(
-        policy.address,
-        eco.address,
-        ecox.address,
-      )).address,
+      (
+        await deploy('PolicyVotes', policy.address, eco.address, ecox.address)
+      ).address,
       eco.address,
       ecox.address,
     );
-    const cloner = await Cloner.new(implementation.address);
-    const policyProposalsClone = await PolicyProposals.at(await cloner.clone());
-    await policy.testDirectSet(
+    const cloner = await deploy('Cloner', implementation.address);
+    const policyProposalsClone = await ethers.getContractAt(
       'PolicyProposals',
-      policyProposalsClone.address,
+      await cloner.clone(),
     );
+    await policy.testDirectSet('PolicyProposals', policyProposalsClone.address);
     return policyProposalsClone;
   }
 
@@ -109,11 +91,11 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
     beforeEach(async () => {
       // we need to get the addresses some voting power
-      await ecox.approve(ecoXLockup.address, one.muln(10), { from: alice });
-      await ecoXLockup.deposit(one.muln(10), { from: alice });
+      await ecox.connect(alice).approve(ecoXLockup.address, one.mul(10));
+      await ecoXLockup.connect(alice).deposit(one.mul(10));
 
-      await ecox.approve(ecoXLockup.address, one.muln(100), { from: charlie });
-      await ecoXLockup.deposit(one.muln(100), { from: charlie });
+      await ecox.connect(charlie).approve(ecoXLockup.address, one.mul(100));
+      await ecoXLockup.connect(charlie).deposit(one.mul(100));
 
       blockNumber = await time.latestBlock();
 
@@ -124,12 +106,9 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
       proposals = await makeProposals();
 
-      testProposal = await Empty.new(1);
+      testProposal = await deploy('Empty', 1);
 
-      await eco.approve(
-        proposals.address,
-        await proposals.COST_REGISTER(),
-      );
+      await eco.approve(proposals.address, await proposals.COST_REGISTER());
 
       await proposals.registerProposal(testProposal.address);
     });
@@ -137,78 +116,90 @@ contract('ecoXLockup [@group=12]', (accounts) => {
     context('basic token and checkpoints data', async () => {
       // Confirm the internal balance method works
       it('can get the balance', async () => {
-        expect(await ecoXLockup.balanceOf(alice)).to.eq.BN(one.muln(10));
+        expect(await ecoXLockup.balanceOf(await alice.getAddress())).to.equal(one.mul(10));
       });
 
       it('Can get the past total supply', async () => {
         const pastTotalSupply = await ecoXLockup.totalSupplyAt(blockNumber);
-        expect(pastTotalSupply).to.be.eq.BN(one.muln(110));
+        expect(pastTotalSupply).to.be.equal(one.mul(110));
       });
 
       it('Can get a past balance', async () => {
-        const pastBalance = await ecoXLockup.getPastVotes(alice, blockNumber);
-        expect(pastBalance).to.be.eq.BN(one.muln(10));
+        const pastBalance = await ecoXLockup.getPastVotes(await alice.getAddress(), blockNumber);
+        expect(pastBalance).to.be.equal(one.mul(10));
       });
     });
 
     context('alice supporting a proposal', () => {
       beforeEach(async () => {
-        await proposals.support(testProposal.address, { from: alice });
+        await proposals.connect(alice).support(testProposal.address);
       });
 
       it('alice successfully added voting support to the proposal', async () => {
         const testProposalObj = await proposals.proposals(testProposal.address);
-        expect(testProposalObj.totalStake).to.eq.BN(toBN('5010000000000000000000'));
+        expect(testProposalObj.totalStake).to.equal('5010000000000000000000');
       });
 
       it('alice cannot withdraw', async () => {
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+        await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+          'Must not vote or undelegate in the generation on or before withdrawing',
+        );
       });
 
       it('alice can still deposit', async () => {
-        await ecox.approve(ecoXLockup.address, one.muln(10), { from: alice });
-        await ecoXLockup.deposit(one.muln(10), { from: alice });
+        await ecox.connect(alice).approve(ecoXLockup.address, one.mul(10));
+        await ecoXLockup.connect(alice).deposit(one.mul(10));
       });
 
       it('alice cannot deposit more than approved', async () => {
-        await ecox.approve(ecoXLockup.address, one.muln(10), { from: alice });
-        await expectRevert(ecoXLockup.deposit(one.muln(1000), { from: alice }), 'ERC20: transfer amount exceeds balance.');
+        await ecox.connect(alice).approve(ecoXLockup.address, one.mul(10));
+        await expect(ecoXLockup.connect(alice).deposit(one.mul(1000))).to.be.revertedWith(
+          'ERC20: transfer amount exceeds allowance',
+        );
       });
     });
 
     context('charlie supports a proposal into a vote', () => {
       beforeEach(async () => {
-        await proposals.support(testProposal.address, { from: charlie });
-        const tx = await proposals.deployProposalVoting({ from: charlie });
+        await proposals.connect(charlie).support(testProposal.address);
+        const tx = await proposals.connect(charlie).deployProposalVoting();
+        const receipt = await tx.wait();
 
-        const votesAddress = tx.logs.find((t) => t.event === 'VoteStart').args.contractAddress;
-        votes = await PolicyVotes.at(votesAddress);
+        const votesAddress = receipt.events.find((t) => t.event === 'VoteStart').args
+          .contractAddress;
+        votes = await ethers.getContractAt('PolicyVotes', votesAddress);
       });
 
       it('charlie can vote', async () => {
-        await votes.vote(true, { from: charlie });
-        expect(await votes.yesStake()).to.eq.BN(toBN('10100000000000000000000'));
+        await votes.connect(charlie).vote(true);
+        expect(await votes.yesStake()).to.equal('10100000000000000000000');
       });
 
       it('alice can withdraw then vote', async () => {
-        await ecoXLockup.withdraw(one.muln(1), { from: alice });
-        await votes.vote(true, { from: alice });
+        await ecoXLockup.connect(alice).withdraw(one.mul(1));
+        await votes.connect(alice).vote(true);
       });
 
       it('alice cannot vote then withdraw', async () => {
-        await votes.vote(true, { from: alice });
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+        await votes.connect(alice).vote(true);
+        await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+          'Must not vote or undelegate in the generation on or before withdrawing',
+        );
       });
 
       it('charlie supported, so cannot withdraw', async () => {
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote or undelegate in the generation on or before withdrawing');
+        await expect(ecoXLockup.connect(charlie).withdraw(one.mul(10))).to.be.revertedWith(
+          'Must not vote or undelegate in the generation on or before withdrawing',
+        );
       });
 
       it('charlie supported, so cannot withdraw in the next generation', async () => {
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
 
-        await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: charlie }), 'Must not vote or undelegate in the generation on or before withdrawing');
+        await expect(ecoXLockup.connect(charlie).withdraw(one.mul(10))).to.be.revertedWith(
+          'Must not vote or undelegate in the generation on or before withdrawing',
+        );
       });
 
       it('charlie supported, but can withdraw the generation after next', async () => {
@@ -217,7 +208,7 @@ contract('ecoXLockup [@group=12]', (accounts) => {
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
 
-        await ecoXLockup.withdraw(one.muln(10), { from: charlie });
+        await ecoXLockup.connect(charlie).withdraw(one.mul(10));
       });
     });
   });
@@ -225,21 +216,23 @@ contract('ecoXLockup [@group=12]', (accounts) => {
   context('delegation and withdrawals', () => {
     beforeEach(async () => {
       // we need to get the addresses some voting power
-      await ecox.approve(ecoXLockup.address, one.muln(10), { from: alice });
-      await ecoXLockup.deposit(one.muln(10), { from: alice });
+      await ecox.connect(alice).approve(ecoXLockup.address, one.mul(10));
+      await ecoXLockup.connect(alice).deposit(one.mul(10));
 
-      await ecox.approve(ecoXLockup.address, one.muln(100), { from: bob });
-      await ecoXLockup.deposit(one.muln(100), { from: bob });
+      await ecox.connect(bob).approve(ecoXLockup.address, one.mul(100));
+      await ecoXLockup.connect(bob).deposit(one.mul(100));
 
-      await ecoXLockup.enableDelegation({ from: bob });
+      await ecoXLockup.connect(bob).enableDelegation();
     });
 
     it('delegate works as expected', async () => {
-      await ecoXLockup.delegate(bob, { from: alice });
+      await ecoXLockup.connect(alice).delegate(await bob.getAddress());
       const blockNumber = await time.latestBlock();
       await time.increase(10);
-      expect(await ecoXLockup.getVotingGons(bob)).to.eq.BN(one.muln(110));
-      expect(await ecoXLockup.votingECOx(bob, blockNumber)).to.eq.BN(one.muln(110));
+      expect(await ecoXLockup.getVotingGons(await bob.getAddress())).to.equal(one.mul(110));
+      expect(await ecoXLockup.votingECOx(await bob.getAddress(), blockNumber)).to.equal(
+        one.mul(110),
+      );
     });
 
     context('undelegate transfers voting record', () => {
@@ -251,51 +244,54 @@ contract('ecoXLockup [@group=12]', (accounts) => {
 
         proposals = await makeProposals();
 
-        testProposal = await Empty.new(1);
+        testProposal = await deploy('Empty', 1);
 
-        await eco.approve(
-          proposals.address,
-          await proposals.COST_REGISTER(),
-        );
+        await eco.approve(proposals.address, await proposals.COST_REGISTER());
 
         await proposals.registerProposal(testProposal.address);
       });
 
       context('delegatee did not vote', () => {
         beforeEach(async () => {
-          await ecoXLockup.delegate(bob, { from: alice });
+          await ecoXLockup.connect(alice).delegate(await bob.getAddress());
         });
 
         it('no effect on withdrawal', async () => {
-          await ecoXLockup.undelegate({ from: alice });
-          await ecoXLockup.withdraw(one.muln(10), { from: alice });
+          await ecoXLockup.connect(alice).undelegate();
+          await ecoXLockup.connect(alice).withdraw(one.mul(10));
         });
 
         it('can withdraw without undelegating', async () => {
-          await ecoXLockup.withdraw(one.muln(10), { from: alice });
+          await ecoXLockup.connect(alice).withdraw(one.mul(10));
         });
       });
 
       context('delegatee did vote', () => {
         beforeEach(async () => {
-          await ecoXLockup.delegate(bob, { from: alice });
-          await proposals.support(testProposal.address, { from: bob });
+          await ecoXLockup.connect(alice).delegate(await bob.getAddress());
+          await proposals.connect(bob).support(testProposal.address);
           await time.advanceBlock();
         });
 
         context('immediately after the vote', () => {
           it('blocks if delegatee did vote', async () => {
-            await ecoXLockup.undelegate({ from: alice });
-            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+            await ecoXLockup.connect(alice).undelegate();
+            await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+              'Must not vote or undelegate in the generation on or before withdrawing',
+            );
           });
 
           it('cannot withdraw without undelegating', async () => {
-            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+            await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+              'Must not vote or undelegate in the generation on or before withdrawing',
+            );
           });
 
           it('undelegateFromAddress blocks withdrawal', async () => {
-            await ecoXLockup.undelegateFromAddress(bob, { from: alice });
-            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+            await ecoXLockup.connect(alice).undelegateFromAddress(await bob.getAddress());
+            await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+              'Must not vote or undelegate in the generation on or before withdrawing',
+            );
           });
         });
 
@@ -306,17 +302,23 @@ contract('ecoXLockup [@group=12]', (accounts) => {
           });
 
           it('blocks if delegatee did vote', async () => {
-            await ecoXLockup.undelegate({ from: alice });
-            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+            await ecoXLockup.connect(alice).undelegate();
+            await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+              'Must not vote or undelegate in the generation on or before withdrawing',
+            );
           });
 
           it('cannot withdraw without undelegating', async () => {
-            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+            await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+              'Must not vote or undelegate in the generation on or before withdrawing',
+            );
           });
 
           it('undelegateFromAddress blocks withdrawal', async () => {
-            await ecoXLockup.undelegateFromAddress(bob, { from: alice });
-            await expectRevert(ecoXLockup.withdraw(one.muln(10), { from: alice }), 'Must not vote or undelegate in the generation on or before withdrawing');
+            await ecoXLockup.connect(alice).undelegateFromAddress(await bob.getAddress());
+            await expect(ecoXLockup.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
+              'Must not vote or undelegate in the generation on or before withdrawing',
+            );
           });
         });
 
@@ -329,26 +331,26 @@ contract('ecoXLockup [@group=12]', (accounts) => {
           });
 
           it('can now withdraw', async () => {
-            await ecoXLockup.undelegate({ from: alice });
-            await ecoXLockup.withdraw(one.muln(10), { from: alice });
+            await ecoXLockup.connect(alice).undelegate();
+            await ecoXLockup.connect(alice).withdraw(one.mul(10));
           });
 
           it('can withdraw without undelegating', async () => {
-            await ecoXLockup.withdraw(one.muln(10), { from: alice });
+            await ecoXLockup.connect(alice).withdraw(one.mul(10));
           });
 
           it('undelegateFromAddress dose not block withdrawal', async () => {
-            await ecoXLockup.undelegateFromAddress(bob, { from: alice });
-            await ecoXLockup.withdraw(one.muln(10), { from: alice });
+            await ecoXLockup.connect(alice).undelegateFromAddress(await bob.getAddress());
+            await ecoXLockup.connect(alice).withdraw(one.mul(10));
           });
         });
       });
 
       context('partial delegation', () => {
         it('can still withdraw if delegation is partial', async () => {
-          await ecoXLockup.delegateAmount(bob, one.muln(5), { from: alice });
-          await proposals.support(testProposal.address, { from: bob });
-          await ecoXLockup.withdraw(one.muln(5), { from: alice });
+          await ecoXLockup.connect(alice).delegateAmount(await bob.getAddress(), one.mul(5));
+          await proposals.connect(bob).support(testProposal.address);
+          await ecoXLockup.connect(alice).withdraw(one.mul(5));
         });
       });
     });

@@ -19,10 +19,6 @@ const { deployTokens, deployGovernance } = require('./deploy');
 
 const defaultRpc = 'http://localhost:8545';
 
-function reqArtifact(contract) {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
-}
-
 function loadConfig(fileNamePath) {
   let stem = '';
   if (fileNamePath[0] !== '/') {
@@ -31,9 +27,9 @@ function loadConfig(fileNamePath) {
   return JSON.parse(fs.readFileSync(path.resolve(__dirname, `${stem}${fileNamePath}`)));
 }
 
-const ECOABI = reqArtifact('ECO');
-const PolicyABI = reqArtifact('Policy');
-const EcoFaucetABI = reqArtifact('EcoFaucet');
+const ECOABI = require('../artifacts/contracts/currency/ECO.sol/ECO.json');
+const PolicyABI = require('../artifacts/contracts/policy/Policy.sol/Policy.json');
+const EcoFaucetABI = require('../artifacts/contracts/deploy/EcoFaucet.sol/EcoFaucet.json');
 
 let options;
 

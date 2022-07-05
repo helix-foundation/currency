@@ -1,82 +1,87 @@
-const chai = require('chai');
+const { ethers } = require('hardhat');
+const { expect } = require('chai');
+const { loadFixture } = require('ethereum-waffle');
+const { deploy } = require('../utils/contracts');
+const { singletonsFixture } = require('../utils/fixtures');
 
-const Policy = artifacts.require('Policy');
-const PolicyInit = artifacts.require('PolicyInit');
-const ForwardProxy = artifacts.require('ForwardProxy');
-const FakeCommander = artifacts.require('FakeCommander');
-const RevertingAction = artifacts.require('RevertingAction');
-const DummyPolicedUtils = artifacts.require('DummyPolicedUtils');
-
-const {
-  expect,
-} = chai;
-
-const { constants, expectRevert, singletons } = require('@openzeppelin/test-helpers');
-
-/* Most cases are covered by functionality required by other suites. This
+/*
+ * Most cases are covered by functionality required by other suites. This
  * suite primarily ensures that rarely-used functionality works correctly.
  */
-contract('Policy [@group=11]', () => {
+describe('Policy [@group=11]', () => {
+  const fixture = async () => {
+    const accounts = await ethers.getSigners();
+    const registry = await singletonsFixture(accounts[0]);
+    const policy = await deploy('Policy');
+    return { registry, policy };
+  };
+
   let policy;
+  let registry;
 
   beforeEach(async () => {
-    policy = await Policy.new();
+    ({ registry, policy } = await loadFixture(fixture));
   });
 
   describe('removeSelf', () => {
-    context('when called by not the provider of an interface', () => {
+    describe('when called by not the provider of an interface', () => {
       it('does not revert', async () => {
-        await policy.removeSelf(web3.utils.soliditySha3('Identifier'));
+        await policy.removeSelf(ethers.utils.solidityKeccak256(['string'], ['Identifier']));
       });
     });
-    context('when called by the provider of the interface', () => {
+    describe('when called by the provider of the interface', () => {
       it('removes msg.sender as the implementor', async () => {
-        const registry = await singletons.ERC1820Registry();
         // TODO
         // need to have a policy address that implements a named interface
         // and is managed by an account address
         // this will allow us to call removeSelf on that policy from the account address to test it
-        expect(await registry.getInterfaceImplementer(policy.address, web3.utils.soliditySha3('Identifier'))).to.equal(constants.ZERO_ADDRESS);
+        expect(
+          await registry.getInterfaceImplementer(
+            policy.address,
+            ethers.utils.solidityKeccak256(['string'], ['Identifier']),
+          ),
+        ).to.equal(ethers.constants.AddressZero);
       });
     });
   });
 
   describe('policyFor', () => {
-    context('when called', () => {
+    describe('when called', () => {
       it('does not revert', async () => {
-        await policy.policyFor(web3.utils.soliditySha3('Identifier'));
+        await policy.policyFor(ethers.utils.solidityKeccak256(['string'], ['Identifier']));
       });
     });
   });
 
   describe('internalCommand', () => {
-    context('when called by a not a setter interface implementer', () => {
+    describe('when called by a not a setter interface implementer', () => {
       it('reverts', async () => {
-        await expectRevert(
+        await expect(
           /* The policy  contract itself is not a valid delegate for the
            * internalCommand action, but it doesn't matter because the call
            * will fail before trying to delegate due to permissions - which is
            * what's being tested here.
            */
           policy.internalCommand(policy.address),
-          'Failed to find an appropriate permission',
-        );
+        ).to.be.revertedWith('Failed to find an appropriate permission');
       });
     });
 
-    context('when the enacted policy fails', () => {
+    describe('when the enacted policy fails', () => {
       let commander;
 
       beforeEach(async () => {
-        const testPolicyIdentifierHash = web3.utils.soliditySha3('Commander');
+        const testPolicyIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['Commander']);
 
-        const policyInit = await PolicyInit.new();
-        const forwardProxy = await ForwardProxy.new(policyInit.address);
-        policy = await Policy.new();
+        const policyInit = await deploy('PolicyInit');
+        const forwardProxy = await deploy('ForwardProxy', policyInit.address);
+        policy = await deploy('Policy');
 
-        commander = await FakeCommander.new(forwardProxy.address);
+        commander = await deploy('FakeCommander', forwardProxy.address);
 
-        await (await PolicyInit.at(forwardProxy.address)).fusedInit(
+        await (
+          await ethers.getContractAt('PolicyInit', forwardProxy.address)
+        ).fusedInit(
           policy.address,
           [testPolicyIdentifierHash],
           [testPolicyIdentifierHash],
@@ -84,17 +89,16 @@ contract('Policy [@group=11]', () => {
           // [testPolicyIdentifierHash],
         );
 
-        policy = await Policy.at(forwardProxy.address);
+        policy = await ethers.getContractAt('Policy', forwardProxy.address);
       });
 
       it('reverts', async () => {
-        const revertingAction = await RevertingAction.new(policy.address);
-        const policed = await DummyPolicedUtils.new(policy.address);
+        const revertingAction = await deploy('RevertingAction', policy.address);
+        const policed = await deploy('DummyPolicedUtils', policy.address);
 
-        await expectRevert(
+        await expect(
           commander.command(policed.address, revertingAction.address),
-          'failed during delegatecall',
-        );
+        ).to.be.revertedWith('failed during delegatecall');
       });
     });
   });

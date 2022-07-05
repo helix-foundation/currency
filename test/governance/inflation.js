@@ -1,35 +1,23 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 
-const CurrencyGovernance = artifacts.require('CurrencyGovernance');
-const Inflation = artifacts.require('Inflation');
-const VDFVerifier = artifacts.require('VDFVerifier');
-const InflationRootHashProposal = artifacts.require('InflationRootHashProposal');
-
-const { web3 } = require('@openzeppelin/test-helpers/src/setup');
-
-const {
-  toBN,
-  BN,
-} = web3.utils;
-const {
-  expectEvent,
-  expectRevert,
-  time,
-} = require('@openzeppelin/test-helpers');
-
 const bigintCryptoUtils = require('bigint-crypto-utils');
-const util = require('../../tools/test/util');
-const {
-  prove,
-  bnHex,
-} = require('../../tools/vdf');
-const {
-  getTree,
-  answer,
-} = require('../../tools/randomInflationUtils');
+const { expect } = require('chai');
+const BN = require('bn.js');
+const web3 = require('web3');
 
-contract('Inflation [@group=6]', (unsortedAccounts) => {
+const { toBN } = web3.utils;
+
+const { ethers } = require('hardhat');
+const { prove, bnHex } = require('../../tools/vdf');
+const { getTree, answer } = require('../../tools/randomInflationUtils');
+
+const { ecoFixture } = require('../utils/fixtures');
+
+const time = require('../utils/time');
+const util = require('../../tools/test/util');
+
+describe('Inflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;
@@ -41,15 +29,13 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   let inflation;
   let currencyTimer;
   let vdf;
-  let counter = 0;
+  let accounts;
 
   //    const inflationVote = 800000;
   //    const rewardVote = 20000;
   const inflationVote = 10;
   const rewardVote = 20000;
 
-  const accounts = Array.from(unsortedAccounts);
-  accounts.sort((a, b) => Number(a - b));
   const accountsBalances = [
     new BN('10000000000000000000000000'),
     new BN('50000000000000000000000000'),
@@ -63,11 +49,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
   const totalSum = new BN('110000000000000000000000000');
   const amountOfAccounts = 3;
-  const map = new Map([
-    [accounts[0], accountsBalances[0]],
-    [accounts[1], accountsBalances[1]],
-    [accounts[2], accountsBalances[2]],
-  ]);
+  let map;
   let timedPolicies;
 
   const hash = (x) => web3.utils.soliditySha3(
@@ -77,30 +59,28 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   );
 
   async function configureInflationRootHash() {
-    const [event] = (await currencyTimer.getPastEvents('NewInflationRootHashProposal'));
+    const events = await currencyTimer.queryFilter('NewInflationRootHashProposal');
+    const event = events[events.length - 1];
     addressRootHashProposal = event.args.inflationRootHashProposalContract;
     tree = getTree(map);
     proposedRootHash = tree.hash;
 
     for (let i = 0; i < 3; i += 1) {
-      eco.approve(addressRootHashProposal, await eco.balanceOf(accounts[i]), {
-        from: accounts[i],
-      });
+      eco
+        .connect(accounts[i])
+        .approve(addressRootHashProposal, await eco.balanceOf(await accounts[i].getAddress()));
     }
 
-    rootHashProposal = await InflationRootHashProposal.at(addressRootHashProposal);
-    await rootHashProposal.proposeRootHash(
-      proposedRootHash,
-      totalSum,
-      amountOfAccounts,
-      {
-        from: accounts[0],
-      },
+    rootHashProposal = await ethers.getContractAt(
+      'InflationRootHashProposal',
+      addressRootHashProposal,
     );
+    await rootHashProposal
+      .connect(accounts[0])
+      .proposeRootHash(proposedRootHash, totalSum.toString(), amountOfAccounts);
     await time.increase(3600 * 25);
-    await expectEvent.inTransaction(
-      (await rootHashProposal.checkRootHashStatus(accounts[0])).tx,
-      InflationRootHashProposal,
+    await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())).to.emit(
+      rootHashProposal,
       'RootHashAccepted',
     );
   }
@@ -115,20 +95,22 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
   }
 
   async function getClaimParameters(inf, sequence) {
-    const chosenClaimNumberHash = web3.utils.soliditySha3({
-      t: 'bytes32',
-      v: await inf.seed(),
-    }, {
-      t: 'uint256',
-      v: sequence,
-    });
+    const chosenClaimNumberHash = web3.utils.soliditySha3(
+      {
+        t: 'bytes32',
+        v: await inf.seed(),
+      },
+      {
+        t: 'uint256',
+        v: sequence,
+      },
+    );
     const [index, recipient] = getRecipient(toBN(chosenClaimNumberHash).mod(toBN(totalSum)));
     return [answer(tree, index), index, recipient];
   }
 
   async function getPrimeDistance() {
-    const block = await web3.eth.getBlock('latest');
-    const baseNum = web3.utils.toBN(block.hash);
+    const baseNum = toBN(await time.latestBlockHash());
 
     for (let i = 0; i < 1000; i++) {
       if (await bigintCryptoUtils.isProbablyPrime(BigInt(baseNum.addn(i).toString()), 30)) {
@@ -139,77 +121,87 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     return getPrimeDistance();
   }
 
+  before(async () => {
+    let comparableAccounts = await Promise.all(
+      (await ethers.getSigners()).map(async (s) => [await s.getAddress(), s]),
+    );
+    comparableAccounts = comparableAccounts.sort((a, b) => a[0].localeCompare(b[0]));
+    accounts = comparableAccounts.map((a) => a[1]);
+    map = new Map([
+      [await accounts[0].getAddress(), accountsBalances[0]],
+      [await accounts[1].getAddress(), accountsBalances[1]],
+      [await accounts[2].getAddress(), accountsBalances[2]],
+    ]);
+  });
+
   beforeEach(async () => {
     ({
       policy,
       eco,
-      initInflation,
+      faucet: initInflation,
       timedPolicies,
       currencyTimer,
       inflation,
-    } = await util.deployPolicy(accounts[counter], { trustednodes: accounts.slice(1, 5) }));
-    counter += 1;
+    } = await ecoFixture(await Promise.all(accounts.slice(1, 5).map(async (a) => a.getAddress()))));
 
-    await initInflation.mint(eco.address, accounts[0], accountsBalances[0]);
-    await initInflation.mint(eco.address, accounts[1], accountsBalances[1]);
-    await initInflation.mint(eco.address, accounts[2], accountsBalances[2]);
+    await initInflation.mint(await accounts[0].getAddress(), accountsBalances[0].toString());
+    await initInflation.mint(await accounts[1].getAddress(), accountsBalances[1].toString());
+    await initInflation.mint(await accounts[2].getAddress(), accountsBalances[2].toString());
 
-    governance = await CurrencyGovernance.at(
+    governance = await ethers.getContractAt(
+      'CurrencyGovernance',
       await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
     const bob = accounts[1];
     const charlie = accounts[2];
     const dave = accounts[3];
-    await governance.propose(inflationVote, rewardVote, 0, 0, toBN('1000000000000000000'), { from: bob });
+    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
     await time.increase(3600 * 24 * 10.1);
 
-    const bobvote = [web3.utils.randomHex(32), bob, [bob]];
-    await governance.commit(hash(bobvote), { from: bob });
-    const charlievote = [web3.utils.randomHex(32), charlie, [bob]];
-    await governance.commit(hash(charlievote), { from: charlie });
-    const davevote = [web3.utils.randomHex(32), dave, [bob]];
-    await governance.commit(hash(davevote), { from: dave });
+    const bobvote = [web3.utils.randomHex(32), await bob.getAddress(), [await bob.getAddress()]];
+    await governance.connect(bob).commit(hash(bobvote));
+    const charlievote = [
+      web3.utils.randomHex(32),
+      await charlie.getAddress(),
+      [await bob.getAddress()],
+    ];
+    await governance.connect(charlie).commit(hash(charlievote));
+    const davevote = [web3.utils.randomHex(32), await dave.getAddress(), [await bob.getAddress()]];
+    await governance.connect(dave).commit(hash(davevote));
     await time.increase(3600 * 24 * 3);
-    await governance.reveal(bobvote[0], bobvote[2], { from: bob });
-    await governance.reveal(charlievote[0], charlievote[2], { from: charlie });
-    await governance.reveal(davevote[0], davevote[2], { from: dave });
+    await governance.connect(bob).reveal(bobvote[0], bobvote[2]);
+    await governance.connect(charlie).reveal(charlievote[0], charlievote[2]);
+    await governance.connect(dave).reveal(davevote[0], davevote[2]);
     await time.increase(3600 * 24 * 1);
     await governance.updateStage();
     await governance.compute();
     await time.increase(3600 * 24 * 3);
     await timedPolicies.incrementGeneration();
-    const [evt] = await currencyTimer.getPastEvents('NewInflation');
-    inflation = await Inflation.at(evt.args.addr);
-    vdf = await VDFVerifier.at(await inflation.vdfVerifier());
+    const events = await currencyTimer.queryFilter('NewInflation');
+    const evt = events[events.length - 1];
+    inflation = await ethers.getContractAt('Inflation', evt.args.addr);
+    vdf = await ethers.getContractAt('VDFVerifier', await inflation.vdfVerifier());
     await configureInflationRootHash();
   });
 
   describe('startInflation', () => {
     it('reverts if startInflation is called with zero value _numRecipients', async () => {
-      await expectRevert(
-        inflation.startInflation(0, 1),
-        'Contract must have rewards',
-      );
+      await expect(inflation.startInflation(0, 1)).to.be.revertedWith('Contract must have rewards');
     });
 
     it('reverts if startInflation is called with zero value _reward', async () => {
-      await expectRevert(
-        inflation.startInflation(1, 0),
-        'Contract must have rewards',
-      );
+      await expect(inflation.startInflation(1, 0)).to.be.revertedWith('Contract must have rewards');
     });
 
     it('reverts if contract doesnt have the required funds to reward chosen recipients', async () => {
-      await expectRevert(
-        inflation.startInflation(1000000000, 1000000000),
+      await expect(inflation.startInflation(1000000000, 1000000000)).to.be.revertedWith(
         'The contract must have a token balance at least the total rewards',
       );
     });
 
     it('reverts if startInflation is called twice', async () => {
-      await expectRevert(
-        inflation.startInflation(1, 1),
+      await expect(inflation.startInflation(1, 1)).to.be.revertedWith(
         'The sale can only be started once',
       );
     });
@@ -219,11 +211,8 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     it('emits the EntropyVDFSeedCommitted event', async () => {
       //      time.increase(3600 * 24 * 2);
 
-      const tx = await inflation.commitEntropyVDFSeed(await getPrimeDistance());
-
-      await expectEvent.inTransaction(
-        tx.tx,
-        inflation.constructor,
+      await expect(inflation.commitEntropyVDFSeed(await getPrimeDistance())).to.emit(
+        inflation,
         'EntropyVDFSeedCommitted',
       );
     });
@@ -233,8 +222,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
       await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
-      await expectRevert(
-        inflation.commitEntropyVDFSeed(await getPrimeDistance()),
+      await expect(inflation.commitEntropyVDFSeed(await getPrimeDistance())).to.be.revertedWith(
         'seed has already been set',
       );
     });
@@ -242,19 +230,15 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
   describe('submitEntropyVDF', () => {
     it('reverts when the seed has not been set', async () => {
-      await expectRevert(
-        inflation.submitEntropyVDF(bnHex(toBN(1))),
-        'seed must be set',
-      );
+      await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith('seed must be set');
     });
 
-    it('reverts when the VDF isn\'t proven', async () => {
+    it("reverts when the VDF isn't proven", async () => {
       //      await time.increase(3600 * 24 * 2);
 
       await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
-      await expectRevert(
-        inflation.submitEntropyVDF(bnHex(toBN(1))),
+      await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
         'output value must be verified',
       );
     });
@@ -278,11 +262,8 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       });
 
       it('emits the EntropySeedRevealed event', async () => {
-        const tx = await inflation.submitEntropyVDF(bnHex(y));
-
-        await expectEvent.inTransaction(
-          tx.tx,
-          inflation.constructor,
+        await expect(inflation.submitEntropyVDF(bnHex(y))).to.emit(
+          inflation,
           'EntropySeedRevealed',
         );
       });
@@ -290,10 +271,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
       it('reverts when submitted multiple times', async () => {
         await inflation.submitEntropyVDF(bnHex(y));
 
-        await expectRevert(
-          inflation.submitEntropyVDF(bnHex(y)),
-          'only submit once',
-        );
+        await expect(inflation.submitEntropyVDF(bnHex(y))).to.be.revertedWith('only submit once');
       });
     });
   });
@@ -306,12 +284,9 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
     context('but before the VDF is complete', () => {
       it('rejects any claims', async () => {
         const a = answer(tree, 0);
-        await expectRevert(
-          inflation.claim(0, a[1].reverse(), toBN(a[0].sum), 0, {
-            from: accounts[0],
-          }),
-          'Must prove VDF before claims can be paid',
-        );
+        await expect(
+          inflation.connect(accounts[0]).claim(0, a[1].reverse(), a[0].sum.toString(), 0),
+        ).to.be.revertedWith('Must prove VDF before claims can be paid');
       });
     });
 
@@ -330,91 +305,62 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
       it('pays out inflation', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 0);
-        await expectEvent.inTransaction(
-          (await inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-            from: recipient,
-          })).tx,
-          inflation.constructor,
-          'Claimed',
-          {
-            who: recipient.toString(),
-            sequence: '0',
-          },
-        );
+        await expect(
+          inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index),
+        )
+          .to.emit(inflation, 'Claimed')
+          .withArgs(await recipient.getAddress(), 0);
       });
 
       it('emits the Claimed event', async () => {
         await time.increase(3600 * 24 * 10 + 1);
         const [a, index, recipient] = await getClaimParameters(inflation, 3);
-        const tx = await inflation.claim(
-          3,
-          a[1].reverse(),
-          toBN(a[0].sum),
-          index,
-          {
-            from: recipient,
-          },
-        );
-        await expectEvent.inTransaction(
-          tx.tx,
-          inflation.constructor,
-          'Claimed',
-          {
-            who: recipient,
-            sequence: '3',
-          },
-        );
+        await expect(
+          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum.toString(), index),
+        )
+          .to.emit(inflation, 'Claimed')
+          .withArgs(await recipient.getAddress(), 3);
       });
 
       context('reverts when called with a non-chosen claimNumber', async () => {
         it('sequence is not in numRecipients', async () => {
           const numRecipients = await inflation.numRecipients();
           const [a, index, recipient] = await getClaimParameters(inflation, 2);
-          await expectRevert(
-            inflation.claim(numRecipients, a[1].reverse(), toBN(a[0].sum), index, {
-              from: recipient,
-            }),
-            'The provided sequence number must be within the set of recipients',
-          );
+          await expect(
+            inflation
+              .connect(recipient)
+              .claim(numRecipients, a[1].reverse(), a[0].sum.toString(), index),
+          ).to.be.revertedWith('The provided sequence number must be within the set of recipients');
         });
 
         it('fail root hash verification', async () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 2);
-          await expectRevert(
-            inflation.claim(0, a[1].reverse(), toBN(a[0].sum + 1000000), index, {
-              from: recipient,
-            }),
-            'A claim submission failed root hash verification',
-          );
+          await expect(
+            inflation
+              .connect(recipient)
+              .claim(0, a[1].reverse(), (a[0].sum + 1000000).toString(), index),
+          ).to.be.revertedWith('A claim submission failed root hash verification');
         });
       });
 
       it('reverts when called for the next period', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 1000);
-        await expectRevert(
-          inflation.claim(3, a[1].reverse(), toBN(a[0].sum), index, {
-            from: recipient,
-          }),
-          'can only be made after enough time',
-        );
+        await expect(
+          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum.toString(), index),
+        ).to.be.revertedWith('can only be made after enough time');
       });
 
       context('when already called this period', () => {
         beforeEach(async () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
-          await inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-            from: recipient,
-          });
+          await inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index);
         });
 
         it('reverts', async () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
-          await expectRevert(
-            inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-              from: recipient,
-            }),
-            'claim can only be made if it has not already been made',
-          );
+          await expect(
+            inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index),
+          ).to.be.revertedWith('claim can only be made if it has not already been made');
         });
       });
 
@@ -422,29 +368,31 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
         const updatedMap = new Map();
         beforeEach(async () => {
           for (let i = 0; i < 3; i += 1) {
-            updatedMap.set(accounts[i], await eco.balanceOf.call(accounts[
-              i]));
+            updatedMap.set(
+              await accounts[i].getAddress(),
+              toBN(await eco.balanceOf(await accounts[i].getAddress())),
+            );
           }
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
-          updatedMap.set(recipient, updatedMap.get(recipient).add(toBN(rewardVote)));
-          await inflation.claim(0, a[1].reverse(), toBN(a[0].sum), index, {
-            from: recipient,
-          });
+          updatedMap.set(
+            await recipient.getAddress(),
+            updatedMap.get(await recipient.getAddress()).add(toBN(rewardVote)),
+          );
+          await inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index);
           await time.increase(3600 * 24 * 30);
         });
 
         it('pays out more inflation', async () => {
           for (let i = 1; i <= 9; i += 1) {
             const [a, index, recipient] = await getClaimParameters(inflation, i);
-            updatedMap.set(recipient, updatedMap.get(recipient).add(toBN(
-              rewardVote,
-            )));
-            await inflation.claim(i, a[1].reverse(), toBN(a[0].sum), index, {
-              from: recipient,
-            });
+            updatedMap.set(
+              await recipient.getAddress(),
+              updatedMap.get(await recipient.getAddress()).add(toBN(rewardVote)),
+            );
+            await inflation.connect(recipient).claim(i, a[1].reverse(), a[0].sum.toString(), index);
             assert.equal(
-              (await eco.balanceOf.call(recipient)).toString(),
-              updatedMap.get(recipient).toString(),
+              (await eco.balanceOf(await recipient.getAddress())).toString(),
+              updatedMap.get(await recipient.getAddress()).toString(),
               'Should get an inflation',
             );
           }
@@ -486,9 +434,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
           for (let i = 0; i < numRecipients; i += 1) {
             await time.increase(3600 * 24 * 8 + 1);
             const [a, index, recipient] = await getClaimParameters(inflation, i);
-            await inflation.claim(i, a[1].reverse(), toBN(a[0].sum), index, {
-              from: recipient,
-            });
+            await inflation.connect(recipient).claim(i, a[1].reverse(), a[0].sum.toString(), index);
           }
         });
 
@@ -499,10 +445,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
         it('burns the minted tokens', async () => {
           await inflation.destruct();
 
-          assert.equal(
-            (await eco.balanceOf(inflation.address)).toString(),
-            0,
-          );
+          assert.equal((await eco.balanceOf(inflation.address)).toString(), 0);
         });
       });
 
@@ -522,10 +465,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
         context('and claimNumbers have not been paid out', () => {
           it('reverts', async () => {
-            await expectRevert(
-              inflation.destruct(),
-              'rewards must be claimed prior',
-            );
+            await expect(inflation.destruct()).to.be.revertedWith('rewards must be claimed prior');
           });
 
           context('after a long time', () => {
@@ -534,8 +474,7 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
             });
 
             it('still reverts', async () => {
-              await expectRevert(
-                inflation.destruct(),
+              await expect(inflation.destruct()).to.be.revertedWith(
                 'rewards must be claimed prior',
               );
             });
@@ -548,26 +487,25 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
 
             const numRecipients = (await inflation.numRecipients()).toNumber();
 
-            await Promise.all([accounts[0], accounts[1]].map(async () => {
-              for (let i = 0; i < numRecipients; i += 1) {
-                try {
-                  const [a, index, recipient] = await getClaimParameters(inflation, i);
-                  await inflation.claim(i, a[1].reverse(), toBN(a[
-                    0].sum), index, {
-                    from: recipient,
-                  });
-                } catch (e) {
-                  if (!e.message.includes(
-                    'provided address does not hold',
-                  )
-                    && !e.message.includes(
-                      'not already been made',
-                    )) {
-                    throw e;
+            await Promise.all(
+              [accounts[0], accounts[1]].map(async () => {
+                for (let i = 0; i < numRecipients; i += 1) {
+                  try {
+                    const [a, index, recipient] = await getClaimParameters(inflation, i);
+                    await inflation
+                      .connect(recipient)
+                      .claim(i, a[1].reverse(), a[0].sum.toString(), index);
+                  } catch (e) {
+                    if (
+                      !e.message.includes('provided address does not hold')
+                      && !e.message.includes('not already been made')
+                    ) {
+                      throw e;
+                    }
                   }
                 }
-              }
-            }));
+              }),
+            );
           });
 
           it('succeeds', async () => {
@@ -580,22 +518,13 @@ contract('Inflation [@group=6]', (unsortedAccounts) => {
             });
 
             it('has no leftover tokens', async () => {
-              assert.equal(
-                (await eco.balanceOf(inflation.address))
-                  .toString(),
-                0,
-              );
+              assert.equal((await eco.balanceOf(inflation.address)).toString(), 0);
             });
 
             it('is no longer the inflation policy', async () => {
-              const govhash = web3.utils.soliditySha3(
-                'CurrencyGovernance',
-              );
+              const govhash = web3.utils.soliditySha3('CurrencyGovernance');
 
-              assert.notEqual(
-                await util.policyFor(policy, govhash),
-                inflation.address,
-              );
+              assert.notEqual(await util.policyFor(policy, govhash), inflation.address);
             });
           });
         });

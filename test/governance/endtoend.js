@@ -15,19 +15,14 @@
  * the first proposal will pass the final vote.
  */
 
-const PolicyProposals = artifacts.require('PolicyProposals');
-const PolicyVotes = artifacts.require('PolicyVotes');
-const MakeRich = artifacts.require('MakeRich');
-const MakeBackdoor = artifacts.require('MakeBackdoor');
-
-const { time } = require('@openzeppelin/test-helpers');
-
+const { ethers } = require('hardhat');
+const { assert } = require('chai');
+const { deployFrom } = require('../utils/contracts');
+const { ecoFixture } = require('../utils/fixtures');
+const time = require('../utils/time');
 const util = require('../../tools/test/util');
-const { isCoverage } = require('../../tools/test/coverage');
 
-const { toBN } = web3.utils;
-
-contract('Production Policy Change [@group=4]', (accounts) => {
+describe('Production Policy Change [@group=4]', () => {
   let policy;
   let eco;
   let timedPolicies;
@@ -36,25 +31,24 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   let policyProposals;
   let policyVotes;
   let initInflation;
+  let accounts;
 
   it('Deploys the production system', async () => {
+    accounts = await ethers.getSigners();
     ({
-      policy,
-      eco,
-      initInflation,
-      timedPolicies,
-    } = await util.deployPolicy(accounts[0]));
+      policy, eco, faucet: initInflation, timedPolicies,
+    } = await ecoFixture([]));
   });
 
   it('Stakes accounts', async () => {
-    const stake = toBN(10).pow(toBN(18)).muln(5000);
+    const stake = ethers.utils.parseEther('5000');
     /* Until we have some idea how initial distribution is done, this *does* use
      *a test-function
      */
-    await initInflation.mint(eco.address, accounts[1], stake);
-    await initInflation.mint(eco.address, accounts[2], stake);
-    await initInflation.mint(eco.address, accounts[3], stake);
-    await initInflation.mint(eco.address, accounts[4], stake);
+    await initInflation.mint(await accounts[1].getAddress(), stake);
+    await initInflation.mint(await accounts[2].getAddress(), stake);
+    await initInflation.mint(await accounts[3].getAddress(), stake);
+    await initInflation.mint(await accounts[4].getAddress(), stake);
   });
 
   it('Waits a generation', async () => {
@@ -63,75 +57,60 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Constructs the proposals', async () => {
-    makerich = await MakeRich.new(accounts[5], 1000000, { from: accounts[1] });
-    backdoor = await MakeBackdoor.new(accounts[2], { from: accounts[2] });
+    makerich = await deployFrom(accounts[1], 'MakeRich', await accounts[5].getAddress(), 1000000);
+    backdoor = await deployFrom(accounts[2], 'MakeBackdoor', await accounts[2].getAddress());
   });
 
-  it('Checks that the 820 workaround for coverage is correct', async () => {
+  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
     const ecoHash = web3.utils.soliditySha3('ECO');
     const pf = await policy.policyFor(ecoHash);
     const erc = await util.policyFor(policy, ecoHash);
-    if (await isCoverage()) {
-      return;
-    }
     assert.equal(erc, pf);
   });
 
   it('Kicks off a proposal round', async () => {
     const proposalsHash = web3.utils.soliditySha3('PolicyProposals');
     //    await timedPolicies.incrementGeneration();
-    policyProposals = await PolicyProposals.at(
+    policyProposals = await ethers.getContractAt(
+      'PolicyProposals',
       await util.policyFor(policy, proposalsHash),
     );
   });
 
   it('Accepts new proposals', async () => {
-    await eco.approve(
-      policyProposals.address,
-      await policyProposals.COST_REGISTER(),
-      { from: accounts[1] },
-    );
-    await policyProposals.registerProposal(makerich.address, {
-      from: accounts[1],
-    });
+    await eco
+      .connect(accounts[1])
+      .approve(policyProposals.address, await policyProposals.COST_REGISTER());
+    await policyProposals.connect(accounts[1]).registerProposal(makerich.address);
 
-    await eco.approve(
-      policyProposals.address,
-      await policyProposals.COST_REGISTER(),
-      { from: accounts[2] },
-    );
-    await policyProposals.registerProposal(backdoor.address, {
-      from: accounts[2],
-    });
+    await eco
+      .connect(accounts[2])
+      .approve(policyProposals.address, await policyProposals.COST_REGISTER());
+    await policyProposals.connect(accounts[2]).registerProposal(backdoor.address);
   });
 
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
-    await policyProposals.support(makerich.address, { from: accounts[1] });
+    await policyProposals.connect(accounts[1]).support(makerich.address);
 
-    await policyProposals.support(backdoor.address, { from: accounts[2] });
-    await policyProposals.support(makerich.address, { from: accounts[2] });
-    await policyProposals.deployProposalVoting({ from: accounts[1] });
+    await policyProposals.connect(accounts[2]).support(backdoor.address);
+    await policyProposals.connect(accounts[2]).support(makerich.address);
+    await policyProposals.connect(accounts[1]).deployProposalVoting();
   });
 
   it('Transitions from proposing to voting', async () => {
     const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
-    policyVotes = await PolicyVotes.at(
+    policyVotes = await ethers.getContractAt(
+      'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash),
     );
   });
 
   it('Allows all users to vote', async () => {
-    await policyVotes.vote(
-      true,
-      { from: accounts[1] },
-    );
-    await policyVotes.vote(
-      true,
-      { from: accounts[2] },
-    );
+    await policyVotes.connect(accounts[1]).vote(true);
+    await policyVotes.connect(accounts[2]).vote(true);
   });
 
   it('Waits until the voting period ends', async () => {
@@ -154,6 +133,6 @@ contract('Production Policy Change [@group=4]', (accounts) => {
   });
 
   it('Celebrates accounts[5]', async () => {
-    assert.equal((await eco.balanceOf.call(accounts[5])).toString(), 1000000);
+    assert.equal((await eco.balanceOf(await accounts[5].getAddress())).toString(), 1000000);
   });
 });

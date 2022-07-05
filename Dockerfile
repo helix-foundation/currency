@@ -7,7 +7,7 @@ RUN cd /currency && npm install --no-optional
 
 COPY contracts /currency/contracts
 COPY tools /currency/tools
-COPY truffle-config.js /currency/
+COPY hardhat.config.js /currency/
 
 RUN cd /currency && npm run build
 
