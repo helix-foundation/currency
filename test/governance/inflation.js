@@ -208,12 +208,12 @@ describe('RandomInflation [@group=6]', () => {
   });
 
   describe('commitEntropyVDF', () => {
-    it('emits the EntropyVDFSeedCommitted event', async () => {
+    it('emits the EntropyVDFSeedCommit event', async () => {
       //      time.increase(3600 * 24 * 2);
 
       await expect(inflation.commitEntropyVDFSeed(await getPrimeDistance())).to.emit(
         inflation,
-        'EntropyVDFSeedCommitted',
+        'EntropyVDFSeedCommit',
       );
     });
 
@@ -261,10 +261,10 @@ describe('RandomInflation [@group=6]', () => {
         }
       });
 
-      it('emits the EntropySeedRevealed event', async () => {
+      it('emits the EntropySeedReveal event', async () => {
         await expect(inflation.submitEntropyVDF(bnHex(y))).to.emit(
           inflation,
-          'EntropySeedRevealed',
+          'EntropySeedReveal',
         );
       });
 
@@ -308,17 +308,17 @@ describe('RandomInflation [@group=6]', () => {
         await expect(
           inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index),
         )
-          .to.emit(inflation, 'Claimed')
+          .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 0);
       });
 
-      it('emits the Claimed event', async () => {
+      it('emits the Claim event', async () => {
         await time.increase(3600 * 24 * 10 + 1);
         const [a, index, recipient] = await getClaimParameters(inflation, 3);
         await expect(
           inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum.toString(), index),
         )
-          .to.emit(inflation, 'Claimed')
+          .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 3);
       });
 
@@ -405,14 +405,18 @@ describe('RandomInflation [@group=6]', () => {
     // I kind of just want to remove the destruct function.
     // I don't really think it does anything useful at this point.
 
-    // context('before seed reveal', () => {
-    //   it('reverts because the contract has a non-zero balance', async () => {
-    //     await expectRevert(
-    //       inflation.destruct(),
-    //       'The contract must have 0 balance to be destructed prior seed revealing.',
-    //     );
-    //   });
-    // });
+    context('before seed reveal', () => {
+      it('reverts', async () => {
+        await expect(
+          inflation.destruct(),
+        ).to.be.revertedWith('Entropy not set, wait until end of full claim period to abort.');
+      });
+
+      it('is still callable after waiting the full time', async () => {
+        await time.increase(3600 * 24 * 28 + 1);
+        await inflation.destruct();
+      });
+    });
 
     context('after the results are computed', () => {
       beforeEach(async () => {

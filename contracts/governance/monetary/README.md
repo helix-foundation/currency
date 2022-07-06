@@ -492,7 +492,7 @@ to reduce the shock to the economy from the addition of new funds
 
 ##### Events
 
-###### Claimed
+###### Claim
 Attributes:
   - `who` (address) - the address of the claimant whose reward was delivered
   - `sequence` (uint256) - the claim sequence number that was used to verify
@@ -501,14 +501,14 @@ Attributes:
 This event is emitted when there is a successful claiming of a reward. It emits
 after the transfer of funds, so it is a marker that the claimant received the reward.
 
-###### EntropyVDFSeedCommitted
+###### EntropyVDFSeedCommit
 Attributes:
   - `seed` (uint256) - the initial seed used by the VDF to compute the seed
     for random inflation
 
 Emitted when the seed for the VDF has been committed to the contract.
 
-###### EntropySeedRevealed
+###### EntropySeedReveal
 Attributes:
   - `seed` (bytes32) - the random seed used to determine the inflation pay-out
     recipients
@@ -536,7 +536,7 @@ inputs as well as the start of the claim period to the current time.
 Arguments: none
 
 Finds a probable prime near the blockhash (at run time) to use as the seed for
-the VDF (`entropyVDFSeed`). Emits `EntropyVDFSeedCommitted` when successful.
+the VDF (`entropyVDFSeed`). Emits `EntropyVDFSeedCommit` when successful.
 
 ###### Security Notes
   - Cannot be run once the `entropyVDFSeed` has been set
@@ -549,7 +549,7 @@ Arguments:
     `keccak256(_y)`).
 
 Sets the `seed` variable for determining the random inflation and emits
-`EntropySeedRevealed`. Only does so if the `vdfVerifier` confirms that it is of
+`EntropySeedReveal`. Only does so if the `vdfVerifier` confirms that it is of
 sufficient random difficulty (see the [VDF Readme](../VDF/README.md) for more details).
 
 ###### Security Notes
@@ -569,7 +569,7 @@ Arguments:
 
 Verifies that the address being claimed for is a valid recipient (see 
 `InflationRootHashProposal` for all the details about this process) and then
-transfers the random inflation reward to the address `_who`. Emits a `Claimed` event
+transfers the random inflation reward to the address `_who`. Emits a `Claim` event
 after the transfer has been made. The staggering of claims over the claim
 period is indexed by the `_sequence` variable which runs from 0 up to `numRecipients`.
 

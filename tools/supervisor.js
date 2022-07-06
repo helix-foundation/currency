@@ -539,16 +539,16 @@
 //           { from: this.account },
 //         );
 
-//         const [EntropySeedRevealed] = (await inflation.getPastEvents(
-//           'EntropySeedRevealed',
+//         const [EntropySeedReveal] = (await inflation.getPastEvents(
+//           'EntropySeedReveal',
 //           {
 //             fromBlock: (await web3.eth.getBlockNumber()) - 1,
 //             toBlock: 'latest',
 //           },
 //         ));
 
-//         if (EntropySeedRevealed) {
-//           logger.info('EntropySeedRevealed event detected, abort ongoing VDF computation');
+//         if (EntropySeedReveal) {
+//           logger.info('EntropySeedReveal event detected, abort ongoing VDF computation');
 //           killVDFCalculation(null, governance._address, ENTROPY);
 //         }
 //       }

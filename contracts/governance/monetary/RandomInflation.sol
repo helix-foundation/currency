@@ -16,8 +16,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * on demand by the CurrencyTimer.
  */
 contract RandomInflation is PolicedUtils, TimeUtils {
-    // Change this so nodes vote on total_eco and eco_per_claimNumber, compute
-    // claim numbers and distribute over 28 days (2 generations).
     /** The time period over which inflation reward is spread to prevent
      *  flooding by spreading out the new tokens.
      */
@@ -26,6 +24,10 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     /** The bound on how much more than the uint256 previous blockhash can a submitted prime be
      */
     uint256 public constant PRIME_BOUND = 1000;
+
+    /** The number of checks to determine the prime seed to start the VDF
+     */
+    uint256 public constant MILLER_RABIN_ROUNDS = 20;
 
     /** The per-participant reward amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
      */
@@ -72,15 +74,15 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     CurrencyTimer public immutable currencyTimer;
 
     /** Fired when a user claims their reward */
-    event Claimed(address indexed who, uint256 sequence);
+    event Claim(address indexed who, uint256 sequence);
 
     /** Emitted when the VDF seed used to provide entropy has been committed to the contract.
      */
-    event EntropyVDFSeedCommitted(uint256 seed);
+    event EntropyVDFSeedCommit(uint256 seed);
 
     /** Emitted when the entropy seed is revealed by provable VDF computation.
      */
-    event EntropySeedRevealed(bytes32 seed);
+    event EntropySeedReveal(bytes32 seed);
 
     constructor(
         Policy _policy,
@@ -101,7 +103,12 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      * have been claimed.
      */
     function destruct() external {
-        if (seed != 0) {
+        require(
+            seed != 0 || getTime() > claimPeriodStarts + CLAIM_PERIOD,
+            "Entropy not set, wait until end of full claim period to abort."
+        );
+
+        if (seed != 0 || getTime() < claimPeriodStarts + CLAIM_PERIOD) {
             /* The higher bound for the loop iterations is the number
              * of reward recipients according to a vote by trusted nodes.
              * It is supposed to be a reasonable number which does not impose a threat
@@ -173,13 +180,13 @@ contract RandomInflation is PolicedUtils, TimeUtils {
                 !(x % 7 == 0) &&
                 !(x % 11 == 0) &&
                 !(x % 13 == 0) &&
-                vdfVerifier.isProbablePrime(x, 10),
+                vdfVerifier.isProbablePrime(x, MILLER_RABIN_ROUNDS),
             "distance does not point to prime number, either the block has progressed or distance is wrong"
         );
 
         entropyVDFSeed = x;
 
-        emit EntropyVDFSeedCommitted(entropyVDFSeed);
+        emit EntropyVDFSeedCommit(entropyVDFSeed);
     }
 
     function startInflation(uint256 _numRecipients, uint256 _reward) external {
@@ -216,7 +223,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
         seed = keccak256(_y);
 
-        emit EntropySeedRevealed(seed);
+        emit EntropySeedReveal(seed);
     }
 
     /** Claim an inflation reward on behalf of some address.
@@ -284,7 +291,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
         require(ecoToken.transfer(_who, reward), "Transfer Failed");
 
-        emit Claimed(_who, _sequence);
+        emit Claim(_who, _sequence);
     }
 
     /** Claim an inflation reward for yourself.
