@@ -67,23 +67,6 @@ contract ECO is InflationCheckpoints, TimeUtils {
         _burn(_from, _value);
     }
 
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override {
-        // If to or from is a lockup early return so voting power and delegation remain
-        CurrencyTimer _currencyTimer = CurrencyTimer(
-            policyFor(ID_CURRENCY_TIMER)
-        );
-        if (
-            address(_currencyTimer) != address(0) &&
-            (_currencyTimer.isLockup(from) || _currencyTimer.isLockup(to))
-        ) return;
-
-        super._afterTokenTransfer(from, to, amount);
-    }
-
     function notifyGenerationIncrease() public virtual override {
         uint256 _old = currentGeneration;
         uint256 _new = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
