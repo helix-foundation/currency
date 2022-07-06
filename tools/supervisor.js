@@ -707,7 +707,7 @@
 
 //           const lockupEnds = toBN(await deposit.methods.lockupEnds().call()).toNumber();
 //           if (lockupEnds < this.timeStamp) {
-//             const investors = (await deposit.getPastEvents('Sale', { fromBlock: 0, toBlock: 'latest' }))
+//             const investors = (await deposit.getPastEvents('Deposit', { fromBlock: 0, toBlock: 'latest' }))
 //               .map((x) => x.returnValues.to);
 
 //             for (let i = 0; i < investors.length; i += 1) {

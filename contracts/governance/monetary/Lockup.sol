@@ -21,13 +21,13 @@ import "../../currency/IECO.sol";
  * additional penalty of that same amount.
  */
 contract Lockup is PolicedUtils, TimeUtils {
-    /** The Sale event indicates that a deposit certificate has been sold
+    /** The Deposit event indicates that a deposit certificate has been sold
      * to a particular address in a particular amount.
      *
      * @param to The address that a deposit certificate has been issued to.
-     * @param amount The amount of tokens deposited for the certificate.
+     * @param amount The amount in basic unit of 10^{-18} ECO (weico) at time of deposit.
      */
-    event Sale(address to, uint256 amount);
+    event Deposit(address indexed to, uint256 amount);
 
     /** The Withdrawal event indicates that a withdrawal has been made,
      * and records the account that was credited, the amount it was credited
@@ -36,7 +36,7 @@ contract Lockup is PolicedUtils, TimeUtils {
      * @param to The address that has made a withdrawal.
      * @param amount The amount in basic unit of 10^{-18} ECO (weico) withdrawn.
      */
-    event Withdrawal(address to, uint256 amount);
+    event Withdrawal(address indexed to, uint256 amount);
 
     // the ECO token address
     IECO public immutable ecoToken;
@@ -44,13 +44,17 @@ contract Lockup is PolicedUtils, TimeUtils {
     // the CurrencyTimer address
     CurrencyTimer public immutable currencyTimer;
 
+    // generation created
     uint256 public generation;
 
+    // length in seconds that deposited funds must be locked up for a reward
     uint256 public duration;
 
-    uint256 public constant BILLION = 1e9;
-
+    // a 9 digit fixed point decimal representation of the payout gained by depositing
     uint256 public interest;
+
+    // denotes the number of decimals of fixed point math for above
+    uint256 public constant INTEREST_DIVISOR = 1e9;
 
     uint256 public totalDeposit;
 
@@ -59,11 +63,11 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     constructor(
         Policy _policy,
-        address _ecoAddr,
-        address _timerAddr
+        IECO _ecoAddr,
+        CurrencyTimer _timerAddr
     ) PolicedUtils(_policy) {
-        ecoToken = IECO(_ecoAddr);
-        currencyTimer = CurrencyTimer(_timerAddr);
+        ecoToken = _ecoAddr;
+        currencyTimer = _timerAddr;
     }
 
     function deposit(uint256 _amount) external {
@@ -80,10 +84,10 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     function clone(uint256 _duration, uint256 _interest)
         external
-        returns (address)
+        returns (Lockup)
     {
-        address _clone = createClone(address(this));
-        Lockup(_clone).initialize(address(this), _duration, _interest);
+        Lockup _clone = Lockup(createClone(address(this)));
+        _clone.initialize(address(this), _duration, _interest);
         return _clone;
     }
 
@@ -111,7 +115,7 @@ contract Lockup is PolicedUtils, TimeUtils {
         require(_allowEarly || !early, "Only depositor may withdraw early");
 
         totalDeposit = totalDeposit - _amount;
-        uint256 _delta = (_amount * interest) / BILLION;
+        uint256 _delta = (_amount * interest) / INTEREST_DIVISOR;
 
         require(ecoToken.transfer(_owner, _amount), "Transfer Failed");
         currencyTimer.lockupWithdrawal(_owner, _delta, early);
@@ -145,6 +149,6 @@ contract Lockup is PolicedUtils, TimeUtils {
         depositBalances[_who] = depositBalances[_who] + _amount;
         depositLockupEnds[_who] = getTime() + duration;
 
-        emit Sale(_who, _amount);
+        emit Deposit(_who, _amount);
     }
 }

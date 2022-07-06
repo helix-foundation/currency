@@ -857,7 +857,7 @@ Interest is stored as a 9 digit fixed point number and is calculated via integer
 multiplication and truncated division.
 
 ##### Events
-###### Sale
+###### Deposit
 Attributes:
   - `to` (address) - the address that a certificate was sold/issued to
   - `amount` (uint256) - the amount of tokens deposited in the certificate
@@ -879,7 +879,7 @@ Transfers funds from the caller's balance to this contract and records the depos
 
 Can be called multiple times to increase the amount deposited, but withdrawals are not possible until after the end of the sale period.
 
-Emits the `Sale` event.
+Emits the `Deposit` event.
 
 ###### Security Notes
   - Can only be called during the sale period.
