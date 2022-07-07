@@ -193,13 +193,14 @@ contract Lockup is PolicedUtils, TimeUtils {
 
         DepositRecord storage _deposit = deposits[_who];
         uint256 _inflationMult = ecoToken.getPastLinearInflation(block.number);
+        uint256 _gonsAmount = _amount * _inflationMult;
         address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
 
-        ecoToken.delegateAmount(_primaryDelegate, _amount);
+        ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
 
         _deposit.lockupEnd = getTime() + duration;
         _deposit.ecoDepositReward += (_amount * interest) / INTEREST_DIVISOR;
-        _deposit.gonsDepositAmount += _amount * _inflationMult;
+        _deposit.gonsDepositAmount += _gonsAmount;
         _deposit.delegate = _primaryDelegate;
 
         emit Deposit(_who, _amount);
