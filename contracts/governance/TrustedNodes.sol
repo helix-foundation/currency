@@ -98,7 +98,6 @@ contract TrustedNodes is PolicedUtils {
      */
     function trust(address _node) external onlyPolicy {
         _trust(_node);
-        emit TrustedNodeAddition(_node);
     }
 
     /** Stop trusting a node.
@@ -116,14 +115,15 @@ contract TrustedNodes is PolicedUtils {
 
         delete currentCohort.trusteeNumbers[_node];
 
-        if (trusteeNumber - 1 != lastIndex) {
+        uint256 trusteeIndex = trusteeNumber - 1;
+        if (trusteeIndex != lastIndex) {
             address lastNode = currentCohort.trustedNodes[lastIndex];
 
-            currentCohort.trustedNodes[trusteeNumber] = lastNode;
+            currentCohort.trustedNodes[trusteeIndex] = lastNode;
             currentCohort.trusteeNumbers[lastNode] = trusteeNumber;
         }
 
-        delete currentCohort.trustedNodes[lastIndex];
+        // delete currentCohort.trustedNodes[lastIndex];
         currentCohort.trustedNodes.pop();
         emit TrustedNodeRemoval(_node);
     }
@@ -179,15 +179,17 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to add to the trusted set.
      */
     function _trust(address _node) private {
+        Cohort storage currentCohort = cohorts[cohort];
         require(
-            cohorts[cohort].trusteeNumbers[_node] == 0,
+            currentCohort.trusteeNumbers[_node] == 0,
             "Node is already trusted"
         );
         // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
-        cohorts[cohort].trusteeNumbers[_node] =
-            cohorts[cohort].trustedNodes.length +
+        currentCohort.trusteeNumbers[_node] =
+            currentCohort.trustedNodes.length +
             1;
-        cohorts[cohort].trustedNodes.push(_node);
+        currentCohort.trustedNodes.push(_node);
+        emit TrustedNodeAddition(_node);
     }
 
     function isTrusted(address _node) public view returns (bool) {
