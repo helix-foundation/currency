@@ -38,6 +38,11 @@ contract Lockup is PolicedUtils, TimeUtils {
          * Calculated by taking the deposit time and adding duration
          */
         uint256 lockupEnd;
+
+        /** Address the lockup has delegated the deposited funds to
+         * Either the depositor or their primary delegate at time of deposit
+         */
+        address delegate;
     }
 
     // the ECO token address
@@ -163,8 +168,7 @@ contract Lockup is PolicedUtils, TimeUtils {
         _deposit.gonsDepositAmount = 0;
         _deposit.ecoDepositReward = 0;
 
-        // delete _deposit;
-
+        ecoToken.undelegateFromAddress(_deposit.delegate);
         require(ecoToken.transfer(_owner, _amount), "Transfer Failed");
         currencyTimer.lockupWithdrawal(_owner, _delta, early);
 
@@ -189,10 +193,14 @@ contract Lockup is PolicedUtils, TimeUtils {
 
         DepositRecord storage _deposit = deposits[_who];
         uint256 _inflationMult = ecoToken.getPastLinearInflation(block.number);
+        address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
+
+        ecoToken.delegateAmount(_primaryDelegate, _amount);
 
         _deposit.lockupEnd = getTime() + duration;
         _deposit.ecoDepositReward += (_amount * interest) / INTEREST_DIVISOR;
         _deposit.gonsDepositAmount += _amount * _inflationMult;
+        _deposit.delegate = _primaryDelegate;
 
         emit Deposit(_who, _amount);
     }
