@@ -168,7 +168,7 @@ contract Lockup is PolicedUtils, TimeUtils {
         _deposit.gonsDepositAmount = 0;
         _deposit.ecoDepositReward = 0;
 
-        ecoToken.undelegateFromAddress(_deposit.delegate);
+        ecoToken.undelegateAmountFromAddress(_deposit.delegate, _gonsAmount);
         require(ecoToken.transfer(_owner, _amount), "Transfer Failed");
         currencyTimer.lockupWithdrawal(_owner, _delta, early);
 
