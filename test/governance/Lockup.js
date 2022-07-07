@@ -20,7 +20,6 @@ describe('Lockup [@group=3]', () => {
   let borda;
   let faucet;
   let lockup;
-  let proposedInflationMult;
 
   const hash = (x) => web3.utils.soliditySha3(
     { type: 'bytes32', value: x[0] },
@@ -48,7 +47,7 @@ describe('Lockup [@group=3]', () => {
 
     const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000;
     const digits10to19 = Math.floor(Math.random() * 10000000000);
-    proposedInflationMult = `${digits10to19}${digits1to9}`;
+    const proposedInflationMult = `${digits10to19}${digits1to9}`;
 
     // 21 day lockup, 5% interest, and a random inflation multiplier
     await borda.connect(bob).propose(0, 0, 1814400, 50000000, proposedInflationMult);
@@ -257,6 +256,69 @@ describe('Lockup [@group=3]', () => {
           await lockup.connect(charlie).withdraw();
           expect(await eco.balanceOf(await charlie.getAddress())).to.equal(2050000000);
         });
+      });
+    });
+  });
+
+  describe('affirming funds are delegated', () => {
+    beforeEach(async () => {
+      await lockup.connect(charlie).deposit(1000000000);
+
+      await faucet.connect(alice).mint(await alice.getAddress(), 2000000000);
+      await eco.connect(alice).approve(lockup.address, 2000000000);
+      await lockup.connect(alice).deposit(2000000000);
+
+      await eco.connect(alice).enableDelegation();
+
+      await faucet.connect(bob).mint(await bob.getAddress(), 3000000000);
+      await eco.connect(bob).delegate(await alice.getAddress());
+
+      await eco.connect(bob).approve(lockup.address, 1000000000);
+      await lockup.connect(bob).deposit(1000000000);
+    });
+
+    it('lockup has no voting power', async () => {
+      const lockupPower = await eco.getPastVotes(lockup.address, await time.latestBlock());
+      expect(lockupPower.eq(0)).to.be.true;
+    });
+
+    it('users have correct voting power', async () => {
+      const alicePower = await eco.getPastVotes(alice.address, await time.latestBlock());
+      const bobPower = await eco.getPastVotes(bob.address, await time.latestBlock());
+      const charliePower = await eco.getPastVotes(charlie.address, await time.latestBlock());
+      
+      expect(alicePower.eq(5000000000)).to.be.true;
+      expect(bobPower.eq(0)).to.be.true;
+      expect(charliePower.eq(1000000000)).to.be.true;
+    });
+
+    describe('bob redelegates', () => {
+      beforeEach(async () => {
+        await eco.connect(charlie).enableDelegation();
+        await eco.connect(bob).delegate(await charlie.getAddress());
+      });
+
+      it('lockup power stays, unlocked power moves', async () => {
+        const alicePower = await eco.getPastVotes(alice.address, await time.latestBlock());
+        const bobPower = await eco.getPastVotes(bob.address, await time.latestBlock());
+        const charliePower = await eco.getPastVotes(charlie.address, await time.latestBlock());
+        
+        expect(alicePower.eq(3000000000)).to.be.true;
+        expect(bobPower.eq(0)).to.be.true;
+        expect(charliePower.eq(3000000000)).to.be.true;
+      });
+
+      it('nonintuitive behavior fixes when bob withdraws', async () => {
+        await time.increase(3600 * 24 * 21.1);
+        await lockup.connect(bob).withdraw();
+
+        const alicePower = await eco.getPastVotes(alice.address, await time.latestBlock());
+        const bobPower = await eco.getPastVotes(bob.address, await time.latestBlock());
+        const charliePower = await eco.getPastVotes(charlie.address, await time.latestBlock());
+        
+        expect(alicePower.eq(2000000000)).to.be.true;
+        expect(bobPower.eq(0)).to.be.true;
+        expect(charliePower.eq(4050000000)).to.be.true;
       });
     });
   });
