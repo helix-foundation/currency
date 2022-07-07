@@ -45,7 +45,8 @@ describe('Lockup [@group=3]', () => {
       await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
-    await borda.connect(bob).propose(10, 20, 30, 40, BigNumber.from('1000000000000000000'));
+    // 21 day lockup, 5% interest
+    await borda.connect(bob).propose(0, 0, 1814400, 50000000, BigNumber.from('1000000000000000000'));
     await time.increase(3600 * 24 * 10.1);
 
     const alicevote = [
@@ -54,7 +55,11 @@ describe('Lockup [@group=3]', () => {
       [await bob.getAddress()],
     ];
     await borda.connect(alice).commit(hash(alicevote));
-    const bobvote = [web3.utils.randomHex(32), await bob.getAddress(), [await bob.getAddress()]];
+    const bobvote = [
+      web3.utils.randomHex(32),
+      await bob.getAddress(),
+      [await bob.getAddress()],
+    ];
     await borda.connect(bob).commit(hash(bobvote));
     await time.increase(3600 * 24 * 3);
     await borda.connect(alice).reveal(alicevote[0], alicevote[2]);
@@ -72,14 +77,56 @@ describe('Lockup [@group=3]', () => {
     await eco.connect(charlie).approve(lockup.address, 1000000000);
   });
 
-  it('allows deposits', async () => {
+  describe('cloning inputs', () => {
+    let rawLockup;
+
+    it('reverts on calling clone on a clone', async () => {
+      await expect(lockup['clone(uint256,uint256)'](1, 2))
+        .to.be.revertedWith('This method cannot be called on clones');
+    });
+
+    beforeEach(async () => {
+      const implAddress = await currencyTimer.lockupImpl();
+      rawLockup = await ethers.getContractAt('Lockup', implAddress);
+    });
+
+    it('reverts on zero duration', async () => {
+      await expect(rawLockup['clone(uint256,uint256)'](0, 2))
+        .to.be.revertedWith('duration should not be zero');
+    });
+
+    it('reverts on calling clone on a clone', async () => {
+      await expect(rawLockup['clone(uint256,uint256)'](1, 0))
+        .to.be.revertedWith('interest should not be zero');
+    });
+  });
+
+  it('allows deposit', async () => {
     await lockup.connect(charlie).deposit(1000000000);
+  });
+
+  it('allows depositFor', async () => {
+    await lockup.connect(charlie).depositFor(1000000000, await alice.getAddress());
+  });
+
+  describe('expect deposit events', async () => {
+    it('on deposit', async () => {
+      await expect(lockup.connect(charlie).deposit(1000000000))
+        .to.emit(lockup, 'Deposit')
+        .withArgs(await charlie.getAddress(), '1000000000');
+    });
+
+    it('on depositFor', async () => {
+      await expect(lockup.connect(charlie).depositFor(1000000000, await alice.getAddress()))
+        .to.emit(lockup, 'Deposit')
+        .withArgs(await alice.getAddress(), '1000000000');
+    });
   });
 
   describe('Without a valid deposit', async () => {
     it('reverts on withdraw', async () => {
       await expect(lockup.connect(alice).withdraw()).to.be.revertedWith(
-        'Withdrawals can only be made for accounts that made deposits',
+        'Withdrawals can only be made for accounts with valid deposits',
       );
     });
   });
@@ -91,7 +138,7 @@ describe('Lockup [@group=3]', () => {
 
     it('punishes early withdrawal', async () => {
       await lockup.connect(charlie).withdraw();
-      expect(await eco.balanceOf(await charlie.getAddress())).to.equal(999999960);
+      expect(await eco.balanceOf(await charlie.getAddress())).to.equal(950000000);
     });
 
     it('does not allow early withdrawFor', async () => {
@@ -100,10 +147,9 @@ describe('Lockup [@group=3]', () => {
       ).to.be.revertedWith('Only depositor may withdraw early');
     });
 
-    describe('j week later', async () => {
+    describe('after the deposit window', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 24 * 14.1);
-        await timedPolicies.incrementGeneration();
+        await time.increase(3600 * 24 * 4.1);
       });
 
       it('can no longer deposit', async () => {
@@ -112,21 +158,62 @@ describe('Lockup [@group=3]', () => {
         );
       });
 
+      it('still punishes early withdrawal', async () => {
+        await lockup.connect(charlie).withdraw();
+        expect(await eco.balanceOf(await charlie.getAddress())).to.equal(950000000);
+      });
+  
+      it('still does not allow early withdrawFor', async () => {
+        await expect(
+          lockup.connect(alice).withdrawFor(await charlie.getAddress()),
+        ).to.be.revertedWith('Only depositor may withdraw early');
+      });
+    });
+
+    describe('after the lockup window', () => {
+      beforeEach(async () => {
+        await time.increase(3600 * 24 * 21.1);
+      });
+
       it('rewards late withdrawal', async () => {
         await lockup.connect(charlie).withdraw();
-        expect(await eco.balanceOf(await charlie.getAddress())).to.equal(1000000040);
+        expect(await eco.balanceOf(await charlie.getAddress())).to.equal(1050000000);
       });
 
       it('allows and rewards late withdrawFor', async () => {
         await lockup.connect(alice).withdrawFor(await charlie.getAddress());
-        expect(await eco.balanceOf(await charlie.getAddress())).to.equal(1000000040);
+        expect(await eco.balanceOf(await charlie.getAddress())).to.equal(1050000000);
       });
 
       it('withdrawal event emitted', async () => {
         await expect(lockup.connect(charlie).withdraw())
           .to.emit(lockup, 'Withdrawal')
-          .withArgs(await charlie.getAddress(), '1000000040');
+          .withArgs(await charlie.getAddress(), '1050000000');
+      });
+
+      it('cannot withdraw again', async () => {
+        await lockup.connect(charlie).withdraw();
+        await expect(lockup.connect(charlie).withdraw())
+          .to.be.revertedWith('Withdrawals can only be made for accounts with valid deposits');
       });
     });
+
+    describe('can make multiple deposits', () => {
+      beforeEach(async () => {
+        await faucet.connect(charlie).mint(await charlie.getAddress(), 1000000000);
+        await eco.connect(charlie).approve(lockup.address, 1000000000);
+        await lockup.connect(charlie).deposit(1000000000);
+        await time.increase(3600 * 24 * 21.1);
+      });
+
+      it('correctly rewards the aggrergate of deposits', async () => {
+        await lockup.connect(charlie).withdraw();
+        expect(await eco.balanceOf(await charlie.getAddress())).to.equal(2100000000);
+      });
+    });
+
+    // describe('with a change in inflation modifier during the lockup', () => {
+
+    // });
   });
 });

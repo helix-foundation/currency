@@ -117,6 +117,14 @@ contract Lockup is PolicedUtils, TimeUtils {
             implementation() == address(this),
             "This method cannot be called on clones"
         );
+        require(
+            _duration > 0,
+            "duration should not be zero"
+        );
+        require(
+            _interest > 0,
+            "interest should not be zero"
+        );
         Lockup _clone = Lockup(createClone(address(this)));
         _clone.initialize(address(this), _duration, _interest);
         return _clone;
@@ -140,7 +148,7 @@ contract Lockup is PolicedUtils, TimeUtils {
 
         require(
             _gonsAmount > 0,
-            "Withdrawals can only be made for accounts that made deposits"
+            "Withdrawals can only be made for accounts with valid deposits"
         );
 
         bool early = getTime() < _deposit.lockupEnd;
