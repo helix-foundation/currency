@@ -3,7 +3,6 @@
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
-const { BigNumber } = require('ethers');
 const { ecoFixture } = require('../utils/fixtures');
 
 const time = require('../utils/time');
@@ -165,7 +164,7 @@ describe('Lockup [@group=3]', () => {
         await lockup.connect(charlie).withdraw();
         expect(await eco.balanceOf(await charlie.getAddress())).to.equal(950000000);
       });
-  
+
       it('still does not allow early withdrawFor', async () => {
         await expect(
           lockup.connect(alice).withdrawFor(await charlie.getAddress()),
@@ -221,11 +220,11 @@ describe('Lockup [@group=3]', () => {
           'CurrencyGovernance',
           await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
         );
-    
+
         // 200% linear inflation
         await borda.connect(bob).propose(0, 0, 0, 0, '500000000000000000');
         await time.increase(3600 * 24 * 10.1);
-    
+
         const alicevote = [
           web3.utils.randomHex(32),
           await alice.getAddress(),
@@ -251,7 +250,7 @@ describe('Lockup [@group=3]', () => {
         beforeEach(async () => {
           await time.increase(3600 * 24 * 7.1);
         });
-  
+
         it('rewards late withdrawal', async () => {
           await lockup.connect(charlie).withdraw();
           expect(await eco.balanceOf(await charlie.getAddress())).to.equal(2050000000);
@@ -286,7 +285,7 @@ describe('Lockup [@group=3]', () => {
       const alicePower = await eco.getPastVotes(alice.address, await time.latestBlock());
       const bobPower = await eco.getPastVotes(bob.address, await time.latestBlock());
       const charliePower = await eco.getPastVotes(charlie.address, await time.latestBlock());
-      
+
       expect(alicePower.eq(5000000000)).to.be.true;
       expect(bobPower.eq(0)).to.be.true;
       expect(charliePower.eq(1000000000)).to.be.true;
@@ -302,7 +301,7 @@ describe('Lockup [@group=3]', () => {
         const alicePower = await eco.getPastVotes(alice.address, await time.latestBlock());
         const bobPower = await eco.getPastVotes(bob.address, await time.latestBlock());
         const charliePower = await eco.getPastVotes(charlie.address, await time.latestBlock());
-        
+
         expect(alicePower.eq(3000000000)).to.be.true;
         expect(bobPower.eq(0)).to.be.true;
         expect(charliePower.eq(3000000000)).to.be.true;
@@ -315,7 +314,7 @@ describe('Lockup [@group=3]', () => {
         const alicePower = await eco.getPastVotes(alice.address, await time.latestBlock());
         const bobPower = await eco.getPastVotes(bob.address, await time.latestBlock());
         const charliePower = await eco.getPastVotes(charlie.address, await time.latestBlock());
-        
+
         expect(alicePower.eq(2000000000)).to.be.true;
         expect(bobPower.eq(0)).to.be.true;
         expect(charliePower.eq(4050000000)).to.be.true;

@@ -27,18 +27,15 @@ contract Lockup is PolicedUtils, TimeUtils {
          * This allows deposit amounts to account for linear inflation during lockup
          */
         uint256 gonsDepositAmount;
-
         /** The amount of ECO to reward a successful withdrawal
          * Also equal to the penalty for withdrawing early
          * Calculated upon deposit
          */
         uint256 ecoDepositReward;
-
         /** Timestamp for withdrawing without penalty
          * Calculated by taking the deposit time and adding duration
          */
         uint256 lockupEnd;
-
         /** Address the lockup has delegated the deposited funds to
          * Either the depositor or their primary delegate at time of deposit
          */
@@ -63,7 +60,7 @@ contract Lockup is PolicedUtils, TimeUtils {
     /** The fraction of payout gained on successful withdrawal
      * Also the fraction for the penality for withdrawing early.
      * A 9 digit fixed point decimal representation
-     */ 
+     */
     uint256 public interest;
 
     // denotes the number of decimals of fixed point math for interest
@@ -122,14 +119,8 @@ contract Lockup is PolicedUtils, TimeUtils {
             implementation() == address(this),
             "This method cannot be called on clones"
         );
-        require(
-            _duration > 0,
-            "duration should not be zero"
-        );
-        require(
-            _interest > 0,
-            "interest should not be zero"
-        );
+        require(_duration > 0, "duration should not be zero");
+        require(_interest > 0, "interest should not be zero");
         Lockup _clone = Lockup(createClone(address(this)));
         _clone.initialize(address(this), _duration, _interest);
         return _clone;
@@ -184,7 +175,10 @@ contract Lockup is PolicedUtils, TimeUtils {
         address _payer,
         address _who
     ) private {
-        require(getTime() < depositWindowEnd, "Deposits can only be made during sale window");
+        require(
+            getTime() < depositWindowEnd,
+            "Deposits can only be made during sale window"
+        );
 
         require(
             ecoToken.transferFrom(_payer, address(this), _amount),

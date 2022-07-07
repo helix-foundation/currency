@@ -353,9 +353,17 @@ abstract contract VoteCheckpoints is ERC20 {
     /**
      * @dev Undelegate a specific amount of votes from the `delegatee` back to the sender.
      */
-    function undelegateAmountFromAddress(address delegatee, uint256 amount) public {
-        require(_delegates[msg.sender][delegatee] >= amount, "amount not available to undelegate");
-        require(msg.sender == getPrimaryDelegate(msg.sender), "undelegating amounts is only available for partial delegators");
+    function undelegateAmountFromAddress(address delegatee, uint256 amount)
+        public
+    {
+        require(
+            _delegates[msg.sender][delegatee] >= amount,
+            "amount not available to undelegate"
+        );
+        require(
+            msg.sender == getPrimaryDelegate(msg.sender),
+            "undelegating amounts is only available for partial delegators"
+        );
         _undelegate(msg.sender, delegatee, amount);
     }
 
