@@ -20,6 +20,13 @@ describe('Lockup [@group=3]', () => {
   let borda;
   let faucet;
   let lockup;
+  let proposedInflationMult;
+
+  const hash = (x) => web3.utils.soliditySha3(
+    { type: 'bytes32', value: x[0] },
+    { type: 'address', value: x[1] },
+    { type: 'address', value: x[2] },
+  );
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
@@ -34,19 +41,17 @@ describe('Lockup [@group=3]', () => {
       policy, eco, faucet, timedPolicies, currencyTimer,
     } = await ecoFixture(trustednodes));
 
-    const hash = (x) => web3.utils.soliditySha3(
-      { type: 'bytes32', value: x[0] },
-      { type: 'address', value: x[1] },
-      { type: 'address', value: x[2] },
-    );
-
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
       await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
     );
 
-    // 21 day lockup, 5% interest
-    await borda.connect(bob).propose(0, 0, 1814400, 50000000, BigNumber.from('1000000000000000000'));
+    const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000;
+    const digits10to19 = Math.floor(Math.random() * 10000000000);
+    proposedInflationMult = `${digits10to19}${digits1to9}`;
+
+    // 21 day lockup, 5% interest, and a random inflation multiplier
+    await borda.connect(bob).propose(0, 0, 1814400, 50000000, proposedInflationMult);
     await time.increase(3600 * 24 * 10.1);
 
     const alicevote = [
@@ -67,7 +72,6 @@ describe('Lockup [@group=3]', () => {
     await time.increase(3600 * 24 * 1);
     await borda.updateStage();
     await borda.compute();
-    await time.increase(3600 * 24 * 3);
     await timedPolicies.incrementGeneration();
 
     const [evt] = await currencyTimer.queryFilter('NewLockup');
@@ -212,8 +216,48 @@ describe('Lockup [@group=3]', () => {
       });
     });
 
-    // describe('with a change in inflation modifier during the lockup', () => {
+    describe('with linear inflation during the lockup', () => {
+      beforeEach(async () => {
+        borda = await ethers.getContractAt(
+          'CurrencyGovernance',
+          await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+        );
+    
+        // 200% linear inflation
+        await borda.connect(bob).propose(0, 0, 0, 0, '500000000000000000');
+        await time.increase(3600 * 24 * 10.1);
+    
+        const alicevote = [
+          web3.utils.randomHex(32),
+          await alice.getAddress(),
+          [await bob.getAddress()],
+        ];
+        await borda.connect(alice).commit(hash(alicevote));
+        const bobvote = [
+          web3.utils.randomHex(32),
+          await bob.getAddress(),
+          [await bob.getAddress()],
+        ];
+        await borda.connect(bob).commit(hash(bobvote));
+        await time.increase(3600 * 24 * 3);
+        await borda.connect(alice).reveal(alicevote[0], alicevote[2]);
+        await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+        await time.increase(3600 * 24 * 1);
+        await borda.updateStage();
+        await borda.compute();
+        await timedPolicies.incrementGeneration();
+      });
 
-    // });
+      describe('after the lockup window', () => {
+        beforeEach(async () => {
+          await time.increase(3600 * 24 * 7.1);
+        });
+  
+        it('rewards late withdrawal', async () => {
+          await lockup.connect(charlie).withdraw();
+          expect(await eco.balanceOf(await charlie.getAddress())).to.equal(2050000000);
+        });
+      });
+    });
   });
 });
