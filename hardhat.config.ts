@@ -1,54 +1,54 @@
-require("@nomiclabs/hardhat-waffle");
-require("hardhat-gas-reporter");
-require("solidity-coverage");
-require("@nomiclabs/hardhat-truffle5");
+import * as dotenv from "dotenv"
 
-const { resolve } = require("path");
+import { HardhatUserConfig, task } from "hardhat/config"
+import "@nomiclabs/hardhat-truffle5"
+import "@nomiclabs/hardhat-etherscan"
+import "@nomiclabs/hardhat-waffle"
+import '@nomiclabs/hardhat-ethers'
+import "@typechain/hardhat"
+import "hardhat-gas-reporter"
+import "solidity-coverage"
 
-const { config: dotenvConfig } = require("dotenv");
+dotenv.config()
 
-dotenvConfig({ path: resolve(__dirname, "./.env") });
-
-const chainIds = {
-  ganache: 1337,
-  goerli: 5,
-  hardhat: 31337,
-  kovan: 42,
-  mainnet: 1,
-  rinkeby: 4,
-  ropsten: 3,
-};
+enum NetworkID {
+  ganache = 1337,
+  goerli = 5,
+  hardhat = 31337,
+  kovan = 42,
+  mainnet = 1,
+  rinkeby = 4,
+  ropsten = 3
+}
 
 // Ensure that we have all the environment variables we need.
-let mnemonic;
+let mnemonic: string;
 if (!process.env.MNEMONIC) {
   mnemonic = "test test test test test test test test test test test junk";
 } else {
   mnemonic = process.env.MNEMONIC;
 }
 
-let infuraApiKey;
+let infuraApiKey: string;
 if (!process.env.INFURA_API_KEY) {
   infuraApiKey = "test";
 } else {
   infuraApiKey = process.env.INFURA_API_KEY;
 }
 
-function createTestnetConfig(network) {
-  const url = "https://" + network + ".infura.io/v3/" + infuraApiKey;
+function createTestnetConfig(networkID: NetworkID) {
+  const url = "https://" + NetworkID[networkID] + ".infura.io/v3/" + infuraApiKey;
   return {
     accounts: {
-      count: 20,
-      initialIndex: 0,
+      count: 100,
       mnemonic,
-      path: "m/44'/60'/0'/0",
     },
-    chainId: chainIds[network],
-    url,
-  };
+    chainId: networkID,
+    url
+  }
 }
+const config: HardhatUserConfig = {
 
-module.exports = {
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
@@ -65,13 +65,13 @@ module.exports = {
         count: 100,
         mnemonic,
       },
-      chainId: chainIds.hardhat,
+      chainId: NetworkID.hardhat,
     },
-    goerli: createTestnetConfig("goerli"),
-    kovan: createTestnetConfig("kovan"),
-    rinkeby: createTestnetConfig("rinkeby"),
-    ropsten: createTestnetConfig("ropsten"),
-    mainnet: createTestnetConfig("mainnet"),
+    goerli: createTestnetConfig(NetworkID.goerli),
+    kovan: createTestnetConfig(NetworkID.kovan),
+    rinkeby: createTestnetConfig(NetworkID.rinkeby),
+    ropsten: createTestnetConfig(NetworkID.ropsten),
+    mainnet: createTestnetConfig(NetworkID.mainnet),
   },
   paths: {
     artifacts: "./artifacts",
@@ -101,7 +101,11 @@ module.exports = {
   },
   mocha: {
     enableTimeouts: false,
+    //@ts-ignore
     grep: process.env.MOCHA_GREP ? new RegExp(process.env.MOCHA_GREP) : new RegExp(),
+    //@ts-ignore
     invert: process.env.MOCHA_INVERT,
   },
 };
+
+export default config
