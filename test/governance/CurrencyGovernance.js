@@ -359,9 +359,9 @@ describe('CurrencyGovernance [@group=4]', () => {
             await time.increase(3600 * 24 * 1.1);
             await timedPolicies.incrementGeneration();
 
-            const originalBorda2 = await CurrencyGovernance.new(policy.address);
-            const bordaCloner2 = await Cloner.new(originalBorda2.address);
-            borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner.clone());
+            const originalBorda2 = await deploy('CurrencyGovernance', policy.address);
+            const bordaCloner2 = await deploy('Cloner', originalBorda2.address);
+            borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
             await policy.testDirectSet('CurrencyGovernance', borda.address);
 
             await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
