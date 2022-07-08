@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 const { ERC1820_REGISTRY, REGISTRY_DEPLOY_TX } = require('../../tools/constants');
 const { deployFrom } = require('./contracts');
 
-const ECOx_LOCKUP_HASH = ethers.utils.solidityKeccak256(['string'], ['ECOxLockup']);
+const ECOx_STAKING_HASH = ethers.utils.solidityKeccak256(['string'], ['ECOxStaking']);
 const CURRENCY_TIMER_HASH = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer']);
 const TIMED_POLICIES_HASH = ethers.utils.solidityKeccak256(['string'], ['TimedPolicies']);
 const POLICY_PROPOSALS_HASH = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
@@ -43,7 +43,7 @@ function getSetters() {
  */
 function getIdentifiers() {
   return [
-    ECOx_LOCKUP_HASH,
+    ECOx_STAKING_HASH,
     CURRENCY_TIMER_HASH,
     TIMED_POLICIES_HASH,
     TRUSTED_NODES_HASH,
@@ -58,7 +58,7 @@ function getIdentifiers() {
  */
 function getAddresses(contracts) {
   return [
-    contracts.ecoXLockup.address,
+    contracts.ecoXStaking.address,
     contracts.currencyTimer.address,
     contracts.timedPolicies.address,
     contracts.trustedNodes.address,
@@ -212,7 +212,7 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
  *  - CurrencyGovernance
  *  - PolicyVotes
  *  - PolicyProposals
- *  - ECOxLockup
+ *  - ECOxStaking
  *  - CurrencyTimer
  *  - TimedPolicies
  *  - Policy
@@ -267,7 +267,7 @@ exports.deployPeripheralContracts = async (
     ecox.address,
   );
 
-  const ecoXLockup = await deployFrom(wallet, 'ECOxLockup', policyProxy.address, ecox.address);
+  const ecoXStaking = await deployFrom(wallet, 'ECOxStaking', policyProxy.address, ecox.address);
 
   const currencyTimerImpl = await deployFrom(
     wallet,
@@ -292,7 +292,7 @@ exports.deployPeripheralContracts = async (
     'TimedPolicies',
     policyProxy.address,
     policyProposals.address,
-    [ECO_HASH, CURRENCY_TIMER_HASH, ECOx_LOCKUP_HASH],
+    [ECO_HASH, CURRENCY_TIMER_HASH, ECOx_STAKING_HASH],
   );
   await bindProxy(bootstrap, timedPoliciesImpl, 4);
   const timedPolicies = await ethers.getContractAt(
@@ -331,7 +331,7 @@ exports.deployPeripheralContracts = async (
     governance,
     policyVotes,
     policyProposals,
-    ecoXLockup,
+    ecoXStaking,
     currencyTimer,
     timedPolicies,
     policy,

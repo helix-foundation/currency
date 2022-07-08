@@ -51,7 +51,7 @@ const CurrencyTimerContractABI = require(`../${importPath}/contracts/governance/
 const LockupContractABI = require(`../${importPath}/contracts/governance/monetary/Lockup.sol/Lockup.json`);
 const PolicyProposalContractABI = require(`../${importPath}/contracts/governance/community/PolicyProposals.sol/PolicyProposals.json`);
 const PolicyVotesContractABI = require(`../${importPath}/contracts/governance/community/PolicyVotes.sol/PolicyVotes.json`);
-const ECOxLockupContractABI = require(`../${importPath}/contracts/governance/community/ECOxLockup.sol/ECOxLockup.json`);
+const ECOxStakingContractABI = require(`../${importPath}/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json`);
 const ECOABI = require(`../${importPath}/contracts/currency/ECO.sol/ECO.json`);
 // const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
 const EcoFaucetABI = require(`../${importPath}/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`);
@@ -439,7 +439,7 @@ async function deployStage2(options) {
 // Template contracts deployed in this stage are: InflationRootHashProposal, Lockup,
 // RandomInflation, CurrencyGovernance, PolicyProposals, and PolicyVotes
 //
-// Helper contracts deployed here are: VDFVerifier, and ECOxLockup
+// Helper contracts deployed here are: VDFVerifier, and ECOxStaking
 //
 // The test-only contracts EcoFaucet and EcoTestCleanup are deployed here if the deploy
 // is not a production-type deploy (i.e. for CI and local testing).
@@ -634,12 +634,12 @@ async function deployStage3(options) {
     });
   options.policyProposalContract = policyProposalContract;
 
-  // Deploy the ECOxLockup contract for voting
-  const ecoXLockupContract = await new web3.eth.Contract(
-    ECOxLockupContractABI.abi,
+  // Deploy the ECOxStaking contract for voting
+  const ecoXStakingContract = await new web3.eth.Contract(
+    ECOxStakingContractABI.abi,
   )
     .deploy({
-      data: ECOxLockupContractABI.bytecode,
+      data: ECOxStakingContractABI.bytecode,
       arguments: [
         options.policyProxy.options.address,
         ecoxProxyAddress,
@@ -650,12 +650,12 @@ async function deployStage3(options) {
       gas: BLOCK_GAS_LIMIT,
       gasPrice: options.gasPrice,
     });
-  options.ecoXLockupContract = ecoXLockupContract;
-  const ecoXLockupIdentifierHash = web3.utils.soliditySha3(
-    'ECOxLockup',
+  options.ecoXStakingContract = ecoXStakingContract;
+  const ecoXStakingIdentifierHash = web3.utils.soliditySha3(
+    'ECOxStaking',
   );
-  identifiers.push(ecoXLockupIdentifierHash);
-  addresses.push(ecoXLockupContract.options.address);
+  identifiers.push(ecoXStakingIdentifierHash);
+  addresses.push(ecoXStakingContract.options.address);
 
   // Deploy the currency timer
   if (options.verbose) {
@@ -726,7 +726,7 @@ async function deployStage3(options) {
         [
           ecoHash,
           currencyTimerHash,
-          ecoXLockupIdentifierHash,
+          ecoXStakingIdentifierHash,
         ],
       ],
     })

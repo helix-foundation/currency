@@ -369,10 +369,10 @@ and establish an accessible permanent record of the outcome.
   - Can only be called during the `Compute` `stage`.
   - Can only be called once on any given inflation contract.
 
-#### ECOxLockup
+#### ECOxStaking
   - Inherits: `ERC20Votes`, `PolicedUtils`
 
-Contains the logic for depositing and withdrawing EcoX to/from lockup. The quantity of
+Contains the logic for depositing and withdrawing EcoX to/from staking. The quantity of
 EcoX locked up relative to the total supply (both at a given block number) determine
 an individual's voting power. This contract also maintains a mapping of addresses -->
 the last generation in which that address cast a vote - this is used to determine
@@ -401,7 +401,7 @@ in a particular amount
 Arguments:
   - `_amount` (uint256) - amount of EcoX sender is attempting to deposit
 
-Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract.
+Transfers EcoX in the amount `_amount` from msg.sender to the EcoXStaking contract.
 A checkpoint is written to increase totalSupply and the voting balance of msg.sender by
 `_amount` for the current block number. This also results in a Deposit event being emitted.
 

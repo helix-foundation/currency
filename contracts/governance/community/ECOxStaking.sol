@@ -6,10 +6,10 @@ import "../../currency/ECOx.sol";
 import "../../policy/PolicedUtils.sol";
 import "../IGeneration.sol";
 
-/** @title ECOxLockup
+/** @title ECOxStaking
  *
  */
-contract ECOxLockup is VoteCheckpoints, PolicedUtils {
+contract ECOxStaking is VoteCheckpoints, PolicedUtils {
     /** The Deposit event indicates that ECOx has been locked up, credited
      * to a particular address in a particular amount.
      *

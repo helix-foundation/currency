@@ -15,7 +15,7 @@ describe('VotingPower [@group=2]', () => {
   let proposals;
   let blockNumber;
   let ecox;
-  let ecoXLockup;
+  let ecoXStaking;
   let one;
   let alicePower;
 
@@ -31,7 +31,7 @@ describe('VotingPower [@group=2]', () => {
     const trustednodes = [await bob.getAddress()];
 
     ({
-      policy, eco, faucet, timedPolicies, ecox, ecoXLockup,
+      policy, eco, faucet, timedPolicies, ecox, ecoXStaking,
     } = await ecoFixture(trustednodes));
 
     await faucet.mint(await alice.getAddress(), one.mul(250));
@@ -218,16 +218,16 @@ describe('VotingPower [@group=2]', () => {
     describe('Voting power with ECO and ECOx', async () => {
       beforeEach(async () => {
         // approve deposits
-        await ecox.connect(alice).approve(ecoXLockup.address, one.mul(400));
-        await ecox.connect(bob).approve(ecoXLockup.address, one.mul(400));
-        await ecox.connect(charlie).approve(ecoXLockup.address, one.mul(200));
+        await ecox.connect(alice).approve(ecoXStaking.address, one.mul(400));
+        await ecox.connect(bob).approve(ecoXStaking.address, one.mul(400));
+        await ecox.connect(charlie).approve(ecoXStaking.address, one.mul(200));
 
-        // lockup funds
-        await ecoXLockup.connect(alice).deposit(one.mul(400));
-        await ecoXLockup.connect(bob).deposit(one.mul(400));
-        await ecoXLockup.connect(charlie).deposit(one.mul(200));
+        // stake funds
+        await ecoXStaking.connect(alice).deposit(one.mul(400));
+        await ecoXStaking.connect(bob).deposit(one.mul(400));
+        await ecoXStaking.connect(charlie).deposit(one.mul(200));
 
-        // one total generation in lockup before voting
+        // one total generation in stake before voting
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
         await time.increase(3600 * 24 * 14 + 1);

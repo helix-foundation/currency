@@ -63,7 +63,7 @@ describe('Policed [@group=11]', () => {
         ID_CURRENCY_GOVERNANCE: 'CurrencyGovernance',
         ID_CURRENCY_TIMER: 'CurrencyTimer',
         ID_ECOX: 'ECOx',
-        ID_ECOXLOCKUP: 'ECOxLockup',
+        ID_ECOXSTAKING: 'ECOxStaking',
       };
       await Promise.all(
         Object.entries(ids).map(async ([key, value]) => {
