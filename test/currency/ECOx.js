@@ -1,7 +1,10 @@
+/* eslint-disable no-underscore-dangle */
+
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 const { expect } = require('chai');
 const { ecoFixture } = require('../utils/fixtures');
+const { permit } = require('../../tools/test/permit');
 
 describe('ECOx', () => {
   let policy;
@@ -140,43 +143,42 @@ describe('ECOx', () => {
   });
 
   describe('permit', () => {
-    const spender = web3.eth.accounts.create();
-    const owner = web3.eth.accounts.create();
+    const spender = ethers.Wallet.createRandom();
+    const owner = ethers.Wallet.createRandom();
+    let chainId;
+
+    before(async () => {
+      ({ chainId } = await ethers.provider.getNetwork());
+    });
 
     context('when the source address has enough balance', async () => {
-      const amount = one.muln(1000);
+      const amount = ethers.utils.parseEther('1').mul(1000);
 
       it('emits an Approval event', async () => {
-        const result = await permit(
+        await expect(permit(
           ecox,
           owner,
           spender,
-          await web3.eth.getChainId(),
+          chainId,
           amount,
-        );
-        await expectEvent.inTransaction(
-          result.tx,
-          ecox.constructor,
-          'Approval',
-        );
+        )).to.emit(ecox, 'Approval');
       });
 
       context('when there is no existing allowance', () => {
         it('sets the allowance', async () => {
-          const result = await permit(
+          await expect(permit(
             ecox,
             owner,
             spender,
-            await web3.eth.getChainId(),
+            chainId,
             amount,
-          );
-          await expectEvent.inTransaction(
-            result.tx,
-            ecox.constructor,
-            'Approval',
-          );
-          const allowance = await ecox.allowance(owner.address, spender.address);
-          expect(allowance).to.eq.BN(amount);
+          )).to.emit(ecox, 'Approval');
+          const allowance = await ecox
+            .allowance(
+              await owner.getAddress(),
+              await spender.getAddress(),
+            );
+          expect(allowance).to.equal(amount);
         });
       });
 
@@ -186,8 +188,8 @@ describe('ECOx', () => {
             ecox,
             owner,
             spender,
-            await web3.eth.getChainId(),
-            amount.sub(new BN(50)),
+            chainId,
+            amount.sub(50),
           );
         });
 
@@ -196,27 +198,26 @@ describe('ECOx', () => {
             ecox,
             owner,
             spender,
-            await web3.eth.getChainId(),
+            chainId,
             amount,
           );
-          const allowance = await ecox.allowance(owner.address, spender.address);
+          const allowance = await ecox
+            .allowance(
+              await owner.getAddress(),
+              await spender.getAddress(),
+            );
 
-          expect(allowance).to.eq.BN(amount);
+          expect(allowance).to.equal(amount);
         });
 
         it('emits the Approval event', async () => {
-          const result = await permit(
+          await expect(permit(
             ecox,
             owner,
             spender,
-            await web3.eth.getChainId(),
+            chainId,
             amount,
-          );
-          await expectEvent.inTransaction(
-            result.tx,
-            ecox.constructor,
-            'Approval',
-          );
+          )).to.emit(ecox, 'Approval');
         });
       });
     });

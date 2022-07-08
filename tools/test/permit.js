@@ -83,13 +83,13 @@ exports.permit = async function permit(
   amount,
   deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000)),
 ) {
-  const nonce = await token.nonces(owner.address);
+  const nonce = await token.nonces(await owner.getAddress());
 
   const permitData = exports.createPermitMessageData({
     name: await token.name(),
     address: token.address,
-    owner: owner.address,
-    spender: spender.address,
+    owner: await owner.getAddress(),
+    spender: await spender.getAddress(),
     value: amount.toString(),
     nonce: nonce.toString(),
     chainId: chainId.toString(),
@@ -103,8 +103,8 @@ exports.permit = async function permit(
   const { v, r, s } = ethers.utils.splitSignature(sig);
 
   return token.permit(
-    owner.address,
-    spender.address,
+    await owner.getAddress(),
+    await spender.getAddress(),
     amount,
     deadline,
     v,
