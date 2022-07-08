@@ -56,9 +56,9 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
     bytes32 internal constant ID_ECOX =
         0xe10ab6c94f1da69921a0ca1c1b96b4fc339699153931c9bfd565e91f44c19b0b;
 
-    // keccak256("ECOxLockup")
-    bytes32 internal constant ID_ECOXLOCKUP =
-        0xdf849ae066ce5ea7a01105f3db8539dd51779b4506741de6731ef32f7f4daa18;
+    // keccak256("ECOxStaking")
+    bytes32 internal constant ID_ECOXSTAKING =
+        0x3776fba25fb0e7d0848ec503ec48569754f9d46736d6ace08b6eed818399d8e1;
 
     address internal expectedInterfaceSet;
 

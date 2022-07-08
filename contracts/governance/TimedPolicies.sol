@@ -6,7 +6,7 @@ import "../policy/Policy.sol";
 import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
-import "./PolicyProposals.sol";
+import "./community/PolicyProposals.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the

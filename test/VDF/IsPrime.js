@@ -1,26 +1,23 @@
 /* eslint-disable no-await-in-loop, no-loop-func */
+const { assert } = require('chai');
+const { BigNumber } = require('ethers');
 
-const IsPrime = artifacts.require('IsPrime');
 const bigintCryptoUtils = require('bigint-crypto-utils');
-
-const { toBN } = web3.utils;
+const { deploy } = require('../utils/contracts');
 
 const MILLER_RABIN_ITERATIONS = 20;
 
-contract('IsPrime [@group=8]', () => {
+describe('IsPrime [@group=8]', () => {
   let instance;
 
   before(async () => {
-    instance = await IsPrime.new();
+    instance = await deploy('IsPrime');
   });
 
   for (let i = 0; i < 100; i += 1) {
     it(`Primality tests ${i}`, async () => {
       const isPrime = await bigintCryptoUtils.isProbablyPrime(BigInt(i));
-      assert.strictEqual(
-        await instance.isProbablePrime(i, MILLER_RABIN_ITERATIONS),
-        isPrime,
-      );
+      assert.strictEqual(await instance.isProbablePrime(i, MILLER_RABIN_ITERATIONS), isPrime);
     });
   }
 
@@ -30,10 +27,7 @@ contract('IsPrime [@group=8]', () => {
     it(`Primality test ${rnd.toString()}`, async () => {
       const isPrime = await bigintCryptoUtils.isProbablyPrime(rnd);
       assert.strictEqual(
-        await instance.isProbablePrime(
-          toBN(rnd.toString()),
-          MILLER_RABIN_ITERATIONS,
-        ),
+        await instance.isProbablePrime(BigNumber.from(rnd.toString()), MILLER_RABIN_ITERATIONS),
         isPrime,
       );
     });

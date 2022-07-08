@@ -3,7 +3,7 @@
 const { isCoverage } = require('../tools/test/coverage');
 
 before(async () => {
-  if (!await isCoverage()) {
+  if (!(await isCoverage())) {
     return;
   }
   // eslint-disable-next-line no-console

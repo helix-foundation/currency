@@ -1,21 +1,24 @@
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { ethers } = require('hardhat');
+const { expect } = require('chai');
+const { loadFixture } = require('ethereum-waffle');
 const util = require('../../tools/test/util');
+const { ecoFixture } = require('../utils/fixtures');
 
-contract('trace', (accounts) => {
+describe('trace', () => {
   let trustedNodes;
 
-  const alice = accounts[0];
-  const bob = accounts[1];
-  let counter = 0;
+  let alice;
+  let bob;
 
   beforeEach(async () => {
-    ({ trustedNodes } = await util.deployPolicy(accounts[counter], { trustednodes: [bob] }));
-    counter++;
+    [alice, bob] = await ethers.getSigners();
+    const bobAddress = await bob.getAddress();
+    const fixture = () => ecoFixture([bobAddress]);
+    ({ trustedNodes } = await loadFixture(fixture));
   });
 
   it('traces reverting transactions', async () => {
-    await expectRevert(
-      util.trace(trustedNodes.trust(alice)),
+    await expect(util.trace(trustedNodes.trust(await alice.getAddress()))).to.be.revertedWith(
       'Only the policy contract',
     );
   });

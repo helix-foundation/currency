@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../policy/Policy.sol";
+import "../../policy/Policy.sol";
 import "./Proposal.sol";
-import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../utils/TimeUtils.sol";
 import "./VotingPower.sol";
-import "../currency/ECO.sol";
-import "../currency/ECOx.sol";
+import "../../currency/ECO.sol";
+import "../../currency/ECOx.sol";
 
 /** @title PolicyVotes
  * This implements the voting and implementation phases of the policy decision process.

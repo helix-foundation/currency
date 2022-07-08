@@ -1,144 +1,155 @@
-const chai = require('chai');
+const { ethers } = require('hardhat');
+const { BigNumber } = require('ethers');
+const { expect } = require('chai');
+const { ecoFixture } = require('../utils/fixtures');
 
-const {
-  BN,
-} = web3.utils;
-const bnChai = require('bn-chai');
-
-const {
-  expect,
-} = chai;
-
-const ECOx = artifacts.require('ECOx');
-
-const { expectRevert, constants } = require('@openzeppelin/test-helpers');
-const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants');
-const util = require('../../tools/test/util');
-
-chai.use(bnChai(BN));
-
-contract('ECOx', (accounts) => {
+describe('ECOx', () => {
   let policy;
   let eco;
   let ecox;
   let faucet;
-  const alice = accounts[0];
-  const bob = accounts[1];
-  const charlie = accounts[2];
-  let counter = 0;
+  let alice;
+  let bob;
+  let charlie;
 
   beforeEach('global setup', async () => {
+    const accounts = await ethers.getSigners();
+    alice = accounts[1];
+    bob = accounts[2];
+    charlie = accounts[3];
+
     ({
+      policy, eco, ecox, faucet,
+    } = await ecoFixture());
+
+    await faucet.mint(await alice.getAddress(), BigNumber.from('20000000000000000000000'));
+    await faucet.mint(await bob.getAddress(), BigNumber.from('30000000000000000000000'));
+    await faucet.mint(await charlie.getAddress(), BigNumber.from('50000000000000000000000'));
+
+    await ecox.transfer(await alice.getAddress(), BigNumber.from('500000000000000000000'));
+    await ecox.transfer(await bob.getAddress(), BigNumber.from('300000000000000000000'));
+    await ecox.transfer(await charlie.getAddress(), BigNumber.from('200000000000000000000'));
+
+    return {
       policy,
       eco,
       ecox,
       faucet,
-    } = await util.deployPolicy(accounts[counter], { trustednodes: [alice, bob, charlie] }));
-
-    await faucet.mint(alice, new BN('20000000000000000000000'));
-    await faucet.mint(bob, new BN('30000000000000000000000'));
-    await faucet.mint(charlie, new BN('50000000000000000000000'));
-
-    await ecox.transfer(alice, new BN('500000000000000000000'), { from: accounts[counter] });
-    await ecox.transfer(bob, new BN('300000000000000000000'), { from: accounts[counter] });
-    await ecox.transfer(charlie, new BN('200000000000000000000'), { from: accounts[counter] });
-
-    counter += 1;
+      alice,
+      bob,
+      charlie,
+    };
   });
 
   it('Verifies starting conditions', async () => {
-    expect(await eco.balanceOf(alice)).to.eq.BN('20000000000000000000000');
-    expect(await eco.balanceOf(bob)).to.eq.BN('30000000000000000000000');
-    expect(await eco.balanceOf(charlie)).to.eq.BN('50000000000000000000000');
+    expect(await eco.balanceOf(await alice.getAddress())).to.equal('20000000000000000000000');
+    expect(await eco.balanceOf(await bob.getAddress())).to.equal('30000000000000000000000');
+    expect(await eco.balanceOf(await charlie.getAddress())).to.equal('50000000000000000000000');
 
-    expect(await ecox.balanceOf(alice)).to.eq.BN('500000000000000000000');
-    expect(await ecox.balanceOf(bob)).to.eq.BN('300000000000000000000');
-    expect(await ecox.balanceOf(charlie)).to.eq.BN('200000000000000000000');
+    expect(await ecox.balanceOf(await alice.getAddress())).to.equal('500000000000000000000');
+    expect(await ecox.balanceOf(await bob.getAddress())).to.equal('300000000000000000000');
+    expect(await ecox.balanceOf(await charlie.getAddress())).to.equal('200000000000000000000');
 
-    expect(await eco.totalSupply()).to.eq.BN('100000000000000000000000');
-    expect(await ecox.totalSupply()).to.eq.BN('1000000000000000000000');
+    expect(await eco.totalSupply()).to.equal('100000000000000000000000');
+    expect(await ecox.totalSupply()).to.equal('1000000000000000000000');
   });
 
   it('checks the gas cost of converting', async () => {
-    const gas = await ecox.exchange.estimateGas(new BN('1000'), { from: alice });
+    const gas = await ecox.connect(alice).estimateGas.exchange(BigNumber.from('1000'));
     // eslint-disable-next-line no-console
     console.log(`Conversion costs: ${gas} gas`);
   });
 
   it('fails if initialSupply == 0', async () => {
-    await expectRevert(
-      ECOx.new(policy.address, charlie, 0, ZERO_ADDRESS),
-      'initial supply not properly set',
-    );
+    const ecoxFactory = await ethers.getContractFactory('ECOx');
+    await expect(
+      ecoxFactory.deploy(
+        policy.address,
+        await charlie.getAddress(),
+        0,
+        ethers.constants.AddressZero,
+      ),
+    ).to.be.revertedWith('initial supply not properly set');
   });
 
   it('doesnt allow minting to 0 address', async () => {
-    await expectRevert(
-      faucet.mint(constants.ZERO_ADDRESS, new BN('1000000')),
-      'mint to the zero address.',
-    );
+    await expect(
+      faucet.mint(ethers.constants.AddressZero, BigNumber.from('1000000')),
+    ).to.be.revertedWith('ERC20: mint to the zero address');
   });
 
   it('doesnt allow minting past a certain block', async () => {
     // takes too long to test
-
     // const maxInt32 = 2**32;
     // await time.advanceBlockTo(maxInt32);
     // await expectRevert(
-    //   faucet.mint(alice, new BN('1000000')),
+    //   faucet.mint(await alice.getAddress(), BigNumber.from('1000000')),
     //   'block number cannot be casted safely',
     // );
   });
 
   it('exchanges ECOx', async () => {
-    await ecox.exchange(new BN('100000000000000000000'), { from: alice });
-    expect(await ecox.balanceOf(alice)).to.eq.BN('400000000000000000000');
+    await ecox.connect(alice).exchange('100000000000000000000');
+    expect(await ecox.balanceOf(await alice.getAddress())).to.equal('400000000000000000000');
     // compare to exact value, truncated
-    expect(await eco.balanceOf(alice)).to.eq.BN('30517091807564762481170');
+    expect(await eco.balanceOf(await alice.getAddress())).to.equal('30517091807564762481170');
   });
 
   it('exchanges a lot of ECOx', async () => {
-    await ecox.exchange(new BN('500000000000000000000'), { from: alice });
-    expect(await ecox.balanceOf(alice)).to.eq.BN('0');
+    await ecox.connect(alice).exchange('500000000000000000000');
+    expect(await ecox.balanceOf(await alice.getAddress())).to.equal('0');
     // compare to exact value, truncated
-    expect(await eco.balanceOf(alice)).to.eq.BN('84872127070012814684865');
+    expect(await eco.balanceOf(await alice.getAddress())).to.equal('84872127070012814684865');
   });
 
   it('exchanges a small amount of ECOx', async () => {
-    await ecox.exchange(new BN('1500000'), { from: alice });
-    expect(await ecox.balanceOf(alice)).to.eq.BN('499999999999998500000');
+    await ecox.connect(alice).exchange('1500000');
+    expect(await ecox.balanceOf(await alice.getAddress())).to.equal('499999999999998500000');
     // compare to exact value, truncated
-    expect(await eco.balanceOf(alice)).to.eq.BN('20000000000000150000000');
+    expect(await eco.balanceOf(await alice.getAddress())).to.equal('20000000000000150000000');
+
     // THIS IS THE APPROXIMATE MINIMUM ACCURATE EXCHANGEABLE PERCENTAGE VALUE
     // BELOW THIS AMOUNT, THE USER MAY BE SHORTCHANGED 1 OF THE SMALLEST UNIT
     // OF ECO DUE TO ROUNDING/TRUNCATING ERRORS
   });
 
   it('exchanges more ECOx than exists in balance', async () => {
-    await expectRevert(
-      ecox.exchange(new BN('3000000000000000000000'), { from: alice }),
-      'ERC20: burn amount exceeds balance',
-    );
+    await ecox
+      .connect(alice)
+      .transfer(
+        await charlie.getAddress(),
+        (await ecox.balanceOf(await alice.getAddress())).sub('1000000'),
+      );
+    await expect(
+      ecox.connect(alice).exchange(BigNumber.from('3000000000000000000000')),
+    ).to.be.revertedWith('ERC20: burn amount exceeds balance');
   });
 
   context('allowance', () => {
     it('returns the correct allowance', async () => {
-      await ecox.approve(bob, new BN('300000000000000000000'), { from: alice });
-      await ecox.approve(bob, new BN('100000000000000000000'), { from: alice });
-      expect(await ecox.allowance(alice, bob)).to.eq.BN('100000000000000000000');
+      await ecox
+        .connect(alice)
+        .approve(await bob.getAddress(), BigNumber.from('300000000000000000000'));
+      await ecox
+        .connect(alice)
+        .approve(await bob.getAddress(), BigNumber.from('100000000000000000000'));
+      expect(await ecox.allowance(await alice.getAddress(), await bob.getAddress())).to.equal(
+        '100000000000000000000',
+      );
     });
   });
 
   context('mint', () => {
     it('mint reverts if called by non-faucet address', async () => {
-      await expectRevert(
-        ecox.mint(charlie, new BN('50000000000000000000000'), { from: charlie }),
-        'Caller not authorized to mint tokens',
-      );
+      await expect(
+        ecox
+          .connect(charlie)
+          .mint(await charlie.getAddress(), BigNumber.from('50000000000000000000000')),
+      ).to.be.revertedWith('Caller not authorized to mint tokens');
     });
   });
 
-  context('getters work properly', () => {
+  describe('getters work properly', () => {
     it('name returns correct name', async () => {
       expect(await ecox.name()).to.equal('Eco-X');
     });
@@ -148,7 +159,7 @@ contract('ECOx', (accounts) => {
     });
 
     it('decimals returns correct number of decimals', async () => {
-      expect(await ecox.decimals()).to.eq.BN('18');
+      expect(await ecox.decimals()).to.equal(18);
     });
   });
 });

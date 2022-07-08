@@ -1,45 +1,52 @@
-const PolicyTestPolicy = artifacts.require('PolicyTestPolicy');
-const DummyPolicedUtils = artifacts.require('DummyPolicedUtils');
-const DummyInflation = artifacts.require('DummyInflation');
-const Policer = artifacts.require('Policer');
-const FakeCommander = artifacts.require('FakeCommander');
-const PolicyInit = artifacts.require('PolicyInit');
-const ForwardProxy = artifacts.require('ForwardProxy');
-const DummyPoliced = artifacts.require('DummyPoliced');
-const RegistrationAttemptContract = artifacts.require(
-  'RegistrationAttemptContract',
-);
+const { ethers } = require('hardhat');
+const { expect } = require('chai');
+const { loadFixture } = require('ethereum-waffle');
+const { deploy } = require('../utils/contracts');
+const { singletonsFixture } = require('../utils/fixtures');
 
-const { expectRevert } = require('@openzeppelin/test-helpers');
+describe('Policed [@group=11]', () => {
+  const fixture = async () => {
+    const accounts = await ethers.getSigners();
+    await singletonsFixture((await ethers.getSigners())[0]);
+    const testPolicyIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['Commander']);
+    const policyInit = await deploy('PolicyInit');
+    const forwardProxy = await deploy('ForwardProxy', policyInit.address);
+    const fakePolicy = await deploy('PolicyTestPolicy');
 
-contract('Policed [@group=11]', (accounts) => {
-  let policy;
-  let testPoliced;
-  let policer;
-  let commander;
-
-  beforeEach(async () => {
-    const testPolicyIdentifierHash = web3.utils.soliditySha3('Commander');
-
-    const policyInit = await PolicyInit.new();
-    const forwardProxy = await ForwardProxy.new(policyInit.address);
-    const fakePolicy = await PolicyTestPolicy.new();
-
-    commander = await FakeCommander.new(forwardProxy.address);
-
-    await (await PolicyInit.at(forwardProxy.address)).fusedInit(
+    const commander = await deploy('FakeCommander', forwardProxy.address);
+    await (
+      await ethers.getContractAt('PolicyInit', forwardProxy.address)
+    ).fusedInit(
       fakePolicy.address,
       [testPolicyIdentifierHash],
       [testPolicyIdentifierHash],
       [commander.address],
-      // [testPolicyIdentifierHash],
     );
 
-    policy = await PolicyTestPolicy.at(forwardProxy.address);
+    const policy = await ethers.getContractAt('PolicyTestPolicy', forwardProxy.address);
 
-    testPoliced = await DummyPolicedUtils.new(policy.address);
+    const testPoliced = await deploy('DummyPolicedUtils', policy.address);
     await policy.setLabel('Dummy', testPoliced.address);
-    policer = await Policer.new(policy.address);
+    const policer = await deploy('Policer', policy.address);
+    return {
+      accounts,
+      policy,
+      testPoliced,
+      policer,
+      commander,
+    };
+  };
+
+  let policy;
+  let testPoliced;
+  let policer;
+  let commander;
+  let accounts;
+
+  beforeEach(async () => {
+    ({
+      accounts, policy, testPoliced, policer, commander,
+    } = await loadFixture(fixture));
   });
 
   describe('PolicedUtils', () => {
@@ -56,28 +63,36 @@ contract('Policed [@group=11]', (accounts) => {
         ID_CURRENCY_GOVERNANCE: 'CurrencyGovernance',
         ID_CURRENCY_TIMER: 'CurrencyTimer',
         ID_ECOX: 'ECOx',
-        ID_ECOXLOCKUP: 'ECOxLockup',
+        ID_ECOXSTAKING: 'ECOxStaking',
       };
-      await Promise.all(Object.entries(ids).map(async ([key, value]) => {
-        assert.equal(await commander[`GET_${key}`](), web3.utils.soliditySha3(value), `${key} != keccak(${value})`);
-      }));
-    });
-
-    it('rejects ERC1820 calls from non-policy objects', async () => {
-      await expectRevert(
-        testPoliced.canImplementInterfaceForAddress('0x1234', testPoliced.address),
-        'Only the policy or interface contract can set the interface.',
+      await Promise.all(
+        Object.entries(ids).map(async ([key, value]) => {
+          assert.equal(
+            await commander[`GET_${key}`](),
+            ethers.utils.solidityKeccak256(['string'], [value]),
+            `${key} != keccak(${value})`,
+          );
+        }),
       );
     });
 
+    it('rejects ERC1820 calls from non-policy objects', async () => {
+      await expect(
+        testPoliced.canImplementInterfaceForAddress(
+          ethers.utils.zeroPad('0x1234', 32),
+          testPoliced.address,
+        ),
+      ).to.be.revertedWith('Only the policy or interface contract can set the interface.');
+    });
+
     it('only allows ERC1820 registration for the root policy', async () => {
-      const registrationAttemptContract = await RegistrationAttemptContract.new(
+      const registrationAttemptContract = await deploy(
+        'RegistrationAttemptContract',
         testPoliced.address,
         'CurrencyGovernance',
       );
 
-      await expectRevert(
-        registrationAttemptContract.register(),
+      await expect(registrationAttemptContract.register()).to.be.revertedWith(
         'Only the policy or interface contract can set the interface.',
       );
     });
@@ -85,98 +100,95 @@ contract('Policed [@group=11]', (accounts) => {
 
   describe('Policed', () => {
     it('only allows ERC1820 registration for the root policy', async () => {
-      const testRawPoliced = await DummyPoliced.new(policy.address);
-      const registrationAttemptContract = await RegistrationAttemptContract.new(
+      const testRawPoliced = await deploy('DummyPoliced', policy.address);
+      const registrationAttemptContract = await deploy(
+        'RegistrationAttemptContract',
         testRawPoliced.address,
         'CurrencyGovernance',
       );
 
-      await expectRevert(
-        registrationAttemptContract.register(),
+      await expect(registrationAttemptContract.register()).to.be.revertedWith(
         'This contract only implements interfaces for the policy contract.',
       );
     });
 
     it('responds to canImplementInterfaceForAddress', async () => {
-      const testRawPoliced = await DummyPoliced.new(policy.address);
-      await testRawPoliced.canImplementInterfaceForAddress('0x00', policy.address);
+      const testRawPoliced = await deploy('DummyPoliced', policy.address);
+      await testRawPoliced.canImplementInterfaceForAddress(
+        ethers.constants.HashZero,
+        policy.address,
+      );
     });
   });
 
   it('Should set values on the dummy object', async () => {
     assert.equal(await testPoliced.value(), 1);
-    await commander.command(testPoliced.address, policer.address, { from: accounts[2] });
+    await commander.connect(accounts[2]).command(testPoliced.address, policer.address);
     assert.equal(await testPoliced.value(), 3);
   });
 
   it('does not allow non-approved callers to run internalCommand', async () => {
-    const cmd = await FakeCommander.new(policy.address);
-    await expectRevert(
-      cmd.command(testPoliced.address, policer.address),
+    const cmd = await deploy('FakeCommander', policy.address);
+    await expect(cmd.command(testPoliced.address, policer.address)).to.be.revertedWith(
       'Failed to find an appropriate permission',
     );
   });
 
   it('Policer should not allow calls from non-policy', async () => {
-    await expectRevert(
-      policer.doit(),
-      'Only the policy contract',
-    );
+    await expect(policer.doit()).to.be.revertedWith('Only the policy contract');
   });
 
   it('Policed should not allow calls from non-policy', async () => {
-    await expectRevert(
-      testPoliced.policyCommand(
-        policer.address,
-        web3.eth.abi.encodeFunctionSignature('doit()'),
-      ),
-      'Only the policy contract',
-    );
+    await expect(
+      testPoliced.policyCommand(policer.address, web3.eth.abi.encodeFunctionSignature('doit()')),
+    ).to.be.revertedWith('Only the policy contract');
   });
 
   it('Should modifier-reject calls from wrong address', async () => {
-    const inflation = await DummyInflation.new(policy.address);
-    await expectRevert(
-      inflation.callModifierTest(),
-      'Only the inflation contract',
-    );
+    const inflation = await deploy('DummyInflation', policy.address);
+    await expect(inflation.callModifierTest()).to.be.revertedWith('Only the inflation contract');
   });
 
   it('Should modifier-allow calls from "inflation"', async () => {
-    const inflation = await DummyInflation.new(policy.address);
+    const inflation = await deploy('DummyInflation', policy.address);
     await policy.setLabel('CurrencyGovernance', inflation.address);
     await inflation.callModifierTest();
     // This will revert if the test fails
   });
 
   it('Should be cloneable', async () => {
-    await testPoliced.cloneMe();
-    const clone = await DummyPolicedUtils.at(await testPoliced.c());
-    assert.equal(
-      (await testPoliced.value()).toString(),
-      (await clone.value()).toString(),
-    );
+    const { testPoliced: policied } = await fixture();
+    await policied.cloneMe();
+    const clone = await deploy('DummyPolicedUtils', await policied.c());
+    assert.equal((await policied.value()).toString(), (await clone.value()).toString());
   });
 
   it('Clones should not be cloneable', async () => {
     await testPoliced.cloneMe();
-    const clone = await DummyPolicedUtils.at(await testPoliced.c());
-    await expectRevert(clone.cloneMe(), 'This method cannot be called on clones');
+    const clone = await ethers.getContractAt('DummyPolicedUtils', await testPoliced.c());
+    await expect(clone.cloneMe()).to.be.revertedWith('This method cannot be called on clones');
   });
 
   it('responds to setExpectedInterfaceSet', async () => {
-    const testRawPolicedUtils = await DummyPolicedUtils.new(policy.address);
-    await policy.setExpected(testRawPolicedUtils.address, accounts[1]);
+    const testRawPolicedUtils = await deploy('DummyPolicedUtils', policy.address);
+    await policy.setExpected(testRawPolicedUtils.address, await accounts[1].getAddress());
   });
 
   it('reverts on setExpectedInterfaceSet from non-policy', async () => {
-    const testRawPolicedUtils = await DummyPolicedUtils.new(policy.address);
-    await expectRevert(testRawPolicedUtils.setExpectedInterfaceSet(accounts[1], { from: accounts[1] }), 'Only the policy contract may call this method.');
+    const testRawPolicedUtils = await deploy('DummyPolicedUtils', policy.address);
+    await expect(
+      testRawPolicedUtils
+        .connect(accounts[1])
+        .setExpectedInterfaceSet(await accounts[1].getAddress()),
+    ).to.be.revertedWith('Only the policy contract may call this method.');
   });
 
   it('setExpectedInterfaceSet allows delegated canImplementInterfaceForAddress', async () => {
-    const testRawPolicedUtils = await DummyPolicedUtils.new(policy.address);
-    await policy.setExpected(testRawPolicedUtils.address, accounts[1]);
-    await testRawPolicedUtils.canImplementInterfaceForAddress('0x00', accounts[1]);
+    const testRawPolicedUtils = await deploy('DummyPolicedUtils', policy.address);
+    await policy.setExpected(testRawPolicedUtils.address, await accounts[1].getAddress());
+    await testRawPolicedUtils.canImplementInterfaceForAddress(
+      ethers.constants.HashZero,
+      await accounts[1].getAddress(),
+    );
   });
 });

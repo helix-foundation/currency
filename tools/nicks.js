@@ -4,6 +4,7 @@ const fs = require('fs');
 const { Transaction } = require('ethereumjs-tx');
 const EthereumUtil = require('ethereumjs-util');
 const commandLineArgs = require('command-line-args');
+const web3 = require('web3');
 
 /* Constants used in ECDSA for generating sigatures.
  *

@@ -2,8 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "./TrustedNodes.sol";
-import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
+import "../../policy/Policy.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../currency/IECO.sol";
+import "./RandomInflation.sol";
+import "../../utils/TimeUtils.sol";
+import "../../VDF/VDFVerifier.sol";
 
 /** @title Inflation/Deflation Process
  *
@@ -165,6 +169,10 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     }
 
     function unpropose() external atStage(Stage.Propose) {
+        require(
+            proposals[msg.sender].inflationMultiplier != 0,
+            "You do not have a proposal to retract"
+        );
         delete proposals[msg.sender];
         emit ProposalRetraction(msg.sender);
     }

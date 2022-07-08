@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../../contracts/policy/Policy.sol";
 import "../../contracts/policy/Policed.sol";
-import "../../contracts/governance/Proposal.sol";
+import "../../contracts/governance/community/Proposal.sol";
 
 /** @title MakePoodle
  * A proposal to add a new voting parameter to CurrencyGovernance.sol

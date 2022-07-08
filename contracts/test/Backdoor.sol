@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/governance/Proposal.sol";
+import "../../contracts/governance/community/Proposal.sol";
 import "../../contracts/policy/Policy.sol";
 import "../../contracts/policy/PolicyInit.sol";
 import "../../contracts/proxy/ForwardProxy.sol";
 import "../../contracts/deploy/EcoInitializable.sol";
 import "../../contracts/deploy/EcoBootstrap.sol";
-import "../../contracts/governance/TrustedNodes.sol";
+import "../../contracts/governance/monetary/TrustedNodes.sol";
 import "./FakePolicy.sol";
 
 /** @title Backdoor

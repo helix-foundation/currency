@@ -3,15 +3,15 @@ pragma solidity ^0.8.0;
 
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
-import "./PolicyProposals.sol";
-import "./CurrencyGovernance.sol";
-import "../currency/InflationRootHashProposal.sol";
+import "./community/PolicyProposals.sol";
+import "./monetary/CurrencyGovernance.sol";
+import "./monetary/InflationRootHashProposal.sol";
 import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
-import "./Lockup.sol";
-import "./Inflation.sol";
-import "./ILockups.sol";
+import "./monetary/Lockup.sol";
+import "./monetary/RandomInflation.sol";
+import "./monetary/ILockups.sol";
 import "../currency/ECO.sol";
 
 /** @title TimedPolicies
@@ -24,7 +24,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
      */
     CurrencyGovernance public bordaImpl;
 
-    Inflation public inflationImpl;
+    RandomInflation public inflationImpl;
     Lockup public lockupImpl;
 
     InflationRootHashProposal public inflationRootHashProposalImpl;
@@ -41,7 +41,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     mapping(uint256 => Lockup) public override lockups;
     mapping(address => bool) public isLockup;
 
-    event NewInflation(Inflation indexed addr);
+    event NewInflation(RandomInflation indexed addr);
     event NewLockup(Lockup indexed addr);
     event NewCurrencyGovernance(CurrencyGovernance indexed addr);
 
@@ -55,7 +55,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     constructor(
         Policy _policy,
         CurrencyGovernance _borda,
-        Inflation _inflation,
+        RandomInflation _inflation,
         Lockup _lockup,
         InflationRootHashProposal _inflationRootHashProposal,
         ECO _ecoAddr
@@ -133,7 +133,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
 
         if (_numberOfRecipients > 0 && _randomInflationReward > 0) {
             // new inflation contract
-            Inflation _clone = Inflation(inflationImpl.clone());
+            RandomInflation _clone = RandomInflation(inflationImpl.clone());
             ecoToken.mint(
                 address(_clone),
                 _numberOfRecipients * _randomInflationReward

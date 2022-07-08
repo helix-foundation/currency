@@ -130,8 +130,8 @@ contract FakeCommander is PolicedUtils {
         return ID_ECOX;
     }
 
-    function GET_ID_ECOXLOCKUP() external pure returns (bytes32) {
-        return ID_ECOXLOCKUP;
+    function GET_ID_ECOXSTAKING() external pure returns (bytes32) {
+        return ID_ECOXSTAKING;
     }
 
     /** Run a FakeCommandAction in the context of the root policy object.

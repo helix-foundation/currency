@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import "../policy/PolicedUtils.sol";
 import "../policy/Policed.sol";
 import "../governance/IGenerationIncrease.sol";
-import "../governance/ILockups.sol";
-import "../governance/Lockup.sol";
-import "../governance/CurrencyGovernance.sol";
+import "../governance/monetary/ILockups.sol";
+import "../governance/monetary/Lockup.sol";
+import "../governance/monetary/CurrencyGovernance.sol";
 import "../governance/CurrencyTimer.sol";
 
 /** @title TimedPolicies
@@ -19,7 +19,7 @@ contract PoodleCurrencyTimer is CurrencyTimer {
         CurrencyTimer(
             Policy(address(0)),
             CurrencyGovernance(address(0)),
-            Inflation(address(0)),
+            RandomInflation(address(0)),
             Lockup(address(0)),
             InflationRootHashProposal(address(0)),
             ECO(address(0))

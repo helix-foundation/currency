@@ -1,68 +1,52 @@
-const ForwardTarget = artifacts.require('ForwardTargetImpl');
-const ForwardProxy = artifacts.require('ForwardProxy');
-const ImplementationUpdatingTarget = artifacts.require(
-  'ImplementationUpdatingTarget',
-);
+const { ethers } = require('hardhat');
+const { expect } = require('chai');
+const { deploy } = require('../utils/contracts');
 
-const { expectRevert } = require('@openzeppelin/test-helpers');
-const { isCoverage } = require('../../tools/test/coverage');
-
-contract('ForwardTarget [@group=2]', () => {
+describe('ForwardTarget [@group=2]', () => {
   let proxy;
   let target;
 
   beforeEach(async () => {
-    target = await ForwardTarget.new();
-    proxy = await ForwardProxy.new(target.address);
+    target = await deploy('ForwardTargetImpl');
+    proxy = await deploy('ForwardProxy', target.address);
   });
 
   it('cannot be reinitialized', async () => {
-    const proxied = await ForwardTarget.at(proxy.address);
+    const proxied = await ethers.getContractAt('ForwardTarget', proxy.address);
 
-    await expectRevert(
-      proxied.initialize(target.address),
+    await expect(proxied.initialize(target.address)).to.be.revertedWith(
       'only be called during initialization',
     );
   });
 
   it('initializes to the proper implementation address', async () => {
-    const proxied = await ForwardTarget.at(proxy.address);
+    const proxied = await ethers.getContractAt('ForwardTarget', proxy.address);
 
-    assert.equal(
-      await proxied.implementation(),
-      await target.implementation(),
-    );
+    assert.equal(await proxied.implementation(), await target.implementation());
   });
 
-  it('does not allow updating to the same target address', async () => {
-    const updatingTarget = await ImplementationUpdatingTarget.new();
-    proxy = await ForwardProxy.new(updatingTarget.address);
-    const proxiedUpdatingTarget = await ImplementationUpdatingTarget.at(
+  it('does not allow updating to the same target address [ @skip-on-coverage ]', async () => {
+    const updatingTarget = await deploy('ImplementationUpdatingTarget');
+    proxy = await deploy('ForwardProxy', updatingTarget.address);
+    const proxiedUpdatingTarget = await ethers.getContractAt(
+      'ImplementationUpdatingTarget',
       proxy.address,
     );
 
-    if (await isCoverage()) {
-      return;
-    }
-
-    await expectRevert(
-      proxiedUpdatingTarget.updateImplementation(
-        await proxiedUpdatingTarget.implementation(),
-      ),
-      'Implementation already matching',
-    );
+    await expect(
+      proxiedUpdatingTarget.updateImplementation(await proxiedUpdatingTarget.implementation()),
+    ).to.be.revertedWith('Implementation already matching');
   });
 
   it('does allow updating to a different target address', async () => {
-    const updatingTarget = await ImplementationUpdatingTarget.new();
-    const otherUpdatingTarget = await ImplementationUpdatingTarget.new();
-    proxy = await ForwardProxy.new(updatingTarget.address);
-    const proxiedUpdatingTarget = await ImplementationUpdatingTarget.at(
+    const updatingTarget = await deploy('ImplementationUpdatingTarget');
+    const otherUpdatingTarget = await deploy('ImplementationUpdatingTarget');
+    proxy = await deploy('ForwardProxy', updatingTarget.address);
+    const proxiedUpdatingTarget = await ethers.getContractAt(
+      'ImplementationUpdatingTarget',
       proxy.address,
     );
 
-    await proxiedUpdatingTarget.updateImplementation(
-      otherUpdatingTarget.address,
-    );
+    await proxiedUpdatingTarget.updateImplementation(otherUpdatingTarget.address);
   });
 });

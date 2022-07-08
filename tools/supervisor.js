@@ -67,7 +67,7 @@
 // const VDFVerifierABI = req('VDFVerifier');
 // const CurrencyGovernanceABI = req('CurrencyGovernance');
 // // const CurrencyTimerABI = req('CurrencyTimer');
-// const InflationABI = req('Inflation');
+// const RandomInflationABI = req('RandomInflation');
 // const LockupContractABI = req('Lockup');
 // const InflationRootHashProposal = req('InflationRootHashProposal');
 
@@ -534,21 +534,21 @@
 
 //       if (inflationAddress) {
 //         const inflation = new web3.eth.Contract(
-//           InflationABI.abi,
+//           RandomInflationABI.abi,
 //           inflationAddress,
 //           { from: this.account },
 //         );
 
-//         const [EntropySeedRevealed] = (await inflation.getPastEvents(
-//           'EntropySeedRevealed',
+//         const [EntropySeedReveal] = (await inflation.getPastEvents(
+//           'EntropySeedReveal',
 //           {
 //             fromBlock: (await web3.eth.getBlockNumber()) - 1,
 //             toBlock: 'latest',
 //           },
 //         ));
 
-//         if (EntropySeedRevealed) {
-//           logger.info('EntropySeedRevealed event detected, abort ongoing VDF computation');
+//         if (EntropySeedReveal) {
+//           logger.info('EntropySeedReveal event detected, abort ongoing VDF computation');
 //           killVDFCalculation(null, governance._address, ENTROPY);
 //         }
 //       }
@@ -636,7 +636,7 @@
 //         }
 //       } else if (await isAlive(inflationAddress)) {
 //         const inflation = new web3.eth.Contract(
-//           InflationABI.abi,
+//           RandomInflationABI.abi,
 //           inflationAddress,
 //           { from: this.account },
 //         );

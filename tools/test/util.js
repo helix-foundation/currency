@@ -5,8 +5,8 @@ const PolicyInit = artifacts.require('PolicyInit');
 const ForwardProxy = artifacts.require('ForwardProxy');
 const ECO = artifacts.require('ECO');
 const ECOx = artifacts.require('ECOx');
-const ECOxLockup = artifacts.require('ECOxLockup');
-const Inflation = artifacts.require('Inflation');
+const ECOxStaking = artifacts.require('ECOxStaking');
+const RandomInflation = artifacts.require('RandomInflation');
 const Policy = artifacts.require('PolicyTest');
 const VDFVerifier = artifacts.require('VDFVerifier');
 const RootHashProposal = artifacts.require('InflationRootHashProposal');
@@ -37,9 +37,10 @@ exports.deployPolicy = async (
   voteReward = '1000',
   production = false,
   verbose = false,
+  extraParams = {},
 ) => {
   const options = await Deploy.deploy({
-    account, trustednodes, trusteeVoteReward: voteReward, production, verbose, test: true,
+    account, trustednodes, trusteeVoteReward: voteReward, production, verbose, test: true, ...extraParams,
   });
 
   const policyAd = options.policyProxy._address;
@@ -52,13 +53,13 @@ exports.deployPolicy = async (
   const trustedNodesAd = options.trustedNodes._address;
   const currencyTimerAd = options.currencyTimer._address;
   const lockupAd = options.depositCertificatesContract._address;
-  const ecoXLockupAd = options.ecoXLockupContract._address;
+  const ecoXStakingAd = options.ecoXStakingContract._address;
   const faucetAd = options.faucetContract._address;
   const cleanupAd = options.cleanupContract._address;
 
   const policy = await Policy.at(policyAd);
   const eco = await ECO.at(ecoAd);
-  const inflation = await Inflation.at(inflationAd);
+  const inflation = await RandomInflation.at(inflationAd);
   const vdf = await VDFVerifier.at(vdfAd);
   const ecox = await ECOx.at(ecoxAd);
   const rootHashProposal = await RootHashProposal.at(rootHashProposalAd);
@@ -66,7 +67,7 @@ exports.deployPolicy = async (
   const trustedNodes = await TrustedNodes.at(trustedNodesAd);
   const currencyTimer = await CurrencyTimer.at(currencyTimerAd);
   const lockup = await Lockup.at(lockupAd);
-  const ecoXLockup = await ECOxLockup.at(ecoXLockupAd);
+  const ecoXStaking = await ECOxStaking.at(ecoXStakingAd);
   const faucet = await EcoFaucet.at(faucetAd);
   const cleanup = await Cleanup.at(cleanupAd);
   const unauthedCleanup = await MurderousCleanup.new();
@@ -93,7 +94,7 @@ exports.deployPolicy = async (
     trustedNodes,
     currencyTimer,
     lockup,
-    ecoXLockup,
+    ecoXStaking,
     faucet,
     cleanup,
     unauthedCleanup,

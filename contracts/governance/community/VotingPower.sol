@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ILockups.sol";
-import "./Lockup.sol";
-import "../policy/PolicedUtils.sol";
-import "../currency/ECO.sol";
-import "../currency/ECOx.sol";
-import "./ECOxLockup.sol";
+import "../monetary/ILockups.sol";
+import "../monetary/Lockup.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../currency/ECO.sol";
+import "../../currency/ECOx.sol";
+import "./ECOxStaking.sol";
 
 /** @title VotingPower
  * Compute voting power for user
@@ -33,7 +33,7 @@ contract VotingPower is PolicedUtils {
         returns (uint256)
     {
         uint256 total = ecoToken.totalSupplyAt(_blockNumber);
-        uint256 totalx = getXLockup().totalVotingECOx(_blockNumber);
+        uint256 totalx = getXStaking().totalVotingECOx(_blockNumber);
 
         return total + totalx;
     }
@@ -44,16 +44,16 @@ contract VotingPower is PolicedUtils {
         returns (uint256)
     {
         uint256 _power = ecoToken.getPastVotes(_who, _blockNumber);
-        uint256 _powerx = getXLockup().votingECOx(_who, _blockNumber);
+        uint256 _powerx = getXStaking().votingECOx(_who, _blockNumber);
 
         return _power + _powerx;
     }
 
     function recordVote(address _who) internal {
-        getXLockup().recordVote(_who);
+        getXStaking().recordVote(_who);
     }
 
-    function getXLockup() internal view returns (ECOxLockup) {
-        return ECOxLockup(policyFor(ID_ECOXLOCKUP));
+    function getXStaking() internal view returns (ECOxStaking) {
+        return ECOxStaking(policyFor(ID_ECOXSTAKING));
     }
 }

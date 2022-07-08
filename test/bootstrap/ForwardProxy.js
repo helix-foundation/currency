@@ -1,16 +1,36 @@
-const SampleForward = artifacts.require('SampleForward');
-const SumVerifier = artifacts.require('SumVerifier');
-const ForwardProxy = artifacts.require('ForwardProxy');
+const { ethers } = require('hardhat');
+const { assert } = require('chai');
+const { loadFixture } = require('ethereum-waffle');
 
-contract('ForwardProxy [@group=2]', (accounts) => {
+describe('ForwardProxy [@group=2]', () => {
+  const fixture = async () => {
+    const targetContract = await (await ethers.getContractFactory('SampleForward')).deploy();
+    const proxy = await ethers.getContractAt(
+      'SampleForward',
+      (
+        await (await ethers.getContractFactory('ForwardProxy')).deploy(targetContract.address)
+      ).address,
+    );
+
+    const sumVerifier = await (await ethers.getContractFactory('SumVerifier')).deploy();
+
+    return {
+      accounts: await ethers.getSigners(),
+      targetContract,
+      proxy,
+      sumVerifier,
+    };
+  };
+
   let targetContract;
   let proxy;
+  let sumVerifier;
+  let accounts;
 
   beforeEach(async () => {
-    targetContract = await SampleForward.new();
-    proxy = await SampleForward.at(
-      (await ForwardProxy.new(targetContract.address)).address,
-    );
+    ({
+      accounts, targetContract, proxy, sumVerifier,
+    } = await loadFixture(fixture));
   });
 
   function compare(description, action, verify) {
@@ -38,45 +58,21 @@ contract('ForwardProxy [@group=2]', (accounts) => {
 
   const objectValue = async (obj) => obj.value();
 
-  compare(
-    'increments',
-    async (obj) => obj.increment(),
-    objectValue,
-  );
+  compare('increments', async (obj) => obj.increment(), objectValue);
 
   compare(
     'transfers',
-    async (obj) => obj.sendTransaction({ from: accounts[0], value: 1000 }),
+    async (obj) => accounts[0].sendTransaction({ to: obj.address, value: 1000 }),
     objectValue,
   );
 
-  compare(
-    'sums',
-    async (obj) => obj.sums(1, 2, 3, 4, 5, 6),
-    objectValue,
-  );
+  compare('sums', async (obj) => obj.sums(1, 2, 3, 4, 5, 6), objectValue);
 
-  compare(
-    'retsums',
-    undefined,
-    async (obj) => obj.retsums(),
-  );
+  compare('retsums', undefined, async (obj) => obj.retsums());
 
-  compare(
-    'increments + returns',
-    async (obj) => (await SumVerifier.new()).sumverify(obj.address),
-    objectValue,
-  );
+  compare('increments + returns', async (obj) => sumVerifier.sumverify(obj.address), objectValue);
 
-  compare(
-    'intcall',
-    async (obj) => obj.intcall(100),
-    objectValue,
-  );
+  compare('intcall', async (obj) => obj.intcall(100), objectValue);
 
-  compare(
-    'extcall',
-    async (obj) => obj.extcall(100),
-    objectValue,
-  );
+  compare('extcall', async (obj) => obj.extcall(100), objectValue);
 });
