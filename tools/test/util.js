@@ -40,7 +40,13 @@ exports.deployPolicy = async (
   extraParams = {},
 ) => {
   const options = await Deploy.deploy({
-    account, trustednodes, trusteeVoteReward: voteReward, production, verbose, test: true, ...extraParams,
+    account,
+    trustednodes,
+    trusteeVoteReward: voteReward,
+    production,
+    verbose,
+    test: true,
+    ...extraParams,
   });
 
   const policyAd = options.policyProxy._address;

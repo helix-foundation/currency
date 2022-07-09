@@ -350,9 +350,12 @@ describe('CurrencyGovernance [@group=4]', () => {
           it('Can pay out trustee vote rewards', async () => {
             await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
             await trustedNodes.connect(dave).redeemVoteRewards();
-            expect(await ecox.balanceOf(await dave.getAddress())).to.equal(BigNumber.from(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord(await dave.getAddress())).to.equal(BigNumber.from(0));
-            expect(await trustedNodes.votingRecord(await bob.getAddress())).to.equal(BigNumber.from(1));
+            expect(await ecox.balanceOf(await dave.getAddress()))
+              .to.equal(BigNumber.from(veryHighTrusteeVotingReward));
+            expect(await trustedNodes.votingRecord(await dave.getAddress()))
+              .to.equal(BigNumber.from(0));
+            expect(await trustedNodes.votingRecord(await bob.getAddress()))
+              .to.equal(BigNumber.from(1));
           });
 
           it('handles potential overflow of trustee rewards with grace', async () => {
@@ -376,10 +379,13 @@ describe('CurrencyGovernance [@group=4]', () => {
             const oldBobBalance = await ecox.balanceOf(bob.address());
 
             await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord(await bob.getAddress())).to.equal(BigNumber.from(BigNumber.from(2)));
+            expect(await trustedNodes.votingRecord(await bob.getAddress()))
+              .to.equal(BigNumber.from(BigNumber.from(2)));
             await trustedNodes.connect(bob).redeemVoteRewards();
-            expect(await ecox.balanceOf(await bob.getAddress())).to.equal(BigNumber.from(veryHighTrusteeVotingReward).add(oldBobBalance));
-            expect(await trustedNodes.votingRecord(await bob.getAddress())).to.equal(BigNumber.from(1));
+            expect(await ecox.balanceOf(await bob.getAddress()))
+              .to.equal(BigNumber.from(veryHighTrusteeVotingReward).add(oldBobBalance));
+            expect(await trustedNodes.votingRecord(await bob.getAddress()))
+              .to.equal(BigNumber.from(1));
           });
         });
       });
