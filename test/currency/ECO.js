@@ -9,7 +9,9 @@ const { signTypedData } = require('@metamask/eth-sig-util');
 const { ecoFixture } = require('../utils/fixtures');
 const time = require('../utils/time');
 const util = require('../../tools/test/util');
-const { createPermitMessageData, permit } = require('../../tools/test/permit');
+const {
+  createPermitMessageData, permit, delegateBySig,
+} = require('../../tools/test/permit');
 
 describe('ECO [@group=1]', () => {
   const one = ethers.utils.parseEther('1');
@@ -1078,6 +1080,250 @@ describe('ECO [@group=1]', () => {
         const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
+      });
+    });
+  });
+
+  describe('delegation by signature', () => {
+    const amount = one.mul(1000);
+    const delegator = ethers.Wallet.createRandom().connect(ethers.provider);
+    const nonDelegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    const delegateTransferRecipient = ethers.Wallet.createRandom().connect(ethers.provider);
+    const delegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    const otherDelegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    let voteAmount;
+    let chainId;
+
+    before(async () => {
+      ({ chainId } = await ethers.provider.getNetwork());
+    });
+
+    beforeEach(async () => {
+      await accounts[5].sendTransaction({ to: await delegator.getAddress(), value: one.mul(100) });
+      await accounts[6].sendTransaction({ to: await delegatee.getAddress(), value: one.mul(100) });
+      await accounts[7]
+        .sendTransaction({ to: await delegateTransferRecipient.getAddress(), value: one.mul(100) });
+      await accounts[8].sendTransaction({
+        to: await otherDelegatee.getAddress(),
+        value: one.mul(100),
+      });
+      await faucet.mint(await delegator.getAddress(), amount);
+      await faucet.mint(await delegateTransferRecipient.getAddress(), amount);
+      await faucet.mint(await delegatee.getAddress(), amount);
+      await faucet.mint(await otherDelegatee.getAddress(), amount);
+      await eco.connect(delegatee).enableDelegation({ gasLimit: 1000000 });
+      await eco.connect(otherDelegatee).enableDelegation({ gasLimit: 1000000 });
+
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount);
+    });
+
+    context('delegateBySig', () => {
+      it('correct votes when delegated', async () => {
+        const tx1 = await delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {});
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
+
+        const tx2 = await delegateBySig(eco, delegator, otherDelegatee, chainId, accounts[0], {});
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+        expect(await eco
+          .getVotingGons(await otherDelegatee.getAddress())).to.equal(voteAmount.mul(2));
+      });
+
+      it('does not allow delegation if not enabled', async () => {
+        await expect(
+          delegateBySig(eco, delegator, nonDelegatee, chainId, accounts[0], {}),
+        ).to.be.revertedWith('Primary delegates must enable delegation');
+      });
+
+      it('allows delegation to yourself', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
+      });
+
+      it('allows delegation by signer', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegator, {});
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
+      });
+
+      it('does not allow delegation if you are a delegatee', async () => {
+        await expect(
+          delegateBySig(eco, delegatee, otherDelegatee, chainId, delegatee, {}),
+        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
+      });
+
+      it('does not allow delegation after deadline', async () => {
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              deadline: Math.floor(new Date().getTime() / 1000 - 5),
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: expired deadline');
+      });
+
+      it('does not allow non-delegator signature', async () => {
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              signer: delegateTransferRecipient,
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+
+      it('does not allow non-monotonic nonce', async () => {
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              nonce: 100,
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+
+      it('does not allow nonce reuse', async () => {
+        await delegateBySig(
+          eco,
+          delegator,
+          delegatee,
+          chainId,
+          accounts[0],
+          {
+            nonce: 0,
+          },
+        );
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              nonce: 0,
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+    });
+
+    context('undelegate', () => {
+      it('correct state when undelegated after delegating', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+
+        const tx2 = await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+
+        const votes1 = await eco.getVotingGons(await delegator.getAddress());
+        expect(votes1).to.equal(voteAmount);
+        const votes2 = await eco.getVotingGons(await delegatee.getAddress());
+        expect(votes2).to.equal(voteAmount);
+      });
+    });
+
+    context('isOwnDelegate', () => {
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.true;
+
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.false;
+
+        await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.true;
+      });
+    });
+
+    context('getPrimaryDelegate', () => {
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
+          await delegator.getAddress(),
+        );
+
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
+          await delegatee.getAddress(),
+        );
+
+        await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
+          await delegator.getAddress(),
+        );
+      });
+    });
+
+    context('delegate then transfer', () => {
+      it('sender delegated', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        await eco.connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
+        expect(await eco
+          .getVotingGons(
+            await delegateTransferRecipient.getAddress(),
+          ))
+          .to.equal(voteAmount.mul(2));
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+      });
+
+      it('receiver delegated', async () => {
+        await delegateBySig(
+          eco,
+          delegateTransferRecipient,
+          otherDelegatee,
+          chainId,
+          delegateTransferRecipient,
+          {},
+        );
+        await eco.connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await delegateTransferRecipient.getAddress())).to.equal(0);
+        expect(await eco
+          .getVotingGons(
+            await otherDelegatee.getAddress(),
+          ))
+          .to.equal(voteAmount.mul(3));
+      });
+
+      it('both delegated', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        await delegateBySig(
+          eco,
+          delegateTransferRecipient,
+          otherDelegatee,
+          chainId,
+          delegateTransferRecipient,
+          {},
+        );
+        await eco.connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await delegateTransferRecipient.getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+        expect(await eco
+          .getVotingGons(
+            await otherDelegatee.getAddress(),
+          ))
+          .to.equal(voteAmount.mul(3));
       });
     });
   });
