@@ -2,9 +2,9 @@
 
 const { ethers } = require('hardhat');
 const { expect, assert } = require('chai');
+const BN = require('bn.js');
 const { deploy } = require('../utils/contracts');
 const { singletonsFixture } = require('../utils/fixtures');
-const BN = require('bn.js');
 
 const { prove, n, bnHex } = require('../../tools/vdf');
 
@@ -46,7 +46,6 @@ describe('VDFVerifier [@group=6]', () => {
 
   describe('testing VDF contract', () => {
     it('Matches N in contract and testing', async () => {
-      console.log(await instanceVDFVerifier.N());
       expect(n.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))).to.be.true;
     });
 

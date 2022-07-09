@@ -1,4 +1,4 @@
-/* eslint-disable no-await-in-loop */
+/* eslint-disable no-await-in-loop, no-nested-ternary */
 
 const { assert, expect } = require('chai');
 
@@ -142,7 +142,6 @@ describe('BigNumber [@group=3]', () => {
               if (e.eqn(0)) {
                 expect(r).to.equal('0x');
               } else {
-                console.log(r);
                 expect(new BN(r.slice(2), 16).eq(e)).to.be.true;
               }
             });

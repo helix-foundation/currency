@@ -16,10 +16,10 @@ describe('Nicks Method', () => {
     it('generates a usable transaction', async () => {
       const [account] = await ethers.getSigners();
       const tx = generateTx(
-        bytecode, 
-        '0x' + Buffer.from(ethers.utils.randomBytes(16)).toString('hex'),
-        800000, 
-        100000000000
+        bytecode,
+        `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
+        800000,
+        100000000000,
       );
 
       await account.sendTransaction({
@@ -36,10 +36,10 @@ describe('Nicks Method', () => {
 
     beforeEach(() => {
       tx = generateTx(
-        bytecode, 
-        '0x' + Buffer.from(ethers.utils.randomBytes(16)).toString('hex'),
-        800000, 
-        100000000000
+        bytecode,
+        `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
+        800000,
+        100000000000,
       );
     });
 

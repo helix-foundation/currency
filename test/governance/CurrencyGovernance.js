@@ -23,8 +23,8 @@ describe('CurrencyGovernance [@group=4]', () => {
   let timedPolicies;
 
   const hash = (x) => ethers.utils.solidityKeccak256(
-    ['bytes32', 'address', 'address[]']
-    [x[0], x[1], x[2]]
+    ['bytes32', 'address', 'address[]'],
+    [x[0], x[1], x[2]],
   );
 
   before(async () => {

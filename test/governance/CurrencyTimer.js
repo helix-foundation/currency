@@ -56,7 +56,7 @@ describe('CurrencyTimer [@group=6]', () => {
 
   describe('With a valid vote', () => {
     const hash = (x) => ethers.utils.solidityKeccak256(
-      ['bytes32', 'address', 'address[]']
+      ['bytes32', 'address', 'address[]'],
       [x[0], x[1], x[2]],
     );
 
@@ -75,7 +75,11 @@ describe('CurrencyTimer [@group=6]', () => {
         [await bob.getAddress()],
       ];
       await borda.connect(alice).commit(hash(alicevote));
-      const bobvote = [ethers.utils.randomBytes(32), await bob.getAddress(), [await bob.getAddress()]];
+      const bobvote = [
+        ethers.utils.randomBytes(32),
+        await bob.getAddress(),
+        [await bob.getAddress()],
+      ];
       await borda.connect(bob).commit(hash(bobvote));
       await time.increase(3600 * 24 * 3);
       await borda.connect(alice).reveal(alicevote[0], alicevote[2]);

@@ -95,7 +95,9 @@ describe('RandomInflation [@group=6]', () => {
       ['bytes32', 'uint256'],
       [await inf.seed(), sequence],
     );
-    const [index, recipient] = getRecipient(new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum)));
+    const [index, recipient] = getRecipient(
+      new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum)),
+    );
     return [answer(tree, index), index, recipient];
   }
 
@@ -149,7 +151,11 @@ describe('RandomInflation [@group=6]', () => {
     await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
     await time.increase(3600 * 24 * 10.1);
 
-    const bobvote = [ethers.utils.randomBytes(32), await bob.getAddress(), [await bob.getAddress()]];
+    const bobvote = [
+      ethers.utils.randomBytes(32),
+      await bob.getAddress(),
+      [await bob.getAddress()],
+    ];
     await governance.connect(bob).commit(hash(bobvote));
     const charlievote = [
       ethers.utils.randomBytes(32),
@@ -157,7 +163,11 @@ describe('RandomInflation [@group=6]', () => {
       [await bob.getAddress()],
     ];
     await governance.connect(charlie).commit(hash(charlievote));
-    const davevote = [ethers.utils.randomBytes(32), await dave.getAddress(), [await bob.getAddress()]];
+    const davevote = [
+      ethers.utils.randomBytes(32),
+      await dave.getAddress(),
+      [await bob.getAddress()],
+    ];
     await governance.connect(dave).commit(hash(davevote));
     await time.increase(3600 * 24 * 3);
     await governance.connect(bob).reveal(bobvote[0], bobvote[2]);
@@ -360,7 +370,8 @@ describe('RandomInflation [@group=6]', () => {
           for (let i = 0; i < 3; i += 1) {
             updatedMap.set(
               await accounts[i].getAddress(),
-              new BN(await eco.balanceOf(await accounts[i].getAddress())),
+              new BN((await eco
+                .balanceOf(await accounts[i].getAddress())).toHexString().slice(2), 16),
             );
           }
           const [a, index, recipient] = await getClaimParameters(inflation, 0);

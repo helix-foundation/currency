@@ -19,7 +19,7 @@ describe("Nick's method [@group=2]", async () => {
     const nick = Nick.decorateTx(
       Nick.generateTx(
         ecoBootstrap.bytecode,
-        '0x' + Buffer.from(ethers.utils.randomBytes(16)).toString('hex'),
+        `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
         5000000 * gasFactor,
         100000000000 / gasFactor,
         abiCoder.encode(['address', 'uint8'], [await accounts[2].getAddress(), numPlaceholders]),
@@ -34,7 +34,8 @@ describe("Nick's method [@group=2]", async () => {
     });
     await ethers.provider.sendTransaction(nick.raw);
 
-    const normalInstance = await ecoBootstrap.deploy(await accounts[2].getAddress(), numPlaceholders);
+    const normalInstance = await ecoBootstrap
+      .deploy(await accounts[2].getAddress(), numPlaceholders);
     assert.equal(
       await ethers.provider.getCode(nick.to),
       await ethers.provider.getCode(normalInstance.address),

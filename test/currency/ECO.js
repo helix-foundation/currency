@@ -46,10 +46,14 @@ describe('ECO [@group=1]', () => {
     await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult);
     await time.increase(3600 * 24 * 10.1);
 
-    const bobvote = [ethers.utils.randomBytes(32), await bob.getAddress(), [await bob.getAddress()]];
+    const bobvote = [
+      ethers.utils.randomBytes(32),
+      await bob.getAddress(),
+      [await bob.getAddress()],
+    ];
     const bobvotehash = ethers.utils.solidityKeccak256(
       ['bytes32', 'address', 'address[]'],
-      [bobvote[0], bobvote[1], bobvote[2]]
+      [bobvote[0], bobvote[1], bobvote[2]],
     );
     await borda.connect(bob).commit(bobvotehash);
     await time.increase(3600 * 24 * 3);

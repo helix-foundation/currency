@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { singletons } = require('@openzeppelin/test-helpers');
 const { deploySingletons } = require('./utils/fixtures');
 
