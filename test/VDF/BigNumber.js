@@ -2,13 +2,13 @@
 
 const { assert, expect } = require('chai');
 
-const BN = require('bn.js');
-const web3 = require('web3');
 const { ethers } = require('hardhat');
 const snapshotGasCost = require('@uniswap/snapshot-gas-cost').default;
+const BN = require('bn.js');
+
 const { deploy } = require('../utils/contracts');
 
-const { toBN } = web3.utils;
+const { BigNumber } = ethers;
 
 describe('BigNumber [@group=3]', () => {
   let bignum;
@@ -63,30 +63,35 @@ describe('BigNumber [@group=3]', () => {
       ];
       list.forEach((a) => {
         list.forEach((b) => {
+          const bigA = a === '0x' ? BigNumber.from(0) : BigNumber.from(a);
+          const bigB = b === '0x' ? BigNumber.from(0) : BigNumber.from(b);
+
           it(`${a} + ${b}`, async () => {
             const r = await bignum.add(a, b);
-            const e = toBN(a).add(toBN(b));
-            if (e.eqn(0)) {
+            const e = bigA.add(bigB);
+
+            if (e.eq(0)) {
               expect(r).to.equal('0x');
             } else {
-              expect(toBN(r).eq(e)).to.be.true;
+              expect(r).to.equal(e);
             }
           });
 
           it(`abs(${a} - ${b})`, async () => {
             const r = await bignum.absdiff(a, b);
-            const e = toBN(a).sub(toBN(b)).abs();
-            if (e.eqn(0)) {
+            const e = bigA.sub(bigB).abs();
+
+            if (e.eq(0)) {
               expect(r).to.equal('0x');
             } else {
-              expect(toBN(r).eq(e)).to.be.true;
+              expect(r).to.equal(e);
             }
           });
 
           it(`${a} <=> ${b}`, async () => {
             const r = await bignum.cmp(a, b);
-            const e = toBN(a).cmp(toBN(b));
-            expect(r.eq(e)).to.be.true;
+            const e = bigA.eq(bigB) ? 0 : bigA.gt(bigB) ? 1 : -1;
+            expect(r).to.equal(e);
           });
         });
       });
@@ -117,23 +122,28 @@ describe('BigNumber [@group=3]', () => {
         list.forEach((b) => {
           modulos.forEach((c) => {
             it(`${a} * ${b} % ${c}`, async () => {
+              const bigA = a === '0x' ? BigNumber.from(0) : BigNumber.from(a);
+              const bigB = b === '0x' ? BigNumber.from(0) : BigNumber.from(b);
+              const bigC = c === '0x' ? BigNumber.from(0) : BigNumber.from(c);
               const r = await bignum.modmul(a, b, c);
-              const e = toBN(a).mul(toBN(b)).mod(toBN(c));
-              if (e.eqn(0)) {
+              const e = bigA.mul(bigB).mod(bigC);
+              if (e.eq(0)) {
                 expect(r).to.equal('0x');
               } else {
-                expect(toBN(r).eq(e)).to.be.true;
+                expect(r).to.equal(e);
               }
             });
 
             it(`${a} ** ${b} % ${c}`, async () => {
               const r = await bignum.modexp(a, b, c);
-              const red = BN.red(toBN(c));
-              const e = toBN(a).toRed(red).redPow(toBN(b)).fromRed();
+              // BigNumber pow is too slow with high values so we keep BN here for now
+              const red = BN.red(new BN(c.slice(2), 16));
+              const e = new BN(a.slice(2), 16).toRed(red).redPow(new BN(b.slice(2), 16)).fromRed();
               if (e.eqn(0)) {
                 expect(r).to.equal('0x');
               } else {
-                expect(toBN(r).eq(e)).to.be.true;
+                console.log(r);
+                expect(new BN(r.slice(2), 16).eq(e)).to.be.true;
               }
             });
           });

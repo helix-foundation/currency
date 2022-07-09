@@ -34,27 +34,26 @@ describe('Lockup [@group=3]', () => {
       policy, eco, faucet, timedPolicies, currencyTimer,
     } = await ecoFixture(trustednodes));
 
-    const hash = (x) => web3.utils.soliditySha3(
-      { type: 'bytes32', value: x[0] },
-      { type: 'address', value: x[1] },
-      { type: 'address', value: x[2] },
+    const hash = (x) => ethers.utils.solidityKeccak256(
+      ['bytes32', 'address', 'address[]']
+      [x[0], x[1], x[2]],
     );
 
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
 
     await borda.connect(bob).propose(10, 20, 30, 40, BigNumber.from('1000000000000000000'));
     await time.increase(3600 * 24 * 10.1);
 
     const alicevote = [
-      web3.utils.randomHex(32),
+      ethers.utils.randomBytes(32),
       await alice.getAddress(),
       [await bob.getAddress()],
     ];
     await borda.connect(alice).commit(hash(alicevote));
-    const bobvote = [web3.utils.randomHex(32), await bob.getAddress(), [await bob.getAddress()]];
+    const bobvote = [ethers.utils.randomBytes(32), await bob.getAddress(), [await bob.getAddress()]];
     await borda.connect(bob).commit(hash(bobvote));
     await time.increase(3600 * 24 * 3);
     await borda.connect(alice).reveal(alicevote[0], alicevote[2]);

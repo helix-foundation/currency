@@ -973,7 +973,7 @@ describe('InflationRootHashProposal', () => {
 
     context('white box testing of state variables for accepting/rejecting root hahses', () => {
       async function getTime() {
-        return (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp;
+        return time.latestBlockTimestamp();
       }
 
       it('lastLiveChallenge correct calculation', async () => {

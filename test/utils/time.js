@@ -11,6 +11,11 @@ exports.latestBlock = async () => {
   return parseInt(res.number, 16);
 };
 
+exports.latestBlockTimestamp = async () => {
+  const res = await hre.network.provider.send('eth_getBlockByNumber', ['latest', false]);
+  return res.timestamp;
+};
+
 exports.latestBlockHash = async () => {
   const res = await hre.network.provider.send('eth_getBlockByNumber', ['latest', false]);
   return res.hash;
