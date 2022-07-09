@@ -492,8 +492,15 @@ describe('ECO [@group=1]', () => {
         });
 
         it('returns proper domain separator', async () => {
+          const domain = {
+            name: await eco.name(),
+            version: '1',
+            chainId,
+            verifyingContract: eco.address,
+          };
+          const expectedDomainSeparator = ethers.utils._TypedDataEncoder.hashDomain(domain);
           expect(await eco.DOMAIN_SEPARATOR())
-            .to.equal('0xad34da3a226e0ca65903bfe98950b57290a64764d4b76b70d9da1f6e1682cd1b');
+            .to.equal(expectedDomainSeparator);
         });
 
         context('when there is no existing allowance', () => {
