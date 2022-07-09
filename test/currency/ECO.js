@@ -491,6 +491,11 @@ describe('ECO [@group=1]', () => {
           expect(nonceAfter - nonce).to.equal(1);
         });
 
+        it('returns proper domain separator', async () => {
+          expect(await eco.DOMAIN_SEPARATOR())
+            .to.equal('0xad34da3a226e0ca65903bfe98950b57290a64764d4b76b70d9da1f6e1682cd1b');
+        });
+
         context('when there is no existing allowance', () => {
           it('sets the allowance', async () => {
             await expect(permit(
