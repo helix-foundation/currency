@@ -383,8 +383,8 @@ describe('PolicyVotes [@group=8]', () => {
   });
 
   describe('execute', () => {
-    const adoptedPolicyIdHash = web3.utils.soliditySha3('TestSample');
-    const votesPolicyIdHash = web3.utils.soliditySha3('PolicyVotes');
+    const adoptedPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['TestSample']);
+    const votesPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
 
     beforeEach(async () => {
       await proxiedPolicyVotes.configure(proposal, await time.latestBlock());

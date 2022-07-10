@@ -65,14 +65,14 @@ describe('Production Policy Change [@group=4]', () => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
-    const ecoHash = web3.utils.soliditySha3('ECO');
+    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO']);
     const pf = await policy.policyFor(ecoHash);
     const erc = await util.policyFor(policy, ecoHash);
     assert.equal(erc, pf);
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = web3.utils.soliditySha3('PolicyProposals');
+    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
     //    await timedPolicies.incrementGeneration();
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
@@ -101,7 +101,7 @@ describe('Production Policy Change [@group=4]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash),
@@ -128,7 +128,7 @@ describe('Production Policy Change [@group=4]', () => {
   });
 
   it('Confirms the backdoor is not there', async () => {
-    const backdoorHash = web3.utils.soliditySha3('Backdoor');
+    const backdoorHash = ethers.utils.solidityKeccak256(['string'], ['Backdoor']);
     assert.equal(await util.policyFor(policy, backdoorHash), 0);
   });
 
