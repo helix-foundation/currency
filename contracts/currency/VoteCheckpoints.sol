@@ -308,6 +308,10 @@ abstract contract VoteCheckpoints is ERC20, DelegatePermit {
         bytes32 s
     ) public {
         require(
+            delegator != delegatee,
+            "Do not delegate to yourself"
+        );
+        require(
             delegationEnabled[delegatee],
             "Primary delegates must enable delegation"
         );

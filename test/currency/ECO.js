@@ -1138,7 +1138,12 @@ describe('ECO [@group=1]', () => {
         ).to.be.revertedWith('Primary delegates must enable delegation');
       });
 
-      it('allows delegation to yourself', async () => {
+      it.only('does not allow delegation to yourself', async () => {
+        await expect(delegateBySig(eco, delegator, delegator, chainId, delegator, {}))
+        .to.be.revertedWith('Do not delegate to yourself');
+      });
+
+      it.only('allows executing own delegation', async () => {
         await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
         expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
       });
