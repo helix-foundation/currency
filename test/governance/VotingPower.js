@@ -55,7 +55,7 @@ describe('VotingPower [@group=2]', () => {
 
     proposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, web3.utils.soliditySha3('PolicyProposals')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])),
     );
   });
 

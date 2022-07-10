@@ -103,7 +103,7 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = web3.utils.soliditySha3('PolicyProposals');
+    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
       await util.policyFor(policy, proposalsHash),
@@ -126,7 +126,7 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash),

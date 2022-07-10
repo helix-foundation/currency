@@ -69,7 +69,7 @@ describe('Governance Policy Change [@group=9]', () => {
   it('Checks that the current governance contract is not poodles', async () => {
     poodleBorda = await ethers.getContractAt(
       'PoodleCurrencyGovernance',
-      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
     await expect(poodleBorda.provePoodles()).to.be.reverted;
@@ -91,14 +91,14 @@ describe('Governance Policy Change [@group=9]', () => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
-    const ecoHash = web3.utils.soliditySha3('ECO');
+    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO']);
     const pf = await policy.policyFor(ecoHash);
     const erc = await util.policyFor(policy, ecoHash);
     assert.equal(erc, pf);
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = web3.utils.soliditySha3('PolicyProposals');
+    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
       await util.policyFor(policy, proposalsHash),
@@ -121,7 +121,7 @@ describe('Governance Policy Change [@group=9]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash),
@@ -149,7 +149,7 @@ describe('Governance Policy Change [@group=9]', () => {
   it('Checks that the new governance contract is poodles', async () => {
     poodleBorda = await ethers.getContractAt(
       'PoodleCurrencyGovernance',
-      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
     const poodles = await poodleBorda.provePoodles();
     expect(poodles).to.be.true;
