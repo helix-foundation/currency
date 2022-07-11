@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./ERC20.sol";
+import "./DelegatePermit.sol";
 
 /**
  * @dev Extension of ERC20 to support Compound-like voting and delegation. This version is more generic than Compound's,
@@ -19,7 +20,7 @@ import "./ERC20.sol";
  *
  * _Available since v4.2._
  */
-abstract contract VoteCheckpoints is ERC20 {
+abstract contract VoteCheckpoints is ERC20, DelegatePermit {
     // structure for saving past voting balances, accounting for delegation
     struct Checkpoint {
         uint32 fromBlock;
@@ -296,6 +297,34 @@ abstract contract VoteCheckpoints is ERC20 {
     }
 
     /**
+     * @dev Delegate all votes from the sender to `delegatee`.
+     */
+    function delegateBySig(
+        address delegator,
+        address delegatee,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public {
+        require(delegator != delegatee, "Do not delegate to yourself");
+        require(
+            delegationEnabled[delegatee],
+            "Primary delegates must enable delegation"
+        );
+
+        if (!isOwnDelegate(delegator)) {
+            _undelegateFromAddress(delegator, getPrimaryDelegate(delegator));
+        }
+
+        _verifyDelegatePermit(delegator, delegatee, deadline, v, r, s);
+
+        uint256 _amount = _balances[delegator];
+        _delegate(delegator, delegatee, _amount);
+        _setPrimaryDelegate(delegator, delegatee);
+    }
+
+    /**
      * @dev Delegate an `amount` of votes from the sender to `delegatee`.
      */
     function delegateAmount(address delegatee, uint256 amount) public {
@@ -343,10 +372,19 @@ abstract contract VoteCheckpoints is ERC20 {
      * @dev Undelegate votes from the `delegatee` back to the sender.
      */
     function undelegateFromAddress(address delegatee) public {
-        uint256 _amount = _delegates[msg.sender][delegatee];
-        _undelegate(msg.sender, delegatee, _amount);
-        if (delegatee == getPrimaryDelegate(msg.sender)) {
-            _setPrimaryDelegate(msg.sender, address(0));
+        _undelegateFromAddress(msg.sender, delegatee);
+    }
+
+    /**
+     * @dev Undelegate votes from the `delegatee` back to the delegator.
+     */
+    function _undelegateFromAddress(address delegator, address delegatee)
+        internal
+    {
+        uint256 _amount = _delegates[delegator][delegatee];
+        _undelegate(delegator, delegatee, _amount);
+        if (delegatee == getPrimaryDelegate(delegator)) {
+            _setPrimaryDelegate(delegator, address(0));
         }
     }
 
