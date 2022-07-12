@@ -174,58 +174,25 @@ contract PolicyProposals is VotingPower, TimeUtils {
         blockNumber = block.number;
     }
 
-    /** A list of addresses for all proposed policies
-     */
-    function allProposalAddresses() public view returns (Proposal[] memory) {
-        return allProposals;
-    }
-
-    function getPaginationBounds(uint256 _page, uint256 _resultsPerPage)
-        internal
-        view
-        returns (
-            uint256 _startIndex,
-            uint256 _loopEnd,
-            uint256 _returnLength,
-            uint256 _proposalsLength
-        )
-    {
-        require(_page > 0, "Page must be non-zero");
-
-        _proposalsLength = allProposals.length;
-        _startIndex = _page * _resultsPerPage - _resultsPerPage;
-        uint256 _endIndex = _startIndex + _resultsPerPage;
-
-        //avoid overflows by returning empty if out of bounds on index
-        if (_startIndex > _proposalsLength - 1) {
-            return (_startIndex, _loopEnd, _returnLength, _proposalsLength);
-        }
-
-        //Check bounds at the end of the array to avoid creating a paginated array that has empty values padded on the end
-        _returnLength = _endIndex < _proposalsLength
-            ? _resultsPerPage
-            : _proposalsLength - _startIndex;
-
-        _loopEnd = _startIndex + _returnLength;
-    }
-
-    /** Returns the paginated proposals. If the _resultsPerPage are set to equal or more than there are proposals, then
-     *  we return all the proposals. The returned array might have less elements than _resultsPerPage if there are fewer
-     *  entries in the array at that page start. Returned array will be zero length if the pagination is out of bounds on the
-     *  proposals array
+    /**
+     * Returns a paginated response from the proposal addresses array. Trying to return out of bounds
+     * page results will return an empty array
+     *
+     * Parameters:
+     *  - _page Start page, must be greater than 0
+     *  - _resultsPerPage  Number of results per page
      */
     function getPaginatedProposalAddresses(
         uint256 _page,
         uint256 _resultsPerPage
-    ) public view returns (Proposal[] memory) {
+    ) external view returns (Proposal[] memory) {
         (
             uint256 _startIndex,
             uint256 _loopEnd,
-            uint256 _returnLength,
-            uint256 _proposalsLength
+            uint256 _returnLength
         ) = getPaginationBounds(_page, _resultsPerPage);
         //avoid overflows by returning empty if out of bounds on index
-        if (_startIndex > _proposalsLength - 1) {
+        if (_startIndex > totalProposals - 1) {
             return new Proposal[](0);
         }
 
@@ -236,24 +203,47 @@ contract PolicyProposals is VotingPower, TimeUtils {
         uint256 _pageIndx = 0;
         for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
             //prevent accessing overflow in base array
-            if (_startIndex < _proposalsLength) {
-                pageProposals[_pageIndx] = allProposals[_startIndex];
-            }
+            pageProposals[_pageIndx] = allProposals[_startIndex];
             _pageIndx++;
         }
 
         return pageProposals;
     }
 
-    /** A list of all proposed policies
+    /**
+     * Returns a paginated response of proposal data. Trying to return out of bounds
+     * page results will return an empty array
+     *
+     * Parameters:
+     *  - _page Start page, must be greater than 0
+     *  - _resultsPerPage  Number of results per page
      */
-    function allProposalData() public view returns (Prop[] memory) {
-        Prop[] memory proposalData = new Prop[](totalProposals);
-        for (uint256 index = 0; index < totalProposals; index++) {
-            proposalData[index] = proposals[allProposals[index]];
+    function getPaginatedProposalData(uint256 _page, uint256 _resultsPerPage)
+        external
+        view
+        returns (Prop[] memory)
+    {
+        (
+            uint256 _startIndex,
+            uint256 _loopEnd,
+            uint256 _returnLength
+        ) = getPaginationBounds(_page, _resultsPerPage);
+        //avoid overflows by returning empty if out of bounds on index
+        if (_startIndex > totalProposals - 1) {
+            return new Prop[](0);
         }
 
-        return proposalData;
+        //paginated props array
+        Prop[] memory propsData = new Prop[](_returnLength);
+
+        //index of position in array we are writing to
+        uint256 _pageIndx = 0;
+        for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
+            propsData[_pageIndx] = proposals[allProposals[_startIndex]];
+            _pageIndx++;
+        }
+
+        return propsData;
     }
 
     /** Submit a proposal.
@@ -454,5 +444,34 @@ contract PolicyProposals is VotingPower, TimeUtils {
             ),
             "Transfer Failed"
         );
+    }
+
+    /** Calculates bounds for the propossals array pagination
+     */
+    function getPaginationBounds(uint256 _page, uint256 _resultsPerPage)
+        internal
+        view
+        returns (
+            uint256 _startIndex,
+            uint256 _loopEnd,
+            uint256 _returnLength
+        )
+    {
+        require(_page > 0, "Page must be non-zero");
+
+        _startIndex = _page * _resultsPerPage - _resultsPerPage;
+        uint256 _endIndex = _startIndex + _resultsPerPage;
+
+        //avoid overflows by returning empty if out of bounds on index
+        if (_startIndex > totalProposals - 1) {
+            return (_startIndex, _loopEnd, _returnLength);
+        }
+
+        //Check bounds at the end of the array to avoid creating a paginated array that has empty values padded on the end
+        _returnLength = _endIndex < totalProposals
+            ? _resultsPerPage
+            : totalProposals - _startIndex;
+
+        _loopEnd = _startIndex + _returnLength;
     }
 }

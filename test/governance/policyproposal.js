@@ -92,7 +92,7 @@ describe('PolicyProposals [@group=7]', () => {
 
         it('updates the allProposalAddresses index', async () => {
           await policyProposals.registerProposal(testProposal.address);
-          const allProposalAddresses = await policyProposals.allProposalAddresses();
+          const allProposalAddresses = await policyProposals.getPaginatedProposalAddresses(1, 1);
           assert.deepEqual(allProposalAddresses, [testProposal.address]);
         });
 
@@ -162,7 +162,8 @@ describe('PolicyProposals [@group=7]', () => {
 
   describe('paginate proposals', () => {
     const totalProposals = 25;
-    let allProposals;
+    let allProposals; let
+      allPropsData;
     let policyProposals;
     beforeEach(async () => {
       policyProposals = await makeProposals();
@@ -177,37 +178,60 @@ describe('PolicyProposals [@group=7]', () => {
       /* eslint-enable no-await-in-loop */
 
       allProposals = await policyProposals.getPaginatedProposalAddresses(1, totalProposals);
+      allPropsData = await policyProposals.getPaginatedProposalData(1, totalProposals);
     });
 
     it('should revert if we ask for page 0', async () => {
       await expect(policyProposals.getPaginatedProposalAddresses(0, 10)).to.be.revertedWith(
         'Page must be non-zero',
       );
+      await expect(policyProposals.getPaginatedProposalData(0, 10)).to.be.revertedWith(
+        'Page must be non-zero',
+      );
     });
 
     it('should return all proposals', async () => {
       expect(allProposals.length).to.eq(totalProposals);
+      expect(allPropsData.length).to.eq(totalProposals);
+    });
+
+    it('should return all proposals on overflow of end bound', async () => {
+      const proposals = await policyProposals.getPaginatedProposalAddresses(1, totalProposals * 2);
+      const data = await policyProposals.getPaginatedProposalData(1, totalProposals * 2);
+      expect(proposals).to.deep.equal(allProposals);
+      expect(data).to.deep.equal(allPropsData);
     });
 
     it('should return empty if we ask for results out of index', async () => {
       const proposals = await policyProposals.getPaginatedProposalAddresses(3, totalProposals);
+      const data = await policyProposals.getPaginatedProposalData(3, totalProposals);
       expect(proposals.length).to.eq(0);
+      expect(data.length).to.eq(0);
     });
 
     it('should get the paginated results', async () => {
       const proposals = await policyProposals.getPaginatedProposalAddresses(1, 10);
+      const data = await policyProposals.getPaginatedProposalData(1, 10);
       expect(proposals.length).to.eq(10);
+      expect(data.length).to.eq(10);
       expect(proposals).to.deep.equal(allProposals.slice(0, 10));
+      expect(data).to.deep.equal(allPropsData.slice(0, 10));
 
       const proposals1 = await policyProposals.getPaginatedProposalAddresses(2, 5);
+      const data1 = await policyProposals.getPaginatedProposalData(2, 5);
       expect(proposals1.length).to.eq(5);
+      expect(data1.length).to.eq(5);
       expect(proposals1).to.deep.equal(allProposals.slice(5, 10));
+      expect(data1).to.deep.equal(allPropsData.slice(5, 10));
     });
 
     it('should get trunkated paginated results at proposals end', async () => {
       const proposals = await policyProposals.getPaginatedProposalAddresses(3, 10);
+      const data = await policyProposals.getPaginatedProposalData(3, 10);
       expect(proposals.length).to.eq(5);
+      expect(data.length).to.eq(5);
       expect(proposals).to.deep.equal(allProposals.slice(20, 25));
+      expect(data).to.deep.equal(allPropsData.slice(20, 25));
     });
   });
 
@@ -215,7 +239,7 @@ describe('PolicyProposals [@group=7]', () => {
     let policyProposals;
     let testProposal;
     let testProposal2;
-
+    const totalProposals = 2;
     beforeEach(async () => {
       policyProposals = await makeProposals();
       testProposal = await deploy('Empty', 1);
@@ -268,7 +292,7 @@ describe('PolicyProposals [@group=7]', () => {
         const proposal1 = await policyProposals.proposals(testProposal.address);
         const proposal2 = await policyProposals.proposals(testProposal2.address);
 
-        const proposalData = await policyProposals.allProposalData();
+        const proposalData = await policyProposals.getPaginatedProposalData(1, totalProposals);
 
         expect(proposal1[0]).to.equal(proposalData[0][0]);
         expect(proposal1[1]).to.equal(proposalData[0][1]);
