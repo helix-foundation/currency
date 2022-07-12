@@ -63,7 +63,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     bool public proposalSelected;
 
-    /** selected proposal awaiting configuration before voting
+    /** Selected proposal awaiting configuration before voting
      */
     Proposal public proposalToConfigure;
 
@@ -178,6 +178,48 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     function allProposalAddresses() public view returns (Proposal[] memory) {
         return allProposals;
+    }
+
+    /** Returns the paginated proposals. If the _resultsPerPage are set to equal or more than there are proposals, then
+     *  we return all the proposals. The returned array might have less elements than _resultsPerPage if there are fewer
+     *  entries in the array at that page start. Returned array will be zero length if the pagination is out of bounds on the
+     *  proposals array
+     */
+    function getPaginatedProposalAddresses(
+        uint256 _page,
+        uint256 _resultsPerPage
+    ) public view returns (Proposal[] memory) {
+        require(_page > 0, "Page must be non-zero");
+
+        uint256 _proposalsLength = allProposals.length;
+        uint256 _proposalsLastIndex = _proposalsLength - 1;
+        uint256 _startIndex = _page * _resultsPerPage - _resultsPerPage;
+        uint256 _endIndex = _startIndex + _resultsPerPage;
+
+        //avoid overflows by returning empty if out of bounds on index
+        if (_startIndex > _proposalsLastIndex) {
+            return new Proposal[](0);
+        }
+
+        //Check bounds at the end of the array to avoid creating a paginated array that has empty values padded on the end
+        uint256 returnLength = _endIndex < _proposalsLength
+            ? _resultsPerPage
+            : _proposalsLength - _startIndex;
+        //paginated proposal array
+        Proposal[] memory pageProposals = new Proposal[](returnLength);
+
+        //index of position in array we are writing to
+        uint256 _pageIndx = 0;
+        uint256 _loopEnd = _startIndex + returnLength;
+        for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
+            //prevent accessing overflow in base array
+            if (_startIndex < _proposalsLength) {
+                pageProposals[_pageIndx] = allProposals[_startIndex];
+            }
+            _pageIndx++;
+        }
+
+        return pageProposals;
     }
 
     /** A list of all proposed policies
