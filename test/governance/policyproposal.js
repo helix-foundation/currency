@@ -13,7 +13,6 @@ describe('PolicyProposals [@group=7]', () => {
   let bob;
   let charlie;
   let dave;
-  let sam;
   let policy;
   let eco;
   let ecox;
@@ -22,16 +21,15 @@ describe('PolicyProposals [@group=7]', () => {
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
-    [alice, bob, charlie, dave, sam] = accounts;
+    [alice, bob, charlie, dave] = accounts;
 
     ({
       policy, eco, ecox, faucet: initInflation, timedPolicies,
     } = await ecoFixture([]));
 
-    await initInflation.mint(await alice.getAddress(), ethers.utils.parseEther('5000'));
-    await initInflation.mint(await bob.getAddress(), ethers.utils.parseEther('5000'));
-    await initInflation.mint(await charlie.getAddress(), ethers.utils.parseEther('10000'));
-    await initInflation.mint(await sam.getAddress(), ethers.utils.parseEther('50000'));
+    await initInflation.mint(await alice.getAddress(), ethers.utils.parseEther('50000'));
+    await initInflation.mint(await bob.getAddress(), ethers.utils.parseEther('50000'));
+    await initInflation.mint(await charlie.getAddress(), ethers.utils.parseEther('100000'));
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
   });
@@ -171,9 +169,9 @@ describe('PolicyProposals [@group=7]', () => {
       /* eslint-disable no-await-in-loop */
       for (let i = 0; i < totalProposals; i++) {
         const testProposal = await deploy('Empty', i);
-        await eco.connect(sam)
+        await eco.connect(charlie)
           .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-        await policyProposals.connect(sam).registerProposal(testProposal.address);
+        await policyProposals.connect(charlie).registerProposal(testProposal.address);
       }
       /* eslint-enable no-await-in-loop */
 
@@ -225,7 +223,7 @@ describe('PolicyProposals [@group=7]', () => {
       expect(data1).to.deep.equal(allPropsData.slice(5, 10));
     });
 
-    it('should get trunkated paginated results at proposals end', async () => {
+    it('should get truncated paginated results at proposals end', async () => {
       const proposals = await policyProposals.getPaginatedProposalAddresses(3, 10);
       const data = await policyProposals.getPaginatedProposalData(3, 10);
       expect(proposals.length).to.eq(5);
@@ -281,7 +279,7 @@ describe('PolicyProposals [@group=7]', () => {
         const postSupportStake = (await policyProposals.proposals(testProposal.address))[2];
 
         expect(postSupportStake).to.equal(
-          BigNumber.from(10).pow(BigNumber.from(18)).mul(5000).add(preSupportStake),
+          BigNumber.from(10).pow(BigNumber.from(18)).mul(50000).add(preSupportStake),
         );
       });
 
@@ -404,7 +402,7 @@ describe('PolicyProposals [@group=7]', () => {
         );
 
         expect(postUnsupportStake).to.equal(
-          preUnsupportStake.sub(BigNumber.from(10).pow(BigNumber.from(18)).mul(5000)),
+          preUnsupportStake.sub(BigNumber.from(10).pow(BigNumber.from(18)).mul(50000)),
         );
       });
 
@@ -422,7 +420,7 @@ describe('PolicyProposals [@group=7]', () => {
           (await policyProposals.proposals(testProposal.address))[2],
         );
 
-        expect(supportedStake).to.equal(BigNumber.from(10).pow(BigNumber.from(18)).mul(5000));
+        expect(supportedStake).to.equal(BigNumber.from(10).pow(BigNumber.from(18)).mul(50000));
       });
     });
   });

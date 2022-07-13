@@ -190,7 +190,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             uint256 _startIndex,
             uint256 _loopEnd,
             uint256 _returnLength
-        ) = getPaginationBounds(_page, _resultsPerPage);
+        ) = _getPaginationBounds(_page, _resultsPerPage);
         //avoid overflows by returning empty if out of bounds on index
         if (_startIndex > totalProposals - 1) {
             return new Proposal[](0);
@@ -200,11 +200,11 @@ contract PolicyProposals is VotingPower, TimeUtils {
         Proposal[] memory pageProposals = new Proposal[](_returnLength);
 
         //index of position in array we are writing to
-        uint256 _pageIndx = 0;
+        uint256 _pageIndex = 0;
         for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
             //prevent accessing overflow in base array
-            pageProposals[_pageIndx] = allProposals[_startIndex];
-            _pageIndx++;
+            pageProposals[_pageIndex] = allProposals[_startIndex];
+            _pageIndex++;
         }
 
         return pageProposals;
@@ -227,7 +227,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             uint256 _startIndex,
             uint256 _loopEnd,
             uint256 _returnLength
-        ) = getPaginationBounds(_page, _resultsPerPage);
+        ) = _getPaginationBounds(_page, _resultsPerPage);
         //avoid overflows by returning empty if out of bounds on index
         if (_startIndex > totalProposals - 1) {
             return new Prop[](0);
@@ -237,10 +237,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
         Prop[] memory propsData = new Prop[](_returnLength);
 
         //index of position in array we are writing to
-        uint256 _pageIndx = 0;
+        uint256 _pageIndex = 0;
         for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
-            propsData[_pageIndx] = proposals[allProposals[_startIndex]];
-            _pageIndx++;
+            propsData[_pageIndex] = proposals[allProposals[_startIndex]];
+            _pageIndex++;
         }
 
         return propsData;
@@ -448,7 +448,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** Calculates bounds for the propossals array pagination
      */
-    function getPaginationBounds(uint256 _page, uint256 _resultsPerPage)
+    function _getPaginationBounds(uint256 _page, uint256 _resultsPerPage)
         internal
         view
         returns (
@@ -459,16 +459,18 @@ contract PolicyProposals is VotingPower, TimeUtils {
     {
         require(_page > 0, "Page must be non-zero");
 
-        _startIndex = _page * _resultsPerPage - _resultsPerPage;
-        uint256 _endIndex = _startIndex + _resultsPerPage;
+        _startIndex = (_page - 1) * _resultsPerPage;
 
         //avoid overflows by returning empty if out of bounds on index
-        if (_startIndex > totalProposals - 1) {
+        uint256 _totalProposals = totalProposals;
+        if (_startIndex > _totalProposals - 1) {
             return (_startIndex, _loopEnd, _returnLength);
         }
 
+        uint256 _endIndex = _startIndex + _resultsPerPage;
+
         //Check bounds at the end of the array to avoid creating a paginated array that has empty values padded on the end
-        _returnLength = _endIndex < totalProposals
+        _returnLength = _endIndex < _totalProposals
             ? _resultsPerPage
             : totalProposals - _startIndex;
 
