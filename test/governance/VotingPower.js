@@ -7,7 +7,7 @@ const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
-describe('VotingPower [@group=2]', () => {
+describe.only('VotingPower [@group=2]', () => {
   let policy;
   let eco;
   let faucet;
@@ -61,7 +61,9 @@ describe('VotingPower [@group=2]', () => {
 
   context('with nothing locked up', () => {
     describe('only ECO power', () => {
-      it('Has the correct total power', async () => {
+      it.only('Has the correct total power', async () => {
+        console.log("initial supply; " + await eco.initialSupply())
+        console.log("initialx supply; " + await ecox.initialSupply())
         // 1000 total, no ECOx power
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(one.mul(1000));
       });

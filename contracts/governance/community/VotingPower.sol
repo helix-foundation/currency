@@ -33,7 +33,7 @@ contract VotingPower is PolicedUtils {
         returns (uint256)
     {
         uint256 total = ecoToken.totalSupplyAt(_blockNumber);
-        uint256 totalx = getXStaking().totalVotingECOx(_blockNumber);
+        uint256 totalx = ecoXToken.valueAt(ecoXToken.totalSupply(), _blockNumber);
 
         return total + totalx;
     }
