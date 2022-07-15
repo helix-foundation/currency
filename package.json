@@ -69,7 +69,7 @@
     "hardhat-gas-reporter": "^1.0.8",
     "nyc": "15.1.0",
     "prettier": "2.7.1",
-    "prettier-plugin-solidity": "1.0.0-dev.22",
+    "prettier-plugin-solidity": "1.0.0-dev.23",
     "solhint": "3.3.7",
     "solhint-plugin-eco": "0.1.0",
     "solidity-coverage": "0.7.21",
