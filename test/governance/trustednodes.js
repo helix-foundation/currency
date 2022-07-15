@@ -60,7 +60,7 @@ describe('TrustedNodes [@group=7]', () => {
           it('succeeds', async () => {
             await expect(policy.testTrust(trustedNodes.address, await alice.getAddress()))
               .to.emit(trustedNodes, 'TrustedNodeAddition')
-              .withArgs(await alice.getAddress());
+              .withArgs(await alice.getAddress(), await trustedNodes.cohort());
           });
 
           it('adds the address to the set', async () => {
@@ -103,7 +103,7 @@ describe('TrustedNodes [@group=7]', () => {
         it('succeeds', async () => {
           await expect(policy.testDistrust(trustedNodes.address, await bob.getAddress()))
             .to.emit(trustedNodes, 'TrustedNodeRemoval')
-            .withArgs(await bob.getAddress());
+            .withArgs(await bob.getAddress(), await trustedNodes.cohort());
         });
 
         it('removes the address from the set', async () => {
