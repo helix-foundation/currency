@@ -376,7 +376,7 @@ describe('CurrencyGovernance [@group=4]', () => {
             await time.increase(3600 * 24 * 3.1);
 
             await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
-            const oldBobBalance = await ecox.balanceOf(bob.address());
+            const oldBobBalance = await ecox.balanceOf(bob.getAddress());
 
             await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
             expect(await trustedNodes.votingRecord(await bob.getAddress()))
