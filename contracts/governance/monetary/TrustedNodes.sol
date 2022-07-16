@@ -38,11 +38,11 @@ contract TrustedNodes is PolicedUtils {
 
     /** Event emitted when a node added to a list of trusted nodes.
      */
-    event TrustedNodeAddition(address indexed node);
+    event TrustedNodeAddition(address indexed node, uint256 cohort);
 
     /** Event emitted when a node removed from a list of trusted nodes
      */
-    event TrustedNodeRemoval(address indexed node);
+    event TrustedNodeRemoval(address indexed node, uint256 cohort);
 
     /** Event emitted when a trustee redeems their voting rewards */
     event VotingRewardRedemption(address indexed trustee, uint256 amount);
@@ -58,7 +58,7 @@ contract TrustedNodes is PolicedUtils {
 
         for (uint256 i = 0; i < _initialTrustedNodes.length; ++i) {
             _trust(_initialTrustedNodes[i]);
-            emit TrustedNodeAddition(_initialTrustedNodes[i]);
+            emit TrustedNodeAddition(_initialTrustedNodes[i], cohort);
         }
     }
 
@@ -125,7 +125,7 @@ contract TrustedNodes is PolicedUtils {
 
         // delete currentCohort.trustedNodes[lastIndex];
         currentCohort.trustedNodes.pop();
-        emit TrustedNodeRemoval(_node);
+        emit TrustedNodeRemoval(_node, cohort);
     }
 
     /** Incements the counter when the trustee reveals their vote
@@ -189,7 +189,7 @@ contract TrustedNodes is PolicedUtils {
             currentCohort.trustedNodes.length +
             1;
         currentCohort.trustedNodes.push(_node);
-        emit TrustedNodeAddition(_node);
+        emit TrustedNodeAddition(_node, cohort);
     }
 
     function isTrusted(address _node) public view returns (bool) {
@@ -204,7 +204,7 @@ contract TrustedNodes is PolicedUtils {
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
-            emit TrustedNodeAddition(_newCohort[i]);
+            emit TrustedNodeAddition(_newCohort[i], cohort);
         }
     }
 }
