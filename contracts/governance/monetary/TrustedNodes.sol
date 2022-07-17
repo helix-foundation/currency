@@ -12,6 +12,13 @@ import "../../currency/ECOx.sol";
  *
  */
 contract TrustedNodes is PolicedUtils {
+
+    uint256 constant private DAY = 3600 * 24;
+    uint256 constant private GENERATION = 14 * DAY;
+    uint256 constant private YEAR = 365 * DAY;
+
+    uint256 public yearEnd;
+
     /** Tracks the current trustee cohort
      * each trustee election cycle corresponds to a new trustee cohort.
      */
@@ -27,7 +34,12 @@ contract TrustedNodes is PolicedUtils {
     /** Increments each time the trustee votes */
     mapping(address => uint256) public votingRecord;
 
+    mapping(address => uint32[]) public votingTimestamps;
+
+    /** reward earned per completed and revealed vote */
     uint256 public voteReward;
+
+    uint256 public unallocatedRewards;
 
     /** Event emitted when a node added to a list of trusted nodes.
      */
@@ -36,7 +48,7 @@ contract TrustedNodes is PolicedUtils {
     /** Event emitted when a node removed from a list of trusted nodes
      */
     event TrustedNodeRemoved(address indexed node);
-
+g
     /** Event emitted when a trustee redeems their voting rewards */
     event VotingRewardRedeemed(address indexed trustee, uint256 amount);
 
@@ -48,11 +60,16 @@ contract TrustedNodes is PolicedUtils {
         uint256 _voteReward
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
+        uint256 trusteeCount = _initialTrustedNodes.length;
 
-        _trust(address(0));
-        for (uint256 i = 0; i < _initial.length; ++i) {
-            _trust(_initial[i]);
+        for (uint256 i = 0; i < trusteeCount; ++i) {
+            _trust(_initialTrustedNodes[i]);
+            emit TrustedNodeAddition(_initialTrustedNodes[i], cohort);
         }
+
+        unallocatedRewards = trusteeCount * (YEAR / GENERATION + 1);
+        yearEnd = block.timestamp + YEAR;
+
     }
 
     /** Initialize the storage context using parameters copied from the
@@ -121,11 +138,13 @@ contract TrustedNodes is PolicedUtils {
             "Must be the monetary policy contract to call"
         );
 
-        votingRecord[_who]++;
+        // votingRecord[_who]++;
+        votingTimestamps[_who].push(uint32(block.timestamp));
+        unallocatedRewards -= 1;
     }
 
     function redeemVoteRewards() external {
-        require(votingRecord[msg.sender] > 0, "No rewards to redeem");
+        // require(votingRecord[msg.sender] > 0, "No rewards to redeem");
 
         uint256 _votesRedeemed = votingRecord[msg.sender];
         uint256 _reward = _votesRedeemed * voteReward;
@@ -173,5 +192,11 @@ contract TrustedNodes is PolicedUtils {
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
         }
+    }
+
+    function reset() external {
+        require(block.timestamp > yearEnd,
+            "cannot call this until the current year term has ended"
+        );
     }
 }
