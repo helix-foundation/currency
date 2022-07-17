@@ -91,7 +91,7 @@ exports.policyFor = async (policy, hash) => {
   return erc1820.getInterfaceImplementer(policy.address, hash);
 };
 
-exports.bootstrap = async (wallet, trustedNodes = []) => {
+exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   await exports.deploySingletons(wallet);
 
   // ### Stage 1
@@ -121,6 +121,7 @@ exports.bootstrap = async (wallet, trustedNodes = []) => {
     wallet,
     bootstrap,
     trustedNodes,
+    voteReward,
     policyProxy,
     Object.assign(coreContracts, { eco, ecox }),
   );
@@ -222,6 +223,7 @@ exports.deployPeripheralContracts = async (
   wallet,
   bootstrap,
   trustedNodesList,
+  voteReward,
   policyProxy,
   coreContracts,
 ) => {
@@ -310,13 +312,12 @@ exports.deployPeripheralContracts = async (
       await getPlaceholder(bootstrap, 5)
     ).address,
   );
-  const trustedVoteReward = '1000';
   const trustedNodesImpl = await deployFrom(
     wallet,
     'TrustedNodes',
     policyProxy.address,
     trustedNodesList,
-    trustedVoteReward,
+    voteReward,
   );
   await bindProxy(bootstrap, trustedNodesImpl, 5);
 
@@ -340,9 +341,9 @@ exports.deployPeripheralContracts = async (
   };
 };
 
-exports.ecoFixture = async (trustedNodes) => {
+exports.ecoFixture = async (trustedNodes, voteReward) => {
   const [wallet] = await ethers.getSigners();
-  return exports.bootstrap(wallet, trustedNodes);
+  return exports.bootstrap(wallet, trustedNodes, voteReward);
 };
 
 exports.singletonsFixture = async (signer) => {

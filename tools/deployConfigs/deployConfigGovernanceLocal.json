@@ -57,7 +57,7 @@
     "30"
   ],
   "initialECOxSupply": "60",
-  "trustedvotereward": "1000",
+  "trusteeVoteReward": "1000",
   "bootstrap": {
     "address": "0x97f312865697c7ac2910e012b2a13eab58e86fb6",
     "source": "0xbc640a1e9917abf04ec5aba2f6ebd0c0ae81f90d",

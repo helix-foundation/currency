@@ -22,16 +22,22 @@ contract TrustedNodes is PolicedUtils {
     /** Tracks the current trustee cohort
      * each trustee election cycle corresponds to a new trustee cohort.
      */
+
+    struct Cohort {
+        /** The list of trusted nodes in the cohort*/
+        address[] trustedNodes;
+        /** @dev address of trusted node to index in trustedNodes */
+        mapping(address => uint256) trusteeNumbers;
+    }
+
+    /** cohort number */
     uint256 public cohort;
 
-    /** The list of trusted nodes per cohort.
-     */
-    mapping(uint256 => address[]) public trustedNodes;
+    /** cohort number to cohort */
+    mapping(uint256 => Cohort) internal cohorts;
 
-    /** @dev Index of trusted node to position in trustedNodes per cohort */
-    mapping(uint256 => mapping(address => uint256)) public trusteeNumber;
-
-    /** Increments each time the trustee votes */
+    /** Represents the number of votes for which the trustee can claim rewards.
+    Increments each time the trustee votes, set to zero upon redemption */
     mapping(address => uint256) public votingRecord;
 
     mapping(address => uint32[]) public votingTimestamps;
@@ -43,20 +49,20 @@ contract TrustedNodes is PolicedUtils {
 
     /** Event emitted when a node added to a list of trusted nodes.
      */
-    event TrustedNodeAdded(address indexed node);
+    event TrustedNodeAddition(address indexed node, uint256 cohort);
 
     /** Event emitted when a node removed from a list of trusted nodes
      */
-    event TrustedNodeRemoved(address indexed node);
-g
+    event TrustedNodeRemoval(address indexed node, uint256 cohort);
+
     /** Event emitted when a trustee redeems their voting rewards */
-    event VotingRewardRedeemed(address indexed trustee, uint256 amount);
+    event VotingRewardRedemption(address indexed trustee, uint256 amount);
 
     /** Creates a new trusted node registry, populated with some initial nodes.
      */
     constructor(
         Policy _policy,
-        address[] memory _initial,
+        address[] memory _initialTrustedNodes,
         uint256 _voteReward
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
@@ -87,9 +93,17 @@ g
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
         uint256 _cohort = TrustedNodes(_self).cohort();
 
-        for (uint256 i = 0; i <= _numTrustees; ++i) {
-            _trust(TrustedNodes(_self).trustedNodes(_cohort, i));
+        for (uint256 i = 0; i < _numTrustees; ++i) {
+            _trust(TrustedNodes(_self).getTrustedNodeFromCohort(_cohort, i));
         }
+    }
+
+    function getTrustedNodeFromCohort(uint256 _cohort, uint256 _trusteeNumber)
+        public
+        view
+        returns (address trustee)
+    {
+        return cohorts[_cohort].trustedNodes[_trusteeNumber];
     }
 
     /** Grant trust to a node.
@@ -100,7 +114,6 @@ g
      */
     function trust(address _node) external onlyPolicy {
         _trust(_node);
-        emit TrustedNodeAdded(_node);
     }
 
     /** Stop trusting a node.
@@ -110,23 +123,25 @@ g
      * @param _node The node to stop trusting.
      */
     function distrust(address _node) external onlyPolicy {
-        require(trusteeNumber[cohort][_node] > 0, "Node already not trusted");
+        Cohort storage currentCohort = cohorts[cohort];
+        uint256 trusteeNumber = currentCohort.trusteeNumbers[_node];
+        require(trusteeNumber > 0, "Node already not trusted");
 
-        uint256 oldIndex = trusteeNumber[cohort][_node];
-        uint256 lastIndex = trustedNodes[cohort].length - 1;
+        uint256 lastIndex = currentCohort.trustedNodes.length - 1;
 
-        delete trusteeNumber[cohort][_node];
+        delete currentCohort.trusteeNumbers[_node];
 
-        if (oldIndex != lastIndex) {
-            address lastNode = trustedNodes[cohort][lastIndex];
+        uint256 trusteeIndex = trusteeNumber - 1;
+        if (trusteeIndex != lastIndex) {
+            address lastNode = currentCohort.trustedNodes[lastIndex];
 
-            trustedNodes[cohort][oldIndex] = lastNode;
-            trusteeNumber[cohort][lastNode] = oldIndex;
+            currentCohort.trustedNodes[trusteeIndex] = lastNode;
+            currentCohort.trusteeNumbers[lastNode] = trusteeNumber;
         }
 
-        delete trustedNodes[cohort][lastIndex];
-        trustedNodes[cohort].pop();
-        emit TrustedNodeRemoved(_node);
+        // delete currentCohort.trustedNodes[lastIndex];
+        currentCohort.trustedNodes.pop();
+        emit TrustedNodeRemoval(_node, cohort);
     }
 
     /** Incements the counter when the trustee reveals their vote
@@ -147,15 +162,26 @@ g
         // require(votingRecord[msg.sender] > 0, "No rewards to redeem");
 
         uint256 _votesRedeemed = votingRecord[msg.sender];
-        uint256 _reward = _votesRedeemed * voteReward;
-
-        votingRecord[msg.sender] = 0;
+        // uint256 _reward = _votesRedeemed * voteReward;
+        uint256 _reward;
+        unchecked {
+            _reward = _votesRedeemed * voteReward;
+        }
+        if (_reward / voteReward != votingRecord[msg.sender]) {
+            // overflow
+            uint256 redeemedVotes = type(uint256).max / voteReward;
+            _reward = voteReward * redeemedVotes;
+            votingRecord[msg.sender] -= redeemedVotes;
+        } else {
+            votingRecord[msg.sender] = 0;
+        }
+        // votingRecord[msg.sender] = 0;
 
         require(
             ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward),
             "Transfer Failed"
         );
-        emit VotingRewardRedeemed(msg.sender, _reward);
+        emit VotingRewardRedemption(msg.sender, _reward);
     }
 
     /** Return the number of entries in trustedNodes
@@ -163,7 +189,7 @@ g
      * you subtract by 1.
      */
     function numTrustees() external view returns (uint256) {
-        return trustedNodes[cohort].length - 1;
+        return cohorts[cohort].trustedNodes.length;
     }
 
     /** Helper function for adding a node to the trusted set.
@@ -171,14 +197,21 @@ g
      * @param _node The node to add to the trusted set.
      */
     function _trust(address _node) private {
-        require(trusteeNumber[cohort][_node] == 0, "Node is already trusted");
-
-        trusteeNumber[cohort][_node] = trustedNodes[cohort].length;
-        trustedNodes[cohort].push(_node);
+        Cohort storage currentCohort = cohorts[cohort];
+        require(
+            currentCohort.trusteeNumbers[_node] == 0,
+            "Node is already trusted"
+        );
+        // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
+        currentCohort.trusteeNumbers[_node] =
+            currentCohort.trustedNodes.length +
+            1;
+        currentCohort.trustedNodes.push(_node);
+        emit TrustedNodeAddition(_node, cohort);
     }
 
     function isTrusted(address _node) public view returns (bool) {
-        return trusteeNumber[cohort][_node] > 0;
+        return cohorts[cohort].trusteeNumbers[_node] > 0;
     }
 
     /** Function for adding a new cohort of trustees
@@ -187,10 +220,9 @@ g
     function newCohort(address[] memory _newCohort) external onlyPolicy {
         cohort++;
 
-        _trust(address(0));
-
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
+            emit TrustedNodeAddition(_newCohort[i], cohort);
         }
     }
 
