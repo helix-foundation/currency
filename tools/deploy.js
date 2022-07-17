@@ -16,7 +16,7 @@
  * account: an account is required to be the interim owner of the contracts during the deploy
  *          and before they are initialized.
  * trustednodes: the list of addresses to be the initial trustees
- * trustedvotereward: a stringified number for the amount of ECOx awarded to trustees on each vote
+ * trusteeVoteReward: a stringified number for the amount of ECOx awarded to trustees on each vote
  * production: boolean flag for if the deploy is to chain or should include test contracts
  * verbose: boolean flag for logging, production overrides this and is always verbose
  * initialECO: an array of { address; amount } objects for initial ECO distribution
@@ -119,7 +119,7 @@ async function parseFlags(options) {
     options.initialECOxSupply = '1000000000000000000000';
     options.initialECOxAddr = [options.account];
     options.initialECOxAmount = [options.initialECOxSupply];
-    options.trustedvotereward = '1000';
+    options.trusteeVoteReward = options.trusteeVoteReward || '1000';
   }
 
   return options;
@@ -792,7 +792,7 @@ async function deployStage3(options) {
   if (options.verbose) {
     console.log('deploying the TrustedNodes policy contract...');
     console.log('trusted addresses:', options.trustednodes);
-    console.log('ecox voting reward for trusted addresses:', options.trustedvotereward);
+    console.log('ecox voting reward for trusted addresses:', options.trusteeVoteReward);
   }
   const trustedNodesImpl = await new web3.eth.Contract(TrustedNodesABI.abi)
     .deploy({
@@ -800,7 +800,7 @@ async function deployStage3(options) {
       arguments: [
         options.policyProxy.options.address,
         options.trustednodes,
-        options.trustedvotereward,
+        options.trusteeVoteReward,
       ],
     })
     .send({
