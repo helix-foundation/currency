@@ -1,7 +1,10 @@
+/* eslint-disable no-underscore-dangle */
+
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 const { expect } = require('chai');
 const { ecoFixture } = require('../utils/fixtures');
+const { permit } = require('../../tools/test/permit');
 
 describe('ECOx', () => {
   let policy;
@@ -136,6 +139,87 @@ describe('ECOx', () => {
       expect(await ecox.allowance(await alice.getAddress(), await bob.getAddress())).to.equal(
         '100000000000000000000',
       );
+    });
+  });
+
+  describe('permit', () => {
+    const spender = ethers.Wallet.createRandom();
+    const owner = ethers.Wallet.createRandom();
+    let chainId;
+
+    before(async () => {
+      ({ chainId } = await ethers.provider.getNetwork());
+    });
+
+    context('when the source address has enough balance', async () => {
+      const amount = ethers.utils.parseEther('1').mul(1000);
+
+      it('emits an Approval event', async () => {
+        await expect(permit(
+          ecox,
+          owner,
+          spender,
+          chainId,
+          amount,
+        )).to.emit(ecox, 'Approval');
+      });
+
+      context('when there is no existing allowance', () => {
+        it('sets the allowance', async () => {
+          await expect(permit(
+            ecox,
+            owner,
+            spender,
+            chainId,
+            amount,
+          )).to.emit(ecox, 'Approval');
+          const allowance = await ecox
+            .allowance(
+              await owner.getAddress(),
+              await spender.getAddress(),
+            );
+          expect(allowance).to.equal(amount);
+        });
+      });
+
+      context('when there is a pre-existing allowance', () => {
+        beforeEach(async () => {
+          await permit(
+            ecox,
+            owner,
+            spender,
+            chainId,
+            amount.sub(50),
+          );
+        });
+
+        it('replaces the existing allowance', async () => {
+          await permit(
+            ecox,
+            owner,
+            spender,
+            chainId,
+            amount,
+          );
+          const allowance = await ecox
+            .allowance(
+              await owner.getAddress(),
+              await spender.getAddress(),
+            );
+
+          expect(allowance).to.equal(amount);
+        });
+
+        it('emits the Approval event', async () => {
+          await expect(permit(
+            ecox,
+            owner,
+            spender,
+            chainId,
+            amount,
+          )).to.emit(ecox, 'Approval');
+        });
+      });
     });
   });
 

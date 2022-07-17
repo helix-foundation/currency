@@ -67,7 +67,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract is not poodles', async () => {
     poodleCheck = await ethers.getContractAt(
       'PoodleTrustedNodes',
-      await util.policyFor(policy, web3.utils.soliditySha3('TrustedNodes')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['TrustedNodes'])),
     );
 
     // the contract at ID_TRUSTED_NODES is not poodles so it does not have this function
@@ -96,14 +96,14 @@ describe('Proxy Policy Change [@group=9]', () => {
     /* When running in coverage mode, policyFor returns the tx object instead of
      * return data
      */
-    const ecoHash = web3.utils.soliditySha3('ECO');
+    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO']);
     const pf = await policy.policyFor(ecoHash);
     const erc = await util.policyFor(policy, ecoHash);
     assert.equal(erc, pf);
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = web3.utils.soliditySha3('PolicyProposals');
+    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
       await util.policyFor(policy, proposalsHash),
@@ -126,7 +126,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash),
@@ -152,7 +152,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   });
 
   it('Checks that the address has not changed', async () => {
-    const trustNodesHash = web3.utils.soliditySha3('TrustedNodes');
+    const trustNodesHash = ethers.utils.solidityKeccak256(['string'], ['TrustedNodes']);
     const retryPoodleCheckAddress = await util.policyFor(policy, trustNodesHash);
     expect(retryPoodleCheckAddress).to.equal(poodleCheck.address);
   });

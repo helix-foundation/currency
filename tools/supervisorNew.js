@@ -33,12 +33,12 @@ const PolicyABI = getABI('Policy');
 const ECO = getABI('ECO');
 const TimedPoliciesABI = getABI('TimedPolicies');
 const PolicyProposalsABI = getABI('PolicyProposals');
-// const PolicyVotesABI = getABI('PolicyVotes');
+const PolicyVotesABI = getABI('PolicyVotes');
 // const TrustedNodesABI = getABI('TrustedNodes');
 // const VDFVerifierABI = getABI('VDFVerifier');
 const CurrencyGovernanceABI = getABI('CurrencyGovernance');
 const CurrencyTimerABI = getABI('CurrencyTimer');
-const RandomInflationABI = getABI('RandomInflation');
+const InflationABI = getABI('RandomInflation');
 const InflationRootHashProposalABI = getABI('InflationRootHashProposal');
 
 const ID_TIMED_POLICIES = web3.utils.soliditySha3('TimedPolicies');
@@ -48,7 +48,7 @@ const ID_CURRENCY_GOVERNANCE = web3.utils.soliditySha3('CurrencyGovernance');
 // const ID_ERC20TOKEN = web3.utils.soliditySha3('ERC20Token');
 const ID_ECO = web3.utils.soliditySha3('ECO');
 const ID_POLICY_PROPOSALS = web3.utils.soliditySha3('PolicyProposals');
-// const ID_POLICY_VOTES = web3.utils.soliditySha3('PolicyVotes');
+const ID_POLICY_VOTES = web3.utils.soliditySha3('PolicyVotes');
 
 // const { toBN } = web3.utils;
 
@@ -57,8 +57,9 @@ const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
 
 // time before next generation that auto refund is called
-// const REFUND_BUFFER = HOUR;
+const REFUND_BUFFER = HOUR;
 // length of a generation
+// this is the default value, overwritten by TimedPolices.GENERATION_DURATION
 const GENERATION_TIME = 14 * DAY;
 
 class Supervisor {
@@ -98,28 +99,85 @@ class Supervisor {
     );
     console.log(`currencyGovernance address is: ${this.currencyGovernance.address}`);
 
-    const filter = this.currencyTimer.filters.InflationStarted();
-    const events = await this.currencyTimer.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+    let filter = this.currencyTimer.filters.NewInflation();
+    let events = await this.currencyTimer.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
     if (events.length > 0) {
-      const inflationAddress = events[events.length - 1].args[0];
+      const randomInflationAddress = events[events.length - 1].args[0];
       this.randomInflation = new ethers.Contract(
-        inflationAddress,
-        RandomInflationABI.abi,
+        randomInflationAddress,
+        InflationABI.abi,
         this.signer,
       );
       console.log(`randomInflation address is: ${this.randomInflation.address}`);
     }
 
-    this.inflationRootHashProposal = new ethers.Contract(
-      await this.currencyTimer.inflationRootHashProposalImpl(),
-      InflationRootHashProposalABI.abi,
-      this.signer,
-    );
-    console.log(`InflationRootHashProposal address is: ${this.inflationRootHashProposal.address}`);
+    filter = this.currencyTimer.filters.NewInflationRootHashProposal();
+    events = await this.currencyTimer.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+    if (events.length > 0) {
+      const inflationRootHashProposalAddress = events[events.length - 1].args[0];
+      this.inflationRootHashProposal = new ethers.Contract(
+        inflationRootHashProposalAddress,
+        InflationRootHashProposalABI.abi,
+        this.signer,
+      );
+      console.log(`InflationRootHashProposal address is: ${this.inflationRootHashProposal.address}`);
+    }
   }
 
   async manageCommunityGovernance() {
-    return this.null;
+    this.fetchPolicyVotes();
+
+    this.deployProposalVoting();
+
+    this.executeProposal();
+  }
+
+  async fetchPolicyVotes() {
+    if (!this.policyVotes && await this.policyProposals.proposalSelected) {
+      this.policyvotes = new ethers.Contract(
+        await this.policy.policyFor(ID_POLICY_VOTES),
+        PolicyVotesABI.abi,
+        this.signer,
+      );
+    }
+  }
+
+  async deployProposalVoting() {
+    if (await !this.policyProposals.proposalSelected
+    && this.timestamp < await this.policyProposals.proposalEnds
+    ) {
+      // find out if a proposal is ready to be voted on, then deploy policyVotes
+      const filter = this.policyProposals.filters.SupportThresholdReached();
+      const events = this.policyProposals.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+      // policyProposals instance is created anew every generation, so max 1 such event
+      if (events.length === 1) {
+        await this.policyProposals.deployProposalVoting();
+      }
+    }
+  }
+
+  async executeProposal() {
+    if (this.policyVotes) {
+      try {
+        const requiredStake = await this.policyVotes.totalStake() / 2;
+        const yesStake = await this.policyVotes.yesStake();
+        if (yesStake > requiredStake
+          && this.timestamp > await this.policyVotes.voteEnds
+          + await this.policyVotes.ENACTION_DELAY) {
+          await this.policyVotes.execute();
+          this.policyChange = true;
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  }
+
+  async refundUnselectedProposals() {
+    // do refunds of unselected proposals
+    await this.policyProposals.allProposals().forEach((proposal) => {
+      this.policyProposals.refund(proposal);
+    });
   }
 
   async manageCurrencyGovernance() {
@@ -163,13 +221,12 @@ class Supervisor {
     );
     console.log(`ECO address is: ${this.eco.address}`);
 
-    const filter = this.timedPolicies.filters.PolicyDecisionStart();
-    filter.fromBlock = 0;
-    filter.toBlock = 'latest';
-    const events = await this.timedPolicies.queryFilter(filter);
+    const filter = this.timedPolicies.filters.PolicyDecisionStarted();
+    const events = await this.timedPolicies.queryFilter(filter, 0, 'latest');
     this.currentGenerationStartBlock = events[events.length - 1].blockNumber;
     const block = await provider.getBlock(this.currentGenerationStartBlock);
     this.currentGenerationStartTime = block.timestamp;
+    this.GENERATION_TIME = await this.timedPolicies.GENERATION_DURATION();
     this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
 
     console.log(`SUPERVISOR STARTED. CURRENT GENERATION STARTED AT TIME: ${this.currentGenerationStartTime} ON BLOCK: ${this.currentGenerationStartBlock}\n`);
@@ -183,8 +240,11 @@ class Supervisor {
     return this.null;
   }
 
+  // async fetchContract(address, abi) {
+  //   return new ethers.Contract(address, abi, this.signer);
+  // }
+
   async processBlock() {
-    console.log(`processing block ${this.blockNumber}`);
     const block = await provider.getBlock('latest');
     this.blockNumber = block.number;
     this.timestamp = block.timestamp;
@@ -209,6 +269,10 @@ class Supervisor {
       await this.manageCurrencyGovernance();
       console.log('managing community governance');
       await this.manageCommunityGovernance();
+
+      if (this.timestamp + REFUND_BUFFER > this.nextGenerationStart) {
+        await this.refundUnselectedProposals();
+      }
 
       if (this.randomInflation) {
         console.log('managing random inflation');

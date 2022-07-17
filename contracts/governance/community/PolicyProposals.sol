@@ -63,7 +63,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     bool public proposalSelected;
 
-    /** selected proposal awaiting configuration before voting
+    /** Selected proposal awaiting configuration before voting
      */
     Proposal public proposalToConfigure;
 
@@ -174,21 +174,76 @@ contract PolicyProposals is VotingPower, TimeUtils {
         blockNumber = block.number;
     }
 
-    /** A list of addresses for all proposed policies
+    /**
+     * Returns a paginated response from the proposal addresses array. Trying to return out of bounds
+     * page results will return an empty array
+     *
+     * Parameters:
+     *  - _page Start page, must be greater than 0
+     *  - _resultsPerPage  Number of results per page
      */
-    function allProposalAddresses() public view returns (Proposal[] memory) {
-        return allProposals;
-    }
-
-    /** A list of all proposed policies
-     */
-    function allProposalData() public view returns (Prop[] memory) {
-        Prop[] memory proposalData = new Prop[](totalProposals);
-        for (uint256 index = 0; index < totalProposals; index++) {
-            proposalData[index] = proposals[allProposals[index]];
+    function getPaginatedProposalAddresses(
+        uint256 _page,
+        uint256 _resultsPerPage
+    ) external view returns (Proposal[] memory) {
+        (
+            uint256 _startIndex,
+            uint256 _loopEnd,
+            uint256 _returnLength
+        ) = _getPaginationBounds(_page, _resultsPerPage);
+        //avoid overflows by returning empty if out of bounds on index
+        if (_startIndex > totalProposals - 1) {
+            return new Proposal[](0);
         }
 
-        return proposalData;
+        //paginated proposal array
+        Proposal[] memory pageProposals = new Proposal[](_returnLength);
+
+        //index of position in array we are writing to
+        uint256 _pageIndex = 0;
+        for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
+            //prevent accessing overflow in base array
+            pageProposals[_pageIndex] = allProposals[_startIndex];
+            _pageIndex++;
+        }
+
+        return pageProposals;
+    }
+
+    /**
+     * Returns a paginated response of proposal data. Trying to return out of bounds
+     * page results will return an empty array
+     *
+     * Parameters:
+     *  - _page Start page, must be greater than 0
+     *  - _resultsPerPage  Number of results per page
+     */
+    function getPaginatedProposalData(uint256 _page, uint256 _resultsPerPage)
+        external
+        view
+        returns (Prop[] memory)
+    {
+        (
+            uint256 _startIndex,
+            uint256 _loopEnd,
+            uint256 _returnLength
+        ) = _getPaginationBounds(_page, _resultsPerPage);
+        //avoid overflows by returning empty if out of bounds on index
+        if (_startIndex > totalProposals - 1) {
+            return new Prop[](0);
+        }
+
+        //paginated props array
+        Prop[] memory propsData = new Prop[](_returnLength);
+
+        //index of position in array we are writing to
+        uint256 _pageIndex = 0;
+        for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
+            propsData[_pageIndex] = proposals[allProposals[_startIndex]];
+            _pageIndex++;
+        }
+
+        return propsData;
     }
 
     /** Submit a proposal.
@@ -389,5 +444,36 @@ contract PolicyProposals is VotingPower, TimeUtils {
             ),
             "Transfer Failed"
         );
+    }
+
+    /** Calculates bounds for the propossals array pagination
+     */
+    function _getPaginationBounds(uint256 _page, uint256 _resultsPerPage)
+        internal
+        view
+        returns (
+            uint256 _startIndex,
+            uint256 _loopEnd,
+            uint256 _returnLength
+        )
+    {
+        require(_page > 0, "Page must be non-zero");
+
+        _startIndex = (_page - 1) * _resultsPerPage;
+
+        //avoid overflows by returning empty if out of bounds on index
+        uint256 _totalProposals = totalProposals;
+        if (_startIndex > _totalProposals - 1) {
+            return (_startIndex, _loopEnd, _returnLength);
+        }
+
+        uint256 _endIndex = _startIndex + _resultsPerPage;
+
+        //Check bounds at the end of the array to avoid creating a paginated array that has empty values padded on the end
+        _returnLength = _endIndex < _totalProposals
+            ? _resultsPerPage
+            : totalProposals - _startIndex;
+
+        _loopEnd = _startIndex + _returnLength;
     }
 }

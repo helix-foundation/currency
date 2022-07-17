@@ -22,10 +22,9 @@ describe('CurrencyGovernance [@group=4]', () => {
   let ecox;
   let timedPolicies;
 
-  const hash = (x) => web3.utils.soliditySha3(
-    { type: 'bytes32', value: x[0] },
-    { type: 'address', value: x[1] },
-    { type: 'address', value: x[2] },
+  const hash = (x) => ethers.utils.solidityKeccak256(
+    ['bytes32', 'address', 'address[]'],
+    [x[0], x[1], x[2]],
   );
 
   const veryHighTrusteeVotingReward = '57896044618658097711785492504343953926634992332820282019728792003956564819968';
@@ -76,7 +75,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it("Doesn't allow voting yet", async () => {
-        await expect(borda.connect(bob).commit(web3.utils.randomHex(32))).to.be.revertedWith(
+        await expect(borda.connect(bob).commit(ethers.utils.randomBytes(32))).to.be.revertedWith(
           'This call is not allowed at this stage',
         );
       });
@@ -114,17 +113,17 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it("Doesn't allow non-trustee to vote", async () => {
-        await expect(borda.commit(web3.utils.randomHex(32))).to.be.revertedWith(
+        await expect(borda.commit(ethers.utils.randomBytes(32))).to.be.revertedWith(
           'Only trusted nodes can call this method',
         );
       });
 
       it('Allows trustees to vote', async () => {
-        await borda.connect(bob).commit(web3.utils.randomHex(32));
+        await borda.connect(bob).commit(ethers.utils.randomBytes(32));
       });
 
       it('Emits VoteCast event when commit is called', async () => {
-        await expect(borda.connect(dave).commit(web3.utils.randomHex(32)))
+        await expect(borda.connect(dave).commit(ethers.utils.randomBytes(32)))
           .to.emit(borda, 'VoteCast')
           .withArgs(await dave.getAddress());
       });
@@ -144,7 +143,7 @@ describe('CurrencyGovernance [@group=4]', () => {
         await time.increase(3600 * 24 * 3);
 
         await expect(
-          borda.reveal(web3.utils.randomHex(32), [
+          borda.reveal(ethers.utils.randomBytes(32), [
             await bob.getAddress(),
             await charlie.getAddress(),
           ]),
@@ -152,7 +151,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Rejects empty votes', async () => {
-        const seed = web3.utils.randomHex(32);
+        const seed = ethers.utils.randomBytes(32);
         await time.increase(3600 * 24 * 10.1);
         await borda.connect(bob).commit(hash([seed, await bob.getAddress(), []]));
         await time.increase(3600 * 24 * 3);
@@ -160,7 +159,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Rejects invalid votes', async () => {
-        const seed = web3.utils.randomHex(32);
+        const seed = ethers.utils.randomBytes(32);
         await time.increase(3600 * 24 * 10.1);
         await borda
           .connect(bob)
@@ -172,7 +171,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Reject duplicate votes', async () => {
-        const seed = web3.utils.randomHex(32);
+        const seed = ethers.utils.randomBytes(32);
         await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
         await borda
@@ -187,7 +186,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Rejects changed votes', async () => {
-        const seed = web3.utils.randomHex(32);
+        const seed = ethers.utils.randomBytes(32);
         await time.increase(3600 * 24 * 10.1);
         await borda
           .connect(bob)
@@ -199,7 +198,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Emits VoteReveal when vote is correctly revealed', async () => {
-        const seed = web3.utils.randomHex(32);
+        const seed = ethers.utils.randomBytes(32);
         await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
         await borda
@@ -212,7 +211,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Allows reveals of correct votes', async () => {
-        const seed = web3.utils.randomHex(32);
+        const seed = ethers.utils.randomBytes(32);
         await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
         await time.increase(3600 * 24 * 10.1);
         await borda
@@ -229,17 +228,17 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         before(async () => {
           bobvote = [
-            web3.utils.randomHex(32),
+            ethers.utils.randomBytes(32),
             await bob.getAddress(),
             [await bob.getAddress(), await charlie.getAddress(), await dave.getAddress()],
           ];
           charlievote = [
-            web3.utils.randomHex(32),
+            ethers.utils.randomBytes(32),
             await charlie.getAddress(),
             [await charlie.getAddress()],
           ];
           davevote = [
-            web3.utils.randomHex(32),
+            ethers.utils.randomBytes(32),
             await dave.getAddress(),
             [await dave.getAddress(), await bob.getAddress(), await charlie.getAddress()],
           ];
@@ -429,7 +428,7 @@ describe('CurrencyGovernance [@group=4]', () => {
           await time.increase(3600 * 24 * 10.1);
 
           const bobvote = [
-            web3.utils.randomHex(32),
+            ethers.utils.randomBytes(32),
             bob,
             [
               await bob.getAddress(),

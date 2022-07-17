@@ -972,27 +972,29 @@ describe('InflationRootHashProposal', () => {
     });
 
     context('white box testing of state variables for accepting/rejecting root hahses', () => {
-      async function getTime() {
-        return (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp;
+      async function getTime(tx) {
+        const blockHash = tx.blockHash;
+        const block = await ethers.provider.getBlock(blockHash);
+        return block.timestamp;
       }
 
       it('lastLiveChallenge correct calculation', async () => {
         let rhp = await rootHashProposal.rootHashProposals(await accounts[0].getAddress());
         expect(rhp.lastLiveChallenge.toString() === '0').to.be.true;
-        await rootHashProposal
+        let tx = await rootHashProposal
           .connect(accounts[1])
           .challengeRootHashRequestAccount(await accounts[0].getAddress(), 0);
-        let t = await getTime();
+        let t = await getTime(tx);
         rhp = await rootHashProposal.rootHashProposals(await accounts[0].getAddress());
         expect(rhp.lastLiveChallenge.toString() === (t + 3600 * 25).toString(10)).to.be.true;
 
         /* another challenger comes in, last live challenge gets updated */
 
         await time.increase(3600 * 10);
-        await rootHashProposal
+        tx = await rootHashProposal
           .connect(accounts[2])
           .challengeRootHashRequestAccount(await accounts[0].getAddress(), 1);
-        t = await getTime();
+        t = await getTime(tx);
         rhp = await rootHashProposal.rootHashProposals(await accounts[0].getAddress());
         expect(rhp.lastLiveChallenge.toString() === (t + 3600 * 25).toString(10)).to.be.true;
 
