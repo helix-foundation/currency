@@ -11,7 +11,7 @@ import "../../currency/ECOx.sol";
  * proposals.
  *
  */
-contract TrustedNodes is PolicedUtils {
+contract TrustedNodes is PolicedUtils, IGenerationIncrease {
 
     uint256 constant private DAY = 3600 * 24;
     uint256 constant private GENERATION = 14 * DAY;
@@ -42,7 +42,11 @@ contract TrustedNodes is PolicedUtils {
     Increments each time the trustee votes, set to zero upon redemption */
     mapping(address => uint256) public votingRecord;
 
-    mapping(address => uint32[]) public votingTimestamps;
+    mapping(address => uint256) public prevVotingRecord;
+
+    mapping(address => uint256) public vestedRewards;
+
+    // mapping(address => uint32[]) public votingTimestamps;
 
     /** reward earned per completed and revealed vote */
     uint256 public voteReward;
@@ -143,7 +147,6 @@ contract TrustedNodes is PolicedUtils {
             currentCohort.trusteeNumbers[lastNode] = trusteeNumber;
         }
 
-        // delete currentCohort.trustedNodes[lastIndex];
         currentCohort.trustedNodes.pop();
         emit TrustedNodeRemoval(_node, cohort);
     }
@@ -157,36 +160,35 @@ contract TrustedNodes is PolicedUtils {
             "Must be the monetary policy contract to call"
         );
 
-        // votingRecord[_who]++;
-        votingTimestamps[_who].push(uint32(block.timestamp));
-        unallocatedRewardsCount -= 1;
+        votingRecord[_who]++;
+        // votingTimestamps[_who].push(uint32(block.timestamp));
+        
+        unallocatedRewardsCount--;
     }
 
     function redeemVoteRewards() external {
 
-        // TODO: binary search through reveal timestamp array
-
-        uint256 _votesRedeemed = votingRecord[msg.sender];
+        uint256 votesRedeemed = vestedRewards[msg.sender];
         // uint256 _reward = _votesRedeemed * voteReward;
-        uint256 _reward;
+        uint256 reward;
         unchecked {
-            _reward = _votesRedeemed * voteReward;
+            reward = votesRedeemed * voteReward;
         }
-        if (_reward / voteReward != votingRecord[msg.sender]) {
-            // overflow
-            uint256 redeemedVotes = type(uint256).max / voteReward;
-            _reward = voteReward * redeemedVotes;
-            votingRecord[msg.sender] -= redeemedVotes;
-        } else {
-            votingRecord[msg.sender] = 0;
+        if (reward / voteReward != votingRecord[msg.sender]) {
+            // overflow: only redeem some of the rewards
+            votesRedeemed = type(uint256).max / voteReward;
+            reward = voteReward * votesRedeemed;
         }
+        votingRecord[msg.sender] -= votesRedeemed;
+        vestedRewards[msg.sender] -= votesRedeemed;
         // votingRecord[msg.sender] = 0;
 
         require(
-            ECOx(policyFor(ID_ECOX)).transfer(msg.sender, _reward),
+            ECOx(policyFor(ID_ECOX)).transfer(msg.sender, reward),
             "Transfer Failed"
         );
-        emit VotingRewardRedemption(msg.sender, _reward);
+
+        emit VotingRewardRedemption(msg.sender, reward);
     }
 
     /** Return the number of entries in trustedNodes array.
@@ -206,9 +208,7 @@ contract TrustedNodes is PolicedUtils {
             "Node is already trusted"
         );
         // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
-        currentCohort.trusteeNumbers[_node] =
-            currentCohort.trustedNodes.length +
-            1;
+        currentCohort.trusteeNumbers[_node] = currentCohort.trustedNodes.length + 1;
         currentCohort.trustedNodes.push(_node);
         emit TrustedNodeAddition(_node, cohort);
     }
@@ -229,10 +229,28 @@ contract TrustedNodes is PolicedUtils {
         }
     }
 
+    function notifyGenerationIncrease() external {
+        address[] memory trustees = cohorts[cohort].trustedNodes;
+        for (uint256 i = 0; i < trustees.length; ++i ) {
+            address trustee = trustees[i];
+            if (prevVotingRecord[trustee] > 0) {
+                // vests one reward if there are any left to be vested
+                vested[trustee]++;
+                // update remainder left to be vested this year
+                prevVotingRecord[trustee]--;
+            }
+        }
+
+    }
+
     function annualUpdate() external {
         require(block.timestamp > yearEnd,
             "cannot call this until the current year term has ended"
-        );
+        ); 
+        for (uint256 i = 0; i < trustees.length; ++i ) {
+            address trustee = trustees[i];
+            prevVotingRecord[trustee] += votingRecord[trustee];
+        }
 
         uint256 reward = unallocatedRewardsCount * voteReward;
         unallocatedRewardsCount = cohorts[cohort].trustedNodes.length * (YEAR / GENERATION - 1);
