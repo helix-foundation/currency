@@ -33,7 +33,7 @@ describe('PolicyVotes [@group=8]', () => {
     } = await ecoFixture([]));
 
     await initInflation.mint(await alice.getAddress(), one.mul(5000));
-    await initInflation.mint(await bob.getAddress(), one.mul(5000));
+    await initInflation.mint(await bob.getAddress(), one.mul(8000));
     await initInflation.mint(await charlie.getAddress(), one.mul(5200));
     await initInflation.mint(await dave.getAddress(), one.mul(4800));
     await time.increase(3600 * 24 * 40);

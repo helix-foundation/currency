@@ -60,6 +60,9 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     /** Timestamp to start claim period from */
     uint256 public claimPeriodStarts;
 
+    /** The Inflation root hash proposal that's used to verify inflation claims */
+    InflationRootHashProposal public inflationRootHashProposal;
+
     /** A mapping recording which claim numbers have been claimed.
      */
     mapping(uint256 => bool) public claimed;
@@ -141,6 +144,9 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
         generation = currencyTimer.currentGeneration() - 1;
+        inflationRootHashProposal = currencyTimer.rootHashAddressPerGeneration(
+            generation
+        );
         blockNumber = block.number;
         vdfVerifier = VDFVerifier(RandomInflation(_self).vdfVerifier().clone());
         randomVDFDifficulty = RandomInflation(_self).randomVDFDifficulty();
