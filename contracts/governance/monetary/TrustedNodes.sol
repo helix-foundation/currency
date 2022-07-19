@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../../policy/PolicedUtils.sol";
 import "../../currency/ECOx.sol";
+import "../TimedPolicies.sol";
 
 /** @title TrustedNodes
  *
@@ -11,13 +12,14 @@ import "../../currency/ECOx.sol";
  * proposals.
  *
  */
-contract TrustedNodes is PolicedUtils, IGenerationIncrease {
-
-    uint256 constant private DAY = 3600 * 24;
-    uint256 constant private GENERATION = 14 * DAY;
-    uint256 constant private YEAR = 365 * DAY;
+contract TrustedNodes is PolicedUtils {
+    uint256 private constant DAY = 3600 * 24;
+    uint256 private constant GENERATION = 14 * DAY;
+    uint256 private constant YEAR = 365 * DAY;
 
     uint256 public yearEnd;
+
+    uint256 public yearStartGen;
 
     address public hoard;
 
@@ -43,9 +45,6 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
     mapping(address => uint256) public votingRecord;
 
     mapping(address => uint256) public prevVotingRecord;
-
-    mapping(address => uint256) public vestedRewards;
-
     // mapping(address => uint32[]) public votingTimestamps;
 
     /** reward earned per completed and revealed vote */
@@ -64,7 +63,10 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
     /** Event emitted when voting rewards are redeemed */
     event VotingRewardRedemption(address indexed recipient, uint256 amount);
 
-    event RewardsTrackingUpdate(uint256 nextUpdateTimestamp, uint256 newRewardsCount);
+    event RewardsTrackingUpdate(
+        uint256 nextUpdateTimestamp,
+        uint256 newRewardsCount
+    );
 
     /** Creates a new trusted node registry, populated with some initial nodes.
      */
@@ -83,7 +85,7 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
 
         unallocatedRewardsCount = trusteeCount * (YEAR / GENERATION + 1);
         yearEnd = block.timestamp + YEAR;
-
+        hoard = address(_policy);
     }
 
     /** Initialize the storage context using parameters copied from the
@@ -162,14 +164,25 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
 
         votingRecord[_who]++;
         // votingTimestamps[_who].push(uint32(block.timestamp));
-        
+
         unallocatedRewardsCount--;
     }
 
     function redeemVoteRewards() external {
-
-        uint256 votesRedeemed = vestedRewards[msg.sender];
+        // uint256 votesRedeemed = vestedRewards[msg.sender];
         // uint256 _reward = _votesRedeemed * voteReward;
+        uint256 currGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
+        require(
+            currGen > yearStartGen,
+            "no withdrawals during first generation of a year term");
+        // do we need this to prevent underflow? i think solidity should revert
+        uint256 yearGenerationCount =  currGen - yearStartGen - 1;
+        uint256 record = prevVotingRecord[msg.sender];
+        uint256 votesRedeemed = record > yearGenerationCount
+            ? yearGenerationCount
+            : record;
+        // prevents withdrawal of more than (year / generationTime = ~26) rewards at a time
+
         uint256 reward;
         unchecked {
             reward = votesRedeemed * voteReward;
@@ -179,9 +192,7 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
             votesRedeemed = type(uint256).max / voteReward;
             reward = voteReward * votesRedeemed;
         }
-        votingRecord[msg.sender] -= votesRedeemed;
-        vestedRewards[msg.sender] -= votesRedeemed;
-        // votingRecord[msg.sender] = 0;
+        prevVotingRecord[msg.sender] -= votesRedeemed;
 
         require(
             ECOx(policyFor(ID_ECOX)).transfer(msg.sender, reward),
@@ -208,7 +219,9 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
             "Node is already trusted"
         );
         // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
-        currentCohort.trusteeNumbers[_node] = currentCohort.trustedNodes.length + 1;
+        currentCohort.trusteeNumbers[_node] =
+            currentCohort.trustedNodes.length +
+            1;
         currentCohort.trustedNodes.push(_node);
         emit TrustedNodeAddition(_node, cohort);
     }
@@ -229,31 +242,21 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
         }
     }
 
-    function notifyGenerationIncrease() external {
-        address[] memory trustees = cohorts[cohort].trustedNodes;
-        for (uint256 i = 0; i < trustees.length; ++i ) {
-            address trustee = trustees[i];
-            if (prevVotingRecord[trustee] > 0) {
-                // vests one reward if there are any left to be vested
-                vested[trustee]++;
-                // update remainder left to be vested this year
-                prevVotingRecord[trustee]--;
-            }
-        }
-
-    }
-
     function annualUpdate() external {
-        require(block.timestamp > yearEnd,
+        require(
+            block.timestamp > yearEnd,
             "cannot call this until the current year term has ended"
-        ); 
-        for (uint256 i = 0; i < trustees.length; ++i ) {
+        );
+        address[] memory trustees = cohorts[cohort].trustedNodes;
+        for (uint256 i = 0; i < trustees.length; ++i) {
             address trustee = trustees[i];
             prevVotingRecord[trustee] += votingRecord[trustee];
         }
 
         uint256 reward = unallocatedRewardsCount * voteReward;
-        unallocatedRewardsCount = cohorts[cohort].trustedNodes.length * (YEAR / GENERATION - 1);
+        unallocatedRewardsCount =
+            cohorts[cohort].trustedNodes.length *
+            (YEAR / GENERATION - 1);
         yearEnd = block.timestamp + YEAR;
 
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
@@ -263,10 +266,7 @@ contract TrustedNodes is PolicedUtils, IGenerationIncrease {
             "Transfer the appropriate funds to this contract before updating"
         );
 
-        require(
-            ecoX.transfer(msg.sender, reward),
-            "Transfer Failed"
-        );
+        require(ecoX.transfer(msg.sender, reward), "Transfer Failed");
 
         emit VotingRewardRedemption(hoard, reward);
         emit RewardsTrackingUpdate(yearEnd, unallocatedRewardsCount);
