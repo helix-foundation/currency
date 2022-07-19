@@ -58,11 +58,9 @@ contract IsPrime {
         }
 
         bytes32 prevBlockHash = blockhash(block.number - 1);
-        
+
         for (uint256 i = 0; i < _k; ++i) {
-            bytes32 hash = keccak256(
-                abi.encode(prevBlockHash, i)
-            );
+            bytes32 hash = keccak256(abi.encode(prevBlockHash, i));
             uint256 a = (uint256(hash) % _n3) + 2;
             uint256 x = expmod(a, d, _n);
             if (x != 1 && x != _n1) {
