@@ -296,9 +296,10 @@ describe('InflationRootHashProposal', () => {
       });
 
       it('doesnt allow double configuration', async () => {
-        await expect(rootHashProposal.configure(1)).to.be.revertedWith(
-          'This instance has already been configured',
-        );
+        await expect(rootHashProposal.configure(1))
+          .to.be.revertedWith(
+            'This instance has already been configured',
+          );
       });
 
       it('doesnt allow double proposal', async () => {});

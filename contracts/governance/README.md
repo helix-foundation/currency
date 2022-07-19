@@ -73,7 +73,7 @@ snapshot of their ECO and ECOx balances. If any proposal reaches support exceedi
 30% of the total available voting power in the system, it will progress to the
 voting phase where any currency holder may vote either for or against it using the
 same calculation of voting power as the supporting of the proposal. At the end of
-the 72 hour voting phase, the proposal passes iff it has more yes votes than no
+the 72 hour voting phase, the proposal passes if it has more yes votes than no
 votes. However, if the yes votes do not consist of a majority of the total voting
 power, there is a 24 hour delay to implementation. Proposals that were submitted
 but not voted on entitle the proposer to a partial refund of the fee as soon as
