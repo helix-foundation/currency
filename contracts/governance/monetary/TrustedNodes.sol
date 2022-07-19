@@ -21,6 +21,8 @@ contract TrustedNodes is PolicedUtils {
 
     uint256 public yearStartGen;
 
+    uint256 public prevYearStartGen;
+
     address public hoard;
 
     /** Tracks the current trustee cohort
@@ -44,12 +46,17 @@ contract TrustedNodes is PolicedUtils {
     Increments each time the trustee votes, set to zero upon redemption */
     mapping(address => uint256) public votingRecord;
 
+    // last year's voting record
     mapping(address => uint256) public prevVotingRecord;
-    // mapping(address => uint32[]) public votingTimestamps;
+
+    // the generation of the last reward withdrawn by a trustee
+    // not the last generation in which a trustee withdrew
+    mapping(address => uint256) public lastWithdrawGeneration;
 
     /** reward earned per completed and revealed vote */
     uint256 public voteReward;
 
+    // unallocated rewards to be sent to hoard upon the end of the year term
     uint256 public unallocatedRewardsCount;
 
     /** Event emitted when a node added to a list of trusted nodes.
@@ -63,6 +70,7 @@ contract TrustedNodes is PolicedUtils {
     /** Event emitted when voting rewards are redeemed */
     event VotingRewardRedemption(address indexed recipient, uint256 amount);
 
+    // information for the new trustee rewards term
     event RewardsTrackingUpdate(
         uint256 nextUpdateTimestamp,
         uint256 newRewardsCount
@@ -77,15 +85,18 @@ contract TrustedNodes is PolicedUtils {
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
         uint256 trusteeCount = _initialTrustedNodes.length;
+        unallocatedRewardsCount = trusteeCount * (YEAR / GENERATION + 1);
+
+        yearStartGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
+        yearEnd = block.timestamp + YEAR;
+
+        hoard = address(_policy);
 
         for (uint256 i = 0; i < trusteeCount; ++i) {
-            _trust(_initialTrustedNodes[i]);
-            emit TrustedNodeAddition(_initialTrustedNodes[i], cohort);
+            address node = _initialTrustedNodes[i];
+            _trust(node);
+            emit TrustedNodeAddition(node, cohort);
         }
-
-        unallocatedRewardsCount = trusteeCount * (YEAR / GENERATION + 1);
-        yearEnd = block.timestamp + YEAR;
-        hoard = address(_policy);
     }
 
     /** Initialize the storage context using parameters copied from the
@@ -178,10 +189,13 @@ contract TrustedNodes is PolicedUtils {
         // do we need this to prevent underflow? i think solidity should revert
         uint256 yearGenerationCount =  currGen - yearStartGen - 1;
         uint256 record = prevVotingRecord[msg.sender];
-        uint256 votesRedeemed = record > yearGenerationCount
+        uint256 votesRedeemed = (record > yearGenerationCount
             ? yearGenerationCount
-            : record;
-        // prevents withdrawal of more than (year / generationTime = ~26) rewards at a time
+            : record);
+        uint256 lastWithdrawnGen = lastWithdrawGeneration[msg.sender];
+        if (lastWithdrawnGen < prevYearStartGen) {
+            votesRedeemed += prevYearStartGen - lastWithdrawnGen;
+        }
 
         uint256 reward;
         unchecked {
@@ -193,7 +207,7 @@ contract TrustedNodes is PolicedUtils {
             reward = voteReward * votesRedeemed;
         }
         prevVotingRecord[msg.sender] -= votesRedeemed;
-
+        lastWithdrawGeneration[msg.sender] += votesRedeemed;
         require(
             ECOx(policyFor(ID_ECOX)).transfer(msg.sender, reward),
             "Transfer Failed"
@@ -223,6 +237,7 @@ contract TrustedNodes is PolicedUtils {
             currentCohort.trustedNodes.length +
             1;
         currentCohort.trustedNodes.push(_node);
+        lastWithdrawGeneration[_node] = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
         emit TrustedNodeAddition(_node, cohort);
     }
 
@@ -258,6 +273,8 @@ contract TrustedNodes is PolicedUtils {
             cohorts[cohort].trustedNodes.length *
             (YEAR / GENERATION - 1);
         yearEnd = block.timestamp + YEAR;
+        prevYearStartGen = yearStartGen;
+        yearStartGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
 
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
 
