@@ -49,23 +49,27 @@ contract IsPrime {
         }
 
         uint256 s = 0;
-        uint256 d = _n - 1;
+        uint256 _n3 = _n - 3;
+        uint256 _n1 = _n - 1;
+        uint256 d = _n1;
         while (d & 1 == 0) {
             d = d >> 1;
             s++;
         }
 
+        bytes32 prevBlockHash = blockhash(block.number - 1);
+        
         for (uint256 i = 0; i < _k; ++i) {
             bytes32 hash = keccak256(
-                abi.encode(blockhash(block.number - 1), i)
+                abi.encode(prevBlockHash, i)
             );
-            uint256 a = (uint256(hash) % (_n - 3)) + 2;
+            uint256 a = (uint256(hash) % _n3) + 2;
             uint256 x = expmod(a, d, _n);
-            if (x != 1 && x != (_n - 1)) {
+            if (x != 1 && x != _n1) {
                 uint256 j;
                 for (j = 0; j < s; ++j) {
                     x = mulmod(x, x, _n);
-                    if (x == _n - 1) {
+                    if (x == _n1) {
                         break;
                     }
                 }
