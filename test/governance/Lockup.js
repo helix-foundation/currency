@@ -151,7 +151,7 @@ describe('Lockup [@group=3]', () => {
 
     describe('after the deposit window', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 24 * 4.1);
+        await time.increase(3600 * 24 * 2);
       });
 
       it('can no longer deposit', async () => {

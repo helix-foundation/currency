@@ -55,7 +55,7 @@ contract Lockup is PolicedUtils, TimeUtils {
     uint256 public depositWindowEnd;
 
     // length of the deposit window
-    uint256 public constant DEPOSIT_WINDOW = 4 days;
+    uint256 public constant DEPOSIT_WINDOW = 2 days;
 
     /** The fraction of payout gained on successful withdrawal
      * Also the fraction for the penality for withdrawing early.
