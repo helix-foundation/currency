@@ -49,10 +49,6 @@ describe('VDFVerifier [@group=6]', () => {
       expect(n.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))).to.be.true;
     });
 
-    it('Contract can be cloned', async () => {
-      await instanceVDFVerifier.clone();
-    });
-
     it('Computed solutions match expectations', async () => {
       const x = new BN(3);
 
@@ -94,6 +90,12 @@ describe('VDFVerifier [@group=6]', () => {
         ).to.be.revertedWith('The commitment (x) must be > 1');
       });
 
+      it('Does not allow X that would fail isProbablePrime', async () => {
+        await expect(
+          instanceVDFVerifier.start(bnHex(new BN(529)), t, bnHex(n.subn(1)), { gasLimit: 6000000 }),
+        ).to.be.revertedWith('x must be probable prime');
+      });
+
       it('Does not allow t=0', async () => {
         await expect(
           instanceVDFVerifier.start(bnHex(xbn), 0, bnHex(n.subn(1)), { gasLimit: 6000000 }),
@@ -107,66 +109,60 @@ describe('VDFVerifier [@group=6]', () => {
 
     describe('without a valid start', () => {
       it('rejects updates', async () => {
-        await expect(instanceVDFVerifier.update(1, bnHex(new BN(2)))).to.be.revertedWith(
-          'The request is inconsistent with the state',
+        await expect(instanceVDFVerifier.update(bnHex(new BN(2)))).to.be.revertedWith(
+          'process has not yet been started',
         );
       });
     });
 
     describe('with a valid start', () => {
       beforeEach(async () => {
-        await await instanceVDFVerifier.start(bnHex(xbn), t, bnHex(ybn), { gasLimit: 6000000 });
-      });
-
-      it('Rejects out-of-order updates', async () => {
-        await expect(instanceVDFVerifier.update(2, bnHex(new BN(2)))).to.be.revertedWith(
-          'The request is inconsistent with the state',
-        );
+        await instanceVDFVerifier.start(bnHex(xbn), t, bnHex(ybn), { gasLimit: 6000000 });
       });
 
       it('Requires U != 1', async () => {
-        await expect(instanceVDFVerifier.update(1, bnHex(new BN(1)))).to.be.revertedWith(
+        await expect(instanceVDFVerifier.update(bnHex(new BN(1)))).to.be.revertedWith(
           'u must be greater than 1',
         );
       });
 
       it('Requires U*U != 1', async () => {
-        await expect(instanceVDFVerifier.update(1, bnHex(n.subn(1)))).to.be.revertedWith(
+        await expect(instanceVDFVerifier.update(bnHex(n.subn(1)))).to.be.revertedWith(
           'u*u must be greater than 1',
         );
       });
 
       it('Requires U<N', async () => {
-        await expect(instanceVDFVerifier.update(1, bnHex(n))).to.be.revertedWith(
+        await expect(instanceVDFVerifier.update(bnHex(n))).to.be.revertedWith(
           'u must be less than N',
         );
       });
 
       it('Allows updates with valid U', async () => {
-        await instanceVDFVerifier.update(1, bnHex(ybn));
+        await instanceVDFVerifier.update(bnHex(ybn));
       });
 
       describe('With a near-complete set of updates', () => {
         beforeEach(async () => {
           for (let i = 0; i < t - 2; i += 1) {
-            await instanceVDFVerifier.update(i + 1, bnHex(Usqrt[i]));
+            await instanceVDFVerifier.update(bnHex(Usqrt[i]));
           }
         });
 
         it('Rejects if last update is invalid', async () => {
-          await expect(instanceVDFVerifier.update(t - 1, bnHex(new BN(2)))).to.be.revertedWith(
+          await expect(instanceVDFVerifier.update(bnHex(new BN(2)))).to.be.revertedWith(
             'Verification failed in the last step',
           );
         });
 
         it('Accepts if the last update is valid', async () => {
-          await instanceVDFVerifier.update(t - 1, bnHex(Usqrt[t - 2]));
+          await instanceVDFVerifier.update(bnHex(Usqrt[t - 2]));
         });
 
         describe('With a completed proof', () => {
           let tx;
           beforeEach(async () => {
-            tx = await instanceVDFVerifier.update(t - 1, bnHex(Usqrt[t - 2]));
+            tx = await instanceVDFVerifier.update(bnHex(Usqrt[t - 2]));
           });
 
           it('Does not show verified for bogus numbers', async () => {
@@ -177,13 +173,22 @@ describe('VDFVerifier [@group=6]', () => {
             expect(await instanceVDFVerifier.isVerified(bnHex(xbn), t, bnHex(ybn))).to.be.true;
           });
 
-          it('emits Verified', async () => {
+          it('emits SuccessfulVerification', async () => {
             const receipt = await tx.wait();
             const log = receipt.events[0];
-            expect(log.event).to.equal('Verified');
+            expect(log.event).to.equal('SuccessfulVerification');
             expect(log.args.t).to.equal('4');
             expect(log.args.x).to.equal(bnHex(xbn));
             expect(log.args.y).to.equal(bnHex(ybn));
+          });
+
+          it('does not allow attempts to verify already verified pair', async () => {
+            await expect(instanceVDFVerifier.start(
+              bnHex(xbn),
+              t,
+              bnHex(ybn),
+              { gasLimit: 6000000 },
+            )).to.be.revertedWith('this _x, _t combination has already been verified');
           });
         });
       });
@@ -213,7 +218,7 @@ describe('VDFVerifier [@group=6]', () => {
           seenShorterU = true;
           vdfTrace(`Seen log2(u)=${u.bitLength()} < log2(n)=${n.bitLength()}`);
         }
-        result = await instanceVDFVerifier.update(i + 1, bnHex(u));
+        result = await instanceVDFVerifier.update(bnHex(u));
         receipt = await result.wait();
         vdfTrace(`update: gas used ${receipt.gasUsed}`);
         totalGasInVerify += receipt.gasUsed;

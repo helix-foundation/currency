@@ -87,7 +87,7 @@
 //   await vdf.methods.start(bnHex(toBN(seed)), difficulty, bnHex(toBN(key))).send({ gas: 4000000 });
 //   for (let i = 0; i < proof.length; i += 1) {
 //     // eslint-disable-next-line no-await-in-loop
-//     await vdf.methods.update(i + 1, bnHex(toBN(proof[i]))).send({ gas: 4000000 });
+//     await vdf.methods.update(bnHex(toBN(proof[i]))).send({ gas: 4000000 });
 //   }
 // }
 

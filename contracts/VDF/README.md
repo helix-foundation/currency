@@ -17,7 +17,7 @@ VDF functionality is a part of the currency project and implements the following
  - [License](#license)
 
 ## Security
-The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. See [Security Details Details](#security-details) for additional information.
+The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. finding a valid prime x such that x^2 is also a false positive to the primality test is too hard of a constraint on the attacker. The value of x is controlled by a potential attacker, but is highly limited (must be close after the previous blockhash, caste as a uint256). This does not guarantee that any such malicious x is valid. See [Security Details Details](#security-details) for additional information.
 
 ## Background
 The contract holds a constant `N` which is the RSA-style modulus. 2048-bit modulus is from the RSA-2048 challenge https://en.wikipedia.org/wiki/RSA_Factoring_Challenge. Our security assumptions rely on RSA challenge rules: no attacker knows or can obtain the factorization, and factorization wasn't recorded on generation of the number.
@@ -31,7 +31,7 @@ The VDF contract is designed to support multiple concurrent Provers that interac
 ## API
 
 ### Events
-#### Verified
+#### SuccessfulVerification
 Attributes:
   - `x` (uint256) - the input x, at least 256 bits
   - `t` (uint256) - the delay parameter t; it defines that the contract expects y to be the result T=2\^t squarings of x
@@ -58,7 +58,6 @@ Initiates the store of state for the `msg.sender` and validates the inputs.
 
 ### update
 Arguments:
-  - `_nextProgress` (uint256) - the index of the step, starting from 1 and ending at t-1
   - `_ubytes` (bytes) - the corresponding proof value u[i], where i = _nextProgress
 
 The caller calls this function n-1 times. If each of these calls is successful, the `isVerified` will return true the last call. See the [VDF.js](../../test/VDF.js) for the details on the generation of each value u[i]. On the final call of `update` it checks for verification and then records and emits an event if successful, then deletes the user's state.
