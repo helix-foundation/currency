@@ -21,6 +21,12 @@ describe('IsPrime [@group=8]', () => {
     });
   }
 
+  it('Primality tests number with many trailing binary zeros', async () => {
+    const bigPow = BigInt(2) ** BigInt(255) + BigInt(1);
+    const isPrime = await bigintCryptoUtils.isProbablyPrime(bigPow);
+    assert.strictEqual(await instance.isProbablePrime(bigPow, MILLER_RABIN_ITERATIONS), isPrime);
+  });
+
   for (let i = 0; i < 100; i += 1) {
     // eslint-disable-next-line no-bitwise
     const rnd = bigintCryptoUtils.randBetween(BigInt(2) ** BigInt(256)) | BigInt(1);

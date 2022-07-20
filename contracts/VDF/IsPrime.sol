@@ -52,9 +52,39 @@ contract IsPrime {
         uint256 _n3 = _n - 3;
         uint256 _n1 = _n - 1;
         uint256 d = _n1;
-        while (d & 1 == 0) {
-            d = d >> 1;
-            s++;
+
+        //calculate the trailing zeros on the binary representation of the number
+        if (d << 128 == 0) {
+            d >>= 128;
+            s += 128;
+        }
+        if (d << 192 == 0) {
+            d >>= 64;
+            s += 64;
+        }
+        if (d << 224 == 0) {
+            d >>= 32;
+            s += 32;
+        }
+        if (d << 240 == 0) {
+            d >>= 16;
+            s += 16;
+        }
+        if (d << 248 == 0) {
+            d >>= 8;
+            s += 8;
+        }
+        if (d << 252 == 0) {
+            d >>= 4;
+            s += 4;
+        }
+        if (d << 254 == 0) {
+            d >>= 2;
+            s += 2;
+        }
+        if (d << 255 == 0) {
+            d >>= 1;
+            s += 1;
         }
 
         bytes32 prevBlockHash = blockhash(block.number - 1);
