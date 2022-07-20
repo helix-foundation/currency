@@ -318,17 +318,17 @@
 //           from: this.account,
 //         },
 //       );
-//       const responses = (await rootHashProposal.getPastEvents('ChallengeResponseVerified', {
+//       const responses = (await rootHashProposal.getPastEvents('ChallengeSuccessResponse', {
 //         fromBlock: 0,
 //         toBlock: 'latest',
 //       })).map((el) => ({ eventParams: el.returnValues, tx: el.transactionHash }));
 
-//       const challenges = (await rootHashProposal.getPastEvents('RootHashChallengeIndexRequestAdded', {
+//       const challenges = (await rootHashProposal.getPastEvents('RootHashChallengeIndexRequest', {
 //         fromBlock: 0,
 //         toBlock: 'latest',
 //       })).map((el) => ({ eventParams: el.returnValues, tx: el.transactionHash }));
 
-//       const proposals = (await rootHashProposal.getPastEvents('RootHashProposed', {
+//       const proposals = (await rootHashProposal.getPastEvents('RootHashPost', {
 //         fromBlock: 0,
 //         toBlock: 'latest',
 //       })).map((el) => ({ eventParams: el.returnValues, tx: el.transactionHash }));

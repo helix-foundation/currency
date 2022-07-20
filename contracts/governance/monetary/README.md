@@ -530,19 +530,17 @@ If the user submits the wrong index or cumulative sum, the root hash will be wro
 To achieve it we need to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
 
 ##### Events
-###### RootHashChallengeIndexRequestAdded
+###### RootHashChallengeIndexRequest
 Attributes:
   - `proposer` (address) - proposer of the root hash being challenged
   - `challenger` (address) - address of the submitter of the challenge
-  - `rootHash` (bytes32) - root hash being challenged
   - `index` (uint256) - which index of the tree proposer required to prove
 
 Indicates that the root hash is challenged and proposer required to respond with the proof of a specific index.
 
-###### ChallengeResponseVerified
+###### ChallengeSuccessResponse
 Attributes:
   - `proposer` (address) - the address responding to the challenge.
-  - `proposedRootHash` (bytes32) - root hash being challenged
   - `challenger` (address) - address of the submitter of the challenge
   - `account` (address) - address of the account being challenged
   - `balance` (uint256) - balance of delegated votes at generation of the account being challenged
@@ -551,7 +549,7 @@ Attributes:
 
 Indicates that submitted response to a challenge was successfully verified.
 
-###### RootHashProposed
+###### RootHashProposal
 Attributes:
   - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
   - `totalSum` (uint256) - total cumulative sum of all the ECO voting power (sum of the last node + its votes) 
@@ -560,28 +558,27 @@ Attributes:
 
 Indicates that the new root hash proposal was submitted to the system
 
-###### RootHashRejected
+###### RootHashRejection
 Attributes:
-  - `proposedRootHash` (bytes32) - the rejected root hash
   - `proposer` (address) - address of the proposer of rejected root hash
 
 Indicates that root hash was proved to be wrong or timed out on unanswered challenged and been rejected
 
-###### RootHashAccepted
+###### RootHashAcceptance
 Attributes:
-  - `proposedRootHash` (bytes32) - the accepted root hash
+  - `proposer` (address) - address of the proposer of accepted root hash
   - `totalSum` (uint256) - total cumulative sum of all the ECO voting power of this proposal
   - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree of this proposal
-  - `proposer` (address) - address of the proposer of accepted root hash
 
 Indicates that a new root hash proposal was accepted by the system, now recipients can claim inflation rewards
 
 ###### ChallengeMissingAccountSuccess
 Attributes:
   - `proposer` (address) - the roothash proposal address
-  - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
   - `challenger` (address) - address of the submitter of the challenge
   - `missingAccount` (address) - address of the account being claimed missing
+  - `index` (uint256) - index in the Merkle tree of the account being challenged
+
 
 Indicates that a missing account challenge was successful, challenged root hash will be rejected
 
@@ -603,7 +600,7 @@ Arguments:
 Allows to propose new root hash to the system. Takes the submitted function
 parameters and saves them in the mapping `rootHashProposals` which maps the
 proposer address (the `msg.sender`) to the `proposal` struct. The challenge time
-window (1 day) is also marked as staring at this point. A `RootHashProposed`
+window (1 day) is also marked as staring at this point. A `RootHashPost`
 event is then emitted and the fee (`PROPOSER_FEE`) of 20000 ECO is charged
 and stored for the newly proposed root hash proposal.
 
@@ -617,7 +614,7 @@ Arguments:
   - `_proposer`           (address) - the roothash proposer address
   - `_requestedIndex`     (uint256) - index in the Merkle tree of the account being challenged
 
-Allows to challenge previously proposed root hash. Challenge requires proposer of the root hash submit proof of the account for requested index. Creates a record of the challenge in the `challenges` property of the proposal struct and sets the challenge status to pending. The challenge is given 1 day to be responded to. A `RootHashChallengeIndexRequestAdded` event is then emitted and the fee of 500 ECO (`CHALLENGE_FEE`) is charged and stored for the challenged root hash proposal.
+Allows to challenge previously proposed root hash. Challenge requires proposer of the root hash submit proof of the account for requested index. Creates a record of the challenge in the `challenges` property of the proposal struct and sets the challenge status to pending. The challenge is given 1 day to be responded to. A `RootHashChallengeIndexRequest` event is then emitted and the fee of 500 ECO (`CHALLENGE_FEE`) is charged and stored for the challenged root hash proposal.
 
 ###### Security Notes
   - You cannot challenge your own proposal (same challenger address as proposer)
@@ -669,7 +666,7 @@ Arguments:
 
 Allows to proposer of the root hash respond to a challenge of specific index with proof details.
 This will revert unless the inputs successfully refute the challenge. The challenge is marked
-as resolved on refutation and a `ChallengeResponseVerified` event is emitted. The challenger
+as resolved on refutation and a `ChallengeSuccessResponse` event is emitted. The challenger
 is given 1 hour more of challenge times in which to submit any additional challenges, if able.
 
 ###### Security Notes

@@ -77,7 +77,7 @@ describe('RandomInflation [@group=6]', () => {
     await time.increase(3600 * 25);
     await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())).to.emit(
       rootHashProposal,
-      'RootHashAccepted',
+      'RootHashAcceptance',
     );
   }
 
