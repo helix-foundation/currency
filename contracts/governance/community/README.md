@@ -336,6 +336,74 @@ then self-destructs. Emits a `VoteCompleted` event.
   - Can only be called before the voting period ends if the yes votes have already
     reached a majority.
 
+#### ECOxStaking
+  - Inherits: `ERC20Votes`, `PolicedUtils`
+
+Contains the logic for depositing and withdrawing EcoX to/from lockup. The quantity of
+EcoX locked up relative to the total supply (both at a given block number) determine
+an individual's voting power. This contract also maintains a mapping of addresses -->
+the last generation in which that address cast a vote - this is used to determine
+whether or not an address is permitted to withdraw (withdrawal is not permitted until
+two generations after the last vote was cast by the withdrawing address).
+
+##### Events
+
+###### Deposit
+Attributes: 
+  - `source` (address) - The address that a deposit certificate has been issued to
+  - `amount` (uint256) - The amount of ECOx tokens deposited
+
+The Deposit event indicates that ECOx has been locked up, credited to a particular
+address in a particular amount.
+
+###### Withdrawal
+Attributes:
+  - `destination` (address) The address that has made a withdrawal
+  - `amount` (uint256) The amount in basic unit of 10^{-18} ECOx (weicoX) tokens withdrawn
+
+The Withdrawal event indicates that a withdrawal has been made to a particular address
+in a particular amount
+
+##### deposit
+Arguments:
+  - `_amount` (uint256) - amount of EcoX sender is attempting to deposit
+
+Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract.
+A checkpoint is written to increase totalSupply and the voting balance of msg.sender by
+`_amount` for the current block number. This also results in a Deposit event being emitted.
+
+###### Security Notes
+  - only updates totalSupply and voting power balance if the transfer is successful i.e. if
+    msg.sender has at least `_amount` of EcoX in their balance
+
+##### withdraw
+Arguments:
+  - `_amount` (uint256) - amount of EcoX sender is attempting to withdraw
+
+Transfers EcoX in the amount `_amount` to msg.sender. Ensures that
+A checkpoint is written to decrease totalSupply and the voting balance of msg.sender by
+`_amount` for the current block number. This also results in a Withdrawal event being emitted.
+
+##### votingECOx
+Arguments:
+  - `_voter` (address) - address whose voting power is being assessed
+  - `_blocknumber` (uint256) - block number at which voting power is being assessed
+
+Fetches the EcoX voting power of a given address at a given block. This is accomplished by
+binary searching to find the earliest checkpoint taken after the given block number, and
+then getting the balance of the address in that checkpoint.
+
+##### totalVotingECOx
+Arguments:
+  - `_blocknumber` (uint256) - block number at which voting power is being assessed
+
+Fetches the total voting power at a given block. This is accomplished by binary searching to
+find the earliest checkpoint taken after the given block number, and then getting the sum of
+all balances at that checkpoint.
+
+###### Security Notes
+  - can only be invoked by the policy proposals contract or the policy votes contract
+
 ## Contributing
 See the [main README](../../README.md).
 

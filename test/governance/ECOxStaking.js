@@ -45,14 +45,6 @@ describe('ecoXStaking [@group=12]', () => {
     await time.advanceBlock();
   });
 
-  describe('unauthorized call of recordVote', () => {
-    it('reverts', async () => {
-      await expect(ecoXStaking.recordVote(await alice.getAddress())).to.be.revertedWith(
-        'Must be a voting contract to call',
-      );
-    });
-  });
-
   describe('disabled ERC20 functionality', () => {
     it('reverts on transfer', async () => {
       await expect(ecoXStaking.transfer(await alice.getAddress(), 1000)).to.be.revertedWith(
@@ -140,12 +132,6 @@ describe('ecoXStaking [@group=12]', () => {
         expect(testProposalObj.totalStake).to.equal('5010000000000000000000');
       });
 
-      it('alice cannot withdraw', async () => {
-        await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-          'Must not vote or undelegate in the generation on or before withdrawing',
-        );
-      });
-
       it('alice can still deposit', async () => {
         await ecox.connect(alice).approve(ecoXStaking.address, one.mul(10));
         await ecoXStaking.connect(alice).deposit(one.mul(10));
@@ -178,37 +164,6 @@ describe('ecoXStaking [@group=12]', () => {
       it('alice can withdraw then vote', async () => {
         await ecoXStaking.connect(alice).withdraw(one.mul(1));
         await votes.connect(alice).vote(true);
-      });
-
-      it('alice cannot vote then withdraw', async () => {
-        await votes.connect(alice).vote(true);
-        await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-          'Must not vote or undelegate in the generation on or before withdrawing',
-        );
-      });
-
-      it('charlie supported, so cannot withdraw', async () => {
-        await expect(ecoXStaking.connect(charlie).withdraw(one.mul(10))).to.be.revertedWith(
-          'Must not vote or undelegate in the generation on or before withdrawing',
-        );
-      });
-
-      it('charlie supported, so cannot withdraw in the next generation', async () => {
-        await time.increase(3600 * 24 * 14 + 1);
-        await timedPolicies.incrementGeneration();
-
-        await expect(ecoXStaking.connect(charlie).withdraw(one.mul(10))).to.be.revertedWith(
-          'Must not vote or undelegate in the generation on or before withdrawing',
-        );
-      });
-
-      it('charlie supported, but can withdraw the generation after next', async () => {
-        await time.increase(3600 * 24 * 14 + 1);
-        await timedPolicies.incrementGeneration();
-        await time.increase(3600 * 24 * 14 + 1);
-        await timedPolicies.incrementGeneration();
-
-        await ecoXStaking.connect(charlie).withdraw(one.mul(10));
       });
     });
   });
@@ -263,86 +218,6 @@ describe('ecoXStaking [@group=12]', () => {
 
         it('can withdraw without undelegating', async () => {
           await ecoXStaking.connect(alice).withdraw(one.mul(10));
-        });
-      });
-
-      context('delegatee did vote', () => {
-        beforeEach(async () => {
-          await ecoXStaking.connect(alice).delegate(await bob.getAddress());
-          await proposals.connect(bob).support(testProposal.address);
-          await time.advanceBlock();
-        });
-
-        context('immediately after the vote', () => {
-          it('blocks if delegatee did vote', async () => {
-            await ecoXStaking.connect(alice).undelegate();
-            await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-              'Must not vote or undelegate in the generation on or before withdrawing',
-            );
-          });
-
-          it('cannot withdraw without undelegating', async () => {
-            await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-              'Must not vote or undelegate in the generation on or before withdrawing',
-            );
-          });
-
-          it('undelegateFromAddress blocks withdrawal', async () => {
-            await ecoXStaking.connect(alice).undelegateFromAddress(await bob.getAddress());
-            await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-              'Must not vote or undelegate in the generation on or before withdrawing',
-            );
-          });
-        });
-
-        context('1 generation after the vote', () => {
-          beforeEach(async () => {
-            await time.increase(3600 * 24 * 14 + 1);
-            await timedPolicies.incrementGeneration();
-          });
-
-          it('blocks if delegatee did vote', async () => {
-            await ecoXStaking.connect(alice).undelegate();
-            await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-              'Must not vote or undelegate in the generation on or before withdrawing',
-            );
-          });
-
-          it('cannot withdraw without undelegating', async () => {
-            await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-              'Must not vote or undelegate in the generation on or before withdrawing',
-            );
-          });
-
-          it('undelegateFromAddress blocks withdrawal', async () => {
-            await ecoXStaking.connect(alice).undelegateFromAddress(await bob.getAddress());
-            await expect(ecoXStaking.connect(alice).withdraw(one.mul(10))).to.be.revertedWith(
-              'Must not vote or undelegate in the generation on or before withdrawing',
-            );
-          });
-        });
-
-        context('2 generations after the vote', () => {
-          beforeEach(async () => {
-            await time.increase(3600 * 24 * 14 + 1);
-            await timedPolicies.incrementGeneration();
-            await time.increase(3600 * 24 * 14 + 1);
-            await timedPolicies.incrementGeneration();
-          });
-
-          it('can now withdraw', async () => {
-            await ecoXStaking.connect(alice).undelegate();
-            await ecoXStaking.connect(alice).withdraw(one.mul(10));
-          });
-
-          it('can withdraw without undelegating', async () => {
-            await ecoXStaking.connect(alice).withdraw(one.mul(10));
-          });
-
-          it('undelegateFromAddress dose not block withdrawal', async () => {
-            await ecoXStaking.connect(alice).undelegateFromAddress(await bob.getAddress());
-            await ecoXStaking.connect(alice).withdraw(one.mul(10));
-          });
         });
       });
 

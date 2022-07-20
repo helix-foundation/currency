@@ -330,7 +330,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
         _p.totalStake = _p.totalStake + _amount;
         staked[_p.proposal][msg.sender] = true;
 
-        recordVote(msg.sender);
         emit Support(msg.sender, _prop);
 
         uint256 _total = totalVotingPower(blockNumber);

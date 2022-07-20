@@ -1,33 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`BigNumber [@group=3] Math gas absdiff 1 - 5 1`] = `31891`;
+exports[`BigNumber [@group=3] Math gas absdiff 1 - 5 1`] = `31404`;
 
-exports[`BigNumber [@group=3] Math gas absdiff Max Uint256 - Max Uint256 1`] = `25674`;
+exports[`BigNumber [@group=3] Math gas absdiff Max Uint256 - Max Uint256 1`] = `26397`;
 
-exports[`BigNumber [@group=3] Math gas add 1 + 5 1`] = `31564`;
+exports[`BigNumber [@group=3] Math gas add 1 + 5 1`] = `31103`;
 
-exports[`BigNumber [@group=3] Math gas add Max Uint256 + Max Uint256 1`] = `42190`;
+exports[`BigNumber [@group=3] Math gas add Max Uint256 + Max Uint256 1`] = `32683`;
 
-exports[`BigNumber [@group=3] Math gas cmp 5 cmp 2 1`] = `23942`;
+exports[`BigNumber [@group=3] Math gas cmp 5 cmp 2 1`] = `25192`;
 
-exports[`BigNumber [@group=3] Math gas cmp Max Uint256 cmp Max Uint256 1`] = `24811`;
+exports[`BigNumber [@group=3] Math gas cmp Max Uint256 cmp Max Uint256 1`] = `26069`;
 
-exports[`BigNumber [@group=3] Math gas fromBytes 0x 1`] = `22649`;
+exports[`BigNumber [@group=3] Math gas fromBytes 0x 1`] = `22442`;
 
-exports[`BigNumber [@group=3] Math gas fromBytes 0x1234 1`] = `36713`;
+exports[`BigNumber [@group=3] Math gas fromBytes 0x1234 1`] = `28640`;
 
-exports[`BigNumber [@group=3] Math gas fromBytes Max Uint256 1`] = `33320`;
+exports[`BigNumber [@group=3] Math gas fromBytes Max Uint256 1`] = `24029`;
 
-exports[`BigNumber [@group=3] Math gas fromUint 0 1`] = `22230`;
+exports[`BigNumber [@group=3] Math gas fromUint 0 1`] = `21909`;
 
-exports[`BigNumber [@group=3] Math gas fromUint 1234 1`] = `29008`;
+exports[`BigNumber [@group=3] Math gas fromUint 1234 1`] = `27379`;
 
-exports[`BigNumber [@group=3] Math gas fromUint Max Uint256 1`] = `32704`;
+exports[`BigNumber [@group=3] Math gas fromUint Max Uint256 1`] = `22801`;
 
-exports[`BigNumber [@group=3] Math gas modexp 5 % 2 ** 3 1`] = `32870`;
+exports[`BigNumber [@group=3] Math gas modexp 5 % 2 ** 3 1`] = `33444`;
 
-exports[`BigNumber [@group=3] Math gas modexp Max Uint256 % 7 ** Max Uint256 1`] = `27103`;
+exports[`BigNumber [@group=3] Math gas modexp Max Uint256 % 7 ** Max Uint256 1`] = `28845`;
 
-exports[`BigNumber [@group=3] Math gas modmul 5 % 2 * 3 1`] = `43106`;
+exports[`BigNumber [@group=3] Math gas modmul 5 % 2 * 3 1`] = `45093`;
 
-exports[`BigNumber [@group=3] Math gas modmul Max Uint256 % 7 * Max Uint256 1`] = `37863`;
+exports[`BigNumber [@group=3] Math gas modmul Max Uint256 % 7 * Max Uint256 1`] = `41937`;
