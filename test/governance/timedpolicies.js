@@ -17,8 +17,8 @@ describe('TimedPolicies [@group=12]', () => {
   });
 
   it('Should do a simple voting cycle', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
-    const policyProposalsIdentifierHash = web3.utils.soliditySha3('PolicyProposals');
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
+    const policyProposalsIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
 
     assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0);
 

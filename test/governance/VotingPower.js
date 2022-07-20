@@ -15,7 +15,7 @@ describe('VotingPower [@group=2]', () => {
   let proposals;
   let blockNumber;
   let ecox;
-  let ecoXLockup;
+  let ecoXStaking;
   let one;
   let alicePower;
 
@@ -31,7 +31,7 @@ describe('VotingPower [@group=2]', () => {
     const trustednodes = [await bob.getAddress()];
 
     ({
-      policy, eco, faucet, timedPolicies, ecox, ecoXLockup,
+      policy, eco, faucet, timedPolicies, ecox, ecoXStaking,
     } = await ecoFixture(trustednodes));
 
     await faucet.mint(await alice.getAddress(), one.mul(250));
@@ -55,7 +55,7 @@ describe('VotingPower [@group=2]', () => {
 
     proposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, web3.utils.soliditySha3('PolicyProposals')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])),
     );
   });
 
@@ -63,7 +63,9 @@ describe('VotingPower [@group=2]', () => {
     describe('only ECO power', () => {
       it('Has the correct total power', async () => {
         // 1000 total, no ECOx power
-        expect(await proposals.totalVotingPower(blockNumber)).to.equal(one.mul(1000));
+        const ecoTotal = await eco.totalSupply();
+        const ecoXTotal = await ecox.totalSupply();
+        expect(await proposals.totalVotingPower(blockNumber)).to.equal(ecoTotal.add(ecoXTotal));
       });
 
       it('Has the right power for alice', async () => {
@@ -84,9 +86,11 @@ describe('VotingPower [@group=2]', () => {
       });
 
       it('Has the correct total power', async () => {
+        const ecoTotal = await eco.totalSupply();
+        const ecoXTotal = await ecox.totalSupply();
         // The original 750 plus all of alice's power as ECO
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(
-          one.mul(750).add(alicePower),
+          ecoTotal.add(ecoXTotal),
         );
       });
 
@@ -218,16 +222,16 @@ describe('VotingPower [@group=2]', () => {
     describe('Voting power with ECO and ECOx', async () => {
       beforeEach(async () => {
         // approve deposits
-        await ecox.connect(alice).approve(ecoXLockup.address, one.mul(400));
-        await ecox.connect(bob).approve(ecoXLockup.address, one.mul(400));
-        await ecox.connect(charlie).approve(ecoXLockup.address, one.mul(200));
+        await ecox.connect(alice).approve(ecoXStaking.address, one.mul(400));
+        await ecox.connect(bob).approve(ecoXStaking.address, one.mul(400));
+        await ecox.connect(charlie).approve(ecoXStaking.address, one.mul(200));
 
-        // lockup funds
-        await ecoXLockup.connect(alice).deposit(one.mul(400));
-        await ecoXLockup.connect(bob).deposit(one.mul(400));
-        await ecoXLockup.connect(charlie).deposit(one.mul(200));
+        // stake funds
+        await ecoXStaking.connect(alice).deposit(one.mul(400));
+        await ecoXStaking.connect(bob).deposit(one.mul(400));
+        await ecoXStaking.connect(charlie).deposit(one.mul(200));
 
-        // one total generation in lockup before voting
+        // one total generation in stake before voting
         await time.increase(3600 * 24 * 14 + 1);
         await timedPolicies.incrementGeneration();
         await time.increase(3600 * 24 * 14 + 1);

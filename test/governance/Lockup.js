@@ -20,10 +20,9 @@ describe('Lockup [@group=3]', () => {
   let faucet;
   let lockup;
 
-  const hash = (x) => web3.utils.soliditySha3(
-    { type: 'bytes32', value: x[0] },
-    { type: 'address', value: x[1] },
-    { type: 'address', value: x[2] },
+  const hash = (x) => ethers.utils.solidityKeccak256(
+    ['bytes32', 'address', 'address[]'],
+    [x[0], x[1], x[2]],
   );
 
   beforeEach(async () => {
@@ -41,7 +40,7 @@ describe('Lockup [@group=3]', () => {
 
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
 
     const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000;
@@ -53,13 +52,13 @@ describe('Lockup [@group=3]', () => {
     await time.increase(3600 * 24 * 10.1);
 
     const alicevote = [
-      web3.utils.randomHex(32),
+      ethers.utils.randomBytes(32),
       await alice.getAddress(),
       [await bob.getAddress()],
     ];
     await borda.connect(alice).commit(hash(alicevote));
     const bobvote = [
-      web3.utils.randomHex(32),
+      ethers.utils.randomBytes(32),
       await bob.getAddress(),
       [await bob.getAddress()],
     ];

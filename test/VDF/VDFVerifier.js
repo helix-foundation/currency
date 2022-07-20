@@ -2,13 +2,11 @@
 
 const { ethers } = require('hardhat');
 const { expect, assert } = require('chai');
-const web3 = require('web3');
+const BN = require('bn.js');
 const { deploy } = require('../utils/contracts');
 const { singletonsFixture } = require('../utils/fixtures');
 
 const { prove, n, bnHex } = require('../../tools/vdf');
-
-const { toBN } = web3.utils;
 
 // eslint-disable-next-line no-unused-vars
 function vdfTrace(m) {
@@ -17,7 +15,7 @@ function vdfTrace(m) {
 
 describe('VDFVerifier [@group=6]', () => {
   const t = 4;
-  const xbn = toBN('169746944503327805396974258181262165209195894124543141625064913165013613381');
+  const xbn = new BN('169746944503327805396974258181262165209195894124543141625064913165013613381');
   const [ybn, Usqrt] = prove(xbn, t);
 
   let instanceVDFVerifier;
@@ -48,7 +46,7 @@ describe('VDFVerifier [@group=6]', () => {
 
   describe('testing VDF contract', () => {
     it('Matches N in contract and testing', async () => {
-      expect(n.eq(toBN(await instanceVDFVerifier.N()))).to.be.true;
+      expect(n.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))).to.be.true;
     });
 
     it('Contract can be cloned', async () => {
@@ -56,7 +54,7 @@ describe('VDFVerifier [@group=6]', () => {
     });
 
     it('Computed solutions match expectations', async () => {
-      const x = toBN(3);
+      const x = new BN(3);
 
       // We expect this to be 3, squared 2^t + 1 times
       const [y] = prove(x, 2);
@@ -78,13 +76,13 @@ describe('VDFVerifier [@group=6]', () => {
 
       it('Does not allow small Y', async () => {
         await expect(
-          instanceVDFVerifier.start(bnHex(xbn), t, bnHex(toBN(2)), { gasLimit: 6000000 }),
+          instanceVDFVerifier.start(bnHex(xbn), t, bnHex(new BN(2)), { gasLimit: 6000000 }),
         ).to.be.revertedWith('The secret (y) must be at least 512 bit long');
       });
 
       it('Does not allow Y between 32 and 64 bytes', async () => {
         await expect(
-          instanceVDFVerifier.start(bnHex(xbn), t, bnHex(toBN(2).pow(toBN(504)).subn(1)), {
+          instanceVDFVerifier.start(bnHex(xbn), t, bnHex(new BN(2).pow(new BN(504)).subn(1)), {
             gasLimit: 6000000,
           }),
         ).to.be.revertedWith('The secret (y) must be at least 512 bit long');
@@ -92,7 +90,7 @@ describe('VDFVerifier [@group=6]', () => {
 
       it('Does not allow X < 2', async () => {
         await expect(
-          instanceVDFVerifier.start(bnHex(toBN(1)), t, bnHex(n.subn(1)), { gasLimit: 6000000 }),
+          instanceVDFVerifier.start(bnHex(new BN(1)), t, bnHex(n.subn(1)), { gasLimit: 6000000 }),
         ).to.be.revertedWith('The commitment (x) must be > 1');
       });
 
@@ -109,7 +107,7 @@ describe('VDFVerifier [@group=6]', () => {
 
     describe('without a valid start', () => {
       it('rejects updates', async () => {
-        await expect(instanceVDFVerifier.update(1, bnHex(toBN(2)))).to.be.revertedWith(
+        await expect(instanceVDFVerifier.update(1, bnHex(new BN(2)))).to.be.revertedWith(
           'The request is inconsistent with the state',
         );
       });
@@ -121,13 +119,13 @@ describe('VDFVerifier [@group=6]', () => {
       });
 
       it('Rejects out-of-order updates', async () => {
-        await expect(instanceVDFVerifier.update(2, bnHex(toBN(2)))).to.be.revertedWith(
+        await expect(instanceVDFVerifier.update(2, bnHex(new BN(2)))).to.be.revertedWith(
           'The request is inconsistent with the state',
         );
       });
 
       it('Requires U != 1', async () => {
-        await expect(instanceVDFVerifier.update(1, bnHex(toBN(1)))).to.be.revertedWith(
+        await expect(instanceVDFVerifier.update(1, bnHex(new BN(1)))).to.be.revertedWith(
           'u must be greater than 1',
         );
       });
@@ -156,7 +154,7 @@ describe('VDFVerifier [@group=6]', () => {
         });
 
         it('Rejects if last update is invalid', async () => {
-          await expect(instanceVDFVerifier.update(t - 1, bnHex(toBN(2)))).to.be.revertedWith(
+          await expect(instanceVDFVerifier.update(t - 1, bnHex(new BN(2)))).to.be.revertedWith(
             'Verification failed in the last step',
           );
         });

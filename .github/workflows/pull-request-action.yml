@@ -1,0 +1,27 @@
+name: "Pull Request Action"
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, converted_to_draft, closed, synchronize, labeled]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+env:
+  JIRA_PR_APPROVED_WEBHOOK: "https://automation.atlassian.com/pro/hooks/daef8f5a4727e55521400bcee8f9b769cff47e17"
+  JIRA_READY_FOR_REVIEW: "https://automation.atlassian.com/pro/hooks/5df75bf7216c68948b99f8f514b30e9fb821aae4"
+  JIRA_IN_QA_WEBHOOK: "https://automation.atlassian.com/pro/hooks/1a86bccb53f8a036c546c9d537d0923442b751e7"
+  JIRA_QA_PASSED_WEBHOOK: "https://automation.atlassian.com/pro/hooks/c26354493dfbd3210d8060402bc1ea3513a0b506"
+  JIRA_PR_MERGED_WEBHOOK: "https://automation.atlassian.com/pro/hooks/d314ad98865c44c25ff46e529c3ea7d8a36a1a23"
+  
+jobs:
+  QA:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Pull Request QA"
+        uses: eco/pull-request-qa-action@v1
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          WH_PR_APPROVED: "${{ env.JIRA_PR_APPROVED_WEBHOOK }}"
+          WH_READY_FOR_REVIEW: "${{ env.JIRA_READY_FOR_REVIEW }}"
+          WH_IN_QA: "${{ env.JIRA_IN_QA_WEBHOOK }}"
+          WH_QA_PASSED: "${{ env.JIRA_QA_PASSED_WEBHOOK }}"
+          WH_PR_MERGED: "${{ env.JIRA_PR_MERGED_WEBHOOK }}"

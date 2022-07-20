@@ -369,105 +369,6 @@ and establish an accessible permanent record of the outcome.
   - Can only be called during the `Compute` `stage`.
   - Can only be called once on any given inflation contract.
 
-#### ECOxLockup
-  - Inherits: `ERC20Votes`, `PolicedUtils`
-
-Contains the logic for depositing and withdrawing EcoX to/from lockup. The quantity of
-EcoX locked up relative to the total supply (both at a given block number) determine
-an individual's voting power. This contract also maintains a mapping of addresses -->
-the last generation in which that address cast a vote - this is used to determine
-whether or not an address is permitted to withdraw (withdrawal is not permitted until
-two generations after the last vote was cast by the withdrawing address).
-
-##### Events
-
-###### Deposit
-Attributes: 
-  - `source` (address) - The address that a deposit certificate has been issued to
-  - `amount` (uint256) - The amount of ECOx tokens deposited
-
-The Deposit event indicates that ECOx has been locked up, credited to a particular
-address in a particular amount.
-
-###### Withdrawal
-Attributes:
-  - `destination` (address) The address that has made a withdrawal
-  - `amount` (uint256) The amount in basic unit of 10^{-18} ECOx (weicoX) tokens withdrawn
-
-The Withdrawal event indicates that a withdrawal has been made to a particular address
-in a particular amount
-
-##### deposit
-Arguments:
-  - `_amount` (uint256) - amount of EcoX sender is attempting to deposit
-
-Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract.
-A checkpoint is written to increase totalSupply and the voting balance of msg.sender by
-`_amount` for the current block number. This also results in a Deposit event being emitted.
-
-###### Security Notes
-  - only updates totalSupply and voting power balance if the transfer is successful i.e. if
-    msg.sender has at least `_amount` of EcoX in their balance
-
-##### withdraw
-Arguments:
-  - `_amount` (uint256) - amount of EcoX sender is attempting to withdraw
-
-Transfers EcoX in the amount `_amount` to msg.sender. Ensures that
-A checkpoint is written to decrease totalSupply and the voting balance of msg.sender by
-`_amount` for the current block number. This also results in a Withdrawal event being emitted.
-
-###### Security Notes
-  - Only allows for withdrawal if msg.sender did not vote in current or previous generation.
-    This is to ensure that voters do not make decisions without having 'skin in the game', they
-    cannot unlock and sell their EcoX for at least two generations after their last vote was cast.
-
-##### votingECOx
-Arguments:
-  - `_voter` (address) - address whose voting power is being assessed
-  - `_blocknumber` (uint256) - block number at which voting power is being assessed
-
-Fetches the EcoX voting power of a given address at a given block. This is accomplished by
-binary searching to find the earliest checkpoint taken after the given block number, and
-then getting the balance of the address in that checkpoint.
-
-##### totalVotingECOx
-Arguments:
-  - `_blocknumber` (uint256) - block number at which voting power is being assessed
-
-Fetches the total voting power at a given block. This is accomplished by binary searching to
-find the earliest checkpoint taken after the given block number, and then getting the sum of
-all balances at that checkpoint.
-
-##### recordVote
-Arguments:
-  - `who` (address) - address casting the vote
-
-Sets votingTracker[address] to the current generation. This is used to determine whether or not
-an address can withdraw its locked up EcoX - they are not permitted to do so the generation of
-or immediately after their most recent vote.
-
-###### Security Notes
-  - can only be invoked by the policy proposals contract or the policy votes contract
-
-##### notifyGenerationIncrease
-Arguments: none
-
-When notified of a generation increase, this contract will find the existing
-clone of `CurrencyGovernance` to read the results of the most recent vote.
-If that vote calls for the creation of any new lockups or random inflation
-contracts, those are cloned. New lockups are added to the mapping `lockups`
-which maps the generation they were offered to the address of the lockup.
-The old lockups offered during the previous generation are funded to be able
-to pay out interest, as they are now closed for contributions. Finally the
-new `CurrencyGovernance` contract is cloned. Events are emitted to represent
-the actions taken.
-
-###### Security Notes (this whole thing is probably wrong now?)
-This method cannot be called until the `TimedPolicies` generation has changed
-from the one stored in this contract.
-
-
 #### RandomInflation
   - Inherits: `PolicedUtils`
 
@@ -629,19 +530,17 @@ If the user submits the wrong index or cumulative sum, the root hash will be wro
 To achieve it we need to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
 
 ##### Events
-###### RootHashChallengeIndexRequestAdded
+###### RootHashChallengeIndexRequest
 Attributes:
   - `proposer` (address) - proposer of the root hash being challenged
   - `challenger` (address) - address of the submitter of the challenge
-  - `rootHash` (bytes32) - root hash being challenged
   - `index` (uint256) - which index of the tree proposer required to prove
 
 Indicates that the root hash is challenged and proposer required to respond with the proof of a specific index.
 
-###### ChallengeResponseVerified
+###### ChallengeSuccessResponse
 Attributes:
   - `proposer` (address) - the address responding to the challenge.
-  - `proposedRootHash` (bytes32) - root hash being challenged
   - `challenger` (address) - address of the submitter of the challenge
   - `account` (address) - address of the account being challenged
   - `balance` (uint256) - balance of delegated votes at generation of the account being challenged
@@ -650,7 +549,7 @@ Attributes:
 
 Indicates that submitted response to a challenge was successfully verified.
 
-###### RootHashProposed
+###### RootHashProposal
 Attributes:
   - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
   - `totalSum` (uint256) - total cumulative sum of all the ECO voting power (sum of the last node + its votes) 
@@ -659,28 +558,27 @@ Attributes:
 
 Indicates that the new root hash proposal was submitted to the system
 
-###### RootHashRejected
+###### RootHashRejection
 Attributes:
-  - `proposedRootHash` (bytes32) - the rejected root hash
   - `proposer` (address) - address of the proposer of rejected root hash
 
 Indicates that root hash was proved to be wrong or timed out on unanswered challenged and been rejected
 
-###### RootHashAccepted
+###### RootHashAcceptance
 Attributes:
-  - `proposedRootHash` (bytes32) - the accepted root hash
+  - `proposer` (address) - address of the proposer of accepted root hash
   - `totalSum` (uint256) - total cumulative sum of all the ECO voting power of this proposal
   - `amountOfAccounts` (uint256) - total number of the accounts in the Merkle tree of this proposal
-  - `proposer` (address) - address of the proposer of accepted root hash
 
 Indicates that a new root hash proposal was accepted by the system, now recipients can claim inflation rewards
 
 ###### ChallengeMissingAccountSuccess
 Attributes:
   - `proposer` (address) - the roothash proposal address
-  - `proposedRootHash` (bytes32) - the proposed root hash of the Merkle tree representing accounts in the system
   - `challenger` (address) - address of the submitter of the challenge
   - `missingAccount` (address) - address of the account being claimed missing
+  - `index` (uint256) - index in the Merkle tree of the account being challenged
+
 
 Indicates that a missing account challenge was successful, challenged root hash will be rejected
 
@@ -702,7 +600,7 @@ Arguments:
 Allows to propose new root hash to the system. Takes the submitted function
 parameters and saves them in the mapping `rootHashProposals` which maps the
 proposer address (the `msg.sender`) to the `proposal` struct. The challenge time
-window (1 day) is also marked as staring at this point. A `RootHashProposed`
+window (1 day) is also marked as staring at this point. A `RootHashPost`
 event is then emitted and the fee (`PROPOSER_FEE`) of 20000 ECO is charged
 and stored for the newly proposed root hash proposal.
 
@@ -716,7 +614,7 @@ Arguments:
   - `_proposer`           (address) - the roothash proposer address
   - `_requestedIndex`     (uint256) - index in the Merkle tree of the account being challenged
 
-Allows to challenge previously proposed root hash. Challenge requires proposer of the root hash submit proof of the account for requested index. Creates a record of the challenge in the `challenges` property of the proposal struct and sets the challenge status to pending. The challenge is given 1 day to be responded to. A `RootHashChallengeIndexRequestAdded` event is then emitted and the fee of 500 ECO (`CHALLENGE_FEE`) is charged and stored for the challenged root hash proposal.
+Allows to challenge previously proposed root hash. Challenge requires proposer of the root hash submit proof of the account for requested index. Creates a record of the challenge in the `challenges` property of the proposal struct and sets the challenge status to pending. The challenge is given 1 day to be responded to. A `RootHashChallengeIndexRequest` event is then emitted and the fee of 500 ECO (`CHALLENGE_FEE`) is charged and stored for the challenged root hash proposal.
 
 ###### Security Notes
   - You cannot challenge your own proposal (same challenger address as proposer)
@@ -768,7 +666,7 @@ Arguments:
 
 Allows to proposer of the root hash respond to a challenge of specific index with proof details.
 This will revert unless the inputs successfully refute the challenge. The challenge is marked
-as resolved on refutation and a `ChallengeResponseVerified` event is emitted. The challenger
+as resolved on refutation and a `ChallengeSuccessResponse` event is emitted. The challenger
 is given 1 hour more of challenge times in which to submit any additional challenges, if able.
 
 ###### Security Notes

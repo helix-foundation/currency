@@ -1,14 +1,17 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, no-underscore-dangle */
 
 const { expect } = require('chai');
-
 const { ethers } = require('hardhat');
 
 const { BigNumber } = ethers;
-const { ecoFixture } = require('../utils/fixtures');
+const { signTypedData } = require('@metamask/eth-sig-util');
 
+const { ecoFixture } = require('../utils/fixtures');
 const time = require('../utils/time');
 const util = require('../../tools/test/util');
+const {
+  createPermitMessageData, permit, delegateBySig,
+} = require('../../tools/test/permit');
 
 describe('ECO [@group=1]', () => {
   const one = ethers.utils.parseEther('1');
@@ -39,17 +42,20 @@ describe('ECO [@group=1]', () => {
     // enact a random amount of linear inflation for all tests
     const borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
 
     await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult);
     await time.increase(3600 * 24 * 10.1);
 
-    const bobvote = [web3.utils.randomHex(32), await bob.getAddress(), [await bob.getAddress()]];
-    const bobvotehash = web3.utils.soliditySha3(
-      { type: 'bytes32', value: bobvote[0] },
-      { type: 'address', value: bobvote[1] },
-      { type: 'address', value: bobvote[2] },
+    const bobvote = [
+      ethers.utils.randomBytes(32),
+      await bob.getAddress(),
+      [await bob.getAddress()],
+    ];
+    const bobvotehash = ethers.utils.solidityKeccak256(
+      ['bytes32', 'address', 'address[]'],
+      [bobvote[0], bobvote[1], bobvote[2]],
     );
     await borda.connect(bob).commit(bobvotehash);
     await time.increase(3600 * 24 * 3);
@@ -261,6 +267,302 @@ describe('ECO [@group=1]', () => {
 
         it('emits the Approval event', async () => {
           await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
+        });
+      });
+    });
+
+    describe('permit', () => {
+      const permitSpender = ethers.Wallet.createRandom();
+      const owner = ethers.Wallet.createRandom();
+      let chainId;
+
+      before(async () => {
+        ({ chainId } = await ethers.provider.getNetwork());
+      });
+
+      context('when the source address has enough balance', async () => {
+        const amount = ethers.utils.parseEther('1').mul(1000);
+
+        it('fails if signed from non-owner', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(await owner.getAddress());
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: await owner.getAddress(),
+            spender: await permitSpender.getAddress(),
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: chainId.toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expect(
+            eco.permit(
+              await permitSpender.getAddress(),
+              await owner.getAddress(),
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+          ).to.be.revertedWith(
+            'ERC20Permit: invalid signature',
+          );
+        });
+
+        it('fails with invalid nonce', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(await owner.getAddress());
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: await owner.getAddress(),
+            spender: await permitSpender.getAddress(),
+            value: amount.toString(),
+            nonce: nonce + 1,
+            chainId: chainId.toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expect(
+            eco.permit(
+              await owner.getAddress(),
+              await permitSpender.getAddress(),
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+          ).to.be.revertedWith(
+            'ERC20Permit: invalid signature',
+          );
+        });
+
+        it('fails with invalid spender', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(await owner.getAddress());
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: await owner.getAddress(),
+            spender: await permitSpender.getAddress(),
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: chainId.toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expect(
+            eco.permit(
+              await owner.getAddress(),
+              await accounts[0].getAddress(),
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+          ).to.be.revertedWith(
+            'ERC20Permit: invalid signature',
+          );
+        });
+
+        it('fails with invalid deadline', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 - 100);
+          const nonce = await eco.nonces(await owner.getAddress());
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: await owner.getAddress(),
+            spender: await permitSpender.getAddress(),
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: chainId.toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expect(
+            eco.permit(
+              await owner.getAddress(),
+              await permitSpender.getAddress(),
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+          ).to.be.revertedWith(
+            'ERC20Permit: expired deadline',
+          );
+        });
+
+        it('fails with signature reuse', async () => {
+          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const nonce = await eco.nonces(await owner.getAddress());
+
+          const permitData = createPermitMessageData({
+            name: await eco.name(),
+            address: eco.address,
+            owner: await owner.getAddress(),
+            spender: await permitSpender.getAddress(),
+            value: amount.toString(),
+            nonce: nonce.toString(),
+            chainId: chainId.toString(),
+            deadline,
+          });
+          const sig = signTypedData({
+            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            data: permitData,
+            version: 'V4',
+          });
+          const { v, r, s } = ethers.utils.splitSignature(sig);
+
+          await expect(eco.permit(
+            await owner.getAddress(),
+            await permitSpender.getAddress(),
+            amount,
+            deadline,
+            v,
+            r,
+            s,
+          )).to.emit(eco, 'Approval');
+
+          await expect(
+            eco.permit(
+              await owner.getAddress(),
+              await permitSpender.getAddress(),
+              amount,
+              deadline,
+              v,
+              r,
+              s,
+            ),
+          ).to.be.revertedWith(
+            'ERC20Permit: invalid signature',
+          );
+        });
+
+        it('emits an Approval event', async () => {
+          await expect(permit(
+            eco,
+            owner,
+            permitSpender,
+            chainId,
+            amount,
+          )).to.emit(eco, 'Approval');
+        });
+
+        it('increments the nonce', async () => {
+          const nonce = await eco.nonces(await owner.getAddress());
+          await permit(
+            eco,
+            owner,
+            permitSpender,
+            chainId,
+            amount,
+          );
+          const nonceAfter = await eco.nonces(await owner.getAddress());
+          expect(nonceAfter - nonce).to.equal(1);
+        });
+
+        it('returns proper domain separator', async () => {
+          const domain = {
+            name: await eco.name(),
+            version: '1',
+            chainId,
+            verifyingContract: eco.address,
+          };
+          const expectedDomainSeparator = ethers.utils._TypedDataEncoder.hashDomain(domain);
+          expect(await eco.DOMAIN_SEPARATOR())
+            .to.equal(expectedDomainSeparator);
+        });
+
+        context('when there is no existing allowance', () => {
+          it('sets the allowance', async () => {
+            await expect(permit(
+              eco,
+              owner,
+              permitSpender,
+              chainId,
+              amount,
+            )).to.emit(eco, 'Approval');
+            const allowance = await eco
+              .allowance(
+                await owner.getAddress(),
+                await permitSpender.getAddress(),
+              );
+            expect(allowance).to.equal(amount);
+          });
+        });
+
+        context('when there is a pre-existing allowance', () => {
+          beforeEach(async () => {
+            await permit(
+              eco,
+              owner,
+              permitSpender,
+              chainId,
+              amount.sub(50),
+            );
+          });
+
+          it('replaces the existing allowance', async () => {
+            await permit(
+              eco,
+              owner,
+              permitSpender,
+              chainId,
+              amount,
+            );
+            const allowance = await eco
+              .allowance(
+                await owner.getAddress(),
+                await permitSpender.getAddress(),
+              );
+
+            expect(allowance).to.equal(amount);
+          });
+
+          it('emits the Approval event', async () => {
+            await expect(permit(
+              eco,
+              owner,
+              permitSpender,
+              chainId,
+              amount,
+            )).to.emit(eco, 'Approval');
+          });
         });
       });
     });
@@ -781,6 +1083,255 @@ describe('ECO [@group=1]', () => {
         const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
+      });
+    });
+  });
+
+  describe('delegation by signature', () => {
+    const amount = one.mul(1000);
+    const delegator = ethers.Wallet.createRandom().connect(ethers.provider);
+    const nonDelegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    const delegateTransferRecipient = ethers.Wallet.createRandom().connect(ethers.provider);
+    const delegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    const otherDelegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    let voteAmount;
+    let chainId;
+
+    before(async () => {
+      ({ chainId } = await ethers.provider.getNetwork());
+    });
+
+    beforeEach(async () => {
+      await accounts[5].sendTransaction({ to: await delegator.getAddress(), value: one.mul(100) });
+      await accounts[6].sendTransaction({ to: await delegatee.getAddress(), value: one.mul(100) });
+      await accounts[7]
+        .sendTransaction({ to: await delegateTransferRecipient.getAddress(), value: one.mul(100) });
+      await accounts[8].sendTransaction({
+        to: await otherDelegatee.getAddress(),
+        value: one.mul(100),
+      });
+      await faucet.mint(await delegator.getAddress(), amount);
+      await faucet.mint(await delegateTransferRecipient.getAddress(), amount);
+      await faucet.mint(await delegatee.getAddress(), amount);
+      await faucet.mint(await otherDelegatee.getAddress(), amount);
+      await eco.connect(delegatee).enableDelegation({ gasLimit: 1000000 });
+      await eco.connect(otherDelegatee).enableDelegation({ gasLimit: 1000000 });
+
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount);
+    });
+
+    context('delegateBySig', () => {
+      it('correct votes when delegated', async () => {
+        const tx1 = await delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {});
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
+
+        const tx2 = await delegateBySig(eco, delegator, otherDelegatee, chainId, accounts[0], {});
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+        expect(await eco
+          .getVotingGons(await otherDelegatee.getAddress())).to.equal(voteAmount.mul(2));
+      });
+
+      it('does not allow delegation if not enabled', async () => {
+        await expect(
+          delegateBySig(eco, delegator, nonDelegatee, chainId, accounts[0], {}),
+        ).to.be.revertedWith('Primary delegates must enable delegation');
+      });
+
+      it('does not allow delegation to yourself', async () => {
+        await expect(delegateBySig(eco, delegator, delegator, chainId, delegator, {}))
+          .to.be.revertedWith('Do not delegate to yourself');
+      });
+
+      it('allows executing own delegation', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
+      });
+
+      it('allows delegation by signer', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegator, {});
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
+      });
+
+      it('does not allow delegation if you are a delegatee', async () => {
+        await expect(
+          delegateBySig(eco, delegatee, otherDelegatee, chainId, delegatee, {}),
+        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
+      });
+
+      it('does not allow delegation after deadline', async () => {
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              deadline: Math.floor(new Date().getTime() / 1000 - 5),
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: expired deadline');
+      });
+
+      it('does not allow non-delegator signature', async () => {
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              signer: delegateTransferRecipient,
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+
+      it('does not allow non-monotonic nonce', async () => {
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              nonce: 100,
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+
+      it('does not allow nonce reuse', async () => {
+        await delegateBySig(
+          eco,
+          delegator,
+          delegatee,
+          chainId,
+          accounts[0],
+          {
+            nonce: 0,
+          },
+        );
+        await expect(
+          delegateBySig(
+            eco,
+            delegator,
+            delegatee,
+            chainId,
+            accounts[0],
+            {
+              nonce: 0,
+            },
+          ),
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+    });
+
+    context('undelegate', () => {
+      it('correct state when undelegated after delegating', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+
+        const tx2 = await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+
+        const votes1 = await eco.getVotingGons(await delegator.getAddress());
+        expect(votes1).to.equal(voteAmount);
+        const votes2 = await eco.getVotingGons(await delegatee.getAddress());
+        expect(votes2).to.equal(voteAmount);
+      });
+    });
+
+    context('isOwnDelegate', () => {
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.true;
+
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.false;
+
+        await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.true;
+      });
+    });
+
+    context('getPrimaryDelegate', () => {
+      it('correct state when delegating and undelegating', async () => {
+        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
+          await delegator.getAddress(),
+        );
+
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
+          await delegatee.getAddress(),
+        );
+
+        await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
+          await delegator.getAddress(),
+        );
+      });
+    });
+
+    context('delegate then transfer', () => {
+      it('sender delegated', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        await eco.connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
+        expect(await eco
+          .getVotingGons(
+            await delegateTransferRecipient.getAddress(),
+          ))
+          .to.equal(voteAmount.mul(2));
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+      });
+
+      it('receiver delegated', async () => {
+        await delegateBySig(
+          eco,
+          delegateTransferRecipient,
+          otherDelegatee,
+          chainId,
+          delegateTransferRecipient,
+          {},
+        );
+        await eco.connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await delegateTransferRecipient.getAddress())).to.equal(0);
+        expect(await eco
+          .getVotingGons(
+            await otherDelegatee.getAddress(),
+          ))
+          .to.equal(voteAmount.mul(3));
+      });
+
+      it('both delegated', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        await delegateBySig(
+          eco,
+          delegateTransferRecipient,
+          otherDelegatee,
+          chainId,
+          delegateTransferRecipient,
+          {},
+        );
+        await eco.connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await delegateTransferRecipient.getAddress())).to.equal(0);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+        expect(await eco
+          .getVotingGons(
+            await otherDelegatee.getAddress(),
+          ))
+          .to.equal(voteAmount.mul(3));
       });
     });
   });

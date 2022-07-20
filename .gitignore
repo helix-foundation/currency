@@ -60,6 +60,9 @@ typings/
 # local (maintainer's) configuration for VDF.js
 test/VDF/vdf-config.json
 
+#Types for contracts
+typechain-types
+
 *~
 build/
 package-lock.json
@@ -67,8 +70,8 @@ cover-run
 coverage.json
 .jsbeautifyrc
 .vscode
-typechain/
 artifacts
 cache/
 out/
 yarn.lock
+typechain/

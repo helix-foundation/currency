@@ -125,7 +125,6 @@ contract PolicyVotes is VotingPower, TimeUtils {
         stake[msg.sender] = _amount;
         totalStake = totalStake + _amount - _oldStake;
 
-        recordVote(msg.sender);
         emit PolicyVoteCast(msg.sender, _vote, _amount);
     }
 
@@ -177,7 +176,6 @@ contract PolicyVotes is VotingPower, TimeUtils {
         stake[msg.sender] = _totalVotes;
         totalStake = totalStake + _totalVotes - _oldStake;
 
-        recordVote(msg.sender);
         emit PolicySplitVoteCast(msg.sender, _votesYes, _votesNo);
     }
 

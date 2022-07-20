@@ -4,9 +4,6 @@
 const bigintCryptoUtils = require('bigint-crypto-utils');
 const { expect } = require('chai');
 const BN = require('bn.js');
-const web3 = require('web3');
-
-const { toBN } = web3.utils;
 
 const { ethers } = require('hardhat');
 const { prove, bnHex } = require('../../tools/vdf');
@@ -52,10 +49,9 @@ describe('RandomInflation [@group=6]', () => {
   let map;
   let timedPolicies;
 
-  const hash = (x) => web3.utils.soliditySha3(
-    { type: 'bytes32', value: x[0] },
-    { type: 'address', value: x[1] },
-    { type: 'address', value: x[2] },
+  const hash = (x) => ethers.utils.solidityKeccak256(
+    ['bytes32', 'address', 'address[]'],
+    [x[0], x[1], x[2]],
   );
 
   async function configureInflationRootHash() {
@@ -81,36 +77,32 @@ describe('RandomInflation [@group=6]', () => {
     await time.increase(3600 * 25);
     await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())).to.emit(
       rootHashProposal,
-      'RootHashAccepted',
+      'RootHashAcceptance',
     );
   }
 
   function getRecipient(claimNumber) {
-    if (toBN(claimNumber) === 0) {
+    if (new BN(claimNumber) === 0) {
       return [0, accounts[0]];
     }
-    let index = accountsSums.findIndex((element) => element.gt(toBN(claimNumber)));
+    let index = accountsSums.findIndex((element) => element.gt(new BN(claimNumber)));
     index = index === -1 ? 2 : index - 1;
     return [index, accounts[index]];
   }
 
   async function getClaimParameters(inf, sequence) {
-    const chosenClaimNumberHash = web3.utils.soliditySha3(
-      {
-        t: 'bytes32',
-        v: await inf.seed(),
-      },
-      {
-        t: 'uint256',
-        v: sequence,
-      },
+    const chosenClaimNumberHash = ethers.utils.solidityKeccak256(
+      ['bytes32', 'uint256'],
+      [await inf.seed(), sequence],
     );
-    const [index, recipient] = getRecipient(toBN(chosenClaimNumberHash).mod(toBN(totalSum)));
+    const [index, recipient] = getRecipient(
+      new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum)),
+    );
     return [answer(tree, index), index, recipient];
   }
 
   async function getPrimeDistance() {
-    const baseNum = toBN(await time.latestBlockHash());
+    const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
 
     for (let i = 0; i < 1000; i++) {
       if (await bigintCryptoUtils.isProbablyPrime(BigInt(baseNum.addn(i).toString()), 30)) {
@@ -150,7 +142,7 @@ describe('RandomInflation [@group=6]', () => {
 
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(policy, web3.utils.soliditySha3('CurrencyGovernance')),
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
 
     const bob = accounts[1];
@@ -159,15 +151,23 @@ describe('RandomInflation [@group=6]', () => {
     await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
     await time.increase(3600 * 24 * 10.1);
 
-    const bobvote = [web3.utils.randomHex(32), await bob.getAddress(), [await bob.getAddress()]];
+    const bobvote = [
+      ethers.utils.randomBytes(32),
+      await bob.getAddress(),
+      [await bob.getAddress()],
+    ];
     await governance.connect(bob).commit(hash(bobvote));
     const charlievote = [
-      web3.utils.randomHex(32),
+      ethers.utils.randomBytes(32),
       await charlie.getAddress(),
       [await bob.getAddress()],
     ];
     await governance.connect(charlie).commit(hash(charlievote));
-    const davevote = [web3.utils.randomHex(32), await dave.getAddress(), [await bob.getAddress()]];
+    const davevote = [
+      ethers.utils.randomBytes(32),
+      await dave.getAddress(),
+      [await bob.getAddress()],
+    ];
     await governance.connect(dave).commit(hash(davevote));
     await time.increase(3600 * 24 * 3);
     await governance.connect(bob).reveal(bobvote[0], bobvote[2]);
@@ -251,7 +251,7 @@ describe('RandomInflation [@group=6]', () => {
 
         await inflation.commitEntropyVDFSeed(await getPrimeDistance());
         let u;
-        const vdfseed = toBN(await inflation.entropyVDFSeed());
+        const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
         const t = await inflation.randomVDFDifficulty();
         [y, u] = prove(vdfseed, t);
 
@@ -292,7 +292,7 @@ describe('RandomInflation [@group=6]', () => {
 
     context('after the VDF is complete', () => {
       beforeEach(async () => {
-        const vdfseed = toBN(await inflation.entropyVDFSeed());
+        const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
         const t = await inflation.randomVDFDifficulty();
         const [y, u] = prove(vdfseed, t);
 
@@ -370,13 +370,14 @@ describe('RandomInflation [@group=6]', () => {
           for (let i = 0; i < 3; i += 1) {
             updatedMap.set(
               await accounts[i].getAddress(),
-              toBN(await eco.balanceOf(await accounts[i].getAddress())),
+              new BN((await eco
+                .balanceOf(await accounts[i].getAddress())).toHexString().slice(2), 16),
             );
           }
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
           updatedMap.set(
             await recipient.getAddress(),
-            updatedMap.get(await recipient.getAddress()).add(toBN(rewardVote)),
+            updatedMap.get(await recipient.getAddress()).add(new BN(rewardVote)),
           );
           await inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index);
           await time.increase(3600 * 24 * 30);
@@ -387,7 +388,7 @@ describe('RandomInflation [@group=6]', () => {
             const [a, index, recipient] = await getClaimParameters(inflation, i);
             updatedMap.set(
               await recipient.getAddress(),
-              updatedMap.get(await recipient.getAddress()).add(toBN(rewardVote)),
+              updatedMap.get(await recipient.getAddress()).add(new BN(rewardVote)),
             );
             await inflation.connect(recipient).claim(i, a[1].reverse(), a[0].sum.toString(), index);
             assert.equal(
@@ -425,7 +426,7 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with VDF, basic flow', () => {
         beforeEach(async () => {
-          const vdfseed = toBN(await inflation.entropyVDFSeed());
+          const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
           const t = await inflation.randomVDFDifficulty();
           const [y, u] = prove(vdfseed, t);
 
@@ -455,7 +456,7 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with a VDF solution', () => {
         beforeEach(async () => {
-          const vdfseed = toBN(await inflation.entropyVDFSeed());
+          const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
           const t = await inflation.randomVDFDifficulty();
           const [y, u] = prove(vdfseed, t);
 
@@ -526,7 +527,7 @@ describe('RandomInflation [@group=6]', () => {
             });
 
             it('is no longer the inflation policy', async () => {
-              const govhash = web3.utils.soliditySha3('CurrencyGovernance');
+              const govhash = ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance']);
 
               assert.notEqual(await util.policyFor(policy, govhash), inflation.address);
             });

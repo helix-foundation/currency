@@ -63,7 +63,7 @@ describe('Policed [@group=11]', () => {
         ID_CURRENCY_GOVERNANCE: 'CurrencyGovernance',
         ID_CURRENCY_TIMER: 'CurrencyTimer',
         ID_ECOX: 'ECOx',
-        ID_ECOXLOCKUP: 'ECOxLockup',
+        ID_ECOXSTAKING: 'ECOxStaking',
       };
       await Promise.all(
         Object.entries(ids).map(async ([key, value]) => {
@@ -139,8 +139,9 @@ describe('Policed [@group=11]', () => {
   });
 
   it('Policed should not allow calls from non-policy', async () => {
+    const iface = new ethers.utils.Interface(['function doit()']);
     await expect(
-      testPoliced.policyCommand(policer.address, web3.eth.abi.encodeFunctionSignature('doit()')),
+      testPoliced.policyCommand(policer.address, iface.getSighash('doit')),
     ).to.be.revertedWith('Only the policy contract');
   });
 

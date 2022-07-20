@@ -1,31 +1,12 @@
 /* eslint-disable no-console, no-await-in-loop, no-restricted-syntax,  no-underscore-dangle */
 /* eslint-disable import/no-extraneous-dependencies, no-unused-vars */
 
-const PolicyInit = artifacts.require('PolicyInit');
-const ForwardProxy = artifacts.require('ForwardProxy');
-const ECO = artifacts.require('ECO');
-const ECOx = artifacts.require('ECOx');
-const ECOxLockup = artifacts.require('ECOxLockup');
-const RandomInflation = artifacts.require('RandomInflation');
-const Policy = artifacts.require('PolicyTest');
-const VDFVerifier = artifacts.require('VDFVerifier');
-const RootHashProposal = artifacts.require('InflationRootHashProposal');
-const TimedPolicies = artifacts.require('TimedPolicies');
-const TrustedNodes = artifacts.require('TrustedNodes');
-const EcoFaucet = artifacts.require('EcoFaucet');
-const CurrencyGovernance = artifacts.require('CurrencyGovernance');
-const CurrencyTimer = artifacts.require('CurrencyTimer');
-const Lockup = artifacts.require('Lockup');
-const PolicyVotes = artifacts.require('PolicyVotes');
-const PolicyProposals = artifacts.require('PolicyProposals');
-const Cleanup = artifacts.require('EcoTestCleanup');
-const MurderousCleanup = artifacts.require('MurderousPolicy');
-
-const Web3 = require('web3');
+const { ethers } = require('hardhat');
 
 const { singletons } = require('@openzeppelin/test-helpers');
 
 const Deploy = require('../deploy');
+const { deploy } = require('../../test/utils/contracts');
 
 const { trace } = require('./trace');
 
@@ -34,12 +15,19 @@ const { trace } = require('./trace');
 exports.deployPolicy = async (
   account,
   { trustednodes = [] } = { trustednodes: [] },
+  voteReward = '1000',
   production = false,
   verbose = false,
   extraParams = {},
 ) => {
   const options = await Deploy.deploy({
-    account, trustednodes, production, verbose, test: true, ...extraParams,
+    account,
+    trustednodes,
+    trusteeVoteReward: voteReward,
+    production,
+    verbose,
+    test: true,
+    ...extraParams,
   });
 
   const policyAd = options.policyProxy._address;
@@ -52,24 +40,25 @@ exports.deployPolicy = async (
   const trustedNodesAd = options.trustedNodes._address;
   const currencyTimerAd = options.currencyTimer._address;
   const lockupAd = options.depositCertificatesContract._address;
-  const ecoXLockupAd = options.ecoXLockupContract._address;
+  const ecoXStakingAd = options.ecoXStakingContract._address;
   const faucetAd = options.faucetContract._address;
   const cleanupAd = options.cleanupContract._address;
 
-  const policy = await Policy.at(policyAd);
-  const eco = await ECO.at(ecoAd);
-  const inflation = await RandomInflation.at(inflationAd);
-  const vdf = await VDFVerifier.at(vdfAd);
-  const ecox = await ECOx.at(ecoxAd);
-  const rootHashProposal = await RootHashProposal.at(rootHashProposalAd);
-  const timedPolicies = await TimedPolicies.at(timedPoliciesAd);
-  const trustedNodes = await TrustedNodes.at(trustedNodesAd);
-  const currencyTimer = await CurrencyTimer.at(currencyTimerAd);
-  const lockup = await Lockup.at(lockupAd);
-  const ecoXLockup = await ECOxLockup.at(ecoXLockupAd);
-  const faucet = await EcoFaucet.at(faucetAd);
-  const cleanup = await Cleanup.at(cleanupAd);
-  const unauthedCleanup = await MurderousCleanup.new();
+  const policy = await ethers.getContractAt('PolicyTest', policyAd);
+  const eco = await ethers.getContractAt('ECO', ecoAd);
+  const inflation = await ethers.getContractAt('RandomInflation', inflationAd);
+  const vdf = await ethers.getContractAt('VDFVerifier', vdfAd);
+  const ecox = await ethers.getContractAt('ECOx', ecoxAd);
+  const rootHashProposal = await ethers
+    .getContractAt('InflationRootHashProposal', rootHashProposalAd);
+  const timedPolicies = await ethers.getContractAt('TimedPolicies', timedPoliciesAd);
+  const trustedNodes = await ethers.getContractAt('TrustedNodes', trustedNodesAd);
+  const currencyTimer = await ethers.getContractAt('CurrencyTimer', currencyTimerAd);
+  const lockup = await ethers.getContractAt('Lockup', lockupAd);
+  const ecoXStaking = await ethers.getContractAt('ECOxStaking', ecoXStakingAd);
+  const faucet = await ethers.getContractAt('EcoFaucet', faucetAd);
+  const cleanup = await ethers.getContractAt('EcoTestCleanup', cleanupAd);
+  const unauthedCleanup = await deploy('MurderousPolicy');
 
   // await timedPolicies.incrementGeneration();
   // console.log(await ecox.name());
@@ -93,7 +82,7 @@ exports.deployPolicy = async (
     trustedNodes,
     currencyTimer,
     lockup,
-    ecoXLockup,
+    ecoXStaking,
     faucet,
     cleanup,
     unauthedCleanup,

@@ -33,7 +33,7 @@ describe('PolicyVotes [@group=8]', () => {
     } = await ecoFixture([]));
 
     await initInflation.mint(await alice.getAddress(), one.mul(5000));
-    await initInflation.mint(await bob.getAddress(), one.mul(5000));
+    await initInflation.mint(await bob.getAddress(), one.mul(8000));
     await initInflation.mint(await charlie.getAddress(), one.mul(5200));
     await initInflation.mint(await dave.getAddress(), one.mul(4800));
     await time.increase(3600 * 24 * 40);
@@ -383,8 +383,8 @@ describe('PolicyVotes [@group=8]', () => {
   });
 
   describe('execute', () => {
-    const adoptedPolicyIdHash = web3.utils.soliditySha3('TestSample');
-    const votesPolicyIdHash = web3.utils.soliditySha3('PolicyVotes');
+    const adoptedPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['TestSample']);
+    const votesPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
 
     beforeEach(async () => {
       await proxiedPolicyVotes.configure(proposal, await time.latestBlock());

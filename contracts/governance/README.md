@@ -73,7 +73,7 @@ snapshot of their ECO and ECOx balances. If any proposal reaches support exceedi
 30% of the total available voting power in the system, it will progress to the
 voting phase where any currency holder may vote either for or against it using the
 same calculation of voting power as the supporting of the proposal. At the end of
-the 72 hour voting phase, the proposal passes iff it has more yes votes than no
+the 72 hour voting phase, the proposal passes if it has more yes votes than no
 votes. However, if the yes votes do not consist of a majority of the total voting
 power, there is a 24 hour delay to implementation. Proposals that were submitted
 but not voted on entitle the proposer to a partial refund of the fee as soon as
@@ -163,7 +163,7 @@ the decisions decided on by the trustees in their Currency Governance votes
 
 ###### NewCurrencyGovernance
 Attributes:
-  `addr` (address) - the address of the new CurrencyGovernance contract.
+  - `addr` (address) - the address of the new CurrencyGovernance contract.
 
 Indicates the location of the new CurrencyGovernance contract.
 
@@ -183,19 +183,10 @@ Indicates the start of a lockup offering.
 ##### notifyGenerationIncrease
 Arguments: none
 
-When notified of a generation increase, this contract will find the existing
-clone of `CurrencyGovernance` to read the results of the most recent vote.
-If that vote calls for the creation of any new lockups or random inflation
-contracts, those are cloned. New lockups are added to the mapping `lockups`
-which maps the generation they were offered to the address of the lockup.
-The old lockups offered during the previous generation are funded to be able
-to pay out interest, as they are now closed for contributions. Finally the
-new `CurrencyGovernance` contract is cloned. Events are emitted to represent
-the actions taken.
+When notified of a generation increase, this contract will find the existing clone of `CurrencyGovernance` to read the results of the most recent vote. If that vote calls for the creation of any new lockups or random inflation contracts, those are cloned. New lockups are added to the mapping `lockups` and new randomInflation is added to the mapping `randomInflations` which map the generation they were offered to the address. The old lockups offered during the previous generation are funded to be able to pay out interest, as they are now closed for contributions. Finally the new `CurrencyGovernance` contract is cloned. Events are emitted to represent the actions taken.
 
-###### Security Notes (this whole thing is probably wrong now?)
-This method cannot be called until the `TimedPolicies` generation has changed
-from the one stored in this contract.
+###### Security Notes
+ - This method cannot be called until the `TimedPolicies` generation has changed from the one stored in this contract.
 
 ## Contributing
 See the [main README](../../README.md).

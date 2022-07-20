@@ -59,8 +59,8 @@ describe('TrustedNodes [@group=7]', () => {
         describe('when there are no empty slots', () => {
           it('succeeds', async () => {
             await expect(policy.testTrust(trustedNodes.address, await alice.getAddress()))
-              .to.emit(trustedNodes, 'TrustedNodeAdded')
-              .withArgs(await alice.getAddress());
+              .to.emit(trustedNodes, 'TrustedNodeAddition')
+              .withArgs(await alice.getAddress(), await trustedNodes.cohort());
           });
 
           it('adds the address to the set', async () => {
@@ -102,8 +102,8 @@ describe('TrustedNodes [@group=7]', () => {
       describe('on an address that is in the set', () => {
         it('succeeds', async () => {
           await expect(policy.testDistrust(trustedNodes.address, await bob.getAddress()))
-            .to.emit(trustedNodes, 'TrustedNodeRemoved')
-            .withArgs(await bob.getAddress());
+            .to.emit(trustedNodes, 'TrustedNodeRemoval')
+            .withArgs(await bob.getAddress(), await trustedNodes.cohort());
         });
 
         it('removes the address from the set', async () => {
@@ -137,7 +137,7 @@ describe('TrustedNodes [@group=7]', () => {
           expect(await trustedNodes.isTrusted(await bob.getAddress())).to.be.false;
         });
 
-        it('Can remove and readd both addresses', async () => {
+        it('Can remove and read both addresses', async () => {
           await policy.testDistrust(trustedNodes.address, await bob.getAddress());
           await policy.testDistrust(trustedNodes.address, await alice.getAddress());
           await policy.testTrust(trustedNodes.address, await alice.getAddress());
