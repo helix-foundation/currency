@@ -42,6 +42,39 @@ describe('BigNumber [@group=3]', () => {
     it('Matches byte 0', async () => {
       assert.equal(await bignum.fromBytes('0x'), '0x');
     });
+
+    it('Matches byte 1', async () => {
+      expect(await bignum.fromBytes('0x01')).to.equal('0x01');
+    });
+
+    it('Matches padded byte 1', async () => {
+      const one = `0x${'00'.repeat(31)}01`;
+      expect(await bignum.fromBytes(one)).to.equal('0x01');
+    });
+
+    it('Rejects asBytes size too small', async () => {
+      await expect(bignum.asBytes(`0x${'ff'.repeat(64)}`, 32)).to.be.revertedWith(
+        'Number too large to represent',
+      );
+    });
+
+    it('Rejects invalid asBytes', async () => {
+      await expect(bignum.asBytes('0x01', 33)).to.be.revertedWith(
+        'Size must be multiple of 0x20',
+      );
+    });
+
+    it('Rejects invalid rightShift value', async () => {
+      await expect(bignum.rightShift('0x01', 4)).to.be.revertedWith(
+        'May only shift by 0x2',
+      );
+    });
+
+    it('Rejects invalid rightShift input', async () => {
+      await expect(bignum.rightShift(`0x${'ff'.repeat(1092)}`, 2)).to.be.revertedWith(
+        'Length must be less than 8192 bits',
+      );
+    });
   });
 
   describe('Math', () => {

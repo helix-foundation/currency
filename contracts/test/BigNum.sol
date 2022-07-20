@@ -22,6 +22,15 @@ contract BigNum {
         return instance.asBytes();
     }
 
+    function asBytes(bytes calldata _value, uint256 size)
+        external
+        pure
+        returns (bytes memory)
+    {
+        BigNumber.Instance memory instance = BigNumber.from(_value);
+        return instance.asBytes(size);
+    }
+
     function add(bytes calldata _a, bytes calldata _b)
         external
         pure
@@ -30,6 +39,15 @@ contract BigNum {
         BigNumber.Instance memory _ai = BigNumber.from(_a);
         BigNumber.Instance memory _bi = BigNumber.from(_b);
         return _ai.privateAdd(_bi).asBytes();
+    }
+
+    function rightShift(bytes calldata _a, uint256 value)
+        external
+        pure
+        returns (bytes memory)
+    {
+        BigNumber.Instance memory _ai = BigNumber.from(_a);
+        return _ai.privateRightShift(value).asBytes();
     }
 
     function absdiff(bytes calldata _a, bytes calldata _b)
