@@ -29,9 +29,6 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
     // the ECOx contract address
     IERC20 public immutable ecoXToken;
 
-    // marks each address's ability to withdraw, maps from address to last voted generation
-    mapping(address => uint256) public votingTracker;
-
     uint256 public currentGeneration;
 
     constructor(Policy _policy, address _ecoXAddr)
@@ -60,12 +57,6 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
         // do this first to ensure that any undelegations in this function are caught
         _burn(_destination, _amount);
 
-        // generation indexing starts at 1000 so this will succeed for new addreses
-        require(
-            votingTracker[_destination] < currentGeneration - 1,
-            "Must not vote or undelegate in the generation on or before withdrawing"
-        );
-
         require(ecoXToken.transfer(_destination, _amount), "Transfer Failed");
 
         emit Withdrawal(_destination, _amount);
@@ -85,27 +76,6 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
         returns (uint256)
     {
         return getPastTotalSupply(_blockNumber);
-    }
-
-    function recordVote(address _who) external {
-        require(
-            msg.sender == policyFor(ID_POLICY_PROPOSALS) ||
-                msg.sender == policyFor(ID_POLICY_VOTES),
-            "Must be a voting contract to call"
-        );
-
-        votingTracker[_who] = currentGeneration;
-    }
-
-    function _undelegate(
-        address delegator,
-        address delegatee,
-        uint256 amount
-    ) internal override {
-        // undelegating makes sure that voting is copied over
-        votingTracker[delegator] = votingTracker[delegatee];
-
-        super._undelegate(delegator, delegatee, amount);
     }
 
     function initialize(address _self) public override onlyConstruction {

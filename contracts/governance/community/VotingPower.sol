@@ -48,10 +48,6 @@ contract VotingPower is PolicedUtils {
         return _power + _powerx;
     }
 
-    function recordVote(address _who) internal {
-        getXStaking().recordVote(_who);
-    }
-
     function getXStaking() internal view returns (ECOxStaking) {
         return ECOxStaking(policyFor(ID_ECOXSTAKING));
     }
