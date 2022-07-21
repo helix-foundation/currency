@@ -55,9 +55,7 @@ describe('RandomInflation [@group=6]', () => {
   );
 
   async function configureInflationRootHash() {
-    const events = await currencyTimer.queryFilter('NewInflationRootHashProposal');
-    const event = events[events.length - 1];
-    addressRootHashProposal = event.args.inflationRootHashProposalContract;
+    addressRootHashProposal = await inflation.inflationRootHashProposal();
     tree = getTree(map);
     proposedRootHash = tree.hash;
 
@@ -177,10 +175,10 @@ describe('RandomInflation [@group=6]', () => {
     await governance.updateStage();
     await governance.compute();
     await time.increase(3600 * 24 * 3);
+    const generation = await currencyTimer.currentGeneration();
     await timedPolicies.incrementGeneration();
-    const events = await currencyTimer.queryFilter('NewInflation');
-    const evt = events[events.length - 1];
-    inflation = await ethers.getContractAt('RandomInflation', evt.args.addr);
+    const inflationAddr = await currencyTimer.randomInflations(generation);
+    inflation = await ethers.getContractAt('RandomInflation', inflationAddr);
     vdf = await ethers.getContractAt('VDFVerifier', await inflation.vdfVerifier());
     await configureInflationRootHash();
   });

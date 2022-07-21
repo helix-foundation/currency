@@ -181,13 +181,6 @@ The `ECO` contract manages the function of our primary token, ECO. Its construct
 
 #### Events
 
-##### NewInflationRootHashProposal
-Attributes:
- - `inflationRootHashProposalContract` (address) - the address of the newly created `InflationRootHashProposal` contract.
- - `generation` (uint256) - the generation in which the decision to add random inflation would be made. This is generally the generation before the call to `notifyGenerationIncrease` is made.
-
-This event marks a `notifyGenerationIncrease` action where the `InflationRootHashProposal` contract is set up and its address is stored in the mapping `rootHashAddressPerGeneration`, keyed by the generation that just ended (same as in the event). See the `InflationRootHashProposal` docs [here](../governance README.md) for more details.
-
 #### mint
 Arguments:
  - `_to` (address) - the address receiving the minted tokens

@@ -69,10 +69,12 @@ describe('Lockup [@group=3]', () => {
     await time.increase(3600 * 24 * 1);
     await borda.updateStage();
     await borda.compute();
+
+    const generation = await currencyTimer.currentGeneration();
     await timedPolicies.incrementGeneration();
 
-    const [evt] = await currencyTimer.queryFilter('NewLockup');
-    lockup = await ethers.getContractAt('Lockup', evt.args.addr);
+    const lockupAddr = await currencyTimer.lockups(generation);
+    lockup = await ethers.getContractAt('Lockup', lockupAddr);
 
     await faucet.connect(charlie).mint(await charlie.getAddress(), 1000000000);
     await eco.connect(charlie).approve(lockup.address, 1000000000);

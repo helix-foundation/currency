@@ -114,7 +114,13 @@ up the addresses for each of these contracts and calls their implementation
 of `notifyGenerationIncrease`.
 
 ##### Events
-###### PolicyDecisionStarted
+###### NewGeneration
+Attributes:
+  - `generation` (uint256) - the index of the newly started generation
+
+Indicates a generation increment.
+
+###### PolicyDecisionStart
 Attributes:
   - `contractAddress` (address) - the address of the `PolicyProposals` contract
     supervising the vote
@@ -142,7 +148,7 @@ contract is created and granted appropriate permissions. The address of the
 new contract can be found by querying the root policy address for the
 `PolicyProposals` policy provider (see ERC1820 references for more info).
 
-A `PolicyDecisionStarted` event is emitted with the `PolicyProposals` contract
+A `PolicyDecisionStart` event is emitted with the `PolicyProposals` contract
 address to indicate the start of a new vote.
 
 ###### Security Notes

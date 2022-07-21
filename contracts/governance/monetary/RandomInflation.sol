@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "../../policy/Policy.sol";
 import "../../policy/PolicedUtils.sol";
 import "../../currency/ECO.sol";
-import "../CurrencyTimer.sol";
 import "../../utils/TimeUtils.sol";
 import "../../VDF/VDFVerifier.sol";
 import "./InflationRootHashProposal.sol";
@@ -41,10 +40,6 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      */
     uint256 public blockNumber;
 
-    /** The generation to use as the reference point for inflation policies
-     */
-    uint256 public generation;
-
     /** The initial value used for VDF to compute random seed. This is set by a
      * call to `commitEntropyVDFSeed()` after the vote results are computed.
      */
@@ -60,21 +55,28 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     /** Timestamp to start claim period from */
     uint256 public claimPeriodStarts;
 
-    /** The Inflation root hash proposal that's used to verify inflation claims */
-    InflationRootHashProposal public inflationRootHashProposal;
-
     /** A mapping recording which claim numbers have been claimed.
      */
     mapping(uint256 => bool) public claimed;
 
-    /** The base VDF implementation */
+    /** The base VDFVerifier implementation */
+    /** The VDF is used to set the random seed for inflation */
     VDFVerifier public vdfVerifier;
+
+    /** The base InflationRootHashProposal implementation */
+    /** The inflation root hash proposal that's used to verify inflation claims */
+    InflationRootHashProposal public inflationRootHashProposal;
 
     // the ECO token address
     ECO public immutable ecoToken;
 
-    // the CurrencyTimer address
-    CurrencyTimer public immutable currencyTimer;
+    /** Emitted when inflation starts.
+     */
+    event InflationStart(
+        VDFVerifier vdfVerifier,
+        InflationRootHashProposal inflationRootHashProposal,
+        uint256 claimPeriodStarts
+    );
 
     /** Fired when a user claims their reward */
     event Claim(address indexed who, uint256 sequence);
@@ -91,13 +93,13 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         Policy _policy,
         VDFVerifier _vdfVerifierImpl,
         uint256 _randomDifficulty,
-        ECO _ecoAddr,
-        CurrencyTimer _timerAddr
+        InflationRootHashProposal _inflationRootHashProposalImpl,
+        ECO _ecoAddr
     ) PolicedUtils(_policy) {
         vdfVerifier = _vdfVerifierImpl;
         randomVDFDifficulty = _randomDifficulty;
+        inflationRootHashProposal = _inflationRootHashProposalImpl;
         ecoToken = _ecoAddr;
-        currencyTimer = _timerAddr;
     }
 
     /** Clean up the inflation contract.
@@ -143,13 +145,15 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        generation = currencyTimer.currentGeneration() - 1;
-        inflationRootHashProposal = currencyTimer.rootHashAddressPerGeneration(
-            generation
-        );
         blockNumber = block.number;
+
         vdfVerifier = VDFVerifier(RandomInflation(_self).vdfVerifier().clone());
         randomVDFDifficulty = RandomInflation(_self).randomVDFDifficulty();
+
+        inflationRootHashProposal = InflationRootHashProposal(
+            RandomInflation(_self).inflationRootHashProposal().clone()
+        );
+        inflationRootHashProposal.configure(blockNumber);
     }
 
     /** Commit to a VDF seed for inflation distribution entropy.
@@ -211,6 +215,11 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         numRecipients = _numRecipients;
         reward = _reward;
         claimPeriodStarts = getTime();
+        emit InflationStart(
+            vdfVerifier,
+            inflationRootHashProposal,
+            claimPeriodStarts
+        );
     }
 
     /** Submit a solution for VDF for randomness.
@@ -266,17 +275,18 @@ contract RandomInflation is PolicedUtils, TimeUtils {
             "A claim can only be made if it has not already been made"
         );
 
-        InflationRootHashProposal rootHashContract = InflationRootHashProposal(
-            currencyTimer.rootHashAddressPerGeneration(generation)
-        );
-
         require(
-            rootHashContract.acceptedRootHash() != 0,
+            inflationRootHashProposal.acceptedRootHash() != 0,
             "A claim can only be made after root hash for this generation was accepted"
         );
 
         require(
-            rootHashContract.verifyClaimSubmission(_who, _proof, _sum, _index),
+            inflationRootHashProposal.verifyClaimSubmission(
+                _who,
+                _proof,
+                _sum,
+                _index
+            ),
             "A claim submission failed root hash verification"
         );
 
@@ -284,7 +294,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
         uint256 claimable = uint256(
             keccak256(abi.encodePacked(seed, _sequence))
-        ) % rootHashContract.acceptedTotalSum();
+        ) % inflationRootHashProposal.acceptedTotalSum();
 
         require(
             claimable < ecoToken.getPastVotes(_who, blockNumber) + _sum,

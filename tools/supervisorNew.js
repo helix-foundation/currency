@@ -35,7 +35,7 @@ const TimedPoliciesABI = getABI('TimedPolicies');
 const PolicyProposalsABI = getABI('PolicyProposals');
 const PolicyVotesABI = getABI('PolicyVotes');
 // const TrustedNodesABI = getABI('TrustedNodes');
-// const VDFVerifierABI = getABI('VDFVerifier');
+const VDFVerifierABI = getABI('VDFVerifier');
 const CurrencyGovernanceABI = getABI('CurrencyGovernance');
 const CurrencyTimerABI = getABI('CurrencyTimer');
 const InflationABI = getABI('RandomInflation');
@@ -77,6 +77,7 @@ class Supervisor {
       await this.getTxHistory(this.currentGenerationStartBlock);
       this.currentGenerationStartBlock = this.blockNumber;
       this.currentGenerationStartTime = this.timestamp;
+      this.currentGeneration += 1;
       this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
     }
   }
@@ -111,15 +112,27 @@ class Supervisor {
       console.log(`randomInflation address is: ${this.randomInflation.address}`);
     }
 
-    filter = this.currencyTimer.filters.NewInflationRootHashProposal();
-    events = await this.currencyTimer.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+    filter = this.randomInflation.filters.InflationStart();
+    events = await this.randomInflation.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
     if (events.length > 0) {
-      const inflationRootHashProposalAddress = events[events.length - 1].args[0];
+      const startInflationEvent = events[events.length - 1];
+
+      const vdfVerifierAddress = startInflationEvent.args[0];
+      this.vdfVerifier = new ethers.Contract(
+        vdfVerifierAddress,
+        VDFVerifierABI.abi,
+        this.signer,
+      );
+
+      console.log(`VDFVerifier address is: ${this.vdfVerifier.address}`);
+
+      const inflationRootHashProposalAddress = startInflationEvent.args[1];
       this.inflationRootHashProposal = new ethers.Contract(
         inflationRootHashProposalAddress,
         InflationRootHashProposalABI.abi,
         this.signer,
       );
+
       console.log(`InflationRootHashProposal address is: ${this.inflationRootHashProposal.address}`);
     }
   }
@@ -221,9 +234,11 @@ class Supervisor {
     );
     console.log(`ECO address is: ${this.eco.address}`);
 
-    const filter = this.timedPolicies.filters.PolicyDecisionStarted();
+    const filter = this.timedPolicies.filters.NewGeneration();
     const events = await this.timedPolicies.queryFilter(filter, 0, 'latest');
-    this.currentGenerationStartBlock = events[events.length - 1].blockNumber;
+    const newGenerationEvent = events[events.length - 1];
+    this.currentGeneration = newGenerationEvent.args[0];
+    this.currentGenerationStartBlock = newGenerationEvent.blockNumber;
     const block = await provider.getBlock(this.currentGenerationStartBlock);
     this.currentGenerationStartTime = block.timestamp;
     this.GENERATION_TIME = await this.timedPolicies.GENERATION_DURATION();

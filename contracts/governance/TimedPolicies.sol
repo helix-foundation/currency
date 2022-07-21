@@ -29,6 +29,13 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      */
     PolicyProposals public policyProposalImpl;
 
+    /**
+     * An event indicating that a new generation has started.
+     *
+     * @param generation The generation number for the new generation.
+     */
+    event NewGeneration(uint256 indexed generation);
+
     /** An event indicating that a policy decision process has started. The
      * address included indicates where on chain the relevant contract can be
      * found. This event is emitted by `startPolicyProposals` to indicate that
@@ -83,6 +90,8 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             // require(address(notifier) != address(0), "Broken state");
             notified.notifyGenerationIncrease();
         }
+
+        emit NewGeneration(generation);
 
         startPolicyProposal();
     }

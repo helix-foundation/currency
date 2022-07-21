@@ -165,7 +165,7 @@ async function deployStage1(options) {
     BLOCK_GAS_LIMIT = limit;
     bootstrapGasCost = options.gasPrice;
     // bootstrapGas = BLOCK_GAS_LIMIT; // try the real gas amount in test to keep it current
-    bootstrapGas = 1526410;
+    bootstrapGas = 1700000;
     if (process.env.IS_COVERAGE === '1') {
       bootstrapGas = limit;
     }
@@ -569,8 +569,8 @@ async function deployStage3(options) {
         options.policyProxy.options.address,
         options.vdfContract.options.address,
         options.randomVDFDifficulty,
+        options.rootHashProposal.options.address,
         ecoProxyAddress,
-        currencyTimerProxyAddress,
       ],
     })
     .send({
@@ -672,7 +672,6 @@ async function deployStage3(options) {
         options.governanceContract.options.address,
         options.inflationContract.options.address,
         options.depositCertificatesContract.options.address,
-        options.rootHashProposal.options.address,
         ecoProxyAddress,
       ],
     })
