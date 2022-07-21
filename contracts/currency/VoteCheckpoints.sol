@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./ERC20.sol";
+import "./ERC20Pausable.sol";
 import "./DelegatePermit.sol";
 
 /**
@@ -20,7 +20,7 @@ import "./DelegatePermit.sol";
  *
  * _Available since v4.2._
  */
-abstract contract VoteCheckpoints is ERC20, DelegatePermit {
+abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     // structure for saving past voting balances, accounting for delegation
     struct Checkpoint {
         uint32 fromBlock;
@@ -72,9 +72,11 @@ abstract contract VoteCheckpoints is ERC20, DelegatePermit {
         address indexed primaryDelegate
     );
 
-    constructor(string memory _name, string memory _symbol)
-        ERC20(_name, _symbol)
-    {}
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address admin
+    ) ERC20Pausable(_name, _symbol, admin) {}
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */

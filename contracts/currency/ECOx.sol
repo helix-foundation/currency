@@ -6,13 +6,13 @@ import "../policy/PolicedUtils.sol";
 import "../utils/TimeUtils.sol";
 import "../governance/monetary/Lockup.sol";
 import "../governance/CurrencyTimer.sol";
-import "./ERC20.sol";
+import "./ERC20Pausable.sol";
 
 /** @title An ERC20 token interface for ECOx
  *
  * Contains the conversion mechanism for turning ECOx into ECO.
  */
-contract ECOx is ERC20, PolicedUtils {
+contract ECOx is ERC20Pausable, PolicedUtils {
     // bits of precision used in the exponentiation approximation
     uint8 public constant PRECISION = 100;
 
@@ -29,7 +29,7 @@ contract ECOx is ERC20, PolicedUtils {
         address _distributor,
         uint256 _initialSupply,
         address _ecoAddr
-    ) ERC20("Eco-X", "ECOx") PolicedUtils(_policy) {
+    ) ERC20Pausable("Eco-X", "ECOx", address(_policy)) PolicedUtils(_policy) {
         require(
             _initialSupply > 0 && _initialSupply <= type(uint256).max,
             "initial supply not properly set"

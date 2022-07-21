@@ -1692,4 +1692,17 @@ describe('ECO [@group=1]', () => {
       });
     });
   });
+
+  context('Pausable', () => {
+    it('is not paused', async () => {
+      expect(await eco.paused()).to.be.false;
+    });
+
+    it('cannot be paused by random address', async () => {
+      await expect(eco.connect(accounts[0]).pause())
+        .to.be.revertedWith(
+          'ERC20Pausable: not pauser',
+        );
+    });
+  });
 });

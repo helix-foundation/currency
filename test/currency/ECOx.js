@@ -233,6 +233,19 @@ describe('ECOx', () => {
     });
   });
 
+  context('Pausable', () => {
+    it('is not paused', async () => {
+      expect(await ecox.paused()).to.be.false;
+    });
+
+    it('cannot be paused by random address', async () => {
+      await expect(ecox.connect(alice).pause())
+        .to.be.revertedWith(
+          'ERC20Pausable: not pauser',
+        );
+    });
+  });
+
   describe('getters work properly', () => {
     it('name returns correct name', async () => {
       expect(await ecox.name()).to.equal('Eco-X');
