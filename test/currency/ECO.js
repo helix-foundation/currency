@@ -1478,6 +1478,71 @@ describe('ECO [@group=1]', () => {
       });
     });
 
+    context('partial undelegateAmountFromAddress', () => {
+      it('can undelegate partially', async () => {
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(4));
+
+        const tx1 = await eco
+          .connect(accounts[1])
+          .undelegateAmountFromAddress(await accounts[4].getAddress(), voteAmount.div(8));
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
+
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+        ).to.equal(voteAmount.div(8).mul(3));
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+        ).to.equal(voteAmount.div(2).mul(3));
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+        ).to.equal(voteAmount.div(8).mul(9));
+
+        const tx2 = await eco
+          .connect(accounts[1])
+          .undelegateAmountFromAddress(await accounts[3].getAddress(), voteAmount.div(4));
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+        ).to.equal(voteAmount.div(8).mul(5));
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+        ).to.equal(voteAmount.div(4).mul(5));
+        expect(
+          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+        ).to.equal(voteAmount.div(8).mul(9));
+      });
+
+      it('reverts if amount is too high', async () => {
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
+
+        await expect(eco
+          .connect(accounts[1])
+          .undelegateAmountFromAddress(await accounts[3].getAddress(), voteAmount))
+          .to.be.revertedWith('amount not available to undelegate');
+      });
+
+      it('reverts if you try to undelegateAmountFromAddress as a primary delegator', async () => {
+        await eco
+          .connect(accounts[1])
+          .delegate(await accounts[3].getAddress());
+
+        await expect(eco
+          .connect(accounts[1])
+          .undelegateAmountFromAddress(await accounts[3].getAddress(), voteAmount.div(2)))
+          .to.be.revertedWith('undelegating amounts is only available for partial delegators');
+      });
+    });
+
     context('isOwnDelegate', () => {
       it('correct state when delegating and undelegating', async () => {
         expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;

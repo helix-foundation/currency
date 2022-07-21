@@ -6,7 +6,7 @@ import "../CurrencyTimer.sol";
 import "../../policy/PolicedUtils.sol";
 import "../../utils/TimeUtils.sol";
 import "../IGeneration.sol";
-import "../../currency/IECO.sol";
+import "../../currency/ECO.sol";
 
 /** @title Lockup
  * This provides deposit certificate functionality for the purpose of countering
@@ -21,13 +21,61 @@ import "../../currency/IECO.sol";
  * additional penalty of that same amount.
  */
 contract Lockup is PolicedUtils, TimeUtils {
-    /** The Sale event indicates that a deposit certificate has been sold
+    // data structure for deposits made per address
+    struct DepositRecord {
+        /** The amount deposited in the underlying representation of the token
+         * This allows deposit amounts to account for linear inflation during lockup
+         */
+        uint256 gonsDepositAmount;
+        /** The amount of ECO to reward a successful withdrawal
+         * Also equal to the penalty for withdrawing early
+         * Calculated upon deposit
+         */
+        uint256 ecoDepositReward;
+        /** Timestamp for withdrawing without penalty
+         * Calculated by taking the deposit time and adding duration
+         */
+        uint256 lockupEnd;
+        /** Address the lockup has delegated the deposited funds to
+         * Either the depositor or their primary delegate at time of deposit
+         */
+        address delegate;
+    }
+
+    // the ECO token address
+    ECO public immutable ecoToken;
+
+    // the CurrencyTimer address
+    CurrencyTimer public immutable currencyTimer;
+
+    // length in seconds that deposited funds must be locked up for a reward
+    uint256 public duration;
+
+    // timestamp for when the Lockup is no longer recieving deposits
+    uint256 public depositWindowEnd;
+
+    // length of the deposit window
+    uint256 public constant DEPOSIT_WINDOW = 2 days;
+
+    /** The fraction of payout gained on successful withdrawal
+     * Also the fraction for the penality for withdrawing early.
+     * A 9 digit fixed point decimal representation
+     */
+    uint256 public interest;
+
+    // denotes the number of decimals of fixed point math for interest
+    uint256 public constant INTEREST_DIVISOR = 1e9;
+
+    // mapping from depositing addresses to data on their deposit
+    mapping(address => DepositRecord) public deposits;
+
+    /** The Deposit event indicates that a deposit certificate has been sold
      * to a particular address in a particular amount.
      *
      * @param to The address that a deposit certificate has been issued to.
-     * @param amount The amount of tokens deposited for the certificate.
+     * @param amount The amount in basic unit of 10^{-18} ECO (weico) at time of deposit.
      */
-    event Sale(address to, uint256 amount);
+    event Deposit(address indexed to, uint256 amount);
 
     /** The Withdrawal event indicates that a withdrawal has been made,
      * and records the account that was credited, the amount it was credited
@@ -36,38 +84,23 @@ contract Lockup is PolicedUtils, TimeUtils {
      * @param to The address that has made a withdrawal.
      * @param amount The amount in basic unit of 10^{-18} ECO (weico) withdrawn.
      */
-    event Withdrawal(address to, uint256 amount);
-
-    // the ECO token address
-    IECO public immutable ecoToken;
-
-    // the CurrencyTimer address
-    CurrencyTimer public immutable currencyTimer;
-
-    uint256 public generation;
-
-    uint256 public duration;
-
-    uint256 public constant BILLION = 1e9;
-
-    uint256 public interest;
-
-    uint256 public totalDeposit;
-
-    mapping(address => uint256) public depositBalances;
-    mapping(address => uint256) public depositLockupEnds;
+    event Withdrawal(address indexed to, uint256 amount);
 
     constructor(
         Policy _policy,
-        address _ecoAddr,
-        address _timerAddr
+        ECO _ecoAddr,
+        CurrencyTimer _timerAddr
     ) PolicedUtils(_policy) {
-        ecoToken = IECO(_ecoAddr);
-        currencyTimer = CurrencyTimer(_timerAddr);
+        ecoToken = _ecoAddr;
+        currencyTimer = _timerAddr;
     }
 
     function deposit(uint256 _amount) external {
         internalDeposit(_amount, msg.sender, msg.sender);
+    }
+
+    function depositFor(uint256 _amount, address _benefactor) external {
+        internalDeposit(_amount, msg.sender, _benefactor);
     }
 
     function withdraw() external {
@@ -80,10 +113,16 @@ contract Lockup is PolicedUtils, TimeUtils {
 
     function clone(uint256 _duration, uint256 _interest)
         external
-        returns (address)
+        returns (Lockup)
     {
-        address _clone = createClone(address(this));
-        Lockup(_clone).initialize(address(this), _duration, _interest);
+        require(
+            implementation() == address(this),
+            "This method cannot be called on clones"
+        );
+        require(_duration > 0, "duration should not be zero");
+        require(_interest > 0, "interest should not be zero");
+        Lockup _clone = Lockup(createClone(address(this)));
+        _clone.initialize(address(this), _duration, _interest);
         return _clone;
     }
 
@@ -93,26 +132,34 @@ contract Lockup is PolicedUtils, TimeUtils {
         uint256 _interest
     ) external onlyConstruction {
         super.initialize(_self);
-        generation = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
         duration = _duration;
         interest = _interest;
+        depositWindowEnd = getTime() + DEPOSIT_WINDOW;
     }
 
     function doWithdrawal(address _owner, bool _allowEarly) internal {
-        uint256 _amount = depositBalances[_owner];
+        DepositRecord storage _deposit = deposits[_owner];
+
+        uint256 _gonsAmount = _deposit.gonsDepositAmount;
 
         require(
-            _amount > 0,
-            "Withdrawals can only be made for accounts that made deposits"
+            _gonsAmount > 0,
+            "Withdrawals can only be made for accounts with valid deposits"
         );
 
-        bool early = getTime() < depositLockupEnds[_owner] || selling();
+        bool early = getTime() < _deposit.lockupEnd;
 
         require(_allowEarly || !early, "Only depositor may withdraw early");
 
-        totalDeposit = totalDeposit - _amount;
-        uint256 _delta = (_amount * interest) / BILLION;
+        uint256 _inflationMult = ecoToken.getPastLinearInflation(block.number);
+        uint256 _amount = _gonsAmount / _inflationMult;
+        uint256 _rawDelta = _deposit.ecoDepositReward;
+        uint256 _delta = _amount > _rawDelta ? _rawDelta : _amount;
 
+        _deposit.gonsDepositAmount = 0;
+        _deposit.ecoDepositReward = 0;
+
+        ecoToken.undelegateAmountFromAddress(_deposit.delegate, _gonsAmount);
         require(ecoToken.transfer(_owner, _amount), "Transfer Failed");
         currencyTimer.lockupWithdrawal(_owner, _delta, early);
 
@@ -123,28 +170,33 @@ contract Lockup is PolicedUtils, TimeUtils {
         }
     }
 
-    function selling() public view returns (bool) {
-        return
-            IGeneration(policyFor(ID_TIMED_POLICIES)).generation() ==
-            generation;
-    }
-
     function internalDeposit(
         uint256 _amount,
         address _payer,
         address _who
     ) private {
-        require(selling(), "Deposits can only be made during sale window");
+        require(
+            getTime() < depositWindowEnd,
+            "Deposits can only be made during sale window"
+        );
 
         require(
             ecoToken.transferFrom(_payer, address(this), _amount),
             "Transfer Failed"
         );
 
-        totalDeposit = totalDeposit + _amount;
-        depositBalances[_who] = depositBalances[_who] + _amount;
-        depositLockupEnds[_who] = getTime() + duration;
+        DepositRecord storage _deposit = deposits[_who];
+        uint256 _inflationMult = ecoToken.getPastLinearInflation(block.number);
+        uint256 _gonsAmount = _amount * _inflationMult;
+        address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
 
-        emit Sale(_who, _amount);
+        ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
+
+        _deposit.lockupEnd = getTime() + duration;
+        _deposit.ecoDepositReward += (_amount * interest) / INTEREST_DIVISOR;
+        _deposit.gonsDepositAmount += _gonsAmount;
+        _deposit.delegate = _primaryDelegate;
+
+        emit Deposit(_who, _amount);
     }
 }
