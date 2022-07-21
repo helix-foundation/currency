@@ -273,10 +273,15 @@ contract PolicyProposals is VotingPower, TimeUtils {
             address(_p.proposal) == address(0),
             "A proposal may only be registered once"
         );
-        require(
-            ecoToken.transferFrom(msg.sender, address(this), COST_REGISTER),
-            "The token cost of registration must be approved to transfer prior to calling registerProposal"
-        );
+
+        // if eco token is paused we can't take proposal fee
+        // note that currently refunds can be claimed for failed proposals even if fees were not taken
+        if (!ecoToken.paused()) {
+            require(
+                ecoToken.transferFrom(msg.sender, address(this), COST_REGISTER),
+                "The token cost of registration must be approved to transfer prior to calling registerProposal"
+            );
+        }
 
         _p.proposal = _prop;
         _p.proposer = msg.sender;

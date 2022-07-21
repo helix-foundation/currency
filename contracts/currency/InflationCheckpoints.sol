@@ -38,7 +38,7 @@ abstract contract InflationCheckpoints is
         Policy _policy,
         string memory _name,
         string memory _symbol
-    ) VoteCheckpoints(_name, _symbol) PolicedUtils(_policy) {
+    ) VoteCheckpoints(_name, _symbol, address(_policy)) PolicedUtils(_policy) {
         _writeCheckpoint(
             _linearInflationCheckpoints,
             _replace,
@@ -65,6 +65,7 @@ abstract contract InflationCheckpoints is
         address to,
         uint256 amount
     ) internal virtual override returns (uint256) {
+        super._beforeTokenTransfer(from, to, amount);
         uint256 gonsAmount = amount *
             _checkpointsLookup(_linearInflationCheckpoints, block.number);
 

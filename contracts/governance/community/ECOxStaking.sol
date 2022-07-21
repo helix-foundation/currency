@@ -32,7 +32,9 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
     uint256 public currentGeneration;
 
     constructor(Policy _policy, address _ecoXAddr)
-        VoteCheckpoints("S-Eco-X", "sECOx")
+        // Note that the policy has the ability to pause transfers
+        // through ERC20Pausable, although transfers are paused by default
+        VoteCheckpoints("S-Eco-X", "sECOx", address(_policy))
         PolicedUtils(_policy)
     {
         ecoXToken = IERC20(_ecoXAddr);
