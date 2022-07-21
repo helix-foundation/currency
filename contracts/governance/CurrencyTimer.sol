@@ -134,6 +134,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         if (_numberOfRecipients > 0 && _randomInflationReward > 0) {
             // new inflation contract
             RandomInflation _clone = RandomInflation(inflationImpl.clone());
+            rootHashAddressPerGeneration[_old].setRandomInflation(_clone);
             ecoToken.mint(
                 address(_clone),
                 _numberOfRecipients * _randomInflationReward

@@ -87,7 +87,7 @@
 //   await vdf.methods.start(bnHex(toBN(seed)), difficulty, bnHex(toBN(key))).send({ gas: 4000000 });
 //   for (let i = 0; i < proof.length; i += 1) {
 //     // eslint-disable-next-line no-await-in-loop
-//     await vdf.methods.update(i + 1, bnHex(toBN(proof[i]))).send({ gas: 4000000 });
+//     await vdf.methods.update(bnHex(toBN(proof[i]))).send({ gas: 4000000 });
 //   }
 // }
 
@@ -318,17 +318,17 @@
 //           from: this.account,
 //         },
 //       );
-//       const responses = (await rootHashProposal.getPastEvents('ChallengeResponseVerified', {
+//       const responses = (await rootHashProposal.getPastEvents('ChallengeSuccessResponse', {
 //         fromBlock: 0,
 //         toBlock: 'latest',
 //       })).map((el) => ({ eventParams: el.returnValues, tx: el.transactionHash }));
 
-//       const challenges = (await rootHashProposal.getPastEvents('RootHashChallengeIndexRequestAdded', {
+//       const challenges = (await rootHashProposal.getPastEvents('RootHashChallengeIndexRequest', {
 //         fromBlock: 0,
 //         toBlock: 'latest',
 //       })).map((el) => ({ eventParams: el.returnValues, tx: el.transactionHash }));
 
-//       const proposals = (await rootHashProposal.getPastEvents('RootHashProposed', {
+//       const proposals = (await rootHashProposal.getPastEvents('RootHashPost', {
 //         fromBlock: 0,
 //         toBlock: 'latest',
 //       })).map((el) => ({ eventParams: el.returnValues, tx: el.transactionHash }));
@@ -707,7 +707,7 @@
 
 //           const lockupEnds = toBN(await deposit.methods.lockupEnds().call()).toNumber();
 //           if (lockupEnds < this.timeStamp) {
-//             const investors = (await deposit.getPastEvents('Sale', { fromBlock: 0, toBlock: 'latest' }))
+//             const investors = (await deposit.getPastEvents('Deposit', { fromBlock: 0, toBlock: 'latest' }))
 //               .map((x) => x.returnValues.to);
 
 //             for (let i = 0; i < investors.length; i += 1) {

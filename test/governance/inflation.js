@@ -77,7 +77,7 @@ describe('RandomInflation [@group=6]', () => {
     await time.increase(3600 * 25);
     await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())).to.emit(
       rootHashProposal,
-      'RootHashAccepted',
+      'RootHashAcceptance',
     );
   }
 
@@ -257,7 +257,7 @@ describe('RandomInflation [@group=6]', () => {
 
         await vdf.start(bnHex(vdfseed), t, bnHex(y));
         for (let i = 0; i < u.length; i += 1) {
-          await vdf.update(i + 1, bnHex(u[i]));
+          await vdf.update(bnHex(u[i]));
         }
       });
 
@@ -298,7 +298,7 @@ describe('RandomInflation [@group=6]', () => {
 
         await vdf.start(bnHex(vdfseed), t, bnHex(y));
         for (let i = 0; i < u.length; i += 1) {
-          await vdf.update(i + 1, bnHex(u[i]));
+          await vdf.update(bnHex(u[i]));
         }
         await inflation.submitEntropyVDF(bnHex(y));
       });
@@ -432,7 +432,7 @@ describe('RandomInflation [@group=6]', () => {
 
           await vdf.start(bnHex(vdfseed), t, bnHex(y));
           for (let i = 0; i < u.length; i += 1) {
-            await vdf.update(i + 1, bnHex(u[i]));
+            await vdf.update(bnHex(u[i]));
           }
           await inflation.submitEntropyVDF(bnHex(y));
           const numRecipients = await inflation.numRecipients();
@@ -462,7 +462,7 @@ describe('RandomInflation [@group=6]', () => {
 
           await vdf.start(bnHex(vdfseed), t, bnHex(y));
           for (let i = 0; i < u.length; i += 1) {
-            await vdf.update(i + 1, bnHex(u[i]));
+            await vdf.update(bnHex(u[i]));
           }
 
           await inflation.submitEntropyVDF(bnHex(y));

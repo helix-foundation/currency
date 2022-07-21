@@ -92,7 +92,7 @@ describe('InflationRootHashProposal', () => {
         rootHashProposal.connect(accounts[1]).claimMissingAccount(proposer, index, account),
       )
         .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
-        .to.emit(rootHashProposal, 'RootHashRejected');
+        .to.emit(rootHashProposal, 'RootHashRejection');
       return true;
     } catch (e) {
       return false;
@@ -188,7 +188,7 @@ describe('InflationRootHashProposal', () => {
           .connect(accounts[0])
           .proposeRootHash(proposedRootHash, totalSum, amountOfAccounts),
       )
-        .to.emit(rootHashProposal, 'RootHashProposed')
+        .to.emit(rootHashProposal, 'RootHashPost')
         .withArgs(await accounts[0].getAddress(), proposedRootHash, totalSum, amountOfAccounts);
     });
 
@@ -200,10 +200,9 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[1])
             .challengeRootHashRequestAccount(await accounts[0].getAddress(), requestedIndex),
         )
-          .to.emit(rootHashProposal, 'RootHashChallengeIndexRequestAdded')
+          .to.emit(rootHashProposal, 'RootHashChallengeIndexRequest')
           .withArgs(
             await accounts[0].getAddress(),
-            proposedRootHash,
             await accounts[1].getAddress(),
             requestedIndex,
           );
@@ -239,10 +238,9 @@ describe('InflationRootHashProposal', () => {
               requestedIndex,
             ),
         )
-          .to.emit(rootHashProposal, 'ChallengeResponseVerified')
+          .to.emit(rootHashProposal, 'ChallengeSuccessResponse')
           .withArgs(
             await accounts[0].getAddress(),
-            proposedRootHash,
             await accounts[1].getAddress(),
             a[0].account.toString(),
             a[0].balance.toString(),
@@ -271,7 +269,8 @@ describe('InflationRootHashProposal', () => {
           rootHashProposal
             .connect(accounts[1])
             .challengeRootHashRequestAccount(await accounts[0].getAddress(), requestedIndex),
-        ).to.be.revertedWith('requested index already responded');
+        )
+          .to.be.revertedWith('Index already challenged');
       });
 
       it('catches balance cheats', async () => {
@@ -296,9 +295,10 @@ describe('InflationRootHashProposal', () => {
       });
 
       it('doesnt allow double configuration', async () => {
-        await expect(rootHashProposal.configure(1)).to.be.revertedWith(
-          'This instance has already been configured',
-        );
+        await expect(rootHashProposal.configure(1))
+          .to.be.revertedWith(
+            'This instance has already been configured',
+          );
       });
 
       it('doesnt allow double proposal', async () => {});
@@ -515,7 +515,7 @@ describe('InflationRootHashProposal', () => {
               BigNumber.from(a[0].sum.toString()),
               requestedIndex,
             ),
-        ).to.emit(rootHashProposal, 'ChallengeResponseVerified');
+        ).to.emit(rootHashProposal, 'ChallengeSuccessResponse');
 
         requestedIndex = 1;
         await rootHashProposal
@@ -566,7 +566,7 @@ describe('InflationRootHashProposal', () => {
               BigNumber.from(a[0].sum.toString()),
               requestedIndex,
             ),
-        ).to.emit(rootHashProposal, 'ChallengeResponseVerified');
+        ).to.emit(rootHashProposal, 'ChallengeSuccessResponse');
 
         requestedIndex = 2;
         await rootHashProposal
@@ -643,7 +643,7 @@ describe('InflationRootHashProposal', () => {
               BigNumber.from(a[0].sum.toString()),
               requestedIndex,
             ),
-        ).to.emit(rootHashProposal, 'ChallengeResponseVerified');
+        ).to.emit(rootHashProposal, 'ChallengeSuccessResponse');
 
         requestedIndex = 0;
         await rootHashProposal
@@ -687,7 +687,7 @@ describe('InflationRootHashProposal', () => {
               BigNumber.from(a[0].sum.toString()),
               requestedIndex,
             ),
-        ).to.emit(rootHashProposal, 'ChallengeResponseVerified');
+        ).to.emit(rootHashProposal, 'ChallengeSuccessResponse');
 
         requestedIndex = 1;
         await rootHashProposal
@@ -731,7 +731,7 @@ describe('InflationRootHashProposal', () => {
               BigNumber.from(a[0].sum.toString()),
               requestedIndex,
             ),
-        ).to.emit(rootHashProposal, 'ChallengeResponseVerified');
+        ).to.emit(rootHashProposal, 'ChallengeSuccessResponse');
 
         requestedIndex = 2;
         await rootHashProposal
@@ -762,10 +762,9 @@ describe('InflationRootHashProposal', () => {
           ).toString() === '0',
         );
         await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress()))
-          .to.emit(rootHashProposal, 'RootHashAccepted')
+          .to.emit(rootHashProposal, 'RootHashAcceptance')
           .withArgs(
             await accounts[0].getAddress(),
-            proposedRootHash,
             totalSum.toString(),
             amountOfAccounts.toString(),
           );
@@ -794,10 +793,9 @@ describe('InflationRootHashProposal', () => {
           ).toString() === '0',
         );
         await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress()))
-          .to.emit(rootHashProposal, 'RootHashAccepted')
+          .to.emit(rootHashProposal, 'RootHashAcceptance')
           .withArgs(
             await accounts[0].getAddress(),
-            proposedRootHash,
             totalSum.toString(),
             amountOfAccounts.toString(),
           );
@@ -835,7 +833,7 @@ describe('InflationRootHashProposal', () => {
       //       '0x0000000000000000000000000000000000000000',
       //     )).tx,
       //     InflationRootHashProposal,
-      //     'RootHashRejected',
+      //     'RootHashRejection',
       //     {
       //       proposer: '0x0000000000000000000000000000000000000000',
       //       proposedRootHash
@@ -848,7 +846,7 @@ describe('InflationRootHashProposal', () => {
         await time.increase(86401);
         await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())).to.emit(
           rootHashProposal,
-          'RootHashAccepted',
+          'RootHashAcceptance',
         );
 
         await expect(

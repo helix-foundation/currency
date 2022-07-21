@@ -59,8 +59,7 @@ function prove(x, t, n = defn) {
     // (unfortunately, there is no easy way to copy hash context, so
     // rehash x and y)
     const res = web3.utils.soliditySha3(
-      x,
-      bnHex(y, bytelen),
+      web3.utils.soliditySha3(x, bnHex(y, bytelen)),
       bnHex(uiprime.fromRed(), bytelen),
       i + 1,
     );
@@ -191,7 +190,7 @@ async function proveAndReveal(inflation, seed, voter) {
   await vdf.start(bnHex(toBN(seed)), difficulty, bnHex(key), { from: voter });
   for (let i = 0; i < proof.length; i += 1) {
     // eslint-disable-next-line no-await-in-loop
-    await vdf.update(i + 1, bnHex(proof[i]), { from: voter });
+    await vdf.update(bnHex(proof[i]), { from: voter });
   }
 
   return [key, await inflation.reveal(voter, bnHex(key), { from: voter })];

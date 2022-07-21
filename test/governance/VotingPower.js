@@ -63,7 +63,9 @@ describe('VotingPower [@group=2]', () => {
     describe('only ECO power', () => {
       it('Has the correct total power', async () => {
         // 1000 total, no ECOx power
-        expect(await proposals.totalVotingPower(blockNumber)).to.equal(one.mul(1000));
+        const ecoTotal = await eco.totalSupply();
+        const ecoXTotal = await ecox.totalSupply();
+        expect(await proposals.totalVotingPower(blockNumber)).to.equal(ecoTotal.add(ecoXTotal));
       });
 
       it('Has the right power for alice', async () => {
@@ -84,9 +86,11 @@ describe('VotingPower [@group=2]', () => {
       });
 
       it('Has the correct total power', async () => {
+        const ecoTotal = await eco.totalSupply();
+        const ecoXTotal = await ecox.totalSupply();
         // The original 750 plus all of alice's power as ECO
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(
-          one.mul(750).add(alicePower),
+          ecoTotal.add(ecoXTotal),
         );
       });
 

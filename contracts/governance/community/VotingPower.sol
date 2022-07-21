@@ -33,7 +33,7 @@ contract VotingPower is PolicedUtils {
         returns (uint256)
     {
         uint256 total = ecoToken.totalSupplyAt(_blockNumber);
-        uint256 totalx = getXStaking().totalVotingECOx(_blockNumber);
+        uint256 totalx = ecoXToken.totalSupply();
 
         return total + totalx;
     }
@@ -45,12 +45,7 @@ contract VotingPower is PolicedUtils {
     {
         uint256 _power = ecoToken.getPastVotes(_who, _blockNumber);
         uint256 _powerx = getXStaking().votingECOx(_who, _blockNumber);
-
         return _power + _powerx;
-    }
-
-    function recordVote(address _who) internal {
-        getXStaking().recordVote(_who);
     }
 
     function getXStaking() internal view returns (ECOxStaking) {

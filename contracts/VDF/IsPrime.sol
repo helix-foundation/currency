@@ -49,23 +49,55 @@ contract IsPrime {
         }
 
         uint256 s = 0;
-        uint256 d = _n - 1;
-        while (d & 1 == 0) {
-            d = d >> 1;
-            s++;
+        uint256 _n3 = _n - 3;
+        uint256 _n1 = _n - 1;
+        uint256 d = _n1;
+
+        //calculate the trailing zeros on the binary representation of the number
+        if (d << 128 == 0) {
+            d >>= 128;
+            s += 128;
+        }
+        if (d << 192 == 0) {
+            d >>= 64;
+            s += 64;
+        }
+        if (d << 224 == 0) {
+            d >>= 32;
+            s += 32;
+        }
+        if (d << 240 == 0) {
+            d >>= 16;
+            s += 16;
+        }
+        if (d << 248 == 0) {
+            d >>= 8;
+            s += 8;
+        }
+        if (d << 252 == 0) {
+            d >>= 4;
+            s += 4;
+        }
+        if (d << 254 == 0) {
+            d >>= 2;
+            s += 2;
+        }
+        if (d << 255 == 0) {
+            d >>= 1;
+            s += 1;
         }
 
+        bytes32 prevBlockHash = blockhash(block.number - 1);
+
         for (uint256 i = 0; i < _k; ++i) {
-            bytes32 hash = keccak256(
-                abi.encode(blockhash(block.number - 1), i)
-            );
-            uint256 a = (uint256(hash) % (_n - 3)) + 2;
+            bytes32 hash = keccak256(abi.encode(prevBlockHash, i));
+            uint256 a = (uint256(hash) % _n3) + 2;
             uint256 x = expmod(a, d, _n);
-            if (x != 1 && x != (_n - 1)) {
+            if (x != 1 && x != _n1) {
                 uint256 j;
                 for (j = 0; j < s; ++j) {
                     x = mulmod(x, x, _n);
-                    if (x == _n - 1) {
+                    if (x == _n1) {
                         break;
                     }
                 }

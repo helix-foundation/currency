@@ -192,7 +192,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             uint256 _returnLength
         ) = _getPaginationBounds(_page, _resultsPerPage);
         //avoid overflows by returning empty if out of bounds on index
-        if (_startIndex > totalProposals - 1) {
+        if (totalProposals == 0 || _startIndex > totalProposals - 1) {
             return new Proposal[](0);
         }
 
@@ -229,7 +229,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             uint256 _returnLength
         ) = _getPaginationBounds(_page, _resultsPerPage);
         //avoid overflows by returning empty if out of bounds on index
-        if (_startIndex > totalProposals - 1) {
+        if (totalProposals == 0 || _startIndex > totalProposals - 1) {
             return new Prop[](0);
         }
 
@@ -330,7 +330,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
         _p.totalStake = _p.totalStake + _amount;
         staked[_p.proposal][msg.sender] = true;
 
-        recordVote(msg.sender);
         emit Support(msg.sender, _prop);
 
         uint256 _total = totalVotingPower(blockNumber);
@@ -463,7 +462,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         //avoid overflows by returning empty if out of bounds on index
         uint256 _totalProposals = totalProposals;
-        if (_startIndex > _totalProposals - 1) {
+        if (_totalProposals == 0 || _startIndex > _totalProposals - 1) {
             return (_startIndex, _loopEnd, _returnLength);
         }
 
