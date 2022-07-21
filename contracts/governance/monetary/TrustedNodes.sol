@@ -21,8 +21,6 @@ contract TrustedNodes is PolicedUtils {
 
     uint256 public yearStartGen;
 
-    uint256 public prevYearStartGen;
-
     address public hoard;
 
     /** Tracks the current trustee cohort
@@ -47,14 +45,16 @@ contract TrustedNodes is PolicedUtils {
     mapping(address => uint256) public votingRecord;
 
     // last year's voting record
-    mapping(address => uint256) public prevVotingRecord;
+    mapping(address => uint256) public lastYearVotingRecord;
 
-    // the generation of the last reward withdrawn by a trustee
-    // not the last generation in which a trustee withdrew
-    mapping(address => uint256) public lastWithdrawGeneration;
+    // completely vested
+    mapping(address => uint256) public fullyVestedRewards;
 
     /** reward earned per completed and revealed vote */
     uint256 public voteReward;
+
+    // maximum rewards that can be withdrawn at once
+    uint256 public maxRewards;
 
     // unallocated rewards to be sent to hoard upon the end of the year term
     uint256 public unallocatedRewardsCount;
@@ -110,6 +110,7 @@ contract TrustedNodes is PolicedUtils {
         super.initialize(_self);
         // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
+        maxRewards = type(uint256).max / voteReward;
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
         uint256 _cohort = TrustedNodes(_self).cohort();
@@ -180,34 +181,31 @@ contract TrustedNodes is PolicedUtils {
     }
 
     function redeemVoteRewards() external {
-        // uint256 votesRedeemed = vestedRewards[msg.sender];
-        // uint256 _reward = _votesRedeemed * voteReward;
-        uint256 currGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
-        require(
-            currGen > yearStartGen,
-            "no withdrawals during first generation of a year term");
-        // do we need this to prevent underflow? i think solidity should revert
-        uint256 yearGenerationCount =  currGen - yearStartGen - 1;
-        uint256 record = prevVotingRecord[msg.sender];
-        uint256 votesRedeemed = (record > yearGenerationCount
-            ? yearGenerationCount
-            : record);
-        uint256 lastWithdrawnGen = lastWithdrawGeneration[msg.sender];
-        if (lastWithdrawnGen < prevYearStartGen) {
-            votesRedeemed += prevYearStartGen - lastWithdrawnGen;
-        }
+        // rewards from last year
+        uint256 yearGenerationCount = TimedPolicies(
+            policyFor(ID_TIMED_POLICIES)
+        ).generation() - yearStartGen;
+        uint256 record = lastYearVotingRecord[msg.sender];
+        uint256 rewardsToRedeem = (
+            record > yearGenerationCount ? yearGenerationCount : record
+        );
+        lastYearVotingRecord[msg.sender] -= rewardsToRedeem;
 
-        uint256 reward;
-        unchecked {
-            reward = votesRedeemed * voteReward;
+        // fully vested rewards if they exist
+        uint256 vested = fullyVestedRewards[msg.sender];
+        if (vested > 0) {
+            rewardsToRedeem += vested;
+            fullyVestedRewards[msg.sender] = 0;
         }
-        if (reward / voteReward != votingRecord[msg.sender]) {
-            // overflow: only redeem some of the rewards
-            votesRedeemed = type(uint256).max / voteReward;
-            reward = voteReward * votesRedeemed;
-        }
-        prevVotingRecord[msg.sender] -= votesRedeemed;
-        lastWithdrawGeneration[msg.sender] += votesRedeemed;
+        uint256 checked = rewardsToRedeem < maxRewards
+            ? rewardsToRedeem
+            : maxRewards;
+
+        // if this sum is too large, return unwithdrawable rewards
+        fullyVestedRewards[msg.sender] += rewardsToRedeem - checked;
+
+        uint256 reward = checked * voteReward;
+
         require(
             ECOx(policyFor(ID_ECOX)).transfer(msg.sender, reward),
             "Transfer Failed"
@@ -237,7 +235,6 @@ contract TrustedNodes is PolicedUtils {
             currentCohort.trustedNodes.length +
             1;
         currentCohort.trustedNodes.push(_node);
-        lastWithdrawGeneration[_node] = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
         emit TrustedNodeAddition(_node, cohort);
     }
 
@@ -265,7 +262,8 @@ contract TrustedNodes is PolicedUtils {
         address[] memory trustees = cohorts[cohort].trustedNodes;
         for (uint256 i = 0; i < trustees.length; ++i) {
             address trustee = trustees[i];
-            prevVotingRecord[trustee] += votingRecord[trustee];
+            fullyVestedRewards[trustee] += lastYearVotingRecord[trustee];
+            lastYearVotingRecord[trustee] = votingRecord[trustee];
         }
 
         uint256 reward = unallocatedRewardsCount * voteReward;
@@ -273,7 +271,6 @@ contract TrustedNodes is PolicedUtils {
             cohorts[cohort].trustedNodes.length *
             (YEAR / GENERATION - 1);
         yearEnd = block.timestamp + YEAR;
-        prevYearStartGen = yearStartGen;
         yearStartGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
 
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
