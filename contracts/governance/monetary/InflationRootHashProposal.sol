@@ -7,8 +7,6 @@ import "../../utils/TimeUtils.sol";
 import "../../currency/IECO.sol";
 import "../monetary/RandomInflation.sol";
 
-import "hardhat/console.sol";
-
 /** @title Inflation Root Hash Proposal
  * This implements a root hash proposal contract to be used by the ECO network to
  * establish root hash of merkle tree representing accounts and balances in the system given generation

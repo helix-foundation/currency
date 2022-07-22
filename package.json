@@ -58,7 +58,6 @@
     "@typescript-eslint/eslint-plugin": "5.30.7",
     "@typescript-eslint/parser": "5.30.7",
     "bigint-crypto-utils": "3.0.24",
-    "bn.js": "^5.2.1",
     "chai": "4.3.6",
     "concurrently": "7.3.0",
     "coveralls": "3.1.1",
@@ -97,7 +96,8 @@
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.7",
     "dotenv": "^16.0.1",
-    "mocha-chai-jest-snapshot": "^1.1.4"
+    "mocha-chai-jest-snapshot": "^1.1.4",
+    "bn.js": "^5.2.1"
   },
   "directories": {
     "test": "test"

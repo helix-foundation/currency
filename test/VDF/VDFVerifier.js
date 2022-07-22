@@ -10,12 +10,12 @@ const { prove, n, bnHex } = require('../../tools/vdf');
 
 // eslint-disable-next-line no-unused-vars
 function vdfTrace(m) {
-  //  console.log(m);
+  // console.log(m);
 }
 
 describe('VDFVerifier [@group=6]', () => {
-  const t = 4;
-  const xbn = new BN('169746944503327805396974258181262165209195894124543141625064913165013613381');
+  const t = 3;
+  const xbn = new BN('33489018563487178283330196417991470257782488426382532093764016677620128062547');
   const [ybn, Usqrt] = prove(xbn, t);
 
   let instanceVDFVerifier;
@@ -177,7 +177,7 @@ describe('VDFVerifier [@group=6]', () => {
             const receipt = await tx.wait();
             const log = receipt.events[0];
             expect(log.event).to.equal('SuccessfulVerification');
-            expect(log.args.t).to.equal('4');
+            expect(log.args.t).to.equal(t.toString());
             expect(log.args.x).to.equal(bnHex(xbn));
             expect(log.args.y).to.equal(bnHex(ybn));
           });
