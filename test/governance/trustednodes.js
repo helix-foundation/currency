@@ -3,38 +3,47 @@ const { ethers } = require('hardhat');
 const { BigNumber } = ethers;
 const { expect } = require('chai');
 const { deploy } = require('../utils/contracts');
-const { singletonsFixture } = require('../utils/fixtures');
+const { singletonsFixture, ecoFixture } = require('../utils/fixtures');
 
 describe('TrustedNodes [@group=7]', () => {
-  const fixture = async () => {
-    const accounts = await ethers.getSigners();
-    const alice = accounts[0];
-    const bob = accounts[1];
-    await singletonsFixture(alice);
-    const policy = await deploy('PolicyTest');
-    const trustedNodes = await deploy(
-      'TrustedNodes',
-      policy.address,
-      [await bob.getAddress()],
-      100,
-    );
-    return {
-      policy,
-      trustedNodes,
-      alice,
-      bob,
-    };
-  };
-
+  // const fixture = async () => {
+  //   const accounts = await ethers.getSigners();
+  //   const alice = accounts[0];
+  //   const bob = accounts[1];
+  //   await singletonsFixture(alice);
+  //   const policy = await deploy('PolicyTest');
+  //   const trustedNodes = await deploy(
+  //     'TrustedNodes',
+  //     policy.address,
+  //     [await bob.getAddress()],
+  //     100,
+  //   );
+  //   return {
+  //     policy,
+  //     trustedNodes,
+  //     alice,
+  //     bob,
+  //   };
+  // };
   let policy;
   let trustedNodes;
   let alice;
   let bob;
 
+
   beforeEach(async () => {
+    const accounts = await ethers.getSigners();
+    alice = accounts[0];
+    bob = accounts[1];
+    // ({
+    //   policy, trustedNodes, alice, bob,
+    // } = await fixture());
+    let nodes = [
+      await bob.getAddress(),
+    ];
     ({
-      policy, trustedNodes, alice, bob,
-    } = await fixture());
+      policy, trustedNodes,
+    } = await ecoFixture(nodes, 100))
   });
 
   describe('trust', () => {
@@ -186,15 +195,15 @@ describe('TrustedNodes [@group=7]', () => {
     });
   });
 
-  // describe('redeemVoteRewards', () => {
-  //   describe('checking revert on no reward to redeem', () => {
-  //     it('reverts', async () => {
-  //       await expect(trustedNodes.connect(bob).redeemVoteRewards()).to.be.revertedWith(
-  //         'No rewards to redeem',
-  //       );
-  //     });
-  //   });
-  // });
+  describe('redeemVoteRewards', () => {
+    describe('checking revert on no reward to redeem', () => {
+      it('reverts', async () => {
+        await expect(trustedNodes.connect(bob).redeemVoteRewards()).to.be.revertedWith(
+          'No vested rewards to redeem',
+        );
+      });
+    });
+  });
 
   describe('annualUpdate', () => {
     it('cannot be called before yearEnd', () => {
