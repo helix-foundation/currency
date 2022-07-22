@@ -4,6 +4,7 @@ const { BigNumber } = ethers;
 const { expect } = require('chai');
 const { deploy } = require('../utils/contracts');
 const { singletonsFixture, ecoFixture } = require('../utils/fixtures');
+const { time } = require('@openzeppelin/test-helpers');
 
 describe('TrustedNodes [@group=7]', () => {
   // const fixture = async () => {
@@ -27,8 +28,11 @@ describe('TrustedNodes [@group=7]', () => {
   // };
   let policy;
   let trustedNodes;
+  let faucet;
+  let ecox;
   let alice;
   let bob;
+  let reward = 10000000;
 
 
   beforeEach(async () => {
@@ -42,8 +46,8 @@ describe('TrustedNodes [@group=7]', () => {
       await bob.getAddress(),
     ];
     ({
-      policy, trustedNodes,
-    } = await ecoFixture(nodes, 100))
+      policy, trustedNodes, faucet, ecox
+    } = await ecoFixture(nodes, reward))
   });
 
   describe('trust', () => {
@@ -206,14 +210,32 @@ describe('TrustedNodes [@group=7]', () => {
   });
 
   describe('annualUpdate', () => {
-    it('cannot be called before yearEnd', () => {
+    it('can only be called after yearEnd', async () => {
+      await time.increase(3600 * 24 * 14 * 25);
+      await expect(
+        trustedNodes.connect(alice).annualUpdate(),
+      ).to.be.revertedWith('cannot call this until the current year term has ended');
 
+      await time.increase(3600 * 24 * 14 * 1.1);
+      await trustedNodes.connect(alice).annualUpdate();
     });
 
-    it('sets things appropriately', () => {
-
+    it("reverts if funds have not been transferred", async () => {
+      await time.increase(3600 * 24 * 14 * 26);
+      await expect(
+        trustedNodes.connect(alice).annualUpdate(),
+      ).to.be.revertedWith("Transfer the appropriate funds to this contract before updating");
     })
-  })
+
+    it.only('sets things appropriately', async () => {
+      await faucet.mintx(trustedNodes.address, BigNumber.from(52 * reward));
+      await time.increase(3600 * 24 * 14 * 26);
+      const oldYearEnd = await trustedNodes.connect(alice).yearEnd();
+      await trustedNodes.connect(alice).annualUpdate();
+      const newYearEnd = await trustedNodes.connect(alice).yearEnd();
+      await expect(newYearEnd - oldYearEnd).to.be.greaterThan(3600*24*14*26);
+    });
+  });
 
   describe('recordVote', () => {
     describe('checking revert on non-authorized call', () => {

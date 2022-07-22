@@ -346,46 +346,57 @@ describe('CurrencyGovernance [@group=4]', () => {
             );
           });
 
-          it('Can pay out trustee vote rewards', async () => {
-            await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
-            await trustedNodes.connect(dave).redeemVoteRewards();
-            expect(await ecox.balanceOf(await dave.getAddress()))
-              .to.equal(BigNumber.from(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord(await dave.getAddress()))
-              .to.equal(BigNumber.from(0));
-            expect(await trustedNodes.votingRecord(await bob.getAddress()))
-              .to.equal(BigNumber.from(1));
-          });
+          describe('reward withdrawal', async () => {
+            it("doesnt let you withdraw if not enough time (<26 weeks) has passed", async () => {
+              await time.increase(3600 * 24 * 14 * 25.9);
+              await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
+              await expect(
+                trustedNodes.connect(dave).redeemVoteRewards(),
+                ).to.be.revertedWith("No vested rewards to redeem");
+            })
+            it('Can pay out trustee vote rewards if enough time has passed', async () => {
 
-          it('handles potential overflow of trustee rewards with grace', async () => {
-            await time.increase(3600 * 24 * 1.1);
-            await timedPolicies.incrementGeneration();
+              await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
+              await time.increase(3600 * 24 * 14 * 27.1);
+              await trustedNodes.connect(dave).redeemVoteRewards();
+              expect(await ecox.balanceOf(await dave.getAddress()))
+                .to.equal(BigNumber.from(veryHighTrusteeVotingReward));
+              expect(await trustedNodes.votingRecord(await dave.getAddress()))
+                .to.equal(BigNumber.from(0));
+              expect(await trustedNodes.votingRecord(await bob.getAddress()))
+                .to.equal(BigNumber.from(1));
+            });
 
-            const originalBorda2 = await deploy('CurrencyGovernance', policy.address);
-            const bordaCloner2 = await deploy('Cloner', originalBorda2.address);
-            borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
-            await policy.testDirectSet('CurrencyGovernance', borda.address);
+            it('handles potential overflow of trustee rewards with grace', async () => {
+              await time.increase(3600 * 24 * 1.1);
+              await timedPolicies.incrementGeneration();
 
-            await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
-            await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
-            await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
-            await time.increase(3600 * 24 * 10.1);
+              const originalBorda2 = await deploy('CurrencyGovernance', policy.address);
+              const bordaCloner2 = await deploy('Cloner', originalBorda2.address);
+              borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
+              await policy.testDirectSet('CurrencyGovernance', borda.address);
 
-            await borda.connect(bob).commit(hash(bobvote));
-            await time.increase(3600 * 24 * 3.1);
+              await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+              await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
+              await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+              await time.increase(3600 * 24 * 10.1);
 
-            await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
-            const oldBobBalance = await ecox.balanceOf(bob.getAddress());
+              await borda.connect(bob).commit(hash(bobvote));
+              await time.increase(3600 * 24 * 3.1);
 
-            await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
-            expect(await trustedNodes.votingRecord(await bob.getAddress()))
-              .to.equal(BigNumber.from(BigNumber.from(2)));
-            await trustedNodes.connect(bob).redeemVoteRewards();
-            expect(await ecox.balanceOf(await bob.getAddress()))
-              .to.equal(BigNumber.from(veryHighTrusteeVotingReward).add(oldBobBalance));
-            expect(await trustedNodes.votingRecord(await bob.getAddress()))
-              .to.equal(BigNumber.from(1));
-          });
+              await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+              const oldBobBalance = await ecox.balanceOf(bob.getAddress());
+
+              await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
+              expect(await trustedNodes.votingRecord(await bob.getAddress()))
+                .to.equal(BigNumber.from(BigNumber.from(2)));
+              await trustedNodes.connect(bob).redeemVoteRewards();
+              expect(await ecox.balanceOf(await bob.getAddress()))
+                .to.equal(BigNumber.from(veryHighTrusteeVotingReward).add(oldBobBalance));
+              expect(await trustedNodes.votingRecord(await bob.getAddress()))
+                .to.equal(BigNumber.from(1));
+            });
+          })
         });
       });
     });

@@ -20,7 +20,7 @@ contract TrustedNodes is PolicedUtils {
     uint256 public yearEnd;
 
     uint256 public yearStartGen;
-
+    
     address public hoard;
 
     /** Tracks the current trustee cohort
@@ -85,6 +85,7 @@ contract TrustedNodes is PolicedUtils {
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
         uint256 trusteeCount = _initialTrustedNodes.length;
+        hoard = address(_policy);
 
         for (uint256 i = 0; i < trusteeCount; ++i) {
             address node = _initialTrustedNodes[i];
