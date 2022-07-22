@@ -105,8 +105,7 @@ contract TrustedNodes is PolicedUtils {
         // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
         maxRewards = type(uint256).max / voteReward;
-        yearStartGen = 9;
-        yearStartGen = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
+        yearStartGen = 1000;
         yearEnd = block.timestamp + YEAR;
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
@@ -189,7 +188,7 @@ contract TrustedNodes is PolicedUtils {
         uint256 vested = fullyVestedRewards[msg.sender];
         require(
             record + vested > 0,
-        "No rewards to redeem"
+        "No vested rewards to redeem"
         );
         uint256 rewardsToRedeem = (
             record > yearGenerationCount ? yearGenerationCount : record

@@ -39,6 +39,9 @@ describe('TrustedNodes [@group=7]', () => {
 
   describe('trust', () => {
     describe('when called directly', () => {
+      // it.only('turgles', async () => {
+      //   console.log(await trustedNodes.connect(await alice.getAddress()).cohort());
+      // })
       it('reverts', async () => {
         await expect(trustedNodes.trust(await alice.getAddress())).to.be.revertedWith(
           'Only the policy contract',
@@ -59,8 +62,8 @@ describe('TrustedNodes [@group=7]', () => {
         describe('when there are no empty slots', () => {
           it('succeeds', async () => {
             await expect(policy.testTrust(trustedNodes.address, await alice.getAddress()))
-              .to.emit(trustedNodes, 'TrustedNodeAdded')
-              .withArgs(await alice.getAddress());
+              .to.emit(trustedNodes, 'TrustedNodeAddition')
+              .withArgs(await alice.getAddress(), BigNumber.from(0));
           });
 
           it('adds the address to the set', async () => {
@@ -102,8 +105,8 @@ describe('TrustedNodes [@group=7]', () => {
       describe('on an address that is in the set', () => {
         it('succeeds', async () => {
           await expect(policy.testDistrust(trustedNodes.address, await bob.getAddress()))
-            .to.emit(trustedNodes, 'TrustedNodeRemoved')
-            .withArgs(await bob.getAddress());
+            .to.emit(trustedNodes, 'TrustedNodeRemoval')
+            .withArgs(await bob.getAddress(), BigNumber.from(0));
         });
 
         it('removes the address from the set', async () => {
@@ -182,6 +185,26 @@ describe('TrustedNodes [@group=7]', () => {
       });
     });
   });
+
+  // describe('redeemVoteRewards', () => {
+  //   describe('checking revert on no reward to redeem', () => {
+  //     it('reverts', async () => {
+  //       await expect(trustedNodes.connect(bob).redeemVoteRewards()).to.be.revertedWith(
+  //         'No rewards to redeem',
+  //       );
+  //     });
+  //   });
+  // });
+
+  describe('annualUpdate', () => {
+    it('cannot be called before yearEnd', () => {
+
+    });
+
+    it('sets things appropriately', () => {
+
+    })
+  })
 
   describe('recordVote', () => {
     describe('checking revert on non-authorized call', () => {
