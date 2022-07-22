@@ -27,7 +27,8 @@ describe('CurrencyGovernance [@group=4]', () => {
     [x[0], x[1], x[2]],
   );
 
-  const veryHighTrusteeVotingReward = '57896044618658097711785492504343953926634992332820282019728792003956564819968';
+  // const votingReward = '57896044618658097711785492504343953926634992332820282019728792003956564819968';
+  const votingReward = '1000000000000000000';
 
   before(async () => {
     const accounts = await ethers.getSigners();
@@ -45,7 +46,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
       ({
         policy, trustedNodes, faucet, ecox, timedPolicies,
-      } = await ecoFixture(trustednodes, veryHighTrusteeVotingReward));
+      } = await ecoFixture(trustednodes, votingReward));
 
       const originalBorda = await deploy('CurrencyGovernance', policy.address);
       const bordaCloner = await deploy('Cloner', originalBorda.address);
@@ -347,20 +348,23 @@ describe('CurrencyGovernance [@group=4]', () => {
           });
 
           describe('reward withdrawal', async () => {
-            it("doesnt let you withdraw if not enough time (<26 weeks) has passed", async () => {
-              await time.increase(3600 * 24 * 14 * 25.9);
-              await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
+            it("doesnt let you withdraw for votes from this year", async () => {
               await expect(
                 trustedNodes.connect(dave).redeemVoteRewards(),
                 ).to.be.revertedWith("No vested rewards to redeem");
             })
-            it('Can pay out trustee vote rewards if enough time has passed', async () => {
-
-              await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
-              await time.increase(3600 * 24 * 14 * 27.1);
-              await trustedNodes.connect(dave).redeemVoteRewards();
+            it.only('Can pay out trustee vote rewards if enough time has passed', async () => {
+              await faucet.mintx(trustedNodes.address, BigNumber.from((2*3*26*votingReward).toString()));
+              const daveInitialBalance = await ecox.balanceOf(await dave.getAddress());
+              await time.increase(3600 * 24 * 14 * 26);
+              await trustedNodes.connect(dave).annualUpdate();
+              // console.log(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress()));
+              console.log(await ecox.balanceOf(await dave.getAddress()));
+              // no change in balance here since one generation 
+              const redeemed = await trustedNodes.connect(dave).redeemVoteRewards();
+              expec
               expect(await ecox.balanceOf(await dave.getAddress()))
-                .to.equal(BigNumber.from(veryHighTrusteeVotingReward));
+                .to.equal(daveInitialBalance);
               expect(await trustedNodes.votingRecord(await dave.getAddress()))
                 .to.equal(BigNumber.from(0));
               expect(await trustedNodes.votingRecord(await bob.getAddress()))
@@ -387,12 +391,12 @@ describe('CurrencyGovernance [@group=4]', () => {
               await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
               const oldBobBalance = await ecox.balanceOf(bob.getAddress());
 
-              await faucet.mintx(trustedNodes.address, BigNumber.from(veryHighTrusteeVotingReward));
+              await faucet.mintx(trustedNodes.address, BigNumber.from(votingReward));
               expect(await trustedNodes.votingRecord(await bob.getAddress()))
                 .to.equal(BigNumber.from(BigNumber.from(2)));
               await trustedNodes.connect(bob).redeemVoteRewards();
               expect(await ecox.balanceOf(await bob.getAddress()))
-                .to.equal(BigNumber.from(veryHighTrusteeVotingReward).add(oldBobBalance));
+                .to.equal(BigNumber.from(votingReward).add(oldBobBalance));
               expect(await trustedNodes.votingRecord(await bob.getAddress()))
                 .to.equal(BigNumber.from(1));
             });

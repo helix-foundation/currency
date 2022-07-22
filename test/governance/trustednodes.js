@@ -30,6 +30,7 @@ describe('TrustedNodes [@group=7]', () => {
   let trustedNodes;
   let faucet;
   let ecox;
+  let timedPolicies;
   let alice;
   let bob;
   let reward = 10000000;
@@ -46,7 +47,7 @@ describe('TrustedNodes [@group=7]', () => {
       await bob.getAddress(),
     ];
     ({
-      policy, trustedNodes, faucet, ecox
+      policy, trustedNodes, faucet, ecox, timedPolicies,
     } = await ecoFixture(nodes, reward))
   });
 
@@ -227,13 +228,20 @@ describe('TrustedNodes [@group=7]', () => {
       ).to.be.revertedWith("Transfer the appropriate funds to this contract before updating");
     })
 
-    it.only('sets things appropriately', async () => {
+    it('sets things appropriately', async () => {
       await faucet.mintx(trustedNodes.address, BigNumber.from(52 * reward));
-      await time.increase(3600 * 24 * 14 * 26);
+      const initialGeneration = await trustedNodes.yearStartGen();
+      await time.increase(3600 * 24 * 14 * 1);
+      await timedPolicies.connect(alice).incrementGeneration();
+      await time.increase(3600 * 24 * 14 * 1);
+      await timedPolicies.connect(alice).incrementGeneration();
+      await time.increase(3600 * 24 * 14 * 24);
       const oldYearEnd = await trustedNodes.connect(alice).yearEnd();
       await trustedNodes.connect(alice).annualUpdate();
       const newYearEnd = await trustedNodes.connect(alice).yearEnd();
+      const newGeneration = await trustedNodes.yearStartGen();
       await expect(newYearEnd - oldYearEnd).to.be.greaterThan(3600*24*14*26);
+      await expect(newGeneration - initialGeneration).to.equal(2);
     });
   });
 

@@ -20,7 +20,7 @@ contract TrustedNodes is PolicedUtils {
     uint256 public yearEnd;
 
     uint256 public yearStartGen;
-    
+
     address public hoard;
 
     /** Tracks the current trustee cohort
@@ -106,7 +106,7 @@ contract TrustedNodes is PolicedUtils {
         // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
         maxRewards = type(uint256).max / voteReward;
-        yearStartGen = 1000;
+        yearStartGen = 1001;
         yearEnd = block.timestamp + YEAR;
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
@@ -179,7 +179,7 @@ contract TrustedNodes is PolicedUtils {
         unallocatedRewardsCount--;
     }
 
-    function redeemVoteRewards() external {
+    function redeemVoteRewards() external returns(uint256 numRewards) {
         // rewards from last year
         uint256 yearGenerationCount = IGeneration(
             policyFor(ID_TIMED_POLICIES)
@@ -216,6 +216,7 @@ contract TrustedNodes is PolicedUtils {
         );
 
         emit VotingRewardRedemption(msg.sender, reward);
+        return checked;
     }
 
     /** Return the number of entries in trustedNodes array.
@@ -280,7 +281,7 @@ contract TrustedNodes is PolicedUtils {
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
 
         require(
-            ecoX.balanceOf(address(this)) >= unallocatedRewardsCount + reward,
+            ecoX.balanceOf(address(this)) >= unallocatedRewardsCount * voteReward + reward,
             "Transfer the appropriate funds to this contract before updating"
         );
 
