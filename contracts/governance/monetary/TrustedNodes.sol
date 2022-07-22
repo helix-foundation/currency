@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../../policy/PolicedUtils.sol";
 import "../../currency/ECOx.sol";
 import "../TimedPolicies.sol";
+import "../IGeneration.sol";
 
 /** @title TrustedNodes
  *
@@ -13,9 +14,8 @@ import "../TimedPolicies.sol";
  *
  */
 contract TrustedNodes is PolicedUtils {
-    uint256 private constant DAY = 3600 * 24;
-    uint256 private constant GENERATION = 14 * DAY;
-    uint256 private constant YEAR = 365 * DAY;
+    uint256 private constant GENERATION = 14 days;
+    uint256 private constant YEAR = 26 * 14 days;
 
     uint256 public yearEnd;
 
@@ -85,12 +85,6 @@ contract TrustedNodes is PolicedUtils {
     ) PolicedUtils(_policy) {
         voteReward = _voteReward;
         uint256 trusteeCount = _initialTrustedNodes.length;
-        unallocatedRewardsCount = trusteeCount * (YEAR / GENERATION + 1);
-
-        yearStartGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
-        yearEnd = block.timestamp + YEAR;
-
-        hoard = address(_policy);
 
         for (uint256 i = 0; i < trusteeCount; ++i) {
             address node = _initialTrustedNodes[i];
@@ -111,8 +105,13 @@ contract TrustedNodes is PolicedUtils {
         // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
         maxRewards = type(uint256).max / voteReward;
+        yearStartGen = 9;
+        yearStartGen = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
+        yearEnd = block.timestamp + YEAR;
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
+
+        unallocatedRewardsCount = _numTrustees * YEAR / GENERATION;
         uint256 _cohort = TrustedNodes(_self).cohort();
 
         for (uint256 i = 0; i < _numTrustees; ++i) {
@@ -182,17 +181,22 @@ contract TrustedNodes is PolicedUtils {
 
     function redeemVoteRewards() external {
         // rewards from last year
-        uint256 yearGenerationCount = TimedPolicies(
+        uint256 yearGenerationCount = IGeneration(
             policyFor(ID_TIMED_POLICIES)
         ).generation() - yearStartGen;
+
         uint256 record = lastYearVotingRecord[msg.sender];
+        uint256 vested = fullyVestedRewards[msg.sender];
+        require(
+            record + vested > 0,
+        "No rewards to redeem"
+        );
         uint256 rewardsToRedeem = (
             record > yearGenerationCount ? yearGenerationCount : record
         );
         lastYearVotingRecord[msg.sender] -= rewardsToRedeem;
 
         // fully vested rewards if they exist
-        uint256 vested = fullyVestedRewards[msg.sender];
         if (vested > 0) {
             rewardsToRedeem += vested;
             fullyVestedRewards[msg.sender] = 0;
@@ -271,7 +275,7 @@ contract TrustedNodes is PolicedUtils {
             cohorts[cohort].trustedNodes.length *
             (YEAR / GENERATION - 1);
         yearEnd = block.timestamp + YEAR;
-        yearStartGen = TimedPolicies(policyFor(ID_TIMED_POLICIES)).generation();
+        yearStartGen = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
 
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
 
