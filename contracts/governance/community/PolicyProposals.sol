@@ -374,6 +374,32 @@ contract PolicyProposals is VotingPower, TimeUtils {
         emit Unsupport(msg.sender, _prop);
     }
 
+    /** Remove a proposal from proposals mapping and allProposals array
+     * @param _prop The proposal to delete.
+     */
+    function deleteProposal(Proposal _prop) internal {
+        uint256 proposalIndex = totalProposals;
+        for (uint256 i = 0; i < totalProposals; i++) {
+            if (address(allProposals[i]) == address(_prop)) {
+                proposalIndex = i;
+            }
+        }
+        // check for out of bounds or proposal doesn't exist
+        if (totalProposals == 0 || proposalIndex == totalProposals) {
+            return;
+        }
+        
+        if (proposalIndex < totalProposals - 1) {
+            Proposal lastProposal = allProposals[totalProposals - 1];
+            allProposals[proposalIndex] = lastProposal;
+        }
+
+        // delete last proposal
+        allProposals.pop();
+        delete proposals[_prop];
+        totalProposals = totalProposals - 1;
+    }
+
     function deployProposalVoting() external {
         require(proposalSelected, "no proposal has been selected");
         require(
@@ -389,8 +415,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         emit VoteStart(pv);
 
-        delete proposals[votingProposal];
-        totalProposals = totalProposals - 1;
+        deleteProposal(votingProposal);
     }
 
     /** Refund the fee for a proposal that was not selected.
@@ -420,8 +445,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         address receiver = _p.proposer;
 
-        delete proposals[_prop];
-        totalProposals = totalProposals - 1;
+        deleteProposal(_prop);
 
         require(ecoToken.transfer(receiver, REFUND_IF_LOST), "Transfer Failed");
 
