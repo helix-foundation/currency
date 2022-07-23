@@ -406,16 +406,16 @@ contract PolicyProposals is VotingPower, TimeUtils {
             address(proposalToConfigure) != address(0),
             "voting has already been deployed"
         );
-        Proposal votingProposal = proposalToConfigure;
+        Prop storage votingProp = proposals[proposalToConfigure];
         delete proposalToConfigure;
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
-        pv.configure(votingProposal, blockNumber);
+        pv.configure(votingProp.proposal, votingProp.proposer, blockNumber);
         policy.setPolicy(ID_POLICY_VOTES, address(pv));
 
         emit VoteStart(pv);
 
-        deleteProposal(votingProposal);
+        deleteProposal(votingProp.proposal);
     }
 
     /** Refund the fee for a proposal that was not selected.
