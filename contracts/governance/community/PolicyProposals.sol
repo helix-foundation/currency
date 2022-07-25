@@ -378,16 +378,16 @@ contract PolicyProposals is VotingPower, TimeUtils {
      * @param _prop The proposal to delete.
      */
     function deleteProposal(Proposal _prop) internal {
+        require(totalProposals > 0, "no proposals to delete");
+
         uint256 proposalIndex = totalProposals;
         for (uint256 i = 0; i < totalProposals; i++) {
             if (address(allProposals[i]) == address(_prop)) {
                 proposalIndex = i;
+                break;
             }
         }
-        // check for out of bounds or proposal doesn't exist
-        if (totalProposals == 0 || proposalIndex == totalProposals) {
-            return;
-        }
+        require(proposalIndex < totalProposals, "proposal does not exist");
         
         if (proposalIndex < totalProposals - 1) {
             Proposal lastProposal = allProposals[totalProposals - 1];
