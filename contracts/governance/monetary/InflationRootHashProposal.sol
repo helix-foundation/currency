@@ -7,8 +7,6 @@ import "../../utils/TimeUtils.sol";
 import "../../currency/IECO.sol";
 import "../monetary/RandomInflation.sol";
 
-import "hardhat/console.sol";
-
 /** @title Inflation Root Hash Proposal
  * This implements a root hash proposal contract to be used by the ECO network to
  * establish root hash of merkle tree representing accounts and balances in the system given generation
@@ -95,10 +93,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** merkle tree verified against balances at block number
      */
     uint256 public blockNumber;
-
-    /** The random inflation contract that will be verifying claims against this contract
-     */
-    RandomInflation public randomInflation;
 
     /** This array tracks the allowed data in proofs to fill out the empty part of the merkle
      * tree. The first element is the result of a node value with all zero data (see where
@@ -287,18 +281,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         blockNumber = _blockNumber;
         emit ConfigureBlock(_blockNumber);
-    }
-
-    /** @notice Set the random inflation contract that this references
-     *
-     * @param _randomInflation random inflation contract that verifies against this
-     */
-    function setRandomInflation(RandomInflation _randomInflation) external {
-        require(
-            address(randomInflation) == address(0),
-            "This instance has already set random inflation"
-        );
-        randomInflation = _randomInflation;
     }
 
     // as you cannot declare a reference type as a constant, memory must be explicitly moved on cloning

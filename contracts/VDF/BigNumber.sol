@@ -71,6 +71,7 @@ library BigNumber {
                 word != 0,
                 "High-word must be set for 256bit-aligned numbers"
             );
+            offset = 32;
         } else {
             bytes32 topByte;
             assembly {
@@ -81,7 +82,7 @@ library BigNumber {
                 // shift right for proper padding
                 word := shr(
                     // shift right by the # of bits not included in _value to make a whole word
-                    mul(8, sub(32, offset)),
+                    mul(8, sub(0x20, offset)),
                     word
                 )
             }
@@ -94,14 +95,15 @@ library BigNumber {
         // set the first word
         instance.value[0] = word;
 
-        // load backwards so padding is in the first slot
-        for (offset += 32; offset < numSlots * 32; offset += 32) {
+        // load the rest of the words starting at the end of the first
+        for (uint256 i = 1; i < numSlots; i++) {
             // add the whole word
             assembly {
                 // load the next word from _value
                 word := mload(add(_value, add(offset, 0x20)))
             }
-            instance.value[(offset / 32)] = word;
+            instance.value[i] = word;
+            offset += 32;
         }
 
         return instance;

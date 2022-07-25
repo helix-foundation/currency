@@ -164,6 +164,7 @@ the decisions decided on by the trustees in their Currency Governance votes
 ###### NewCurrencyGovernance
 Attributes:
   - `addr` (address) - the address of the new CurrencyGovernance contract.
+  - `generation` (uint256) - the generation where currency governance will happen.
 
 Indicates the location of the new CurrencyGovernance contract.
 
@@ -171,12 +172,14 @@ Indicates the location of the new CurrencyGovernance contract.
 Attributes:
   - `addr` (address) - the address of the `RandomInflation` contract facilitating
     the distribution of random inflation.
+  - `generation` (uint256) - the generation in which the new inflation was agreed upon
 
 Indicates the start of a random inflation decision.
 
 ###### NewLockup
 Attributes:
   - `addr` (address) - the address of the `Lockup` contract being offered
+  - `generation` (uint256) - the generation in which the new lockup was agreed upon
 
 Indicates the start of a lockup offering.
 
