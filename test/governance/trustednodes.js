@@ -2,60 +2,32 @@ const { ethers } = require('hardhat');
 
 const { BigNumber } = ethers;
 const { expect } = require('chai');
-const { deploy } = require('../utils/contracts');
-const { singletonsFixture, ecoFixture } = require('../utils/fixtures');
 const { time } = require('@openzeppelin/test-helpers');
+const { ecoFixture } = require('../utils/fixtures');
 
 describe('TrustedNodes [@group=7]', () => {
-  // const fixture = async () => {
-  //   const accounts = await ethers.getSigners();
-  //   const alice = accounts[0];
-  //   const bob = accounts[1];
-  //   await singletonsFixture(alice);
-  //   const policy = await deploy('PolicyTest');
-  //   const trustedNodes = await deploy(
-  //     'TrustedNodes',
-  //     policy.address,
-  //     [await bob.getAddress()],
-  //     100,
-  //   );
-  //   return {
-  //     policy,
-  //     trustedNodes,
-  //     alice,
-  //     bob,
-  //   };
-  // };
   let policy;
   let trustedNodes;
   let faucet;
-  let ecox;
   let timedPolicies;
   let alice;
   let bob;
-  let reward = 10000000;
-
+  const reward = 10000000;
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
     alice = accounts[0];
     bob = accounts[1];
-    // ({
-    //   policy, trustedNodes, alice, bob,
-    // } = await fixture());
-    let nodes = [
+    const nodes = [
       await bob.getAddress(),
     ];
     ({
-      policy, trustedNodes, faucet, ecox, timedPolicies,
-    } = await ecoFixture(nodes, reward))
+      policy, trustedNodes, faucet, timedPolicies,
+    } = await ecoFixture(nodes, reward));
   });
 
   describe('trust', () => {
     describe('when called directly', () => {
-      // it.only('turgles', async () => {
-      //   console.log(await trustedNodes.connect(await alice.getAddress()).cohort());
-      // })
       it('reverts', async () => {
         await expect(trustedNodes.trust(await alice.getAddress())).to.be.revertedWith(
           'Only the policy contract',
@@ -212,24 +184,27 @@ describe('TrustedNodes [@group=7]', () => {
 
   describe('annualUpdate', () => {
     it('can only be called after yearEnd', async () => {
-      await time.increase(3600 * 24 * 14 * 25);
+      // console.log(await trustedNodes.connect(alice).yearStartGen());
+      // console.log(Date.now());
+      // await time.increase(3600 * 24 * 14 * 25);
       await expect(
         trustedNodes.connect(alice).annualUpdate(),
       ).to.be.revertedWith('cannot call this until the current year term has ended');
 
-      await time.increase(3600 * 24 * 14 * 1.1);
+      await time.increase(3600 * 24 * 14 * 26);
+      await faucet.mintx(trustedNodes.address, BigNumber.from(1 * 26 * 2 * reward));
       await trustedNodes.connect(alice).annualUpdate();
     });
 
-    it("reverts if funds have not been transferred", async () => {
+    it('reverts if funds have not been transferred', async () => {
       await time.increase(3600 * 24 * 14 * 26);
       await expect(
         trustedNodes.connect(alice).annualUpdate(),
-      ).to.be.revertedWith("Transfer the appropriate funds to this contract before updating");
-    })
+      ).to.be.revertedWith('Transfer the appropriate funds to this contract before updating');
+    });
 
     it('sets things appropriately', async () => {
-      await faucet.mintx(trustedNodes.address, BigNumber.from(52 * reward));
+      await faucet.mintx(trustedNodes.address, BigNumber.from(1 * 26 * 2 * reward));
       const initialGeneration = await trustedNodes.yearStartGen();
       await time.increase(3600 * 24 * 14 * 1);
       await timedPolicies.connect(alice).incrementGeneration();
@@ -240,7 +215,7 @@ describe('TrustedNodes [@group=7]', () => {
       await trustedNodes.connect(alice).annualUpdate();
       const newYearEnd = await trustedNodes.connect(alice).yearEnd();
       const newGeneration = await trustedNodes.yearStartGen();
-      await expect(newYearEnd - oldYearEnd).to.be.greaterThan(3600*24*14*26);
+      await expect(newYearEnd - oldYearEnd).to.be.greaterThan(3600 * 24 * 14 * 26);
       await expect(newGeneration - initialGeneration).to.equal(2);
     });
   });

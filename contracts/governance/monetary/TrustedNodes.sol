@@ -107,7 +107,7 @@ contract TrustedNodes is PolicedUtils {
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
 
-        unallocatedRewardsCount = _numTrustees * YEAR / GENERATION;
+        unallocatedRewardsCount = (_numTrustees * YEAR) / GENERATION;
         uint256 _cohort = TrustedNodes(_self).cohort();
 
         for (uint256 i = 0; i < _numTrustees; ++i) {
@@ -175,18 +175,14 @@ contract TrustedNodes is PolicedUtils {
         unallocatedRewardsCount--;
     }
 
-    function redeemVoteRewards() external returns(uint256 numRewards) {
+    function redeemVoteRewards() external returns (uint256 numRewards) {
         // rewards from last year
-        uint256 yearGenerationCount = IGeneration(
-            policyFor(ID_TIMED_POLICIES)
-        ).generation() - yearStartGen;
+        uint256 yearGenerationCount = IGeneration(policyFor(ID_TIMED_POLICIES))
+            .generation() - yearStartGen;
 
         uint256 record = lastYearVotingRecord[msg.sender];
         uint256 vested = fullyVestedRewards[msg.sender];
-        require(
-            record + vested > 0,
-        "No vested rewards to redeem"
-        );
+        require(record + vested > 0, "No vested rewards to redeem");
         uint256 rewardsToRedeem = (
             record > yearGenerationCount ? yearGenerationCount : record
         );
@@ -272,11 +268,15 @@ contract TrustedNodes is PolicedUtils {
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
 
         require(
-            ecoX.balanceOf(address(this)) >= unallocatedRewardsCount * voteReward + reward,
+            ecoX.balanceOf(address(this)) >=
+                unallocatedRewardsCount * voteReward + reward,
             "Transfer the appropriate funds to this contract before updating"
         );
         // TODO: fix this, address should be hoard, but breaks test due to it being set to 0 address in tests
-        require(ecoX.transfer(address(0xbeefbeefbeef), reward), "Transfer Failed");
+        require(
+            ecoX.transfer(address(0xbeefbeefbeef), reward),
+            "Transfer Failed"
+        );
 
         emit VotingRewardRedemption(hoard, reward);
         emit RewardsTrackingUpdate(yearEnd, unallocatedRewardsCount);
