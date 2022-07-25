@@ -175,7 +175,7 @@ contract TrustedNodes is PolicedUtils {
         unallocatedRewardsCount--;
     }
 
-    function redeemVoteRewards() external returns (uint256 numRewards) {
+    function redeemVoteRewards() external {
         // rewards from last year
         uint256 yearGenerationCount = IGeneration(policyFor(ID_TIMED_POLICIES))
             .generation() - yearStartGen;
@@ -202,7 +202,6 @@ contract TrustedNodes is PolicedUtils {
         );
 
         emit VotingRewardRedemption(msg.sender, reward);
-        return rewardsToRedeem;
     }
 
     /** Return the number of entries in trustedNodes array.
