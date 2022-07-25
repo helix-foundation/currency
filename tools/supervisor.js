@@ -298,7 +298,7 @@
 //     }
 
 //     const lastStamp = this.timedPoliciesEventStamp;
-//     (await timedpolicies.getPastEvents('PolicyDecisionStarted', { fromBlock: lastStamp, toBlock: this.blockNumber }))
+//     (await timedpolicies.getPastEvents('PolicyDecisionStart', { fromBlock: lastStamp, toBlock: this.blockNumber }))
 //       .map((event) => event.returnValues[0])
 //       .forEach((event) => {
 //         this.policyDecisionAddresses.add(event);

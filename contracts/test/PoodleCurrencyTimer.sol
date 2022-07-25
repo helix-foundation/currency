@@ -21,7 +21,6 @@ contract PoodleCurrencyTimer is CurrencyTimer {
             CurrencyGovernance(address(0)),
             RandomInflation(address(0)),
             Lockup(address(0)),
-            InflationRootHashProposal(address(0)),
             ECO(address(0))
         )
     {}

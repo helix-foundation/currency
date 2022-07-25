@@ -181,10 +181,7 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
   const deployments = [];
   deployments.push(deployFrom(wallet, 'ECO', policyProxy.address, ecoInit.address, 0));
   deployments.push(deployFrom(wallet, 'EcoXTokenInit'));
-  deployments.push(
-    deployFrom(wallet, 'InflationRootHashProposal', policyProxy.address, ecoProxy.address),
-  );
-  const [ecoImpl, ecoxInit, rootHashProposal] = await Promise.all(deployments);
+  const [ecoImpl, ecoxInit] = await Promise.all(deployments);
 
   const initialECOxSupply = ethers.utils.parseEther('1000');
   const ecoxImpl = await deployFrom(
@@ -197,7 +194,6 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
   );
 
   return {
-    rootHashProposal,
     ecoImpl,
     ecoInit,
     ecoxInit,
@@ -227,18 +223,11 @@ exports.deployPeripheralContracts = async (
   policyProxy,
   coreContracts,
 ) => {
-  const { eco, ecox, rootHashProposal } = coreContracts;
+  const { eco, ecox } = coreContracts;
 
   const vdfVerifier = await deployFrom(wallet, 'VDFVerifier', policyProxy.address);
 
-  const currencyTimerProxy = await getPlaceholder(bootstrap, 3);
-  const lockup = await deployFrom(
-    wallet,
-    'Lockup',
-    policyProxy.address,
-    eco.address,
-    currencyTimerProxy.address,
-  );
+  const rootHashProposal = await deployFrom(wallet, 'InflationRootHashProposal', policyProxy.address, eco.address);
 
   const inflation = await deployFrom(
     wallet,
@@ -246,6 +235,16 @@ exports.deployPeripheralContracts = async (
     policyProxy.address,
     vdfVerifier.address,
     3,
+    rootHashProposal.address,
+    eco.address,
+  );
+
+  const currencyTimerProxy = await getPlaceholder(bootstrap, 3);
+
+  const lockup = await deployFrom(
+    wallet,
+    'Lockup',
+    policyProxy.address,
     eco.address,
     currencyTimerProxy.address,
   );
@@ -278,7 +277,6 @@ exports.deployPeripheralContracts = async (
     governance.address,
     inflation.address,
     lockup.address,
-    rootHashProposal.address,
     eco.address,
   );
   await bindProxy(bootstrap, currencyTimerImpl, 3);

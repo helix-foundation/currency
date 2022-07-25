@@ -19,6 +19,8 @@ const {
 const { BigNumber } = ethers;
 const { ecoFixture } = require('../utils/fixtures');
 
+const util = require('../../tools/test/util');
+
 const time = require('../utils/time');
 
 describe('InflationRootHashProposal', () => {
@@ -28,6 +30,16 @@ describe('InflationRootHashProposal', () => {
   let currencyTimer;
   let eco;
   let accounts;
+  let inflation;
+  let policy;
+
+  const hash = (x) => ethers.utils.solidityKeccak256(
+    ['bytes32', 'address', 'address[]'],
+    [x[0], x[1], x[2]],
+  );
+
+  const inflationVote = 10;
+  const rewardVote = 20000;
 
   before(async () => {
     const originalAccounts = await ethers.getSigners();
@@ -57,15 +69,14 @@ describe('InflationRootHashProposal', () => {
     ];
 
     ({
+      policy,
       eco,
       faucet: initInflation,
+      timedPolicies,
       currencyTimer,
       rootHashProposal,
-      timedPolicies,
+      inflation,
     } = await ecoFixture(trustednodes));
-
-    await time.increase(31557600 / 10);
-    await timedPolicies.incrementGeneration();
   });
 
   async function verifyOnChain(tree, index, proposer) {
@@ -143,13 +154,47 @@ describe('InflationRootHashProposal', () => {
   }
 
   async function getRootHash() {
-    for (let i = 0; i < 2; i += 1) {
-      await time.increase(31557600 / 10);
-      await timedPolicies.incrementGeneration();
-    }
-    const events = await currencyTimer.queryFilter('NewInflationRootHashProposal');
-    const event = events[events.length - 1];
-    const addressRootHashProposal = event.args.inflationRootHashProposalContract;
+    const [, bob, charlie, dave] = accounts;
+
+    const governance = await ethers.getContractAt(
+      'CurrencyGovernance',
+      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
+    );
+
+    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
+    await time.increase(3600 * 24 * 10.1);
+
+    const bobvote = [
+      ethers.utils.randomBytes(32),
+      await bob.getAddress(),
+      [await bob.getAddress()],
+    ];
+    await governance.connect(bob).commit(hash(bobvote));
+    const charlievote = [
+      ethers.utils.randomBytes(32),
+      await charlie.getAddress(),
+      [await bob.getAddress()],
+    ];
+    await governance.connect(charlie).commit(hash(charlievote));
+    const davevote = [
+      ethers.utils.randomBytes(32),
+      await dave.getAddress(),
+      [await bob.getAddress()],
+    ];
+    await governance.connect(dave).commit(hash(davevote));
+    await time.increase(3600 * 24 * 3);
+    await governance.connect(bob).reveal(bobvote[0], bobvote[2]);
+    await governance.connect(charlie).reveal(charlievote[0], charlievote[2]);
+    await governance.connect(dave).reveal(davevote[0], davevote[2]);
+    await time.increase(3600 * 24 * 1);
+    await governance.updateStage();
+    await governance.compute();
+    await time.increase(3600 * 24 * 3);
+    const generation = await currencyTimer.currentGeneration();
+    await timedPolicies.incrementGeneration();
+    const inflationAddr = await currencyTimer.randomInflations(generation);
+    inflation = await ethers.getContractAt('RandomInflation', inflationAddr);
+    const addressRootHashProposal = await inflation.inflationRootHashProposal();
     for (let i = 0; i < 10; i += 1) {
       eco
         .connect(accounts[i])
@@ -176,7 +221,6 @@ describe('InflationRootHashProposal', () => {
       await initInflation.mint(await accounts[0].getAddress(), '50000000000000000000000000');
       await initInflation.mint(await accounts[1].getAddress(), '100000000000000000000000000');
       await initInflation.mint(await accounts[2].getAddress(), '150000000000000000000000000');
-      await time.advanceBlock();
       await time.advanceBlock();
 
       tree = getTree(map);
@@ -756,11 +800,6 @@ describe('InflationRootHashProposal', () => {
     context('accept and reject root hash', () => {
       it('succeeds', async () => {
         await time.increase(86401);
-        expect(
-          (
-            await currencyTimer.rootHashAddressPerGeneration((await eco.currentGeneration()) - 1)
-          ).toString() === '0',
-        );
         await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress()))
           .to.emit(rootHashProposal, 'RootHashAcceptance')
           .withArgs(
@@ -768,12 +807,6 @@ describe('InflationRootHashProposal', () => {
             totalSum.toString(),
             amountOfAccounts.toString(),
           );
-
-        expect(
-          (
-            await currencyTimer.rootHashAddressPerGeneration((await eco.currentGeneration()) - 1)
-          ).toString() === rootHashProposal.address.toString(),
-        );
 
         await rootHashProposal.connect(accounts[0]).claimFee(await accounts[0].getAddress());
 
@@ -787,11 +820,6 @@ describe('InflationRootHashProposal', () => {
 
       it('success rejects alternative proposed hashes', async () => {
         await time.increase(86401);
-        expect(
-          (
-            await currencyTimer.rootHashAddressPerGeneration((await eco.currentGeneration()) - 1)
-          ).toString() === '0',
-        );
         await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress()))
           .to.emit(rootHashProposal, 'RootHashAcceptance')
           .withArgs(
@@ -799,11 +827,6 @@ describe('InflationRootHashProposal', () => {
             totalSum.toString(),
             amountOfAccounts.toString(),
           );
-        expect(
-          (
-            await currencyTimer.rootHashAddressPerGeneration((await eco.currentGeneration()) - 1)
-          ).toString() === rootHashProposal.address.toString(),
-        );
 
         await rootHashProposal.connect(accounts[0]).claimFee(await accounts[0].getAddress());
 
@@ -823,24 +846,7 @@ describe('InflationRootHashProposal', () => {
         );
       });
 
-      // TODO
-      // it('fails', async () => {
-      //   await time.increase(86401);
-      //   expect((await currencyTimer.rootHashAddressPerGeneration((
-      //     await eco.currentGeneration()) - 1)).toString() === '0');
-      //   await expectEvent.inTransaction(
-      //     (await rootHashProposal.checkRootHashStatus(
-      //       '0x0000000000000000000000000000000000000000',
-      //     )).tx,
-      //     InflationRootHashProposal,
-      //     'RootHashRejection',
-      //     {
-      //       proposer: '0x0000000000000000000000000000000000000000',
-      //       proposedRootHash
-      //     },
-      //   );
-      //   TODO: claim Fee for rejector
-      // });
+      // TODO: claim Fee for rejector
 
       it('no external function run once hash been accepted', async () => {
         await time.increase(86401);
