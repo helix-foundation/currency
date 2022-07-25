@@ -28,7 +28,8 @@ describe('CurrencyGovernance [@group=4]', () => {
   );
 
   // const votingReward = '57896044618658097711785492504343953926634992332820282019728792003956564819968';
-  const votingReward = '1000000000000000000';
+  const votingReward = '1000000000000000';
+                     // 76000000000000000
 
   before(async () => {
     const accounts = await ethers.getSigners();
@@ -353,22 +354,142 @@ describe('CurrencyGovernance [@group=4]', () => {
                 trustedNodes.connect(dave).redeemVoteRewards(),
                 ).to.be.revertedWith("No vested rewards to redeem");
             })
-            it.only('Can pay out trustee vote rewards if enough time has passed', async () => {
-              await faucet.mintx(trustedNodes.address, BigNumber.from((2*3*26*votingReward).toString()));
-              const daveInitialBalance = await ecox.balanceOf(await dave.getAddress());
+            it('pays out trustee in simple case', async () => {
+              const trustees = await trustedNodes.connect(alice).numTrustees();
+              // should be 26 * numTrustees - 2 reveals = 76
+              expect(await trustedNodes.connect(alice).unallocatedRewardsCount()).to.equal(76);
+              let daveCurrentVotes = await trustedNodes.connect(dave).votingRecord(await dave.getAddress());
+              expect(daveCurrentVotes).to.equal(1);
+              // rewards for the current year and the next year
+              await faucet.mintx(trustedNodes.address, BigNumber.from((2 * trustees * 26 * votingReward).toString()));
               await time.increase(3600 * 24 * 14 * 26);
-              await trustedNodes.connect(dave).annualUpdate();
-              // console.log(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress()));
-              console.log(await ecox.balanceOf(await dave.getAddress()));
-              // no change in balance here since one generation 
-              const redeemed = await trustedNodes.connect(dave).redeemVoteRewards();
-              expec
-              expect(await ecox.balanceOf(await dave.getAddress()))
-                .to.equal(daveInitialBalance);
-              expect(await trustedNodes.votingRecord(await dave.getAddress()))
+
+              expect(await trustedNodes.connect(dave).annualUpdate())
+              .to.emit(trustedNodes, "VotingRewardRedemption")
+              .withArgs(await trustedNodes.connect(alice).hoard(), BigNumber.from((76*votingReward).toString()));     
+
+              daveCurrentVotes = await trustedNodes.connect(dave).votingRecord(await dave.getAddress());
+              let daveLastYearVotes = await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress());
+              expect(daveCurrentVotes).to.equal(0);
+              expect(daveLastYearVotes).to.equal(1);
+
+              // no redemption right now, one gen must pass 
+              await trustedNodes.connect(dave).redeemVoteRewards();
+              expect(await ecox.balanceOf(await dave.getAddress())).to.equal(0);
+
+              await time.increase(3600 * 24 * 14);
+              await (timedPolicies.connect(alice).incrementGeneration());
+              await expect(trustedNodes.connect(dave).redeemVoteRewards()).to.emit(trustedNodes, 'VotingRewardRedemption').withArgs(await dave.getAddress(), votingReward);
+
+              expect(await ecox.balanceOf(await dave.getAddress())).to.equal(votingReward);
+              
+              expect(await trustedNodes.lastYearVotingRecord(await dave.getAddress()))
                 .to.equal(BigNumber.from(0));
-              expect(await trustedNodes.votingRecord(await bob.getAddress()))
-                .to.equal(BigNumber.from(1));
+            });
+
+            it.only('pays out trustee appropriately in complex case', async () => {
+              const trustees = await trustedNodes.connect(alice).numTrustees();
+              let daveCurrentVotes = await trustedNodes.connect(dave).votingRecord(await dave.getAddress());
+              expect(daveCurrentVotes).to.equal(1);
+              // rewards for the current year and the next year
+              
+              // dave reveals once in year 1
+              await faucet.mintx(trustedNodes.address, BigNumber.from((2 * trustees * 26 * votingReward).toString()));
+              await time.increase(3600 * 24 * 14 * 26);
+              await trustedNodes.connect(dave).annualUpdate();     
+
+              // YEAR 2
+              daveCurrentVotes = await trustedNodes.connect(dave).votingRecord(await dave.getAddress());
+              let daveLastYearVotes = await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress());
+              expect(daveCurrentVotes).to.equal(0);
+              expect(daveLastYearVotes).to.equal(1);
+
+                // currencyGovernance cycle in gen 1 of year - dave reveals
+              let originalBorda2 = await deploy('CurrencyGovernance', policy.address);
+              let bordaCloner2 = await deploy('Cloner', originalBorda2.address);
+              borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
+              await policy.testDirectSet('CurrencyGovernance', borda.address);
+              
+              await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+              await time.increase(3600 * 24 * 10.1);
+
+              const davevote = [
+                ethers.utils.randomBytes(32),
+                await dave.getAddress(),
+                [await dave.getAddress()],
+              ];
+              await borda.connect(dave).commit(hash(davevote));
+              await time.increase(3600 * 24 * 3);
+
+              await borda.connect(dave).reveal(davevote[0], davevote[2]);
+              expect(await trustedNodes.connect(dave).votingRecord(await dave.getAddress())).to.equal(1);
+              await time.increase(3600 * 24 * 1);
+
+              await (timedPolicies.connect(alice).incrementGeneration());
+
+                // currencyGovernance cycle in gen 2 of year 2, nothing happens
+              originalBorda2 = await deploy('CurrencyGovernance', policy.address);
+              bordaCloner2 = await deploy('Cloner', originalBorda2.address);
+              borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
+              await policy.testDirectSet('CurrencyGovernance', borda.address);
+
+              await time.increase(3600 * 24 * 14.1);
+              await (timedPolicies.connect(alice).incrementGeneration());
+          
+                // currencyGovernance cycle in gen 3 of year 2 - dave reveals again
+              originalBorda2 = await deploy('CurrencyGovernance', policy.address);
+              bordaCloner2 = await deploy('Cloner', originalBorda2.address);
+              borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
+              await policy.testDirectSet('CurrencyGovernance', borda.address);
+              
+              await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+              await time.increase(3600 * 24 * 10.1);
+
+              await borda.connect(dave).commit(hash(davevote));
+              await time.increase(3600 * 24 * 3);
+
+              await borda.connect(dave).reveal(davevote[0], davevote[2]);
+              expect(await trustedNodes.connect(dave).votingRecord(await dave.getAddress())).to.equal(2);
+              await time.increase(3600 * 24 * 1);
+
+              await (timedPolicies.connect(alice).incrementGeneration());
+
+              console.log('DONE WITH SETUP');
+
+              await time.increase(3600 * 24 * 14 * 23);
+
+              await faucet.mintx(trustedNodes.address, BigNumber.from((trustees * 26 * votingReward).toString()));
+              await trustedNodes.connect(dave).annualUpdate();
+
+              expect(await trustedNodes.connect(dave).votingRecord(await dave.getAddress())).to.equal(0);
+              expect(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress())).to.equal(2);
+              expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress())).to.equal(1);
+
+              // YEAR 3
+
+              // after 0 generations in gen 3 --> expect to redeem 1 reward: the fully vested one
+              expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress())).to.equal(1);
+              await expect(trustedNodes.connect(dave).redeemVoteRewards()).to.emit(trustedNodes, 'VotingRewardRedemption').withArgs(await dave.getAddress(), votingReward);
+              expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress())).to.equal(0);
+
+              await time.increase(3600 * 24 * 14);
+              await (timedPolicies.connect(alice).incrementGeneration());
+
+              // after 1 generation in gen 3 --> expect to redeem 1 reward: corresponding to year 2 gen 1
+
+              expect(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress())).to.equal(2);
+              await expect(trustedNodes.connect(dave).redeemVoteRewards()).to.emit(trustedNodes, 'VotingRewardRedemption').withArgs(await dave.getAddress(), votingReward);
+              expect(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress())).to.equal(1);
+
+              await time.increase(3600 * 24 * 14);
+              await (timedPolicies.connect(alice).incrementGeneration());
+
+              // after 2 generations in gen 3 --> expect to redeem 1 reward: corresponding to year 2 gen 3
+
+              expect(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress())).to.equal(1);
+              await expect(trustedNodes.connect(dave).redeemVoteRewards()).to.emit(trustedNodes, 'VotingRewardRedemption').withArgs(await dave.getAddress(), votingReward);
+              expect(await trustedNodes.connect(dave).lastYearVotingRecord(await dave.getAddress())).to.equal(0);
+              
             });
 
             it('handles potential overflow of trustee rewards with grace', async () => {
