@@ -9,6 +9,7 @@ import "./VotingPower.sol";
 import "../../currency/ECO.sol";
 import "../../currency/ECOx.sol";
 import "hardhat/console.sol";
+
 /** @title PolicyVotes
  * This implements the voting and implementation phases of the policy decision process.
  * Open stake based voting is used for the voting phase.
@@ -19,7 +20,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
     /** The stake an the yes votes of an address on a proposal
      */
-    struct VotePower {
+    struct VotePartial {
         uint256 stake;
         uint256 yesVotes;
     }
@@ -27,14 +28,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
     /** The voting power that a user has based on their stake and
      *  the portion that they have voted yes with
      */
-    mapping(address => VotePower) public votePower;
-    // /** Per voter power.
-    //  */
-    // mapping(address => uint256) public stake;
-
-    // /** Per voter that votes yes, by amount voted yes
-    //  */
-    // mapping(address => uint256) public yesVotes;
+    mapping(address => VotePartial) public votePartials;
 
     /** Total currency staked in all ongoing votes in basic unit of 10^{-18} ECO (weico).
      */
@@ -114,7 +108,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "Voters must have held tokens before this voting cycle"
         );
 
-        VotePower storage vpower = votePower[msg.sender];
+        VotePartial storage vpower = votePartials[msg.sender];
         uint256 _oldStake = vpower.stake;
         uint256 _oldYesVotes = vpower.yesVotes;
         bool _prevVote = _oldYesVotes != 0;
@@ -177,7 +171,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "Your voting power is less than submitted yes + no votes"
         );
 
-        VotePower storage vpower = votePower[msg.sender];
+        VotePartial storage vpower = votePartials[msg.sender];
         uint256 _oldStake = vpower.stake;
         uint256 _oldYesVotes = vpower.yesVotes;
 
@@ -259,19 +253,21 @@ contract PolicyVotes is VotingPower, TimeUtils {
             _res = Result.Rejected;
         } else {
             // Vote passed
-            policy.internalCommand(address(proposal));
             _res = Result.Accepted;
+
+            emit VoteCompletion(_res);
+            policy.removeSelf(ID_POLICY_VOTES);
+
+            require(
+                ecoToken.transfer(
+                    address(policy),
+                    ecoToken.balanceOf(address(this))
+                ),
+                "Transfer Failed"
+            );
+
+            //Enact the policy
+            policy.internalCommand(address(proposal));
         }
-
-        emit VoteCompletion(_res);
-        policy.removeSelf(ID_POLICY_VOTES);
-
-        require(
-            ecoToken.transfer(
-                address(policy),
-                ecoToken.balanceOf(address(this))
-            ),
-            "Transfer Failed"
-        );
     }
 }
