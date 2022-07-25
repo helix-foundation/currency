@@ -493,7 +493,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               // YEAR 3
 
-              // after 0 generations in gen 3 --> expect to redeem 1 reward: the fully vested one
+              // after 0 generations in year 3 --> expect to redeem 1 reward: the fully vested one
               expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress()))
                 .to.equal(1);
               await expect(trustedNodes.connect(dave).redeemVoteRewards())
@@ -505,7 +505,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               await time.increase(3600 * 24 * 14);
               await (timedPolicies.connect(alice).incrementGeneration());
 
-              // after 1 generation in gen 3 --> expect to redeem 1: corresponding to year 2 gen 1
+              // after 1 generation in year 3 --> expect to redeem 1: corresponding to year 2 gen 1
 
               expect(await trustedNodes.connect(dave)
                 .lastYearVotingRecord(await dave.getAddress())).to.equal(2);
@@ -518,7 +518,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               await time.increase(3600 * 24 * 14);
               await (timedPolicies.connect(alice).incrementGeneration());
 
-              // after 2 generations in gen 3 --> expect to redeem 1: corresponding to year 2 gen 3
+              // after 2 generations in year 3 --> expect to redeem 1: corresponding to year 2 gen 3
 
               expect(await trustedNodes.connect(dave)
                 .lastYearVotingRecord(await dave.getAddress())).to.equal(1);
