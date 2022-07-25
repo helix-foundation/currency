@@ -37,6 +37,9 @@ contract PolicyProposals is VotingPower, TimeUtils {
         uint256 totalStake;
     }
 
+    // max length of data fields
+    uint256 public maxData = 150;
+
     /* A record of which addresses have already staked in support of each proposal
      */
     mapping(Proposal => mapping(address => bool)) public staked;
@@ -265,6 +268,13 @@ contract PolicyProposals is VotingPower, TimeUtils {
         require(
             getTime() < proposalEnds && !proposalSelected,
             "Proposals may no longer be registered because the registration period has ended"
+        );
+
+        require(
+            bytes(Proposal(_prop).name()).length < maxData && 
+            bytes(Proposal(_prop).description()).length < maxData && 
+            bytes(Proposal(_prop).url()).length < maxData,
+            "Data fields are too long."
         );
 
         Prop storage _p = proposals[_prop];

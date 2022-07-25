@@ -39,6 +39,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 lockupInterest;
         // multiplier for linear inflation as an 18 digit fixed point number
         uint256 inflationMultiplier;
+        // to store a link to more information
+        string description;
     }
 
     // timescales
@@ -52,6 +54,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     uint256 public revealEnds;
 
     uint256 public constant IDEMPOTENT_INFLATION_MULTIPLIER = 1e18;
+
+    // max length of description field
+    uint256 public maxData = 150;
 
     // mapping of proposing trustee addresses to their submitted proposals
     mapping(address => GovernanceProposal) public proposals;
@@ -72,7 +77,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _randomInflationReward,
         uint256 _lockupDuration,
         uint256 _lockupInterest,
-        uint256 _inflationMultiplier
+        uint256 _inflationMultiplier,
+        string _description
     );
 
     // emitted when a trustee unproposes their proposal
@@ -144,11 +150,17 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _randomInflationReward,
         uint256 _lockupDuration,
         uint256 _lockupInterest,
-        uint256 _inflationMultiplier
+        uint256 _inflationMultiplier,
+        string memory _description
     ) external onlyTrusted atStage(Stage.Propose) {
         require(
             _inflationMultiplier > 0,
             "Inflation multiplier cannot be zero."
+        );
+        require(
+            // didn't choose this number for any particular reason
+            bytes(_description).length < maxData,
+            "Description is too long."
         );
 
         GovernanceProposal storage p = proposals[msg.sender];
@@ -157,6 +169,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         p.lockupDuration = _lockupDuration;
         p.lockupInterest = _lockupInterest;
         p.inflationMultiplier = _inflationMultiplier;
+        p.description = _description;
+
 
         emit ProposalCreation(
             msg.sender,
@@ -164,7 +178,8 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
             _randomInflationReward,
             _lockupDuration,
             _lockupInterest,
-            _inflationMultiplier
+            _inflationMultiplier,
+            _description
         );
     }
 
