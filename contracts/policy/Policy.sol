@@ -11,31 +11,20 @@ import "./ERC1820Client.sol";
  * governance systems for other contracts.
  */
 contract Policy is ForwardTarget, ERC1820Client {
-    bytes32[] public setters;
+    mapping(bytes32 => bool) public setters;
 
-    modifier onlySetter() {
-        bool authed;
-
-        /*
-         * Amount of setters is predefined by ECO and is reasonable
-         * from gas consumption standpoint. Change to amount of setter
-         * Have to go through reviewed policy proposal framework
-         */
-        for (uint256 i = 0; i < setters.length; ++i) {
-            if (
-                ERC1820REGISTRY.getInterfaceImplementer(
-                    address(this),
-                    setters[i]
-                ) == msg.sender
-            ) {
-                authed = true;
-                break;
-            }
-        }
+    modifier onlySetter(bytes32 _identifier) {
+        require(
+            setters[_identifier],
+            "Identifier hash is not authorized for this action"
+        );
 
         require(
-            authed,
-            "Failed to find an appropriate permission for this action."
+            ERC1820REGISTRY.getInterfaceImplementer(
+                address(this),
+                _identifier
+            ) == msg.sender,
+            "Caller is not the authorized address for identifier"
         );
 
         _;
@@ -86,7 +75,11 @@ contract Policy is ForwardTarget, ERC1820Client {
      *
      * @param _implementer The contract to assume the label.
      */
-    function setPolicy(bytes32 _key, address _implementer) public onlySetter {
+    function setPolicy(
+        bytes32 _key,
+        address _implementer,
+        bytes32 _authKey
+    ) public onlySetter(_authKey) {
         ERC1820REGISTRY.setInterfaceImplementer(
             address(this),
             _key,
@@ -98,30 +91,14 @@ contract Policy is ForwardTarget, ERC1820Client {
      *
      * @param _delegate The contract code to delegate execution to.
      */
-    function internalCommand(address _delegate) public onlySetter {
+    function internalCommand(address _delegate, bytes32 _authKey)
+        public
+        onlySetter(_authKey)
+    {
         // solhint-disable-next-line avoid-low-level-calls
         (bool _success, ) = _delegate.delegatecall(
             abi.encodeWithSignature("enacted(address)", _delegate)
         );
         require(_success, "Command failed during delegatecall");
-    }
-
-    /** Initialize the contract (replaces constructor)
-     *
-     * Policy contracts are often the targets of proxies, and therefore need a
-     * mechanism to initialize internal state when adopted by a new proxy. This
-     * replaces the constructor.
-     *
-     * @param _self The address of the original contract deployment (as opposed
-     *              to the address of the proxy contract, which takes the place
-     *              of `this`).
-     */
-    function initialize(address _self)
-        public
-        virtual
-        override
-        onlyConstruction
-    {
-        super.initialize(_self);
     }
 }

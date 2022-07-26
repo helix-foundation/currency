@@ -411,7 +411,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
         pv.configure(votingProp.proposal, votingProp.proposer, blockNumber);
-        policy.setPolicy(ID_POLICY_VOTES, address(pv));
+        policy.setPolicy(ID_POLICY_VOTES, address(pv), ID_POLICY_PROPOSALS);
 
         emit VoteStart(pv);
 

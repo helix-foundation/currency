@@ -130,7 +130,7 @@ describe('Policed [@group=11]', () => {
   it('does not allow non-approved callers to run internalCommand', async () => {
     const cmd = await deploy('FakeCommander', policy.address);
     await expect(cmd.command(testPoliced.address, policer.address)).to.be.revertedWith(
-      'Failed to find an appropriate permission',
+      'Caller is not the authorized address for identifier',
     );
   });
 

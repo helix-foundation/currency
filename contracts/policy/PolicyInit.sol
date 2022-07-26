@@ -28,7 +28,7 @@ contract PolicyInit is Policy, Ownable {
         Policy _policy,
         bytes32[] calldata _setters,
         bytes32[] calldata _keys,
-        address[] calldata _values //, bytes32[] calldata _tokenResolvers
+        address[] calldata _values
     ) external onlyOwner {
         require(
             _keys.length == _values.length,
@@ -36,15 +36,19 @@ contract PolicyInit is Policy, Ownable {
         );
 
         setImplementation(address(_policy));
-        setters = _setters;
-        // This contract is for internal ECO use only,
-        // loops boundaries are reasonable.
+
+        // attribute all the identifier hashes to their addresses
         for (uint256 i = 0; i < _keys.length; ++i) {
             ERC1820REGISTRY.setInterfaceImplementer(
                 address(this),
                 _keys[i],
                 _values[i]
             );
+        }
+
+        // store which hashes have setter privileges
+        for (uint256 i = 0; i < _setters.length; ++i) {
+            setters[_setters[i]] = true;
         }
     }
 

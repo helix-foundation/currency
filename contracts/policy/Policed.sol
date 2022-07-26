@@ -9,7 +9,7 @@ import "./Policy.sol";
  *
  * A policed contract is any contract managed by a policy.
  */
-abstract contract Policed is ForwardTarget, IERC1820Implementer {
+abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 
@@ -32,6 +32,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer {
 
     constructor(Policy _policy) {
         policy = _policy;
+        ERC1820REGISTRY.setManager(address(this), address(_policy));
     }
 
     /** ERC1820 permissioning interface
@@ -69,6 +70,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer {
         onlyConstruction
     {
         super.initialize(_self);
+        ERC1820REGISTRY.setManager(address(this), address(policy));
     }
 
     /** Execute code as indicated by the managing policy contract
