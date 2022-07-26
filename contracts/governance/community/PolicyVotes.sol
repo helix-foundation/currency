@@ -16,8 +16,8 @@ import "../../currency/ECOx.sol";
 contract PolicyVotes is VotingPower, TimeUtils {
     /** The proposal being voted on */
     Proposal public proposal;
-    
-    /* The proposer of the proposal being voted on */ 
+
+    /* The proposer of the proposal being voted on */
     address public proposer;
 
     /** Per voter power.
@@ -200,9 +200,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _proposal The proposal to vote on.
      */
-    function configure(Proposal _proposal, address _proposer, uint256 _cutoffBlockNumber)
-        external
-    {
+    function configure(
+        Proposal _proposal,
+        address _proposer,
+        uint256 _cutoffBlockNumber
+    ) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;

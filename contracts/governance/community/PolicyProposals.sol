@@ -388,7 +388,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             }
         }
         require(proposalIndex < totalProposals, "proposal does not exist");
-        
+
         if (proposalIndex < totalProposals - 1) {
             Proposal lastProposal = allProposals[totalProposals - 1];
             allProposals[proposalIndex] = lastProposal;
