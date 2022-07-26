@@ -8,7 +8,6 @@ import "../../utils/TimeUtils.sol";
 import "./VotingPower.sol";
 import "../../currency/ECO.sol";
 import "../../currency/ECOx.sol";
-import "hardhat/console.sol";
 
 /** @title PolicyVotes
  * This implements the voting and implementation phases of the policy decision process.
