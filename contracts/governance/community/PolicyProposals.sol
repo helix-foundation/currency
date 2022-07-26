@@ -57,7 +57,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** The duration of the proposal portion of the proposal phase.
      */
-    uint256 public constant PROPOSAL_TIME = 10 days;
+    uint256 public constant PROPOSAL_TIME = 9 days + 16 hours;
 
     /** Whether or not a winning proposal has been selected
      */
