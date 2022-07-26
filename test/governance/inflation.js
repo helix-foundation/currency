@@ -146,7 +146,7 @@ describe('RandomInflation [@group=6]', () => {
     const bob = accounts[1];
     const charlie = accounts[2];
     const dave = accounts[3];
-    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', "");
+    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', '');
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [

@@ -171,7 +171,6 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         p.inflationMultiplier = _inflationMultiplier;
         p.description = _description;
 
-
         emit ProposalCreation(
             msg.sender,
             _numberOfRecipients,
