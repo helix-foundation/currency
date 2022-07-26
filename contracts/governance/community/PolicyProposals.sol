@@ -271,9 +271,9 @@ contract PolicyProposals is VotingPower, TimeUtils {
         );
 
         require(
-            uint256(bytes(Proposal(_prop).name()).length) < maxData &&
-                uint256(bytes(Proposal(_prop).description()).length) < maxData &&
-                uint256(bytes(Proposal(_prop).url()).length) < maxData,
+            uint256(bytes(Proposal(_prop).name()).length) <= maxData &&
+                uint256(bytes(Proposal(_prop).description()).length) <= maxData &&
+                uint256(bytes(Proposal(_prop).url()).length) <= maxData,
             "Data fields are too long."
         );
 

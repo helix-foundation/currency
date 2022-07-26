@@ -159,7 +159,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         );
         require(
             // didn't choose this number for any particular reason
-            uint256(bytes(_description).length) < 150,
+            uint256(bytes(_description).length) <= 150,
             "Description is too long."
         );
 

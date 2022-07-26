@@ -66,7 +66,7 @@ describe('CurrencyTimer [@group=6]', () => {
     beforeEach(async () => {
       await faucet.mint(await alice.getAddress(), aliceBal);
 
-      await borda.connect(bob).propose(10, 20, 30, 40, proposedInflationMult);
+      await borda.connect(bob).propose(10, 20, 30, 40, proposedInflationMult, "");
       await time.increase(3600 * 24 * 10.1);
 
       const alicevote = [

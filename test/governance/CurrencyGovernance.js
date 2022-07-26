@@ -61,6 +61,16 @@ describe('CurrencyGovernance [@group=4]', () => {
         ).to.be.revertedWith('Only trusted nodes can call this method');
       });
 
+      it("reverts if description is too long, doesnt if not", async () => {
+        const a = "a";
+        const maxString = a.repeat(150);
+        await expect(
+        borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), maxString + "!")
+        ).to.be.revertedWith("Description is too long.");
+
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), maxString);
+      })
+
       it('Allows trustees to propose', async () => {
         await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), "");
 
