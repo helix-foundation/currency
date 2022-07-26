@@ -46,13 +46,11 @@ contract MakeRich is Policy, Proposal {
         return "https://description.of.proposal";
     }
 
-    /** Enact the proposal.
+    /** Enact the proposal. Mint a bunch of coins for the lucky account.
      *
      * This is executed in the storage context of the root policy contract.
-     *
-     * @param _self The address of the proposal.
      */
-    function enacted(address _self) public override {
+    function enacted(address) public override {
         bytes32 _inflationId = keccak256(abi.encodePacked("EcoLabs"));
         bytes32 _ecoId = keccak256(abi.encodePacked("ECO"));
 

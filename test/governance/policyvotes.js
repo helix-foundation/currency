@@ -138,7 +138,7 @@ describe('PolicyVotes [@group=8]', () => {
         context('with tokens', () => {
           it('can vote', async () => {
             await expect(proxiedPolicyVotes.connect(alice).vote(true))
-              .to.emit(proxiedPolicyVotes, 'PolicyVoteCast')
+              .to.emit(proxiedPolicyVotes, 'PolicyVote')
               .withArgs(await alice.getAddress(), true, one.mul(5000));
           });
 
@@ -422,7 +422,7 @@ describe('PolicyVotes [@group=8]', () => {
       it('fails', async () => {
         await time.increase(3600 * 24 * 4.1);
         await expect(proxiedPolicyVotes.execute())
-          .to.emit(proxiedPolicyVotes, 'VoteCompleted')
+          .to.emit(proxiedPolicyVotes, 'VoteCompletion')
           .withArgs(2);
       });
     });
@@ -453,7 +453,7 @@ describe('PolicyVotes [@group=8]', () => {
           await time.increase(3600 * 24 * 4.1);
 
           await expect(proxiedPolicyVotes.execute())
-            .to.emit(proxiedPolicyVotes, 'VoteCompleted')
+            .to.emit(proxiedPolicyVotes, 'VoteCompletion')
             .withArgs(0);
         });
       });
@@ -463,7 +463,7 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.connect(bob).vote(true);
 
           await expect(proxiedPolicyVotes.execute())
-            .to.emit(proxiedPolicyVotes, 'VoteCompleted')
+            .to.emit(proxiedPolicyVotes, 'VoteCompletion')
             .withArgs(0);
         });
       });
@@ -484,7 +484,7 @@ describe('PolicyVotes [@group=8]', () => {
           await time.increase(3600 * 24 * 4.1);
 
           await expect(proxiedPolicyVotes.execute())
-            .to.emit(proxiedPolicyVotes, 'VoteCompleted')
+            .to.emit(proxiedPolicyVotes, 'VoteCompletion')
             .withArgs(1);
         });
 
@@ -502,7 +502,7 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.connect(bob).vote(true);
 
           await expect(proxiedPolicyVotes.execute())
-            .to.emit(proxiedPolicyVotes, 'VoteCompleted')
+            .to.emit(proxiedPolicyVotes, 'VoteCompletion')
             .withArgs(0);
         });
 
