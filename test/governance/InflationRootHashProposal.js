@@ -161,7 +161,7 @@ describe('InflationRootHashProposal', () => {
       await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
     );
 
-    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
+    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', "");
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [
