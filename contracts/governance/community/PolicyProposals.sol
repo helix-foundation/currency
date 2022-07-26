@@ -57,7 +57,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** The duration of the proposal portion of the proposal phase.
      */
-    uint256 public constant PROPOSAL_TIME = 10 days;
+    uint256 public constant PROPOSAL_TIME = 9 days + 16 hours;
 
     /** Whether or not a winning proposal has been selected
      */
@@ -374,23 +374,48 @@ contract PolicyProposals is VotingPower, TimeUtils {
         emit Unsupport(msg.sender, _prop);
     }
 
+    /** Remove a proposal from proposals mapping and allProposals array
+     * @param _prop The proposal to delete.
+     */
+    function deleteProposal(Proposal _prop) internal {
+        require(totalProposals > 0, "no proposals to delete");
+
+        uint256 proposalIndex = totalProposals;
+        for (uint256 i = 0; i < totalProposals; i++) {
+            if (address(allProposals[i]) == address(_prop)) {
+                proposalIndex = i;
+                break;
+            }
+        }
+        require(proposalIndex < totalProposals, "proposal does not exist");
+
+        if (proposalIndex < totalProposals - 1) {
+            Proposal lastProposal = allProposals[totalProposals - 1];
+            allProposals[proposalIndex] = lastProposal;
+        }
+
+        // delete last proposal
+        allProposals.pop();
+        delete proposals[_prop];
+        totalProposals = totalProposals - 1;
+    }
+
     function deployProposalVoting() external {
         require(proposalSelected, "no proposal has been selected");
         require(
             address(proposalToConfigure) != address(0),
             "voting has already been deployed"
         );
-        Proposal votingProposal = proposalToConfigure;
+        Prop storage votingProp = proposals[proposalToConfigure];
         delete proposalToConfigure;
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
-        pv.configure(votingProposal, blockNumber);
+        pv.configure(votingProp.proposal, votingProp.proposer, blockNumber);
         policy.setPolicy(ID_POLICY_VOTES, address(pv));
 
         emit VoteStart(pv);
 
-        delete proposals[votingProposal];
-        totalProposals = totalProposals - 1;
+        deleteProposal(votingProp.proposal);
     }
 
     /** Refund the fee for a proposal that was not selected.
@@ -420,8 +445,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         address receiver = _p.proposer;
 
-        delete proposals[_prop];
-        totalProposals = totalProposals - 1;
+        deleteProposal(_prop);
 
         require(ecoToken.transfer(receiver, REFUND_IF_LOST), "Transfer Failed");
 
