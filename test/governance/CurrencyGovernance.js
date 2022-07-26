@@ -474,8 +474,6 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               await (timedPolicies.connect(alice).incrementGeneration());
 
-              console.log('DONE WITH SETUP');
-
               await time.increase(3600 * 24 * 14 * 23);
 
               await faucet.mintx(

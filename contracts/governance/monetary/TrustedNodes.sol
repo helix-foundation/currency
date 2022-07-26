@@ -102,6 +102,7 @@ contract TrustedNodes is PolicedUtils {
         super.initialize(_self);
         // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
+        hoard = TrustedNodes(_self).hoard();
         yearStartGen = 1001;
         yearEnd = block.timestamp + YEAR;
 
@@ -272,10 +273,7 @@ contract TrustedNodes is PolicedUtils {
             "Transfer the appropriate funds to this contract before updating"
         );
         // TODO: fix this, address should be hoard, but breaks test due to it being set to 0 address in tests
-        require(
-            ecoX.transfer(address(0xbeefbeefbeef), reward),
-            "Transfer Failed"
-        );
+        require(ecoX.transfer(hoard, reward), "Transfer Failed");
 
         emit VotingRewardRedemption(hoard, reward);
         emit RewardsTrackingUpdate(yearEnd, unallocatedRewardsCount);
