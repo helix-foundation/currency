@@ -17,13 +17,20 @@ contract PolicyVotes is VotingPower, TimeUtils {
     /** The proposal being voted on */
     Proposal public proposal;
 
-    /** Per voter power.
-     */
-    mapping(address => uint256) public stake;
+    /* The proposer of the proposal being voted on */
+    address public proposer;
 
-    /** Per voter that votes yes, by amount voted yes
+    /** The stake an the yes votes of an address on a proposal
      */
-    mapping(address => uint256) public yesVotes;
+    struct VotePartial {
+        uint256 stake;
+        uint256 yesVotes;
+    }
+
+    /** The voting power that a user has based on their stake and
+     *  the portion that they have voted yes with
+     */
+    mapping(address => VotePartial) public votePartials;
 
     /** Total currency staked in all ongoing votes in basic unit of 10^{-18} ECO (weico).
      */
@@ -54,11 +61,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
     /** Event emitted when vote outcome is known.
      */
-    event VoteCompleted(Result result);
+    event VoteCompletion(Result indexed result);
 
     /** Event emitted when vote is submitted.
      */
-    event PolicyVoteCast(address indexed voter, bool vote, uint256 amount);
+    event PolicyVote(address indexed voter, bool indexed vote, uint256 amount);
 
     /** Event emitted when split vote is.
      */
@@ -72,6 +79,8 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     uint256 public blockNumber;
 
+    /** Here we only call inherited constructor, and pass parameters to it
+     */
     // solhint-disable-next-line no-empty-blocks
     constructor(
         Policy _policy,
@@ -101,8 +110,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "Voters must have held tokens before this voting cycle"
         );
 
-        uint256 _oldStake = stake[msg.sender];
-        uint256 _oldYesVotes = yesVotes[msg.sender];
+        VotePartial storage vpower = votePartials[msg.sender];
+        uint256 _oldStake = vpower.stake;
+        uint256 _oldYesVotes = vpower.yesVotes;
         bool _prevVote = _oldYesVotes != 0;
 
         if (_oldStake != 0) {
@@ -112,20 +122,20 @@ contract PolicyVotes is VotingPower, TimeUtils {
             );
 
             if (_prevVote) {
-                yesStake = yesStake - _oldYesVotes;
-                yesVotes[msg.sender] = 0;
+                yesStake -= _oldYesVotes;
+                vpower.yesVotes = 0;
             }
         }
 
         if (_vote) {
-            yesStake = yesStake + _amount;
-            yesVotes[msg.sender] = _amount;
+            yesStake += _amount;
+            vpower.yesVotes = _amount;
         }
 
-        stake[msg.sender] = _amount;
+        vpower.stake = _amount;
         totalStake = totalStake + _amount - _oldStake;
 
-        emit PolicyVoteCast(msg.sender, _vote, _amount);
+        emit PolicyVote(msg.sender, _vote, _amount);
     }
 
     /** Submit a mixed vote of yes/no support
@@ -163,17 +173,18 @@ contract PolicyVotes is VotingPower, TimeUtils {
             "Your voting power is less than submitted yes + no votes"
         );
 
-        uint256 _oldStake = stake[msg.sender];
-        uint256 _oldYesVotes = yesVotes[msg.sender];
+        VotePartial storage vpower = votePartials[msg.sender];
+        uint256 _oldStake = vpower.stake;
+        uint256 _oldYesVotes = vpower.yesVotes;
 
         if (_oldYesVotes > 0) {
-            yesStake = yesStake - _oldYesVotes;
+            yesStake -= _oldYesVotes;
         }
 
-        yesVotes[msg.sender] = _votesYes;
-        yesStake = yesStake + _votesYes;
+        vpower.yesVotes = _votesYes;
+        yesStake += _votesYes;
 
-        stake[msg.sender] = _totalVotes;
+        vpower.stake = _totalVotes;
         totalStake = totalStake + _totalVotes - _oldStake;
 
         emit PolicySplitVoteCast(msg.sender, _votesYes, _votesNo);
@@ -197,15 +208,18 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _proposal The proposal to vote on.
      */
-    function configure(Proposal _proposal, uint256 _cutoffBlockNumber)
-        external
-    {
+    function configure(
+        Proposal _proposal,
+        address _proposer,
+        uint256 _cutoffBlockNumber
+    ) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
         blockNumber = _cutoffBlockNumber;
 
         proposal = _proposal;
+        proposer = _proposer;
     }
 
     /** Execute the proposal if it has enough support.
@@ -221,13 +235,12 @@ contract PolicyVotes is VotingPower, TimeUtils {
     function execute() external {
         uint256 _requiredStake = totalStake / 2;
         uint256 _total = totalVotingPower(blockNumber);
-        uint256 _time = getTime();
 
         Result _res;
 
         if (yesStake < _total / 2) {
             require(
-                _time > voteEnds + ENACTION_DELAY,
+                getTime() > voteEnds + ENACTION_DELAY,
                 "Majority support required for early enaction"
             );
         }
@@ -245,11 +258,13 @@ contract PolicyVotes is VotingPower, TimeUtils {
             _res = Result.Rejected;
         } else {
             // Vote passed
-            policy.internalCommand(address(proposal));
             _res = Result.Accepted;
+
+            //Enact the policy
+            policy.internalCommand(address(proposal));
         }
 
-        emit VoteCompleted(_res);
+        emit VoteCompletion(_res);
         policy.removeSelf(ID_POLICY_VOTES);
 
         require(

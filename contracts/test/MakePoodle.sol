@@ -48,13 +48,12 @@ contract MakePoodle is Policy, Proposal {
         return "https://description.of.proposal";
     }
 
-    /** Enact the proposal.
+    /** Sets the value of the CurrencyGovernance implementation on the
+     * CurrencyTimer contract to the value on this proposal.
      *
      * This is executed in the storage context of the root policy contract.
-     *
-     * @param _self The address of the proposal.
      */
-    function enacted(address _self) public override {
+    function enacted(address) public override {
         address _currencyTimer = policyFor(currencyTimerId);
 
         Policed(_currencyTimer).policyCommand(

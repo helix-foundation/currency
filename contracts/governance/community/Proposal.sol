@@ -5,21 +5,21 @@ pragma solidity ^0.8.0;
  * Interface specification for proposals. Any proposal submitted in the
  * policy decision process must implement this interface.
  */
-abstract contract Proposal {
+interface Proposal {
     /** The name of the proposal.
      *
      * This should be relatively unique and descriptive.
      */
-    function name() external view virtual returns (string memory);
+    function name() external view returns (string memory);
 
     /** A longer description of what this proposal achieves.
      */
-    function description() external view virtual returns (string memory);
+    function description() external view returns (string memory);
 
     /** A URL where voters can go to see the case in favour of this proposal,
      * and learn more about it.
      */
-    function url() external view virtual returns (string memory);
+    function url() external view returns (string memory);
 
     /** Called to enact the proposal.
      *
@@ -29,5 +29,5 @@ abstract contract Proposal {
      *
      * @param _self The address of the proposal contract.
      */
-    function enacted(address _self) external virtual;
+    function enacted(address _self) external;
 }
