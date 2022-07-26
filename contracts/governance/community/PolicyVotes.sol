@@ -17,6 +17,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
     /** The proposal being voted on */
     Proposal public proposal;
 
+    /* The proposer of the proposal being voted on */
+    address public proposer;
+
     /** Per voter power.
      */
     mapping(address => uint256) public stake;
@@ -197,15 +200,18 @@ contract PolicyVotes is VotingPower, TimeUtils {
      *
      * @param _proposal The proposal to vote on.
      */
-    function configure(Proposal _proposal, uint256 _cutoffBlockNumber)
-        external
-    {
+    function configure(
+        Proposal _proposal,
+        address _proposer,
+        uint256 _cutoffBlockNumber
+    ) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
         blockNumber = _cutoffBlockNumber;
 
         proposal = _proposal;
+        proposer = _proposer;
     }
 
     /** Execute the proposal if it has enough support.

@@ -56,11 +56,19 @@ describe('PolicyVotes [@group=8]', () => {
     describe('when called on a proxied instance', () => {
       context('that has not been configured', () => {
         it('succeeds', async () => {
-          await proxiedPolicyVotes.configure(proposal, await time.latestBlock());
+          await proxiedPolicyVotes.configure(
+            proposal,
+            await alice.getAddress(),
+            await time.latestBlock(),
+          );
         });
 
         it('sets the veto end time', async () => {
-          await proxiedPolicyVotes.configure(proposal, await time.latestBlock());
+          await proxiedPolicyVotes.configure(
+            proposal,
+            await alice.getAddress(),
+            await time.latestBlock(),
+          );
 
           assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0);
         });
@@ -68,12 +76,20 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('that has already been configured', () => {
         beforeEach(async () => {
-          await proxiedPolicyVotes.configure(proposal, await time.latestBlock());
+          await proxiedPolicyVotes.configure(
+            proposal,
+            await alice.getAddress(),
+            await time.latestBlock(),
+          );
         });
 
         it('reverts', async () => {
           await expect(
-            proxiedPolicyVotes.configure(proposal, await time.latestBlock()),
+            proxiedPolicyVotes.configure(
+              proposal,
+              await alice.getAddress(),
+              await time.latestBlock(),
+            ),
           ).to.be.revertedWith('has already been configured');
         });
       });
@@ -91,7 +107,11 @@ describe('PolicyVotes [@group=8]', () => {
 
     context('when the contract is configured', () => {
       beforeEach(async () => {
-        await proxiedPolicyVotes.configure(proposal, await time.latestBlock());
+        await proxiedPolicyVotes.configure(
+          proposal,
+          await alice.getAddress(),
+          await time.latestBlock(),
+        );
       });
 
       context('after the commitment period', () => {
@@ -215,7 +235,11 @@ describe('PolicyVotes [@group=8]', () => {
 
     context('when the contract is configured', () => {
       beforeEach(async () => {
-        await proxiedPolicyVotes.configure(proposal, await time.latestBlock());
+        await proxiedPolicyVotes.configure(
+          proposal,
+          await alice.getAddress(),
+          await time.latestBlock(),
+        );
       });
 
       context('after the commitment period', () => {
@@ -387,7 +411,11 @@ describe('PolicyVotes [@group=8]', () => {
     const votesPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
 
     beforeEach(async () => {
-      await proxiedPolicyVotes.configure(proposal, await time.latestBlock());
+      await proxiedPolicyVotes.configure(
+        proposal,
+        await alice.getAddress(),
+        await time.latestBlock(),
+      );
     });
 
     context('when no one votes', () => {
