@@ -270,13 +270,13 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "Proposals may no longer be registered because the registration period has ended"
         );
 
-        require(
-            uint256(bytes(Proposal(_prop).name()).length) <= maxData &&
-                uint256(bytes(Proposal(_prop).description()).length) <=
-                maxData &&
-                uint256(bytes(Proposal(_prop).url()).length) <= maxData,
-            "Data fields are too long."
-        );
+        // require(
+        //     uint256(bytes(Proposal(_prop).name()).length) <= maxData &&
+        //         uint256(bytes(Proposal(_prop).description()).length) <=
+        //         maxData &&
+        //         uint256(bytes(Proposal(_prop).url()).length) <= maxData,
+        //     "Data fields are too long."
+        // );
 
         Prop storage _p = proposals[_prop];
 
