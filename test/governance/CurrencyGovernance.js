@@ -57,12 +57,12 @@ describe('CurrencyGovernance [@group=4]', () => {
     describe('Propose phase', () => {
       it("Doesn't allow non-trustee to propose", async () => {
         await expect(
-          borda.propose(33, 34, 35, 36, BigNumber.from('1000000000000000000')),
+          borda.propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), ""),
         ).to.be.revertedWith('Only trusted nodes can call this method');
       });
 
       it('Allows trustees to propose', async () => {
-        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), "");
 
         const p = await borda.proposals(await bob.getAddress());
         expect(p.inflationMultiplier).to.equal('1000000000000000000');
@@ -81,7 +81,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Allows removing proposals', async () => {
-        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), "");
         await borda.connect(bob).unpropose();
 
         const p = await borda.proposals(await bob.getAddress());
@@ -89,7 +89,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
 
       it('Emits ProposalCreation event when proposal is created', async () => {
-        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), "");
         const [evt] = await borda.queryFilter('ProposalCreation');
         expect(evt.args.trusteeAddress).to.equal(await bob.getAddress());
         expect(evt.args._numberOfRecipients).to.equal(33);
@@ -102,9 +102,9 @@ describe('CurrencyGovernance [@group=4]', () => {
 
     describe('Voting phase', () => {
       beforeEach(async () => {
-        await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
-        await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
-        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+        await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), "");
+        await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), "");
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
         await time.increase(3600 * 24 * 10.1);
       });
 
@@ -172,7 +172,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
       it('Reject duplicate votes', async () => {
         const seed = ethers.utils.randomBytes(32);
-        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
         await time.increase(3600 * 24 * 10.1);
         await borda
           .connect(bob)
@@ -199,7 +199,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
       it('Emits VoteReveal when vote is correctly revealed', async () => {
         const seed = ethers.utils.randomBytes(32);
-        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
         await time.increase(3600 * 24 * 10.1);
         await borda
           .connect(bob)
@@ -212,7 +212,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
       it('Allows reveals of correct votes', async () => {
         const seed = ethers.utils.randomBytes(32);
-        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+        await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
         await time.increase(3600 * 24 * 10.1);
         await borda
           .connect(bob)
@@ -245,11 +245,11 @@ describe('CurrencyGovernance [@group=4]', () => {
         });
 
         beforeEach(async () => {
-          await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+          await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), "");
           await borda
             .connect(charlie)
-            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
-          await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), "");
+          await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
           await time.increase(3600 * 24 * 10.1);
 
           await borda.connect(bob).commit(hash(bobvote));
@@ -366,9 +366,9 @@ describe('CurrencyGovernance [@group=4]', () => {
             borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner2.clone());
             await policy.testDirectSet('CurrencyGovernance', borda.address);
 
-            await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
-            await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
-            await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+            await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), "");
+            await borda.connect(charlie).propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), "");
+            await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
             await time.increase(3600 * 24 * 10.1);
 
             await borda.connect(bob).commit(hash(bobvote));
@@ -415,15 +415,15 @@ describe('CurrencyGovernance [@group=4]', () => {
       /* eslint-disable no-loop-func, no-await-in-loop */
       for (let i = 0; i < additionalTrustees.length; i++) {
         it(`testing revealing with ${i + 4} proposals`, async () => {
-          await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+          await borda.connect(dave).propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), "");
           await borda
             .connect(charlie)
-            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'));
-          await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'));
+            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000', ""));
+          await borda.connect(bob).propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), "");
           for (let j = 0; j < additionalTrustees.length; j++) {
             await borda
               .connect(additionalTrustees[j])
-              .propose(40, 40, 40, 40, BigNumber.from('1000000000000000000'));
+              .propose(40, 40, 40, 40, BigNumber.from('1000000000000000000'), "");
           }
           await time.increase(3600 * 24 * 10.1);
 
