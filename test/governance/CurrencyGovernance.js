@@ -348,12 +348,12 @@ describe('CurrencyGovernance [@group=4]', () => {
           });
 
           describe('reward withdrawal', async () => {
-            it.only('doesnt let you withdraw for votes from this year', async () => {
+            it('doesnt let you withdraw for votes from this year', async () => {
               await expect(
                 trustedNodes.connect(dave).redeemVoteRewards(),
               ).to.be.revertedWith('No vested rewards to redeem');
             });
-            it.only('pays out trustee in simple case', async () => {
+            it('pays out trustee in simple case', async () => {
               const trustees = await trustedNodes.connect(alice).numTrustees();
               // should be 26 * numTrustees - 2 reveals = 76
               expect(await trustedNodes.connect(alice).unallocatedRewardsCount()).to.equal(76);
@@ -397,7 +397,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                 .to.equal(BigNumber.from(0));
             });
 
-            it.only('pays out trustee appropriately in complex case', async () => {
+            it('pays out trustee appropriately in complex case', async () => {
               const trustees = await trustedNodes.connect(alice).numTrustees();
               let daveCurrentVotes = await trustedNodes.connect(dave)
                 .votingRecord(await dave.getAddress());
@@ -494,43 +494,44 @@ describe('CurrencyGovernance [@group=4]', () => {
               // YEAR 3
 
               // after 0 generations in year 3 --> expect to redeem 1 reward: the fully vested one
-              // expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress()))
-              //   .to.equal(1);
-              // await expect(trustedNodes.connect(dave).redeemVoteRewards())
-              //   .to.emit(trustedNodes, 'VotingRewardRedemption')
-              //   .withArgs(await dave.getAddress(), votingReward);
-              // expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress()))
-              //   .to.equal(0);
+              expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress()))
+                .to.equal(1);
+              await expect(trustedNodes.connect(dave).redeemVoteRewards())
+                .to.emit(trustedNodes, 'VotingRewardRedemption')
+                .withArgs(await dave.getAddress(), votingReward);
+              expect(await trustedNodes.connect(dave).fullyVestedRewards(await dave.getAddress()))
+                .to.equal(0);
 
               await time.increase(3600 * 24 * 14);
               await (timedPolicies.connect(alice).incrementGeneration());
 
               // after 1 generation in year 3 --> expect to redeem 1: corresponding to year 2 gen 1
 
-              // expect(await trustedNodes.connect(dave)
-              //   .lastYearVotingRecord(await dave.getAddress())).to.equal(2);
-              // await expect(trustedNodes.connect(dave).redeemVoteRewards())
-              //   .to.emit(trustedNodes, 'VotingRewardRedemption')
-              //   .withArgs(await dave.getAddress(), votingReward);
-              // expect(await trustedNodes.connect(dave)
-              //   .lastYearVotingRecord(await dave.getAddress())).to.equal(1);
+              expect(await trustedNodes.connect(dave)
+                .lastYearVotingRecord(await dave.getAddress())).to.equal(2);
+              await expect(trustedNodes.connect(dave).redeemVoteRewards())
+                .to.emit(trustedNodes, 'VotingRewardRedemption')
+                .withArgs(await dave.getAddress(), votingReward);
+              expect(await trustedNodes.connect(dave)
+                .lastYearVotingRecord(await dave.getAddress())).to.equal(1);
 
               await time.increase(3600 * 24 * 14);
               await (timedPolicies.connect(alice).incrementGeneration());
 
               // after 2 generations in year 3 --> expect to redeem 1: corresponding to year 2 gen 3
 
-              // expect(await trustedNodes.connect(dave)
-              //   .lastYearVotingRecord(await dave.getAddress())).to.equal(1);
-              // await expect(trustedNodes.connect(dave).redeemVoteRewards())
-              //   .to.emit(trustedNodes, 'VotingRewardRedemption')
-              //   .withArgs(await dave.getAddress(), votingReward);
-              // expect(await trustedNodes.connect(dave)
-              //   .lastYearVotingRecord(await dave.getAddress())).to.equal(0);
+              expect(await trustedNodes.connect(dave)
+                .lastYearVotingRecord(await dave.getAddress())).to.equal(1);
+              await expect(trustedNodes.connect(dave).redeemVoteRewards())
+                .to.emit(trustedNodes, 'VotingRewardRedemption')
+                .withArgs(await dave.getAddress(), votingReward);
+              expect(await trustedNodes.connect(dave)
+                .lastYearVotingRecord(await dave.getAddress())).to.equal(0);
 
-              const tx2 = await trustedNodes.connect(dave).redeemVoteRewards();
-              const receipt2 = await tx2.wait();
-              console.log("three withdraws: " + receipt2.gasUsed);
+              // const tx2 = await trustedNodes.connect(dave).redeemVoteRewards();
+              // const receipt2 = await tx2.wait();
+              // console.log("three withdraws: " + receipt2.gasUsed);
+              // expect(await ecox.balanceOf(await dave.getAddress())).to.equal(votingReward *);
             });
           });
         });
