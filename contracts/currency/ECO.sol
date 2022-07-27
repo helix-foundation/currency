@@ -89,7 +89,7 @@ contract ECO is InflationCheckpoints, TimeUtils {
             address winner = bg.winner();
             if (winner != address(0)) {
                 uint256 _inflationMultiplier;
-                (, , , , _inflationMultiplier) = bg.proposals(winner);
+                (, , , , _inflationMultiplier, ) = bg.proposals(winner);
                 emit NewInflationMultiplier(_inflationMultiplier);
 
                 // updates the inflation value

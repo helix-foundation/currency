@@ -99,6 +99,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
                     _randomInflationReward,
                     _lockupDuration,
                     _lockupInterest,
+                    ,
 
                 ) = bg.proposals(winner);
             }

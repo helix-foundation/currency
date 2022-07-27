@@ -48,7 +48,7 @@ describe('ECO [@group=1]', () => {
       )
     );
 
-    await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult);
+    await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult, '');
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [
