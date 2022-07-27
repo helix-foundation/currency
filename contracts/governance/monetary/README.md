@@ -864,6 +864,13 @@ Attributes:
 Emitted by the `redeemVoteRewards` function or the `annualUpdate` function
 if recipient is the hoard.
 
+###### FundingRequest(uint256 amount);
+Attributes:
+  - `amount` (uint256) the amount of ECOx that needs to be added to the TrustedNodes 
+  contract to ensure continued payouts going forward
+
+Emitted by 'newCohort' and 'annualUpdate'.
+
 ###### RewardsTrackingUpdate(uint256 nextUpdateTimestamp, uint256 newRewardsCount);
 Attributes:
   - `nextUpdateTimestamp` (uint256) the timestamp at which this contract needs to transfer

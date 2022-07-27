@@ -196,13 +196,6 @@ describe('TrustedNodes [@group=7]', () => {
       await trustedNodes.connect(alice).annualUpdate();
     });
 
-    it('reverts if funds have not been transferred', async () => {
-      await time.increase(3600 * 24 * 14 * 26);
-      await expect(
-        trustedNodes.connect(alice).annualUpdate(),
-      ).to.be.revertedWith('Transfer the appropriate funds to this contract before updating');
-    });
-
     it('sets things appropriately', async () => {
       await faucet.mintx(trustedNodes.address, BigNumber.from(1 * 26 * 2 * reward));
       const initialGeneration = await trustedNodes.yearStartGen();

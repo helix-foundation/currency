@@ -63,6 +63,7 @@ describe('Governance Trustee Change [@group=9]', () => {
 
   it('Constructs the proposals', async () => {
     trusteeReplacement = await deploy('TrusteeReplacement', [
+      await alice.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
     ]);
@@ -74,8 +75,9 @@ describe('Governance Trustee Change [@group=9]', () => {
     expect(await trusteeReplacement.url()).to.equal(
       'https://description.of.proposal make this link to a discussion of the new trustee slate',
     );
-    expect(await trusteeReplacement.newTrustees(0)).to.equal(await charlie.getAddress());
-    expect(await trusteeReplacement.newTrustees(1)).to.equal(await dave.getAddress());
+    expect(await trusteeReplacement.newTrustees(0)).to.equal(await alice.getAddress());
+    expect(await trusteeReplacement.newTrustees(1)).to.equal(await charlie.getAddress());
+    expect(await trusteeReplacement.newTrustees(2)).to.equal(await dave.getAddress());
   });
 
   it('Checks that alice is initially a trustee', async () => {
@@ -143,13 +145,19 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Executes the outcome of the votes', async () => {
-    await policyVotes.execute();
+    await expect(policyVotes.execute())
+      .to.emit(trustedNodes, 'FundingRequest')
+      .withArgs(26000);
   });
 
-  it('Checks that alice is no longer a trustee', async () => {
+  // it('Executes the outcome of the votes', async () => {
+  //   await policyVotes.execute();
+  // });
+
+  it('Checks that alice is still a trustee', async () => {
     const aliceBool = await trustedNodes.isTrusted(await alice.getAddress());
     // console.log(aliceBool);
-    expect(aliceBool).to.be.false;
+    expect(aliceBool).to.be.true;
   });
 
   it('Checks that bob is no longer a trustee', async () => {

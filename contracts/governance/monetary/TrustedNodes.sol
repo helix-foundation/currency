@@ -67,6 +67,9 @@ contract TrustedNodes is PolicedUtils {
     /** Event emitted when voting rewards are redeemed */
     event VotingRewardRedemption(address indexed recipient, uint256 amount);
 
+    // Event emitted on annualUpdate and newCohort to request funding to the contract
+    event FundingRequest(uint256 amount);
+
     // information for the new trustee rewards term
     event RewardsTrackingUpdate(
         uint256 nextUpdateTimestamp,
@@ -171,9 +174,10 @@ contract TrustedNodes is PolicedUtils {
         );
 
         votingRecord[_who]++;
-        // votingTimestamps[_who].push(uint32(block.timestamp));
 
-        unallocatedRewardsCount--;
+        if (unallocatedRewardsCount > 0) {
+            unallocatedRewardsCount--;
+        }
     }
 
     function redeemVoteRewards() external {
@@ -237,6 +241,11 @@ contract TrustedNodes is PolicedUtils {
      * used for implementing the results of a trustee election
      */
     function newCohort(address[] memory _newCohort) external onlyPolicy {
+        uint256 trustees = cohorts[cohort].trustedNodes.length;
+        if(_newCohort.length > trustees) {
+            emit FundingRequest(voteReward * YEAR / GENERATION * (_newCohort.length - trustees));
+        }
+
         cohort++;
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
@@ -261,20 +270,15 @@ contract TrustedNodes is PolicedUtils {
         uint256 reward = unallocatedRewardsCount * voteReward;
         unallocatedRewardsCount =
             cohorts[cohort].trustedNodes.length *
-            (YEAR / GENERATION - 1);
+            (YEAR / GENERATION);
         yearEnd = block.timestamp + YEAR;
         yearStartGen = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
 
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
 
-        require(
-            ecoX.balanceOf(address(this)) >=
-                unallocatedRewardsCount * voteReward + reward,
-            "Transfer the appropriate funds to this contract before updating"
-        );
-        // TODO: fix this, address should be hoard, but breaks test due to it being set to 0 address in tests
         require(ecoX.transfer(hoard, reward), "Transfer Failed");
 
+        emit FundingRequest(unallocatedRewardsCount * voteReward);
         emit VotingRewardRedemption(hoard, reward);
         emit RewardsTrackingUpdate(yearEnd, unallocatedRewardsCount);
     }
