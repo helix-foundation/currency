@@ -12,8 +12,8 @@
 
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -69,19 +69,25 @@ describe('Governance Policy Change [@group=9]', () => {
   it('Checks that the current governance contract is not poodles', async () => {
     poodleBorda = await ethers.getContractAt(
       'PoodleCurrencyGovernance',
-      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
     );
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
     await expect(poodleBorda.provePoodles()).to.be.reverted;
   });
 
   it('Constructs the proposals', async () => {
-    poodleCurrencyGovernance = await deploy('PoodleCurrencyGovernance', policy.address);
+    poodleCurrencyGovernance = await deploy(
+      'PoodleCurrencyGovernance',
+      policy.address
+    );
     poodleCurrencyTimer = await deploy('PoodleCurrencyTimer');
     makePoodle = await deploy(
       'MakePoodle',
       poodleCurrencyGovernance.address,
-      poodleCurrencyTimer.address,
+      poodleCurrencyTimer.address
     );
     const name = await makePoodle.name();
     expect(name).to.equal('MakePoodle');
@@ -98,10 +104,13 @@ describe('Governance Policy Change [@group=9]', () => {
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
+    );
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash),
+      await util.policyFor(policy, proposalsHash)
     );
   });
 
@@ -121,10 +130,13 @@ describe('Governance Policy Change [@group=9]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    );
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash),
+      await util.policyFor(policy, policyVotesIdentifierHash)
     );
   });
 
@@ -149,7 +161,10 @@ describe('Governance Policy Change [@group=9]', () => {
   it('Checks that the new governance contract is poodles', async () => {
     poodleBorda = await ethers.getContractAt(
       'PoodleCurrencyGovernance',
-      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
     );
     const poodles = await poodleBorda.provePoodles();
     expect(poodles).to.be.true;

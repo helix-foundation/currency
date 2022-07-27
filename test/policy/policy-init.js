@@ -30,15 +30,14 @@ describe('PolicyInit [@group=11]', () => {
   let accounts;
 
   beforeEach(async () => {
-    ({
-      accounts, policyInit, proxied, policy, registry, allPolicy,
-    } = await fixture());
+    ({ accounts, policyInit, proxied, policy, registry, allPolicy } =
+      await fixture());
   });
 
   describe('initialize', () => {
     it('should not be callable', async () => {
       await expect(proxied.initialize(policyInit.address)).to.be.revertedWith(
-        'Can only be called during initialization',
+        'Can only be called during initialization'
       );
     });
   });
@@ -47,7 +46,7 @@ describe('PolicyInit [@group=11]', () => {
     context('when called by an outsider address', () => {
       it('reverts', async () => {
         await expect(
-          proxied.connect(accounts[1]).fusedInit(policy.address, [], [], []),
+          proxied.connect(accounts[1]).fusedInit(policy.address, [], [], [])
         ).to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
@@ -55,8 +54,10 @@ describe('PolicyInit [@group=11]', () => {
     context('with mismatched key/value array lengths', () => {
       it('reverts', async () => {
         await expect(
-          proxied.fusedInit(policy.address, [], [], [policy.address]),
-        ).to.be.revertedWith('_keys and _values must correspond exactly (length)');
+          proxied.fusedInit(policy.address, [], [], [policy.address])
+        ).to.be.revertedWith(
+          '_keys and _values must correspond exactly (length)'
+        );
       });
     });
 
@@ -66,38 +67,54 @@ describe('PolicyInit [@group=11]', () => {
       });
 
       it('sets the specified interface addresses in ERC1820', async () => {
-        const interfaceName = ethers.utils.solidityKeccak256(['string'], ['interface']);
+        const interfaceName = ethers.utils.solidityKeccak256(
+          ['string'],
+          ['interface']
+        );
 
-        await proxied.fusedInit(policy.address, [], [interfaceName], [allPolicy.address]);
+        await proxied.fusedInit(
+          policy.address,
+          [],
+          [interfaceName],
+          [allPolicy.address]
+        );
 
         expect(allPolicy.address).to.equal(
-          await registry.getInterfaceImplementer(proxied.address, interfaceName),
+          await registry.getInterfaceImplementer(proxied.address, interfaceName)
         );
       });
 
       it('calling twice fails because proxy is changed', async () => {
-        const interfaceName = ethers.utils.solidityKeccak256(['string'], ['interface']);
+        const interfaceName = ethers.utils.solidityKeccak256(
+          ['string'],
+          ['interface']
+        );
 
-        const allPolicySetter = allPolicy.address.toLowerCase() + '00'.repeat(12);
+        const allPolicySetter =
+          allPolicy.address.toLowerCase() + '00'.repeat(12);
         await proxied.fusedInit(
           policy.address,
           [allPolicySetter],
           [interfaceName],
-          [allPolicy.address],
+          [allPolicy.address]
         );
 
         const allPolicy2 = await deploy('PolicyForAll');
-        const allPolicy2Setter = allPolicy2.address.toLowerCase() + '00'.repeat(12);
+        const allPolicy2Setter =
+          allPolicy2.address.toLowerCase() + '00'.repeat(12);
         await expect(
           proxied.fusedInit(
             policy.address,
             [allPolicy2Setter],
             [interfaceName],
-            [allPolicy2.address],
-          ),
+            [allPolicy2.address]
+          )
         ).to.be.reverted;
 
-        const reproxied = await ethers.getContractAt('TestPolicy', proxied.address);
+        const reproxied = await ethers.getContractAt(
+          'TestPolicy',
+          proxied.address
+        );
         const setter1Auth = await reproxied.setters(allPolicySetter);
         expect(setter1Auth).to.be.true;
         const setter2Auth = await reproxied.setters(allPolicy2Setter);
@@ -105,50 +122,73 @@ describe('PolicyInit [@group=11]', () => {
       });
 
       it('using two policyInits on the same policy creates two independent proxies', async () => {
-        const interfaceName1 = ethers.utils.solidityKeccak256(['string'], ['interface1']);
-        const interfaceName2 = ethers.utils.solidityKeccak256(['string'], ['interface2']);
+        const interfaceName1 = ethers.utils.solidityKeccak256(
+          ['string'],
+          ['interface1']
+        );
+        const interfaceName2 = ethers.utils.solidityKeccak256(
+          ['string'],
+          ['interface2']
+        );
 
-        const allPolicySetter = allPolicy.address.toLowerCase() + '00'.repeat(12);
+        const allPolicySetter =
+          allPolicy.address.toLowerCase() + '00'.repeat(12);
         await proxied.fusedInit(
           policy.address,
           [allPolicySetter],
           [interfaceName1],
-          [allPolicy.address],
+          [allPolicy.address]
         );
 
         expect(allPolicy.address).to.equal(
-          await registry.getInterfaceImplementer(proxied.address, interfaceName1),
+          await registry.getInterfaceImplementer(
+            proxied.address,
+            interfaceName1
+          )
         );
 
         const policyInit2 = await deploy('PolicyInit');
         const proxy2 = await deploy('ForwardProxy', policyInit2.address);
-        const proxied2 = await ethers.getContractAt('PolicyInit', proxy2.address);
+        const proxied2 = await ethers.getContractAt(
+          'PolicyInit',
+          proxy2.address
+        );
         const allPolicy2 = await deploy('PolicyForAll');
-        const allPolicy2Setter = allPolicy2.address.toLowerCase() + '00'.repeat(12);
+        const allPolicy2Setter =
+          allPolicy2.address.toLowerCase() + '00'.repeat(12);
         await proxied2.fusedInit(
           policy.address,
           [allPolicy2Setter],
           [interfaceName1, interfaceName2],
-          [allPolicy.address, allPolicy2.address],
+          [allPolicy.address, allPolicy2.address]
         );
 
         expect(allPolicy2.address).to.equal(
-          await registry.getInterfaceImplementer(proxied2.address, interfaceName2),
+          await registry.getInterfaceImplementer(
+            proxied2.address,
+            interfaceName2
+          )
         );
 
-        const reproxied1 = await ethers.getContractAt('TestPolicy', proxied.address);
-        const reproxied2 = await ethers.getContractAt('TestPolicy', proxied2.address);
+        const reproxied1 = await ethers.getContractAt(
+          'TestPolicy',
+          proxied.address
+        );
+        const reproxied2 = await ethers.getContractAt(
+          'TestPolicy',
+          proxied2.address
+        );
 
         const name1address = await registry.getInterfaceImplementer(
           reproxied1.address,
-          interfaceName1,
+          interfaceName1
         );
 
         expect(name1address).to.equal(allPolicy.address);
 
         const name2address = await registry.getInterfaceImplementer(
           reproxied2.address,
-          interfaceName2,
+          interfaceName2
         );
 
         expect(name2address).to.equal(allPolicy2.address);

@@ -22,8 +22,11 @@ describe("Nick's method [@group=2]", async () => {
         `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
         5000000 * gasFactor,
         100000000000 / gasFactor,
-        abiCoder.encode(['address', 'uint8'], [await accounts[2].getAddress(), numPlaceholders]),
-      ),
+        abiCoder.encode(
+          ['address', 'uint8'],
+          [await accounts[2].getAddress(), numPlaceholders]
+        )
+      )
     );
 
     assert((await ethers.provider.getCode(nick.to)).length < 10);
@@ -34,16 +37,22 @@ describe("Nick's method [@group=2]", async () => {
     });
     await ethers.provider.sendTransaction(nick.raw);
 
-    const normalInstance = await ecoBootstrap
-      .deploy(await accounts[2].getAddress(), numPlaceholders);
+    const normalInstance = await ecoBootstrap.deploy(
+      await accounts[2].getAddress(),
+      numPlaceholders
+    );
     assert.equal(
       await ethers.provider.getCode(nick.to),
-      await ethers.provider.getCode(normalInstance.address),
+      await ethers.provider.getCode(normalInstance.address)
     );
 
     assert.equal(
-      (await (await ethers.getContractAt('EcoBootstrap', nick.to)).NUM_PLACEHOLDERS()).toString(),
-      numPlaceholders,
+      (
+        await (
+          await ethers.getContractAt('EcoBootstrap', nick.to)
+        ).NUM_PLACEHOLDERS()
+      ).toString(),
+      numPlaceholders
     );
   });
 });

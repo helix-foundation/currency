@@ -1,11 +1,24 @@
 module.exports = {
-  extends: "airbnb-base",
+  env: {
+    browser: false,
+    es2021: true,
+    mocha: true,
+    node: true,
+  },
+  extends: [
+    "standard",
+    "plugin:prettier/recommended",
+    "plugin:node/recommended",
+  ],
   plugins: [
     "@typescript-eslint",
     "mocha",
     "chai-friendly"
   ],
   parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: 12,
+  },
   rules: {
     "no-unused-expressions": 0,
     "no-plusplus": 0,
@@ -16,7 +29,18 @@ module.exports = {
       max: 1,
       maxEOF: 0,
       maxBOF: 0
-    }]
+    }],
+    "node/no-unsupported-features/es-syntax": [
+      "error",
+      { ignores: ["modules"] },
+    ],
+    "node/no-missing-import": [
+      "error",
+      {
+        allowModules: [],
+        tryExtensions: [".js", ".json", ".node", ".ts", ".d.ts"],
+      },
+    ]
   },
   globals: {
     BigInt: "readonly",

@@ -26,7 +26,9 @@ describe('Policy [@group=11]', () => {
   describe('removeSelf', () => {
     describe('when called by not the provider of an interface', () => {
       it('does not revert', async () => {
-        await policy.removeSelf(ethers.utils.solidityKeccak256(['string'], ['Identifier']));
+        await policy.removeSelf(
+          ethers.utils.solidityKeccak256(['string'], ['Identifier'])
+        );
       });
     });
     describe('when called by the provider of the interface', () => {
@@ -38,8 +40,8 @@ describe('Policy [@group=11]', () => {
         expect(
           await registry.getInterfaceImplementer(
             policy.address,
-            ethers.utils.solidityKeccak256(['string'], ['Identifier']),
-          ),
+            ethers.utils.solidityKeccak256(['string'], ['Identifier'])
+          )
         ).to.equal(ethers.constants.AddressZero);
       });
     });
@@ -48,7 +50,9 @@ describe('Policy [@group=11]', () => {
   describe('policyFor', () => {
     describe('when called', () => {
       it('does not revert', async () => {
-        await policy.policyFor(ethers.utils.solidityKeccak256(['string'], ['Identifier']));
+        await policy.policyFor(
+          ethers.utils.solidityKeccak256(['string'], ['Identifier'])
+        );
       });
     });
   });
@@ -58,7 +62,10 @@ describe('Policy [@group=11]', () => {
     let testPolicyIdentifierHash;
 
     beforeEach(async () => {
-      testPolicyIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['Commander']);
+      testPolicyIdentifierHash = ethers.utils.solidityKeccak256(
+        ['string'],
+        ['Commander']
+      );
 
       const policyInit = await deploy('PolicyInit');
       const forwardProxy = await deploy('ForwardProxy', policyInit.address);
@@ -72,7 +79,7 @@ describe('Policy [@group=11]', () => {
         policy.address,
         [testPolicyIdentifierHash],
         [testPolicyIdentifierHash],
-        [commander.address],
+        [commander.address]
         // [testPolicyIdentifierHash],
       );
 
@@ -85,17 +92,24 @@ describe('Policy [@group=11]', () => {
        * what's being tested here.
        */
       it('reverts if the auth is not a setter', async () => {
-        const nonSetterHash = ethers.utils.solidityKeccak256(['string'], ['Unauthed']);
+        const nonSetterHash = ethers.utils.solidityKeccak256(
+          ['string'],
+          ['Unauthed']
+        );
 
         await expect(
-          policy.internalCommand(policy.address, nonSetterHash),
-        ).to.be.revertedWith('Identifier hash is not authorized for this action');
+          policy.internalCommand(policy.address, nonSetterHash)
+        ).to.be.revertedWith(
+          'Identifier hash is not authorized for this action'
+        );
       });
 
       it('reverts if the auth is not the caller', async () => {
         await expect(
-          policy.internalCommand(policy.address, testPolicyIdentifierHash),
-        ).to.be.revertedWith('Caller is not the authorized address for identifier');
+          policy.internalCommand(policy.address, testPolicyIdentifierHash)
+        ).to.be.revertedWith(
+          'Caller is not the authorized address for identifier'
+        );
       });
     });
 
@@ -105,7 +119,7 @@ describe('Policy [@group=11]', () => {
         const policed = await deploy('DummyPolicedUtils', policy.address);
 
         await expect(
-          commander.command(policed.address, revertingAction.address),
+          commander.command(policed.address, revertingAction.address)
         ).to.be.revertedWith('failed during delegatecall');
       });
     });

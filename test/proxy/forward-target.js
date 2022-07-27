@@ -15,7 +15,7 @@ describe('ForwardTarget [@group=2]', () => {
     const proxied = await ethers.getContractAt('ForwardTarget', proxy.address);
 
     await expect(proxied.initialize(target.address)).to.be.revertedWith(
-      'only be called during initialization',
+      'only be called during initialization'
     );
   });
 
@@ -30,11 +30,13 @@ describe('ForwardTarget [@group=2]', () => {
     proxy = await deploy('ForwardProxy', updatingTarget.address);
     const proxiedUpdatingTarget = await ethers.getContractAt(
       'ImplementationUpdatingTarget',
-      proxy.address,
+      proxy.address
     );
 
     await expect(
-      proxiedUpdatingTarget.updateImplementation(await proxiedUpdatingTarget.implementation()),
+      proxiedUpdatingTarget.updateImplementation(
+        await proxiedUpdatingTarget.implementation()
+      )
     ).to.be.revertedWith('Implementation already matching');
   });
 
@@ -44,9 +46,11 @@ describe('ForwardTarget [@group=2]', () => {
     proxy = await deploy('ForwardProxy', updatingTarget.address);
     const proxiedUpdatingTarget = await ethers.getContractAt(
       'ImplementationUpdatingTarget',
-      proxy.address,
+      proxy.address
     );
 
-    await proxiedUpdatingTarget.updateImplementation(otherUpdatingTarget.address);
+    await proxiedUpdatingTarget.updateImplementation(
+      otherUpdatingTarget.address
+    );
   });
 });

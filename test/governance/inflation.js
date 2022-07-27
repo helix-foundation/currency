@@ -6,12 +6,11 @@ const { expect } = require('chai');
 const BN = require('bn.js');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { prove, bnHex } = require('../../tools/vdf');
 const { getTree, answer } = require('../../tools/randomInflationUtils');
 
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const util = require('../../tools/test/util');
 
 describe('RandomInflation [@group=6]', () => {
@@ -49,10 +48,11 @@ describe('RandomInflation [@group=6]', () => {
   let map;
   let timedPolicies;
 
-  const hash = (x) => ethers.utils.solidityKeccak256(
-    ['bytes32', 'address', 'address[]'],
-    [x[0], x[1], x[2]],
-  );
+  const hash = (x) =>
+    ethers.utils.solidityKeccak256(
+      ['bytes32', 'address', 'address[]'],
+      [x[0], x[1], x[2]]
+    );
 
   async function configureInflationRootHash() {
     addressRootHashProposal = await inflation.inflationRootHashProposal();
@@ -62,28 +62,32 @@ describe('RandomInflation [@group=6]', () => {
     for (let i = 0; i < 3; i += 1) {
       eco
         .connect(accounts[i])
-        .approve(addressRootHashProposal, await eco.balanceOf(await accounts[i].getAddress()));
+        .approve(
+          addressRootHashProposal,
+          await eco.balanceOf(await accounts[i].getAddress())
+        );
     }
 
     rootHashProposal = await ethers.getContractAt(
       'InflationRootHashProposal',
-      addressRootHashProposal,
+      addressRootHashProposal
     );
     await rootHashProposal
       .connect(accounts[0])
       .proposeRootHash(proposedRootHash, totalSum.toString(), amountOfAccounts);
     await time.increase(3600 * 25);
-    await expect(rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())).to.emit(
-      rootHashProposal,
-      'RootHashAcceptance',
-    );
+    await expect(
+      rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())
+    ).to.emit(rootHashProposal, 'RootHashAcceptance');
   }
 
   function getRecipient(claimNumber) {
     if (new BN(claimNumber) === 0) {
       return [0, accounts[0]];
     }
-    let index = accountsSums.findIndex((element) => element.gt(new BN(claimNumber)));
+    let index = accountsSums.findIndex((element) =>
+      element.gt(new BN(claimNumber))
+    );
     index = index === -1 ? 2 : index - 1;
     return [index, accounts[index]];
   }
@@ -91,10 +95,10 @@ describe('RandomInflation [@group=6]', () => {
   async function getClaimParameters(inf, sequence) {
     const chosenClaimNumberHash = ethers.utils.solidityKeccak256(
       ['bytes32', 'uint256'],
-      [await inf.seed(), sequence],
+      [await inf.seed(), sequence]
     );
     const [index, recipient] = getRecipient(
-      new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum)),
+      new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum))
     );
     return [answer(tree, index), index, recipient];
   }
@@ -103,7 +107,12 @@ describe('RandomInflation [@group=6]', () => {
     const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
 
     for (let i = 0; i < 1000; i++) {
-      if (await bigintCryptoUtils.isProbablyPrime(BigInt(baseNum.addn(i).toString()), 30)) {
+      if (
+        await bigintCryptoUtils.isProbablyPrime(
+          BigInt(baseNum.addn(i).toString()),
+          30
+        )
+      ) {
         return i;
       }
     }
@@ -113,9 +122,11 @@ describe('RandomInflation [@group=6]', () => {
 
   before(async () => {
     let comparableAccounts = await Promise.all(
-      (await ethers.getSigners()).map(async (s) => [await s.getAddress(), s]),
+      (await ethers.getSigners()).map(async (s) => [await s.getAddress(), s])
     );
-    comparableAccounts = comparableAccounts.sort((a, b) => a[0].localeCompare(b[0]));
+    comparableAccounts = comparableAccounts.sort((a, b) =>
+      a[0].localeCompare(b[0])
+    );
     accounts = comparableAccounts.map((a) => a[1]);
     map = new Map([
       [await accounts[0].getAddress(), accountsBalances[0]],
@@ -132,21 +143,37 @@ describe('RandomInflation [@group=6]', () => {
       timedPolicies,
       currencyTimer,
       inflation,
-    } = await ecoFixture(await Promise.all(accounts.slice(1, 5).map(async (a) => a.getAddress()))));
+    } = await ecoFixture(
+      await Promise.all(accounts.slice(1, 5).map(async (a) => a.getAddress()))
+    ));
 
-    await initInflation.mint(await accounts[0].getAddress(), accountsBalances[0].toString());
-    await initInflation.mint(await accounts[1].getAddress(), accountsBalances[1].toString());
-    await initInflation.mint(await accounts[2].getAddress(), accountsBalances[2].toString());
+    await initInflation.mint(
+      await accounts[0].getAddress(),
+      accountsBalances[0].toString()
+    );
+    await initInflation.mint(
+      await accounts[1].getAddress(),
+      accountsBalances[1].toString()
+    );
+    await initInflation.mint(
+      await accounts[2].getAddress(),
+      accountsBalances[2].toString()
+    );
 
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
     );
 
     const bob = accounts[1];
     const charlie = accounts[2];
     const dave = accounts[3];
-    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
+    await governance
+      .connect(bob)
+      .propose(inflationVote, rewardVote, 0, 0, '1000000000000000000');
     await time.increase(3600 * 24 * 10.1);
 
     const bobvote = [
@@ -179,28 +206,37 @@ describe('RandomInflation [@group=6]', () => {
     await timedPolicies.incrementGeneration();
     const inflationAddr = await currencyTimer.randomInflations(generation);
     inflation = await ethers.getContractAt('RandomInflation', inflationAddr);
-    vdf = await ethers.getContractAt('VDFVerifier', await inflation.vdfVerifier());
+    vdf = await ethers.getContractAt(
+      'VDFVerifier',
+      await inflation.vdfVerifier()
+    );
     await configureInflationRootHash();
   });
 
   describe('startInflation', () => {
     it('reverts if startInflation is called with zero value _numRecipients', async () => {
-      await expect(inflation.startInflation(0, 1)).to.be.revertedWith('Contract must have rewards');
+      await expect(inflation.startInflation(0, 1)).to.be.revertedWith(
+        'Contract must have rewards'
+      );
     });
 
     it('reverts if startInflation is called with zero value _reward', async () => {
-      await expect(inflation.startInflation(1, 0)).to.be.revertedWith('Contract must have rewards');
+      await expect(inflation.startInflation(1, 0)).to.be.revertedWith(
+        'Contract must have rewards'
+      );
     });
 
     it('reverts if contract doesnt have the required funds to reward chosen recipients', async () => {
-      await expect(inflation.startInflation(1000000000, 1000000000)).to.be.revertedWith(
-        'The contract must have a token balance at least the total rewards',
+      await expect(
+        inflation.startInflation(1000000000, 1000000000)
+      ).to.be.revertedWith(
+        'The contract must have a token balance at least the total rewards'
       );
     });
 
     it('reverts if startInflation is called twice', async () => {
       await expect(inflation.startInflation(1, 1)).to.be.revertedWith(
-        'The sale can only be started once',
+        'The sale can only be started once'
       );
     });
   });
@@ -209,10 +245,9 @@ describe('RandomInflation [@group=6]', () => {
     it('emits the EntropyVDFSeedCommit event', async () => {
       //      time.increase(3600 * 24 * 2);
 
-      await expect(inflation.commitEntropyVDFSeed(await getPrimeDistance())).to.emit(
-        inflation,
-        'EntropyVDFSeedCommit',
-      );
+      await expect(
+        inflation.commitEntropyVDFSeed(await getPrimeDistance())
+      ).to.emit(inflation, 'EntropyVDFSeedCommit');
     });
 
     it('reverts when called twice', async () => {
@@ -220,15 +255,17 @@ describe('RandomInflation [@group=6]', () => {
 
       await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
-      await expect(inflation.commitEntropyVDFSeed(await getPrimeDistance())).to.be.revertedWith(
-        'seed has already been set',
-      );
+      await expect(
+        inflation.commitEntropyVDFSeed(await getPrimeDistance())
+      ).to.be.revertedWith('seed has already been set');
     });
   });
 
   describe('submitEntropyVDF', () => {
     it('reverts when the seed has not been set', async () => {
-      await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith('seed must be set');
+      await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
+        'seed must be set'
+      );
     });
 
     it("reverts when the VDF isn't proven", async () => {
@@ -237,7 +274,7 @@ describe('RandomInflation [@group=6]', () => {
       await inflation.commitEntropyVDFSeed(await getPrimeDistance());
 
       await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
-        'output value must be verified',
+        'output value must be verified'
       );
     });
 
@@ -249,7 +286,10 @@ describe('RandomInflation [@group=6]', () => {
 
         await inflation.commitEntropyVDFSeed(await getPrimeDistance());
         let u;
-        const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
+        const vdfseed = new BN(
+          (await inflation.entropyVDFSeed()).toHexString().slice(2),
+          16
+        );
         const t = await inflation.randomVDFDifficulty();
         [y, u] = prove(vdfseed, t);
 
@@ -262,14 +302,16 @@ describe('RandomInflation [@group=6]', () => {
       it('emits the EntropySeedReveal event', async () => {
         await expect(inflation.submitEntropyVDF(bnHex(y))).to.emit(
           inflation,
-          'EntropySeedReveal',
+          'EntropySeedReveal'
         );
       });
 
       it('reverts when submitted multiple times', async () => {
         await inflation.submitEntropyVDF(bnHex(y));
 
-        await expect(inflation.submitEntropyVDF(bnHex(y))).to.be.revertedWith('only submit once');
+        await expect(inflation.submitEntropyVDF(bnHex(y))).to.be.revertedWith(
+          'only submit once'
+        );
       });
     });
   });
@@ -283,14 +325,19 @@ describe('RandomInflation [@group=6]', () => {
       it('rejects any claims', async () => {
         const a = answer(tree, 0);
         await expect(
-          inflation.connect(accounts[0]).claim(0, a[1].reverse(), a[0].sum.toString(), 0),
+          inflation
+            .connect(accounts[0])
+            .claim(0, a[1].reverse(), a[0].sum.toString(), 0)
         ).to.be.revertedWith('Must prove VDF before claims can be paid');
       });
     });
 
     context('after the VDF is complete', () => {
       beforeEach(async () => {
-        const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
+        const vdfseed = new BN(
+          (await inflation.entropyVDFSeed()).toHexString().slice(2),
+          16
+        );
         const t = await inflation.randomVDFDifficulty();
         const [y, u] = prove(vdfseed, t);
 
@@ -304,7 +351,9 @@ describe('RandomInflation [@group=6]', () => {
       it('pays out inflation', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 0);
         await expect(
-          inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index),
+          inflation
+            .connect(recipient)
+            .claim(0, a[1].reverse(), a[0].sum.toString(), index)
         )
           .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 0);
@@ -314,7 +363,9 @@ describe('RandomInflation [@group=6]', () => {
         await time.increase(3600 * 24 * 10 + 1);
         const [a, index, recipient] = await getClaimParameters(inflation, 3);
         await expect(
-          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum.toString(), index),
+          inflation
+            .connect(recipient)
+            .claim(3, a[1].reverse(), a[0].sum.toString(), index)
         )
           .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 3);
@@ -327,8 +378,10 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(numRecipients, a[1].reverse(), a[0].sum.toString(), index),
-          ).to.be.revertedWith('The provided sequence number must be within the set of recipients');
+              .claim(numRecipients, a[1].reverse(), a[0].sum.toString(), index)
+          ).to.be.revertedWith(
+            'The provided sequence number must be within the set of recipients'
+          );
         });
 
         it('fail root hash verification', async () => {
@@ -336,29 +389,39 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(0, a[1].reverse(), (a[0].sum + 1000000).toString(), index),
-          ).to.be.revertedWith('A claim submission failed root hash verification');
+              .claim(0, a[1].reverse(), (a[0].sum + 1000000).toString(), index)
+          ).to.be.revertedWith(
+            'A claim submission failed root hash verification'
+          );
         });
       });
 
       it('reverts when called for the next period', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 1000);
         await expect(
-          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum.toString(), index),
+          inflation
+            .connect(recipient)
+            .claim(3, a[1].reverse(), a[0].sum.toString(), index)
         ).to.be.revertedWith('can only be made after enough time');
       });
 
       context('when already called this period', () => {
         beforeEach(async () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
-          await inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index);
+          await inflation
+            .connect(recipient)
+            .claim(0, a[1].reverse(), a[0].sum.toString(), index);
         });
 
         it('reverts', async () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
           await expect(
-            inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index),
-          ).to.be.revertedWith('claim can only be made if it has not already been made');
+            inflation
+              .connect(recipient)
+              .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+          ).to.be.revertedWith(
+            'claim can only be made if it has not already been made'
+          );
         });
       });
 
@@ -368,31 +431,44 @@ describe('RandomInflation [@group=6]', () => {
           for (let i = 0; i < 3; i += 1) {
             updatedMap.set(
               await accounts[i].getAddress(),
-              new BN((await eco
-                .balanceOf(await accounts[i].getAddress())).toHexString().slice(2), 16),
+              new BN(
+                (await eco.balanceOf(await accounts[i].getAddress()))
+                  .toHexString()
+                  .slice(2),
+                16
+              )
             );
           }
           const [a, index, recipient] = await getClaimParameters(inflation, 0);
           updatedMap.set(
             await recipient.getAddress(),
-            updatedMap.get(await recipient.getAddress()).add(new BN(rewardVote)),
+            updatedMap.get(await recipient.getAddress()).add(new BN(rewardVote))
           );
-          await inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index);
+          await inflation
+            .connect(recipient)
+            .claim(0, a[1].reverse(), a[0].sum.toString(), index);
           await time.increase(3600 * 24 * 30);
         });
 
         it('pays out more inflation', async () => {
           for (let i = 1; i <= 9; i += 1) {
-            const [a, index, recipient] = await getClaimParameters(inflation, i);
+            const [a, index, recipient] = await getClaimParameters(
+              inflation,
+              i
+            );
             updatedMap.set(
               await recipient.getAddress(),
-              updatedMap.get(await recipient.getAddress()).add(new BN(rewardVote)),
+              updatedMap
+                .get(await recipient.getAddress())
+                .add(new BN(rewardVote))
             );
-            await inflation.connect(recipient).claim(i, a[1].reverse(), a[0].sum.toString(), index);
+            await inflation
+              .connect(recipient)
+              .claim(i, a[1].reverse(), a[0].sum.toString(), index);
             assert.equal(
               (await eco.balanceOf(await recipient.getAddress())).toString(),
               updatedMap.get(await recipient.getAddress()).toString(),
-              'Should get an inflation',
+              'Should get an inflation'
             );
           }
         });
@@ -406,9 +482,9 @@ describe('RandomInflation [@group=6]', () => {
 
     context('before seed reveal', () => {
       it('reverts', async () => {
-        await expect(
-          inflation.destruct(),
-        ).to.be.revertedWith('Entropy not set, wait until end of full claim period to abort.');
+        await expect(inflation.destruct()).to.be.revertedWith(
+          'Entropy not set, wait until end of full claim period to abort.'
+        );
       });
 
       it('is still callable after waiting the full time', async () => {
@@ -424,7 +500,10 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with VDF, basic flow', () => {
         beforeEach(async () => {
-          const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
+          const vdfseed = new BN(
+            (await inflation.entropyVDFSeed()).toHexString().slice(2),
+            16
+          );
           const t = await inflation.randomVDFDifficulty();
           const [y, u] = prove(vdfseed, t);
 
@@ -436,8 +515,13 @@ describe('RandomInflation [@group=6]', () => {
           const numRecipients = await inflation.numRecipients();
           for (let i = 0; i < numRecipients; i += 1) {
             await time.increase(3600 * 24 * 8 + 1);
-            const [a, index, recipient] = await getClaimParameters(inflation, i);
-            await inflation.connect(recipient).claim(i, a[1].reverse(), a[0].sum.toString(), index);
+            const [a, index, recipient] = await getClaimParameters(
+              inflation,
+              i
+            );
+            await inflation
+              .connect(recipient)
+              .claim(i, a[1].reverse(), a[0].sum.toString(), index);
           }
         });
 
@@ -454,7 +538,10 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with a VDF solution', () => {
         beforeEach(async () => {
-          const vdfseed = new BN((await inflation.entropyVDFSeed()).toHexString().slice(2), 16);
+          const vdfseed = new BN(
+            (await inflation.entropyVDFSeed()).toHexString().slice(2),
+            16
+          );
           const t = await inflation.randomVDFDifficulty();
           const [y, u] = prove(vdfseed, t);
 
@@ -468,7 +555,9 @@ describe('RandomInflation [@group=6]', () => {
 
         context('and claimNumbers have not been paid out', () => {
           it('reverts', async () => {
-            await expect(inflation.destruct()).to.be.revertedWith('rewards must be claimed prior');
+            await expect(inflation.destruct()).to.be.revertedWith(
+              'rewards must be claimed prior'
+            );
           });
 
           context('after a long time', () => {
@@ -478,7 +567,7 @@ describe('RandomInflation [@group=6]', () => {
 
             it('still reverts', async () => {
               await expect(inflation.destruct()).to.be.revertedWith(
-                'rewards must be claimed prior',
+                'rewards must be claimed prior'
               );
             });
           });
@@ -494,20 +583,23 @@ describe('RandomInflation [@group=6]', () => {
               [accounts[0], accounts[1]].map(async () => {
                 for (let i = 0; i < numRecipients; i += 1) {
                   try {
-                    const [a, index, recipient] = await getClaimParameters(inflation, i);
+                    const [a, index, recipient] = await getClaimParameters(
+                      inflation,
+                      i
+                    );
                     await inflation
                       .connect(recipient)
                       .claim(i, a[1].reverse(), a[0].sum.toString(), index);
                   } catch (e) {
                     if (
-                      !e.message.includes('provided address does not hold')
-                      && !e.message.includes('not already been made')
+                      !e.message.includes('provided address does not hold') &&
+                      !e.message.includes('not already been made')
                     ) {
                       throw e;
                     }
                   }
                 }
-              }),
+              })
             );
           });
 
@@ -521,13 +613,22 @@ describe('RandomInflation [@group=6]', () => {
             });
 
             it('has no leftover tokens', async () => {
-              assert.equal((await eco.balanceOf(inflation.address)).toString(), 0);
+              assert.equal(
+                (await eco.balanceOf(inflation.address)).toString(),
+                0
+              );
             });
 
             it('is no longer the inflation policy', async () => {
-              const govhash = ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance']);
+              const govhash = ethers.utils.solidityKeccak256(
+                ['string'],
+                ['CurrencyGovernance']
+              );
 
-              assert.notEqual(await util.policyFor(policy, govhash), inflation.address);
+              assert.notEqual(
+                await util.policyFor(policy, govhash),
+                inflation.address
+              );
             });
           });
         });

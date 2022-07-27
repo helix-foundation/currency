@@ -2,9 +2,8 @@ const { assert } = require('chai');
 
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -17,23 +16,35 @@ describe('TimedPolicies [@group=12]', () => {
   });
 
   it('Should do a simple voting cycle', async () => {
-    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
-    const policyProposalsIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    );
+    const policyProposalsIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
+    );
 
     assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0);
 
-    assert.notEqual(await util.policyFor(policy, policyProposalsIdentifierHash), 0);
+    assert.notEqual(
+      await util.policyFor(policy, policyProposalsIdentifierHash),
+      0
+    );
 
     const policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, policyProposalsIdentifierHash),
+      await util.policyFor(policy, policyProposalsIdentifierHash)
     );
     await time.increase(3600 * 24 * 15);
 
     assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0);
 
     await policyProposals.destruct();
-    assert.equal(await util.policyFor(policy, policyProposalsIdentifierHash), 0);
+    assert.equal(
+      await util.policyFor(policy, policyProposalsIdentifierHash),
+      0
+    );
   });
 
   describe('initialize', () => {
@@ -48,7 +59,7 @@ describe('TimedPolicies [@group=12]', () => {
         await time.increase(3600 * 24 * 15);
         await expect(timedPolicies.incrementGeneration()).to.emit(
           timedPolicies,
-          'PolicyDecisionStart',
+          'PolicyDecisionStart'
         );
       });
     });

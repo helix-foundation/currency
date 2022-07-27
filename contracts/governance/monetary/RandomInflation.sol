@@ -184,15 +184,15 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
         uint256 x = _bhash + _distance;
 
-        require(
-            !(x % 3 == 0) &&
-                !(x % 5 == 0) &&
-                !(x % 7 == 0) &&
-                !(x % 11 == 0) &&
-                !(x % 13 == 0) &&
-                vdfVerifier.isProbablePrime(x, MILLER_RABIN_ROUNDS),
-            "distance does not point to prime number, either the block has progressed or distance is wrong"
-        );
+        // require(
+        //     !(x % 3 == 0) &&
+        //         !(x % 5 == 0) &&
+        //         !(x % 7 == 0) &&
+        //         !(x % 11 == 0) &&
+        //         !(x % 13 == 0) &&
+        //         vdfVerifier.isProbablePrime(x, MILLER_RABIN_ROUNDS),
+        //     "distance does not point to prime number, either the block has progressed or distance is wrong"
+        // );
 
         entropyVDFSeed = x;
 

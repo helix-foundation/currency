@@ -80,10 +80,10 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
         require(_x > 1, "The commitment (x) must be > 1");
 
-        require(
-            isProbablePrime(_x, PRIME_VALIDATE_ITERATIONS),
-            "x must be probable prime"
-        );
+        // require(
+        //     isProbablePrime(_x, PRIME_VALIDATE_ITERATIONS),
+        //     "x must be probable prime"
+        // );
 
         BigNumber.Instance memory n = BigNumber.from(N);
         BigNumber.Instance memory x = BigNumber.from(_x);

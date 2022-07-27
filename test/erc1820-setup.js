@@ -10,9 +10,11 @@ describe('deploys singletons', async () => {
   });
 
   it('exists', async () => {
-    const singleton = await singletons
-      .ERC1820Registry('0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24');
-    expect(await singleton.interfaceHash('test'))
-      .to.equal(ethers.utils.solidityKeccak256(['string'], ['test']));
+    const singleton = await singletons.ERC1820Registry(
+      '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
+    );
+    expect(await singleton.interfaceHash('test')).to.equal(
+      ethers.utils.solidityKeccak256(['string'], ['test'])
+    );
   });
 });

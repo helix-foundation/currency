@@ -18,7 +18,11 @@ let provider;
 function getABI(contract) {
   try {
     // TODO: replace this fs stuff with a more explicit import
-    return JSON.parse(fs.readFileSync(path.resolve(__dirname, `../build/contracts/${contract}.json`)));
+    return JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname, `../build/contracts/${contract}.json`)
+      )
+    );
   } catch (e) {
     if (global.artifacts === undefined) {
       // logger.info(e);
@@ -78,7 +82,8 @@ class Supervisor {
       this.currentGenerationStartBlock = this.blockNumber;
       this.currentGenerationStartTime = this.timestamp;
       this.currentGeneration += 1;
-      this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
+      this.nextGenerationStartTime =
+        this.currentGenerationStartTime + GENERATION_TIME;
     }
   }
 
@@ -89,31 +94,43 @@ class Supervisor {
     this.policyProposals = new ethers.Contract(
       await this.policy.policyFor(ID_POLICY_PROPOSALS),
       PolicyProposalsABI.abi,
-      this.signer,
+      this.signer
     );
     console.log(`policyProposals address is: ${this.policyProposals.address}`);
 
     this.currencyGovernance = new ethers.Contract(
       await this.policy.policyFor(ID_CURRENCY_GOVERNANCE),
       CurrencyGovernanceABI.abi,
-      this.signer,
+      this.signer
     );
-    console.log(`currencyGovernance address is: ${this.currencyGovernance.address}`);
+    console.log(
+      `currencyGovernance address is: ${this.currencyGovernance.address}`
+    );
 
     let filter = this.currencyTimer.filters.NewInflation();
-    let events = await this.currencyTimer.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+    let events = await this.currencyTimer.queryFilter(
+      filter,
+      this.currentGenerationStartBlock,
+      'latest'
+    );
     if (events.length > 0) {
       const randomInflationAddress = events[events.length - 1].args[0];
       this.randomInflation = new ethers.Contract(
         randomInflationAddress,
         InflationABI.abi,
-        this.signer,
+        this.signer
       );
-      console.log(`randomInflation address is: ${this.randomInflation.address}`);
+      console.log(
+        `randomInflation address is: ${this.randomInflation.address}`
+      );
     }
 
     filter = this.randomInflation.filters.InflationStart();
-    events = await this.randomInflation.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+    events = await this.randomInflation.queryFilter(
+      filter,
+      this.currentGenerationStartBlock,
+      'latest'
+    );
     if (events.length > 0) {
       const startInflationEvent = events[events.length - 1];
 
@@ -121,7 +138,7 @@ class Supervisor {
       this.vdfVerifier = new ethers.Contract(
         vdfVerifierAddress,
         VDFVerifierABI.abi,
-        this.signer,
+        this.signer
       );
 
       console.log(`VDFVerifier address is: ${this.vdfVerifier.address}`);
@@ -130,10 +147,12 @@ class Supervisor {
       this.inflationRootHashProposal = new ethers.Contract(
         inflationRootHashProposalAddress,
         InflationRootHashProposalABI.abi,
-        this.signer,
+        this.signer
       );
 
-      console.log(`InflationRootHashProposal address is: ${this.inflationRootHashProposal.address}`);
+      console.log(
+        `InflationRootHashProposal address is: ${this.inflationRootHashProposal.address}`
+      );
     }
   }
 
@@ -146,22 +165,27 @@ class Supervisor {
   }
 
   async fetchPolicyVotes() {
-    if (!this.policyVotes && await this.policyProposals.proposalSelected) {
+    if (!this.policyVotes && (await this.policyProposals.proposalSelected)) {
       this.policyvotes = new ethers.Contract(
         await this.policy.policyFor(ID_POLICY_VOTES),
         PolicyVotesABI.abi,
-        this.signer,
+        this.signer
       );
     }
   }
 
   async deployProposalVoting() {
-    if (await !this.policyProposals.proposalSelected
-    && this.timestamp < await this.policyProposals.proposalEnds
+    if (
+      (await !this.policyProposals.proposalSelected) &&
+      this.timestamp < (await this.policyProposals.proposalEnds)
     ) {
       // find out if a proposal is ready to be voted on, then deploy policyVotes
       const filter = this.policyProposals.filters.SupportThresholdReached();
-      const events = this.policyProposals.queryFilter(filter, this.currentGenerationStartBlock, 'latest');
+      const events = this.policyProposals.queryFilter(
+        filter,
+        this.currentGenerationStartBlock,
+        'latest'
+      );
       // policyProposals instance is created anew every generation, so max 1 such event
       if (events.length === 1) {
         await this.policyProposals.deployProposalVoting();
@@ -172,11 +196,14 @@ class Supervisor {
   async executeProposal() {
     if (this.policyVotes) {
       try {
-        const requiredStake = await this.policyVotes.totalStake() / 2;
+        const requiredStake = (await this.policyVotes.totalStake()) / 2;
         const yesStake = await this.policyVotes.yesStake();
-        if (yesStake > requiredStake
-          && this.timestamp > await this.policyVotes.voteEnds
-          + await this.policyVotes.ENACTION_DELAY) {
+        if (
+          yesStake > requiredStake &&
+          this.timestamp >
+            (await this.policyVotes.voteEnds) +
+              (await this.policyVotes.ENACTION_DELAY)
+        ) {
           await this.policyVotes.execute();
           this.policyChange = true;
         }
@@ -198,9 +225,14 @@ class Supervisor {
 
     const stage = await this.currencyGovernance.stage();
 
-    if ((stage === 0 && this.timestamp >= await this.currencyGovernance.proposalEnds())
-        || (stage === 1 && this.timestamp >= await this.currencyGovernance.votingEnds())
-        || (stage === 2 && this.timestamp >= await this.currencyGovernance.revealEnds())) {
+    if (
+      (stage === 0 &&
+        this.timestamp >= (await this.currencyGovernance.proposalEnds())) ||
+      (stage === 1 &&
+        this.timestamp >= (await this.currencyGovernance.votingEnds())) ||
+      (stage === 2 &&
+        this.timestamp >= (await this.currencyGovernance.revealEnds()))
+    ) {
       await this.currencyGovernance.updateStage();
     }
   }
@@ -216,21 +248,21 @@ class Supervisor {
     this.timedPolicies = new ethers.Contract(
       await this.policy.policyFor(ID_TIMED_POLICIES),
       TimedPoliciesABI.abi,
-      this.signer,
+      this.signer
     );
     console.log(`timedpolicies address is: ${this.timedPolicies.address}`);
 
     this.currencyTimer = new ethers.Contract(
       await this.policy.policyFor(ID_CURRENCY_TIMER),
       CurrencyTimerABI.abi,
-      this.signer,
+      this.signer
     );
     console.log(`currencyTimer address is: ${this.currencyTimer.address}`);
 
     this.eco = new ethers.Contract(
       await this.policy.policyFor(ID_ECO),
       ECO.abi,
-      this.signer,
+      this.signer
     );
     console.log(`ECO address is: ${this.eco.address}`);
 
@@ -242,9 +274,12 @@ class Supervisor {
     const block = await provider.getBlock(this.currentGenerationStartBlock);
     this.currentGenerationStartTime = block.timestamp;
     this.GENERATION_TIME = await this.timedPolicies.GENERATION_DURATION();
-    this.nextGenerationStartTime = this.currentGenerationStartTime + GENERATION_TIME;
+    this.nextGenerationStartTime =
+      this.currentGenerationStartTime + GENERATION_TIME;
 
-    console.log(`SUPERVISOR STARTED. CURRENT GENERATION STARTED AT TIME: ${this.currentGenerationStartTime} ON BLOCK: ${this.currentGenerationStartBlock}\n`);
+    console.log(
+      `SUPERVISOR STARTED. CURRENT GENERATION STARTED AT TIME: ${this.currentGenerationStartTime} ON BLOCK: ${this.currentGenerationStartBlock}\n`
+    );
 
     await this.updateContracts();
 
@@ -266,7 +301,9 @@ class Supervisor {
     const drift = Math.abs(Math.floor(Date.now() / 1000) - this.timestamp);
     if (drift > 300) {
       // pretty primitive logging here, but it'll work for now
-      const content = `current timestamp: ${Math.floor(Date.now() / 1000)}, block timestamp: ${this.timestamp}, drift: ${drift}`;
+      const content = `current timestamp: ${Math.floor(
+        Date.now() / 1000
+      )}, block timestamp: ${this.timestamp}, drift: ${drift}`;
       fs.writeFile('tools/timedrift.txt', content, (e) => {
         if (e) {
           console.log(e);
@@ -274,10 +311,14 @@ class Supervisor {
       });
     }
     if (this.timestamp > this.nextGenerationStartTime) {
-      console.log(`current time is ${this.timeStamp}, nextGenerationStart is ${this.nextGenerationStartTime}, updating generation`);
+      console.log(
+        `current time is ${this.timeStamp}, nextGenerationStart is ${this.nextGenerationStartTime}, updating generation`
+      );
       await this.updateGeneration();
     } else if (this.currentGenerationStartBlock === this.blockNumber - 1) {
-      console.log(`current generation block is ${this.currentGenerationStartBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`);
+      console.log(
+        `current generation block is ${this.currentGenerationStartBlock}, this.blockNumber is ${this.blockNumber}, updating contracts`
+      );
       await this.updateContracts();
     } else {
       console.log('managing currency governance');
@@ -307,10 +348,7 @@ class Supervisor {
       signer = wallet.connect(provider);
     }
 
-    const supervisor = await new Supervisor(
-      _rootPolicy,
-      signer,
-    );
+    const supervisor = await new Supervisor(_rootPolicy, signer);
 
     await supervisor.catchup();
 

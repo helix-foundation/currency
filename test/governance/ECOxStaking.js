@@ -1,9 +1,8 @@
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 
 describe('ecoXStaking [@group=12]', () => {
@@ -27,9 +26,8 @@ describe('ecoXStaking [@group=12]', () => {
     [alice, bob, charlie] = accounts;
     const trustednodes = [await bob.getAddress()];
 
-    ({
-      policy, eco, faucet, timedPolicies, ecox, ecoXStaking,
-    } = await ecoFixture(trustednodes));
+    ({ policy, eco, faucet, timedPolicies, ecox, ecoXStaking } =
+      await ecoFixture(trustednodes));
 
     await faucet.mint(await alice.getAddress(), one.mul(5000));
     await faucet.mint(await bob.getAddress(), one.mul(5000));
@@ -47,14 +45,18 @@ describe('ecoXStaking [@group=12]', () => {
 
   describe('disabled ERC20 functionality', () => {
     it('reverts on transfer', async () => {
-      await expect(ecoXStaking.transfer(await alice.getAddress(), 1000)).to.be.revertedWith(
-        'sECOx is non-transferrable',
-      );
+      await expect(
+        ecoXStaking.transfer(await alice.getAddress(), 1000)
+      ).to.be.revertedWith('sECOx is non-transferrable');
     });
 
     it('reverts on transferFrom', async () => {
       await expect(
-        ecoXStaking.transferFrom(await alice.getAddress(), await bob.getAddress(), 1000),
+        ecoXStaking.transferFrom(
+          await alice.getAddress(),
+          await bob.getAddress(),
+          1000
+        )
       ).to.be.revertedWith('sECOx is non-transferrable');
     });
   });
@@ -67,12 +69,12 @@ describe('ecoXStaking [@group=12]', () => {
         await deploy('PolicyVotes', policy.address, eco.address, ecox.address)
       ).address,
       eco.address,
-      ecox.address,
+      ecox.address
     );
     const cloner = await deploy('Cloner', implementation.address);
     const policyProposalsClone = await ethers.getContractAt(
       'PolicyProposals',
-      await cloner.clone(),
+      await cloner.clone()
     );
     await policy.testDirectSet('PolicyProposals', policyProposalsClone.address);
     return policyProposalsClone;
@@ -108,7 +110,9 @@ describe('ecoXStaking [@group=12]', () => {
     context('basic token and checkpoints data', async () => {
       // Confirm the internal balance method works
       it('can get the balance', async () => {
-        expect(await ecoXStaking.balanceOf(await alice.getAddress())).to.equal(one.mul(10));
+        expect(await ecoXStaking.balanceOf(await alice.getAddress())).to.equal(
+          one.mul(10)
+        );
       });
 
       it('Can get the past total supply', async () => {
@@ -117,7 +121,10 @@ describe('ecoXStaking [@group=12]', () => {
       });
 
       it('Can get a past balance', async () => {
-        const pastBalance = await ecoXStaking.getPastVotes(await alice.getAddress(), blockNumber);
+        const pastBalance = await ecoXStaking.getPastVotes(
+          await alice.getAddress(),
+          blockNumber
+        );
         expect(pastBalance).to.be.equal(one.mul(10));
       });
     });
@@ -139,9 +146,9 @@ describe('ecoXStaking [@group=12]', () => {
 
       it('alice cannot deposit more than approved', async () => {
         await ecox.connect(alice).approve(ecoXStaking.address, one.mul(10));
-        await expect(ecoXStaking.connect(alice).deposit(one.mul(1000))).to.be.revertedWith(
-          'ERC20: transfer amount exceeds allowance',
-        );
+        await expect(
+          ecoXStaking.connect(alice).deposit(one.mul(1000))
+        ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
       });
     });
 
@@ -151,8 +158,8 @@ describe('ecoXStaking [@group=12]', () => {
         const tx = await proposals.connect(charlie).deployProposalVoting();
         const receipt = await tx.wait();
 
-        const votesAddress = receipt.events.find((t) => t.event === 'VoteStart').args
-          .contractAddress;
+        const votesAddress = receipt.events.find((t) => t.event === 'VoteStart')
+          .args.contractAddress;
         votes = await ethers.getContractAt('PolicyVotes', votesAddress);
       });
 
@@ -184,10 +191,12 @@ describe('ecoXStaking [@group=12]', () => {
       await ecoXStaking.connect(alice).delegate(await bob.getAddress());
       const blockNumber = await time.latestBlock();
       await time.increase(10);
-      expect(await ecoXStaking.getVotingGons(await bob.getAddress())).to.equal(one.mul(110));
-      expect(await ecoXStaking.votingECOx(await bob.getAddress(), blockNumber)).to.equal(
-        one.mul(110),
+      expect(await ecoXStaking.getVotingGons(await bob.getAddress())).to.equal(
+        one.mul(110)
       );
+      expect(
+        await ecoXStaking.votingECOx(await bob.getAddress(), blockNumber)
+      ).to.equal(one.mul(110));
     });
 
     context('undelegate transfers voting record', () => {
@@ -223,7 +232,9 @@ describe('ecoXStaking [@group=12]', () => {
 
       context('partial delegation', () => {
         it('can still withdraw if delegation is partial', async () => {
-          await ecoXStaking.connect(alice).delegateAmount(await bob.getAddress(), one.mul(5));
+          await ecoXStaking
+            .connect(alice)
+            .delegateAmount(await bob.getAddress(), one.mul(5));
           await proposals.connect(bob).support(testProposal.address);
           await ecoXStaking.connect(alice).withdraw(one.mul(5));
         });

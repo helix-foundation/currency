@@ -1,9 +1,8 @@
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -29,7 +28,11 @@ describe('PolicyVotes [@group=8]', () => {
     [alice, bob, charlie, dave, frank] = accounts;
 
     ({
-      policy, eco, faucet: initInflation, timedPolicies, ecox,
+      policy,
+      eco,
+      faucet: initInflation,
+      timedPolicies,
+      ecox,
     } = await ecoFixture([]));
 
     await initInflation.mint(await alice.getAddress(), one.mul(5000));
@@ -39,10 +42,18 @@ describe('PolicyVotes [@group=8]', () => {
     await time.increase(3600 * 24 * 40);
     await timedPolicies.incrementGeneration();
 
-    policyVotes = await deploy('PolicyVotes', policy.address, eco.address, ecox.address);
+    policyVotes = await deploy(
+      'PolicyVotes',
+      policy.address,
+      eco.address,
+      ecox.address
+    );
     proposal = (await deploy('SampleProposal', 0)).address;
     const proxy = await deploy('ForwardProxy', policyVotes.address);
-    proxiedPolicyVotes = await ethers.getContractAt('PolicyVotes', proxy.address);
+    proxiedPolicyVotes = await ethers.getContractAt(
+      'PolicyVotes',
+      proxy.address
+    );
     await policy.testDirectSet('PolicyVotes', proxiedPolicyVotes.address);
   });
 
@@ -59,7 +70,7 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.configure(
             proposal,
             await alice.getAddress(),
-            await time.latestBlock(),
+            await time.latestBlock()
           );
         });
 
@@ -67,7 +78,7 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.configure(
             proposal,
             await alice.getAddress(),
-            await time.latestBlock(),
+            await time.latestBlock()
           );
 
           assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0);
@@ -79,7 +90,7 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.configure(
             proposal,
             await alice.getAddress(),
-            await time.latestBlock(),
+            await time.latestBlock()
           );
         });
 
@@ -88,8 +99,8 @@ describe('PolicyVotes [@group=8]', () => {
             proxiedPolicyVotes.configure(
               proposal,
               await alice.getAddress(),
-              await time.latestBlock(),
-            ),
+              await time.latestBlock()
+            )
           ).to.be.revertedWith('has already been configured');
         });
       });
@@ -100,7 +111,7 @@ describe('PolicyVotes [@group=8]', () => {
     context('before the contract is configured', () => {
       it('reverts', async () => {
         await expect(proxiedPolicyVotes.vote(true)).to.be.revertedWith(
-          'Votes can only be recorded during the voting period',
+          'Votes can only be recorded during the voting period'
         );
       });
     });
@@ -110,7 +121,7 @@ describe('PolicyVotes [@group=8]', () => {
         await proxiedPolicyVotes.configure(
           proposal,
           await alice.getAddress(),
-          await time.latestBlock(),
+          await time.latestBlock()
         );
       });
 
@@ -121,7 +132,7 @@ describe('PolicyVotes [@group=8]', () => {
 
         it('reverts', async () => {
           await expect(proxiedPolicyVotes.vote(true)).to.be.revertedWith(
-            'Votes can only be recorded during the voting period',
+            'Votes can only be recorded during the voting period'
           );
         });
       });
@@ -129,9 +140,9 @@ describe('PolicyVotes [@group=8]', () => {
       context('during the commitment period', () => {
         context('with no tokens', () => {
           it('reverts', async () => {
-            await expect(proxiedPolicyVotes.connect(frank).vote(true)).to.be.revertedWith(
-              'must have held tokens',
-            );
+            await expect(
+              proxiedPolicyVotes.connect(frank).vote(true)
+            ).to.be.revertedWith('must have held tokens');
           });
         });
 
@@ -150,7 +161,7 @@ describe('PolicyVotes [@group=8]', () => {
             assert(
               startStake
                 .add(await eco.balanceOf(await alice.getAddress()))
-                .eq(await proxiedPolicyVotes.totalStake()),
+                .eq(await proxiedPolicyVotes.totalStake())
             );
           });
 
@@ -160,7 +171,7 @@ describe('PolicyVotes [@group=8]', () => {
             await proxiedPolicyVotes.vote(true);
 
             expect(await proxiedPolicyVotes.yesStake()).to.equal(
-              startStake.add(await eco.balanceOf(await alice.getAddress())),
+              startStake.add(await eco.balanceOf(await alice.getAddress()))
             );
           });
 
@@ -182,7 +193,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.vote(false);
 
-              expect(await proxiedPolicyVotes.totalStake()).to.equal(startStake);
+              expect(await proxiedPolicyVotes.totalStake()).to.equal(
+                startStake
+              );
             });
 
             it('decreases yes stake', async () => {
@@ -191,7 +204,7 @@ describe('PolicyVotes [@group=8]', () => {
               await proxiedPolicyVotes.vote(false);
 
               expect(await proxiedPolicyVotes.yesStake()).to.equal(
-                startStake.sub(await eco.balanceOf(await alice.getAddress())),
+                startStake.sub(await eco.balanceOf(await alice.getAddress()))
               );
             });
           });
@@ -206,7 +219,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.vote(true);
 
-              expect(await proxiedPolicyVotes.totalStake()).to.equal(startStake);
+              expect(await proxiedPolicyVotes.totalStake()).to.equal(
+                startStake
+              );
             });
 
             it('increases yes stake', async () => {
@@ -215,7 +230,7 @@ describe('PolicyVotes [@group=8]', () => {
               await proxiedPolicyVotes.vote(true);
 
               expect(await proxiedPolicyVotes.yesStake()).to.equal(
-                startStake.add(await eco.balanceOf(await alice.getAddress())),
+                startStake.add(await eco.balanceOf(await alice.getAddress()))
               );
             });
           });
@@ -228,7 +243,7 @@ describe('PolicyVotes [@group=8]', () => {
     context('before the contract is configured', () => {
       it('reverts', async () => {
         await expect(proxiedPolicyVotes.voteSplit(1, 1)).to.be.revertedWith(
-          'Votes can only be recorded during the voting period',
+          'Votes can only be recorded during the voting period'
         );
       });
     });
@@ -238,7 +253,7 @@ describe('PolicyVotes [@group=8]', () => {
         await proxiedPolicyVotes.configure(
           proposal,
           await alice.getAddress(),
-          await time.latestBlock(),
+          await time.latestBlock()
         );
       });
 
@@ -249,7 +264,7 @@ describe('PolicyVotes [@group=8]', () => {
 
         it('reverts', async () => {
           await expect(proxiedPolicyVotes.voteSplit(1, 1)).to.be.revertedWith(
-            'Votes can only be recorded during the voting period',
+            'Votes can only be recorded during the voting period'
           );
         });
       });
@@ -257,9 +272,9 @@ describe('PolicyVotes [@group=8]', () => {
       context('during the commitment period', () => {
         context('with no tokens', () => {
           it('reverts', async () => {
-            await expect(proxiedPolicyVotes.connect(frank).voteSplit(0, 0)).to.be.revertedWith(
-              'must have held tokens',
-            );
+            await expect(
+              proxiedPolicyVotes.connect(frank).voteSplit(0, 0)
+            ).to.be.revertedWith('must have held tokens');
           });
         });
 
@@ -272,8 +287,10 @@ describe('PolicyVotes [@group=8]', () => {
 
           it('cannot vote more than owned', async () => {
             await expect(
-              proxiedPolicyVotes.voteSplit(one.mul(5000), one.mul(3000)),
-            ).to.be.revertedWith('Your voting power is less than submitted yes + no votes');
+              proxiedPolicyVotes.voteSplit(one.mul(5000), one.mul(3000))
+            ).to.be.revertedWith(
+              'Your voting power is less than submitted yes + no votes'
+            );
           });
 
           describe('increases the total stake', () => {
@@ -285,7 +302,7 @@ describe('PolicyVotes [@group=8]', () => {
               assert(
                 startStake
                   .add(await eco.balanceOf(await alice.getAddress()))
-                  .eq(await proxiedPolicyVotes.totalStake()),
+                  .eq(await proxiedPolicyVotes.totalStake())
               );
             });
 
@@ -294,7 +311,11 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(1500), one.mul(200));
 
-              assert(startStake.add(one.mul(1700)).eq(await proxiedPolicyVotes.totalStake()));
+              assert(
+                startStake
+                  .add(one.mul(1700))
+                  .eq(await proxiedPolicyVotes.totalStake())
+              );
             });
           });
 
@@ -303,7 +324,9 @@ describe('PolicyVotes [@group=8]', () => {
 
             await proxiedPolicyVotes.voteSplit(one.mul(1500), one.mul(200));
 
-            expect(await proxiedPolicyVotes.yesStake()).to.equal(startStake.add(one.mul(1500)));
+            expect(await proxiedPolicyVotes.yesStake()).to.equal(
+              startStake.add(one.mul(1500))
+            );
           });
 
           context('with an existing vote and the same total', () => {
@@ -316,7 +339,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(1000), one.mul(700));
 
-              expect(await proxiedPolicyVotes.totalStake()).to.equal(startStake);
+              expect(await proxiedPolicyVotes.totalStake()).to.equal(
+                startStake
+              );
             });
 
             it('decreases yes stake', async () => {
@@ -324,7 +349,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(1000), one.mul(700));
 
-              expect(await proxiedPolicyVotes.yesStake()).to.equal(startStake.sub(one.mul(500)));
+              expect(await proxiedPolicyVotes.yesStake()).to.equal(
+                startStake.sub(one.mul(500))
+              );
             });
           });
 
@@ -338,7 +365,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2500), one.mul(1200));
 
-              expect(await proxiedPolicyVotes.totalStake()).to.equal(startStake.add(one.mul(2000)));
+              expect(await proxiedPolicyVotes.totalStake()).to.equal(
+                startStake.add(one.mul(2000))
+              );
             });
 
             it('correctly increases yes stake', async () => {
@@ -346,7 +375,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2500), one.mul(1200));
 
-              expect(await proxiedPolicyVotes.yesStake()).to.equal(startStake.add(one.mul(1000)));
+              expect(await proxiedPolicyVotes.yesStake()).to.equal(
+                startStake.add(one.mul(1000))
+              );
             });
           });
 
@@ -360,7 +391,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2500), one.mul(1200));
 
-              expect(await proxiedPolicyVotes.totalStake()).to.equal(startStake.sub(one.mul(1300)));
+              expect(await proxiedPolicyVotes.totalStake()).to.equal(
+                startStake.sub(one.mul(1300))
+              );
             });
 
             it('correctly decreases yes stake', async () => {
@@ -368,7 +401,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2500), one.mul(1200));
 
-              expect(await proxiedPolicyVotes.yesStake()).to.equal(startStake.sub(one.mul(2500)));
+              expect(await proxiedPolicyVotes.yesStake()).to.equal(
+                startStake.sub(one.mul(2500))
+              );
             });
           });
 
@@ -382,7 +417,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.vote(true);
 
-              expect(await proxiedPolicyVotes.totalStake()).to.equal(startStake.add(one.mul(3300)));
+              expect(await proxiedPolicyVotes.totalStake()).to.equal(
+                startStake.add(one.mul(3300))
+              );
             });
 
             it('correctly increases yes stake on yes', async () => {
@@ -390,7 +427,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.vote(true);
 
-              expect(await proxiedPolicyVotes.yesStake()).to.equal(startStake.add(one.mul(3500)));
+              expect(await proxiedPolicyVotes.yesStake()).to.equal(
+                startStake.add(one.mul(3500))
+              );
             });
 
             it('correctly decreases yes stake on no', async () => {
@@ -398,7 +437,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.vote(false);
 
-              expect(await proxiedPolicyVotes.yesStake()).to.equal(startStake.sub(one.mul(1500)));
+              expect(await proxiedPolicyVotes.yesStake()).to.equal(
+                startStake.sub(one.mul(1500))
+              );
             });
           });
         });
@@ -407,14 +448,20 @@ describe('PolicyVotes [@group=8]', () => {
   });
 
   describe('execute', () => {
-    const adoptedPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['TestSample']);
-    const votesPolicyIdHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
+    const adoptedPolicyIdHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['TestSample']
+    );
+    const votesPolicyIdHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    );
 
     beforeEach(async () => {
       await proxiedPolicyVotes.configure(
         proposal,
         await alice.getAddress(),
-        await time.latestBlock(),
+        await time.latestBlock()
       );
     });
 
@@ -443,7 +490,7 @@ describe('PolicyVotes [@group=8]', () => {
       context('when called early, without majority support', () => {
         it('reverts', async () => {
           await expect(proxiedPolicyVotes.execute()).to.be.revertedWith(
-            'Majority support required for early enaction',
+            'Majority support required for early enaction'
           );
         });
       });
@@ -473,7 +520,7 @@ describe('PolicyVotes [@group=8]', () => {
           await policy.testDirectSet('PolicyVotes', policy.address);
           await time.increase(3600 * 24 * 4.1);
           await expect(proxiedPolicyVotes.execute()).to.be.revertedWith(
-            'This contract no longer has authorization to enact the vote',
+            'This contract no longer has authorization to enact the vote'
           );
         });
       });
@@ -509,7 +556,7 @@ describe('PolicyVotes [@group=8]', () => {
         it('adopts policy 0', async () => {
           const newPolicy = await ethers.getContractAt(
             'SampleHandler',
-            await util.policyFor(policy, adoptedPolicyIdHash),
+            await util.policyFor(policy, adoptedPolicyIdHash)
           );
           assert.equal((await newPolicy.id()).toString(), 0);
         });

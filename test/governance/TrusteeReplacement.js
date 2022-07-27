@@ -8,12 +8,12 @@
  * how a full suite of trustees can be replaces, and how a new TrustedNodes
  * contract can replace the old one.
  */
+
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -69,13 +69,17 @@ describe('Governance Trustee Change [@group=9]', () => {
     const name = await trusteeReplacement.name();
     expect(name).to.equal('Trustee Election Proposal Template');
     expect(await trusteeReplacement.description()).to.equal(
-      'Created with a list of trustees and replaces all current trustees with those trustees',
+      'Created with a list of trustees and replaces all current trustees with those trustees'
     );
     expect(await trusteeReplacement.url()).to.equal(
-      'https://description.of.proposal make this link to a discussion of the new trustee slate',
+      'https://description.of.proposal make this link to a discussion of the new trustee slate'
     );
-    expect(await trusteeReplacement.newTrustees(0)).to.equal(await charlie.getAddress());
-    expect(await trusteeReplacement.newTrustees(1)).to.equal(await dave.getAddress());
+    expect(await trusteeReplacement.newTrustees(0)).to.equal(
+      await charlie.getAddress()
+    );
+    expect(await trusteeReplacement.newTrustees(1)).to.equal(
+      await dave.getAddress()
+    );
   });
 
   it('Checks that alice is initially a trustee', async () => {
@@ -91,7 +95,9 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Checks that charlie is not yet a trustee', async () => {
-    const charlieBool = await trustedNodes.isTrusted(await charlie.getAddress());
+    const charlieBool = await trustedNodes.isTrusted(
+      await charlie.getAddress()
+    );
     // console.log(charlieBool);
     expect(charlieBool).to.be.false;
   });
@@ -103,10 +109,13 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
+    );
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash),
+      await util.policyFor(policy, proposalsHash)
     );
   });
 
@@ -114,7 +123,9 @@ describe('Governance Trustee Change [@group=9]', () => {
     await eco
       .connect(alice)
       .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-    await policyProposals.connect(alice).registerProposal(trusteeReplacement.address);
+    await policyProposals
+      .connect(alice)
+      .registerProposal(trusteeReplacement.address);
 
     await time.increase(3600 * 24 * 2);
   });
@@ -126,10 +137,13 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    );
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash),
+      await util.policyFor(policy, policyVotesIdentifierHash)
     );
   });
 
@@ -159,7 +173,9 @@ describe('Governance Trustee Change [@group=9]', () => {
   });
 
   it('Checks that charlie is now a trustee', async () => {
-    const charlieBool = await trustedNodes.isTrusted(await charlie.getAddress());
+    const charlieBool = await trustedNodes.isTrusted(
+      await charlie.getAddress()
+    );
     // console.log(charlieBool);
     expect(charlieBool).to.be.true;
   });
