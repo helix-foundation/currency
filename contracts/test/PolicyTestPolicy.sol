@@ -18,7 +18,11 @@ contract PolicyTestPolicy is Policy {
      * @param _impl The interface implementation.
      */
     function setLabel(string calldata _label, address _impl) external {
-        setInterfaceImplementation(_label, _impl);
+        ERC1820REGISTRY.setInterfaceImplementer(
+            address(this),
+            keccak256(abi.encodePacked(_label)),
+            _impl
+        );
     }
 
     /** Set the expected interface setter for a given policedutils to the given
@@ -141,7 +145,8 @@ contract FakeCommander is PolicedUtils {
      */
     function command(address _policed, address _action) public {
         policy.internalCommand(
-            address(new FakeCommandAction(_policed, _action))
+            address(new FakeCommandAction(_policed, _action)),
+            keccak256("Commander")
         );
     }
 }
@@ -289,6 +294,10 @@ contract RegistrationAttemptContract is ERC1820Client {
     }
 
     function register() external {
-        setInterfaceImplementation(identifier, implementer);
+        ERC1820REGISTRY.setInterfaceImplementer(
+            address(this),
+            keccak256(abi.encodePacked(identifier)),
+            implementer
+        );
     }
 }

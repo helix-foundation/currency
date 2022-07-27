@@ -110,7 +110,11 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         PolicyProposals _proposals = PolicyProposals(
             policyProposalImpl.clone()
         );
-        policy.setPolicy(ID_POLICY_PROPOSALS, address(_proposals));
+        policy.setPolicy(
+            ID_POLICY_PROPOSALS,
+            address(_proposals),
+            ID_TIMED_POLICIES
+        );
         emit PolicyDecisionStart(address(_proposals));
     }
 }

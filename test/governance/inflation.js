@@ -1,5 +1,4 @@
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable no-underscore-dangle, no-await-in-loop, no-console */
 
 const bigintCryptoUtils = require('bigint-crypto-utils');
 const { expect } = require('chai');
@@ -303,11 +302,14 @@ describe('RandomInflation [@group=6]', () => {
 
       it('pays out inflation', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 0);
-        await expect(
-          inflation.connect(recipient).claim(0, a[1].reverse(), a[0].sum.toString(), index),
-        )
-          .to.emit(inflation, 'Claim')
-          .withArgs(await recipient.getAddress(), 0);
+        const beforeBalance = await eco.balanceOf(recipient.getAddress());
+        const tx = await inflation
+          .connect(recipient)
+          .claim(0, a[1].reverse(), a[0].sum.toString(), index);
+        const receipt = await tx.wait();
+        console.log(`gas used ${receipt.gasUsed}`);
+        const afterBalance = await eco.balanceOf(recipient.getAddress());
+        expect(afterBalance.sub(beforeBalance).toNumber()).to.equal(rewardVote);
       });
 
       it('emits the Claim event', async () => {

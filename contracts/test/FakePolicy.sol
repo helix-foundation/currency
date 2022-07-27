@@ -14,7 +14,11 @@ contract FakePolicy is TestPolicy {
      * @param _impl The implementing address.
      */
     function setLabel(string calldata _label, address _impl) external {
-        setInterfaceImplementation(_label, _impl);
+        ERC1820REGISTRY.setInterfaceImplementer(
+            address(this),
+            keccak256(abi.encodePacked(_label)),
+            _impl
+        );
     }
 
     /** Mint tokens in the provided store at the provided account.

@@ -107,7 +107,11 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
 
         {
             CurrencyGovernance _clone = CurrencyGovernance(bordaImpl.clone());
-            policy.setPolicy(ID_CURRENCY_GOVERNANCE, address(_clone));
+            policy.setPolicy(
+                ID_CURRENCY_GOVERNANCE,
+                address(_clone),
+                ID_CURRENCY_TIMER
+            );
             emit NewCurrencyGovernance(_clone, _new);
         }
 

@@ -54,44 +54,52 @@ describe('Policy [@group=11]', () => {
   });
 
   describe('internalCommand', () => {
+    let commander;
+    let testPolicyIdentifierHash;
+
+    beforeEach(async () => {
+      testPolicyIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['Commander']);
+
+      const policyInit = await deploy('PolicyInit');
+      const forwardProxy = await deploy('ForwardProxy', policyInit.address);
+      policy = await deploy('Policy');
+
+      commander = await deploy('FakeCommander', forwardProxy.address);
+
+      await (
+        await ethers.getContractAt('PolicyInit', forwardProxy.address)
+      ).fusedInit(
+        policy.address,
+        [testPolicyIdentifierHash],
+        [testPolicyIdentifierHash],
+        [commander.address],
+        // [testPolicyIdentifierHash],
+      );
+
+      policy = await ethers.getContractAt('Policy', forwardProxy.address);
+    });
     describe('when called by a not a setter interface implementer', () => {
-      it('reverts', async () => {
+      /* The policy  contract itself is not a valid delegate for the
+       * internalCommand action, but it doesn't matter because the call
+       * will fail before trying to delegate due to permissions - which is
+       * what's being tested here.
+       */
+      it('reverts if the auth is not a setter', async () => {
+        const nonSetterHash = ethers.utils.solidityKeccak256(['string'], ['Unauthed']);
+
         await expect(
-          /* The policy  contract itself is not a valid delegate for the
-           * internalCommand action, but it doesn't matter because the call
-           * will fail before trying to delegate due to permissions - which is
-           * what's being tested here.
-           */
-          policy.internalCommand(policy.address),
-        ).to.be.revertedWith('Failed to find an appropriate permission');
+          policy.internalCommand(policy.address, nonSetterHash),
+        ).to.be.revertedWith('Identifier hash is not authorized for this action');
+      });
+
+      it('reverts if the auth is not the caller', async () => {
+        await expect(
+          policy.internalCommand(policy.address, testPolicyIdentifierHash),
+        ).to.be.revertedWith('Caller is not the authorized address for identifier');
       });
     });
 
     describe('when the enacted policy fails', () => {
-      let commander;
-
-      beforeEach(async () => {
-        const testPolicyIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['Commander']);
-
-        const policyInit = await deploy('PolicyInit');
-        const forwardProxy = await deploy('ForwardProxy', policyInit.address);
-        policy = await deploy('Policy');
-
-        commander = await deploy('FakeCommander', forwardProxy.address);
-
-        await (
-          await ethers.getContractAt('PolicyInit', forwardProxy.address)
-        ).fusedInit(
-          policy.address,
-          [testPolicyIdentifierHash],
-          [testPolicyIdentifierHash],
-          [commander.address],
-          // [testPolicyIdentifierHash],
-        );
-
-        policy = await ethers.getContractAt('Policy', forwardProxy.address);
-      });
-
       it('reverts', async () => {
         const revertingAction = await deploy('RevertingAction', policy.address);
         const policed = await deploy('DummyPolicedUtils', policy.address);

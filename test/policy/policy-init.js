@@ -78,35 +78,40 @@ describe('PolicyInit [@group=11]', () => {
       it('calling twice fails because proxy is changed', async () => {
         const interfaceName = ethers.utils.solidityKeccak256(['string'], ['interface']);
 
+        const allPolicySetter = allPolicy.address.toLowerCase() + '00'.repeat(12);
         await proxied.fusedInit(
           policy.address,
-          [allPolicy.address + '00'.repeat(12)],
+          [allPolicySetter],
           [interfaceName],
           [allPolicy.address],
         );
 
         const allPolicy2 = await deploy('PolicyForAll');
+        const allPolicy2Setter = allPolicy2.address.toLowerCase() + '00'.repeat(12);
         await expect(
           proxied.fusedInit(
             policy.address,
-            [allPolicy2.address + '00'.repeat(12)],
+            [allPolicy2Setter],
             [interfaceName],
             [allPolicy2.address],
           ),
         ).to.be.reverted;
 
         const reproxied = await ethers.getContractAt('TestPolicy', proxied.address);
-        const setter = await reproxied.setters(0);
-        expect(setter).to.equal(`${allPolicy.address}000000000000000000000000`.toLowerCase());
+        const setter1Auth = await reproxied.setters(allPolicySetter);
+        expect(setter1Auth).to.be.true;
+        const setter2Auth = await reproxied.setters(allPolicy2Setter);
+        expect(setter2Auth).to.be.false;
       });
 
       it('using two policyInits on the same policy creates two independent proxies', async () => {
         const interfaceName1 = ethers.utils.solidityKeccak256(['string'], ['interface1']);
         const interfaceName2 = ethers.utils.solidityKeccak256(['string'], ['interface2']);
 
+        const allPolicySetter = allPolicy.address.toLowerCase() + '00'.repeat(12);
         await proxied.fusedInit(
           policy.address,
-          [allPolicy.address + '00'.repeat(12)],
+          [allPolicySetter],
           [interfaceName1],
           [allPolicy.address],
         );
@@ -119,10 +124,10 @@ describe('PolicyInit [@group=11]', () => {
         const proxy2 = await deploy('ForwardProxy', policyInit2.address);
         const proxied2 = await ethers.getContractAt('PolicyInit', proxy2.address);
         const allPolicy2 = await deploy('PolicyForAll');
-
+        const allPolicy2Setter = allPolicy2.address.toLowerCase() + '00'.repeat(12);
         await proxied2.fusedInit(
           policy.address,
-          [allPolicy2.address + '00'.repeat(12)],
+          [allPolicy2Setter],
           [interfaceName1, interfaceName2],
           [allPolicy.address, allPolicy2.address],
         );
@@ -148,10 +153,10 @@ describe('PolicyInit [@group=11]', () => {
 
         expect(name2address).to.equal(allPolicy2.address);
 
-        const setter1 = await reproxied1.setters(0);
-        expect(setter1).to.equal(`${allPolicy.address}000000000000000000000000`.toLowerCase());
-        const setter2 = await reproxied2.setters(0);
-        expect(setter2).to.equal(`${allPolicy2.address}000000000000000000000000`.toLowerCase());
+        const setter1Auth = await reproxied1.setters(allPolicySetter);
+        expect(setter1Auth).to.be.true;
+        const setter2Auth = await reproxied2.setters(allPolicy2Setter);
+        expect(setter2Auth).to.be.true;
       });
     });
   });

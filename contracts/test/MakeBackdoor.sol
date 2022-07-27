@@ -44,7 +44,11 @@ contract MakeBackdoor is Policy, Proposal {
      * This is run in the storage context of the root policy contract.
      */
     function enacted(address) public override {
-        setters.push("Backdoor");
-        setInterfaceImplementation("Backdoor", who);
+        setters[keccak256("Backdoor")] = true;
+        setPolicy(
+            keccak256("Backdoor"),
+            address(this),
+            keccak256("PolicyVotes")
+        );
     }
 }

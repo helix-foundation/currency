@@ -63,11 +63,12 @@ contract BackdoorProposal is Policy, Proposal {
     /** Enact the proposal.
      */
     function enacted(address) public override {
-        setInterfaceImplementation(
-            "Backdoor",
-            address(new Backdoor(Policy(this)))
+        setPolicy(
+            keccak256("Backdoor"),
+            address(new Backdoor(Policy(this))),
+            keccak256("PolicyVotes")
         );
-        setters.push(keccak256(abi.encodePacked("Backdoor")));
+        setters[keccak256("Backdoor")] = true;
     }
 }
 
@@ -120,9 +121,12 @@ contract SampleProposal is Policy, Proposal {
     /** Enact the proposal.
      */
     function enacted(address _self) public override {
-        setInterfaceImplementation(
-            "TestSample",
-            address(new SampleHandler(Policy(this), SampleProposal(_self).id()))
+        setPolicy(
+            keccak256("TestSample"),
+            address(
+                new SampleHandler(Policy(this), SampleProposal(_self).id())
+            ),
+            keccak256("PolicyVotes")
         );
     }
 }
@@ -151,7 +155,11 @@ contract PolicyTest is FakePolicy {
      * @param _value The address of the implementation.
      */
     function testDirectSet(string calldata _key, address _value) external {
-        setInterfaceImplementation(_key, _value);
+        ERC1820REGISTRY.setInterfaceImplementer(
+            address(this),
+            keccak256(abi.encodePacked(_key)),
+            _value
+        );
     }
 
     /** Test trusting an address.
