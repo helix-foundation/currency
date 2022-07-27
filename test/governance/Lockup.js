@@ -52,7 +52,9 @@ describe('Lockup [@group=3]', () => {
     const proposedInflationMult = `${digits10to19}${digits1to9}`;
 
     // 21 day lockup, 5% interest, and a random inflation multiplier
-    await borda.connect(bob).propose(0, 0, 1814400, 50000000, proposedInflationMult, '');
+    await borda
+      .connect(bob)
+      .propose(0, 0, 1814400, 50000000, proposedInflationMult, '');
 
     await time.increase(3600 * 24 * 10.1);
 

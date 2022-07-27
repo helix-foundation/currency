@@ -167,7 +167,9 @@ describe('InflationRootHashProposal', () => {
       )
     );
 
-    await governance.connect(bob).propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', '');
+    await governance
+      .connect(bob)
+      .propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', '');
 
     await time.increase(3600 * 24 * 10.1);
 
