@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./BigNumber.sol";
 import "./IsPrime.sol";
 import "../policy/PolicedUtils.sol";
+import "hardhat/console.sol";
 
 /** @title On-the-chain verification for RSA 2K VDF
  */
@@ -49,28 +50,31 @@ contract VDFVerifier is PolicedUtils, IsPrime {
      */
     event SuccessfulVerification(uint256 x, uint256 t, bytes y);
 
+    IsPrime public prime;
     /**
      * @notice Construct the contract with global parameters.
      */
     // solhint-disable-next-line no-empty-blocks
-    constructor(Policy _policy) PolicedUtils(_policy) {
+    constructor(Policy _policy, IsPrime isPrime) PolicedUtils(_policy) {
         // uses PolicedUtils constructor
-    }
-
-    /** Initialize clone of contract */
-    function initialize(address _self) public override onlyConstruction {
-        super.initialize(_self);
+        prime = IsPrime(isPrime);
     }
 
     /**
      * @notice Start the verification process
      * This starts the submission of a proof that (x^(2^(2^t+1)))==y
+     * @notice Prior to calling this function, caller must also set the primal in the IsPrime contract in
+     * a previous block so that we can validate the primality of the number without gaming of the variable if the
+     * blockhash is know
      */
     function start(
-        uint256 _x,
         uint256 _t,
         bytes calldata _ybytes
     ) external {
+        uint256 _x = prime.getPrimal(msg.sender);
+         console.log("geting");
+        console.log(_x);
+        require(_x > 0, "primal must be set");
         require(
             verified[keccak256(abi.encode(_t, _x))] == bytes32(0),
             "this _x, _t combination has already been verified"
@@ -80,10 +84,10 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
         require(_x > 1, "The commitment (x) must be > 1");
 
-        // require(
-        //     isProbablePrime(_x, PRIME_VALIDATE_ITERATIONS),
-        //     "x must be probable prime"
-        // );
+        require(
+            prime.isProbablePrime(PRIME_VALIDATE_ITERATIONS),
+            "x must be probable prime"
+        );
 
         BigNumber.Instance memory n = BigNumber.from(N);
         BigNumber.Instance memory x = BigNumber.from(_x);

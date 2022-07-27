@@ -26,7 +26,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
     /** The number of checks to determine the prime seed to start the VDF
      */
-    uint256 public constant MILLER_RABIN_ROUNDS = 20;
+    uint256 public constant MILLER_RABIN_ROUNDS = 25;
 
     /** The per-participant reward amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
      */

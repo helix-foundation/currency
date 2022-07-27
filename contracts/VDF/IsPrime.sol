@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-
+import "hardhat/console.sol";
 /** @title Probable prime tester with Miller-Rabin
  *  A user first adds a primal to the contract, then they can test its primality in a subsequent block
  */
@@ -47,14 +47,14 @@ contract IsPrime {
      * Probability of false positive is (1/4)**_k
      * @param _k Number of iterations
      */
-    function isProbablePrime(uint256 _k) public view returns (bool) {
+    function isProbablePrime(uint256 _k, address sender) public view returns (bool) {
         require(
-            primals[msg.sender]._blockNumber < block.number,
+            primals[sender]._blockNumber < block.number,
             "Primal block must be before current"
         );
 
         //Number to be tested for primality
-        uint256 _n = primals[msg.sender]._n;
+        uint256 _n = primals[sender]._n;
         if (_n == 2 || _n == 3 || _n == 5) {
             return true;
         }
@@ -127,7 +127,17 @@ contract IsPrime {
     /** Sets the primal a user can test. Replaces previous primal they might have set
      */
     function setPrimal(uint256 _n) public {
+        // console.log(msg.sender);
         primals[msg.sender]._n = _n;
         primals[msg.sender]._blockNumber = block.number;
+        // console.log(_n);
+        // console.log(primals[msg.sender]._n);
+    }
+
+    function getPrimal(address sender) public view returns(uint256) { 
+        // console.log("stored");
+        // console.log(msg.sender);
+        // console.log(primals[msg.sender]._n);
+        return primals[sender]._n;
     }
 }
