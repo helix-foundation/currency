@@ -348,12 +348,12 @@ describe('CurrencyGovernance [@group=4]', () => {
           });
 
           describe('reward withdrawal', async () => {
-            it('doesnt let you withdraw for votes from this year', async () => {
+            it.only('doesnt let you withdraw for votes from this year', async () => {
               await expect(
                 trustedNodes.connect(dave).redeemVoteRewards(),
               ).to.be.revertedWith('No vested rewards to redeem');
             });
-            it('pays out trustee in simple case', async () => {
+            it.only('pays out trustee in simple case', async () => {
               const trustees = await trustedNodes.connect(alice).numTrustees();
               // should be 26 * numTrustees - 2 reveals = 76
               expect(await trustedNodes.connect(alice).unallocatedRewardsCount()).to.equal(76);
@@ -387,9 +387,9 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               await time.increase(3600 * 24 * 14);
               await (timedPolicies.connect(alice).incrementGeneration());
-              await expect(trustedNodes.connect(dave).redeemVoteRewards())
-                .to.emit(trustedNodes, 'VotingRewardRedemption')
-                .withArgs(await dave.getAddress(), votingReward);
+              const tx = await trustedNodes.connect(dave).redeemVoteRewards();
+              const receipt = await tx.wait();
+              console.log("redeem 1 reward: " + receipt.gasUsed);
 
               expect(await ecox.balanceOf(await dave.getAddress())).to.equal(votingReward);
 
@@ -410,7 +410,9 @@ describe('CurrencyGovernance [@group=4]', () => {
                 BigNumber.from((2 * trustees * 26 * votingReward).toString()),
               );
               await time.increase(3600 * 24 * 14 * 26);
-              await trustedNodes.connect(dave).annualUpdate();
+              const tx = await trustedNodes.connect(dave).annualUpdate();
+              const receipt = await tx.wait();
+              console.log("annualUpdate: " + receipt.gasUsed);
 
               // YEAR 2
               daveCurrentVotes = await trustedNodes.connect(dave)
@@ -527,8 +529,8 @@ describe('CurrencyGovernance [@group=4]', () => {
               //   .lastYearVotingRecord(await dave.getAddress())).to.equal(0);
 
               const tx2 = await trustedNodes.connect(dave).redeemVoteRewards();
-              const receipt = await tx.wait();
-              console.log(receipt.gasUsed);
+              const receipt2 = await tx2.wait();
+              console.log("three withdraws: " + receipt2.gasUsed);
             });
           });
         });
@@ -555,6 +557,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       // console.log(borda.address);
       await policy.testDirectSet('CurrencyGovernance', borda.address);
     });
+
 
     describe('reveal stresstesting', () => {
       /* eslint-disable no-loop-func, no-await-in-loop */
