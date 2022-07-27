@@ -50,14 +50,12 @@ contract VDFVerifier is PolicedUtils, IsPrime {
      */
     event SuccessfulVerification(uint256 x, uint256 t, bytes y);
 
-    IsPrime public prime;
     /**
      * @notice Construct the contract with global parameters.
      */
     // solhint-disable-next-line no-empty-blocks
-    constructor(Policy _policy, IsPrime isPrime) PolicedUtils(_policy) {
+    constructor(Policy _policy) PolicedUtils(_policy) {
         // uses PolicedUtils constructor
-        prime = IsPrime(isPrime);
     }
 
     /**
@@ -68,13 +66,10 @@ contract VDFVerifier is PolicedUtils, IsPrime {
      * blockhash is know
      */
     function start(
+        uint256 _x,
         uint256 _t,
         bytes calldata _ybytes
     ) external {
-        uint256 _x = prime.getPrimal(msg.sender);
-         console.log("geting");
-        console.log(_x);
-        require(_x > 0, "primal must be set");
         require(
             verified[keccak256(abi.encode(_t, _x))] == bytes32(0),
             "this _x, _t combination has already been verified"
@@ -83,11 +78,6 @@ contract VDFVerifier is PolicedUtils, IsPrime {
         require(_t >= 2, "t must be at least 2");
 
         require(_x > 1, "The commitment (x) must be > 1");
-
-        require(
-            prime.isProbablePrime(PRIME_VALIDATE_ITERATIONS),
-            "x must be probable prime"
-        );
 
         BigNumber.Instance memory n = BigNumber.from(N);
         BigNumber.Instance memory x = BigNumber.from(_x);

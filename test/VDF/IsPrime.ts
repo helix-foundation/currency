@@ -1,8 +1,7 @@
 /* eslint-disable no-await-in-loop, no-loop-func */
-import { expect, assert } from 'chai';
-import { advanceBlocks } from '../utils/time';
+import { assert } from 'chai';
 import { IsPrime } from '../../typechain-types';
-
+import { BigNumber } from 'ethers';
 const bigintCryptoUtils = require('bigint-crypto-utils');
 const { deploy } = require('../utils/contracts');
 
@@ -15,20 +14,11 @@ describe('IsPrime [@group=8]', () => {
     instance = await deploy('IsPrime');
   });
 
-  it('should revert if primal not set in prior block', async () => {
-    await instance.setPrimal(123);
-    await expect(
-      instance.isProbablePrime(MILLER_RABIN_ITERATIONS)
-    ).to.be.revertedWith('Primal block must be before current');
-  });
-
   for (let i = 0; i < 100; i += 1) {
     it(`Primality tests ${i}`, async () => {
       const isPrime = await bigintCryptoUtils.isProbablyPrime(BigInt(i));
-      await instance.setPrimal(i);
-      await advanceBlocks(1);
       assert.strictEqual(
-        await instance.isProbablePrime(MILLER_RABIN_ITERATIONS),
+        await instance.isProbablePrime(i, MILLER_RABIN_ITERATIONS),
         isPrime
       );
     });
@@ -37,10 +27,8 @@ describe('IsPrime [@group=8]', () => {
   it('Primality tests number with many trailing binary zeros', async () => {
     const bigPow = BigInt(2) ** BigInt(255) + BigInt(1);
     const isPrime = await bigintCryptoUtils.isProbablyPrime(bigPow);
-    await instance.setPrimal(bigPow);
-    await advanceBlocks(1);
     assert.strictEqual(
-      await instance.isProbablePrime(MILLER_RABIN_ITERATIONS),
+      await instance.isProbablePrime(bigPow, MILLER_RABIN_ITERATIONS),
       isPrime
     );
   });
@@ -51,10 +39,11 @@ describe('IsPrime [@group=8]', () => {
       bigintCryptoUtils.randBetween(BigInt(2) ** BigInt(256)) | BigInt(1);
     it(`Primality test ${rnd.toString()}`, async () => {
       const isPrime = await bigintCryptoUtils.isProbablyPrime(rnd);
-      await instance.setPrimal(rnd);
-      await advanceBlocks(1);
       assert.strictEqual(
-        await instance.isProbablePrime(MILLER_RABIN_ITERATIONS),
+        await instance.isProbablePrime(
+          BigNumber.from(rnd.toString()),
+          MILLER_RABIN_ITERATIONS
+        ),
         isPrime
       );
     });
