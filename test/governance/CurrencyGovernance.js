@@ -63,7 +63,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
       it('reverts if description is too long, doesnt if not', async () => {
         const a = 'a';
-        const maxString = a.repeat(150);
+        const maxString = a.repeat(160);
         await expect(
           borda.connect(bob).propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), `${maxString}!`),
         ).to.be.revertedWith('Description is too long.');

@@ -56,7 +56,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     uint256 public constant IDEMPOTENT_INFLATION_MULTIPLIER = 1e18;
 
     // max length of description field
-    uint256 public maxData = 150;
+    uint256 public constant MAX_DATA = 160;
 
     // mapping of proposing trustee addresses to their submitted proposals
     mapping(address => GovernanceProposal) public proposals;
@@ -151,7 +151,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         uint256 _lockupDuration,
         uint256 _lockupInterest,
         uint256 _inflationMultiplier,
-        string memory _description
+        string calldata _description
     ) external onlyTrusted atStage(Stage.Propose) {
         require(
             _inflationMultiplier > 0,
@@ -159,7 +159,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
         );
         require(
             // didn't choose this number for any particular reason
-            uint256(bytes(_description).length) <= 150,
+            uint256(bytes(_description).length) <= MAX_DATA,
             "Description is too long."
         );
 
