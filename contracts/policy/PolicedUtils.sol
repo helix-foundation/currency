@@ -11,7 +11,7 @@ import "./ERC1820Client.sol";
  *
  * See documentation for Policed to understand what a policed contract is.
  */
-abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
+abstract contract PolicedUtils is Policed, CloneFactory {
     // keccak256("Faucet")
     bytes32 internal constant ID_FAUCET =
         0x93824b3fb91a9a455e79c6bb5ad7a2acaedbf7fea80464761d7d892aa7853d5e;
@@ -62,9 +62,7 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
 
     address internal expectedInterfaceSet;
 
-    constructor(Policy _policy) Policed(_policy) {
-        ERC1820REGISTRY.setManager(address(this), address(_policy));
-    }
+    constructor(Policy _policy) Policed(_policy) {}
 
     /** ERC1820 permissioning interface
      *
@@ -81,24 +79,6 @@ abstract contract PolicedUtils is Policed, CloneFactory, ERC1820Client {
             "Only the policy or interface contract can set the interface."
         );
         return ERC1820_ACCEPT_MAGIC;
-    }
-
-    /** Initialize the contract (replaces constructor)
-     *
-     * See documentation for Policed for an explanation.
-     *
-     * @param _self The address of the original contract deployment (as opposed
-     *              to the address of the proxy contract, which takes the place
-     *              of `this`).
-     */
-    function initialize(address _self)
-        public
-        virtual
-        override
-        onlyConstruction
-    {
-        super.initialize(_self);
-        ERC1820REGISTRY.setManager(address(this), address(policy));
     }
 
     /** Set the expected interface set

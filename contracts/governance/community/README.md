@@ -283,13 +283,13 @@ the root policy contract.
  Basically, lets you vote.
 
 ##### Events
-###### VoteCompleted
+###### VoteCompletion
 Attributes:
   - `result` (Result enum) - either `Accepted, Rejected, Failed`
 
 Emitted when an outcome is known.
 
-###### PolicyVoteCast
+###### PolicyVote
 Attributes:
   - `voter` (address) - the address of the voter
   - `vote` (bool) - the vote cast, `true` to pass, `false` to fail
@@ -314,7 +314,7 @@ Arguments:
 
 Records the caller's vote, weighted by their voting power. Records the voting power of
 the caller in `totalStake` and in `yesStake` if the voter voted yes. Records yes votes
-in the mapping `yesVote` which maps addresses to votes. Emits a `PolicyVoteCast` event.
+in the mapping `yesVote` which maps addresses to votes. Emits a `PolicyVote` event.
 
 ###### Security Notes
   - Cannot be called if the voting period is over
@@ -327,7 +327,7 @@ Arguments: none
 
 Runs the default function on the proposal, if it passed, and then removes the
 permissions from the contract, transfers any tokens to the root policy, and
-then self-destructs. Emits a `VoteCompleted` event.
+then self-destructs. Emits a `VoteCompletion` event.
 
 ###### Security Notes
   - Enacted proposals can do anything they like. They're run in the context of
