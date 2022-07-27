@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./BigNumber.sol";
 import "./IsPrime.sol";
 import "../policy/PolicedUtils.sol";
-import "hardhat/console.sol";
 
 /** @title On-the-chain verification for RSA 2K VDF
  */

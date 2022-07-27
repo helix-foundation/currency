@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import "hardhat/console.sol";
 
 /** @title Probable prime tester with Miller-Rabin
  *  A user first adds a primal to the contract, then they can test its primality in a subsequent block
  */
 contract IsPrime {
-    /** Structure to record the primal test values and the coresponding block that they were comited
-     */
-    struct Primal {
-        uint256 _n;
-        uint256 _blockNumber;
-    }
-
     /* Compute modular exponentiation using the modexp precompile contract
      * See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-198.md
      */
