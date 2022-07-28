@@ -439,7 +439,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               await policy.testDirectSet('CurrencyGovernance', borda.address);
 
               await borda.connect(dave)
-                .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+                .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '');
               await time.increase(3600 * 24 * 10.1);
 
               const davevote2 = [
@@ -473,7 +473,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               await policy.testDirectSet('CurrencyGovernance', borda.address);
 
               await borda.connect(dave)
-                .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'));
+                .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '');
               await time.increase(3600 * 24 * 10.1);
 
               await borda.connect(dave).commit(hash(davevote2));
