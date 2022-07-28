@@ -13,7 +13,7 @@
     "lint": "concurrently 'npm:lint:*'",
     "lint:depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,prettier-plugin-solidity,solhint-plugin-eco,concurrently,@types/mocha",
     "lint:solhint": "solhint 'contracts/**/*.sol'",
-    "lint:eslint": "eslint 'tools/**/**.js' 'test/**/**.js'",
+    "lint:eslint": "eslint 'tools/**/**.js' 'test/**/**.js' 'test/**/**.ts'",
     "lint:prettier": "prettier --check 'contracts/**/*.sol'",
     "build": "hardhat compile",
     "test": "hardhat test",
