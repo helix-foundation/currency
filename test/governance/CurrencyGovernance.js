@@ -389,7 +389,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               await (timedPolicies.connect(alice).incrementGeneration());
               const tx = await trustedNodes.connect(dave).redeemVoteRewards();
               const receipt = await tx.wait();
-              console.log("redeem 1 reward: " + receipt.gasUsed);
+              console.log(`redeem 1 reward: ${receipt.gasUsed}`);
 
               expect(await ecox.balanceOf(await dave.getAddress())).to.equal(votingReward);
 
@@ -412,7 +412,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               await time.increase(3600 * 24 * 14 * 26);
               const tx = await trustedNodes.connect(dave).annualUpdate();
               const receipt = await tx.wait();
-              console.log("annualUpdate: " + receipt.gasUsed);
+              console.log(`annualUpdate: ${receipt.gasUsed}`);
 
               // YEAR 2
               daveCurrentVotes = await trustedNodes.connect(dave)
@@ -558,7 +558,6 @@ describe('CurrencyGovernance [@group=4]', () => {
       // console.log(borda.address);
       await policy.testDirectSet('CurrencyGovernance', borda.address);
     });
-
 
     describe('reveal stresstesting', () => {
       /* eslint-disable no-loop-func, no-await-in-loop */

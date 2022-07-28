@@ -242,8 +242,11 @@ contract TrustedNodes is PolicedUtils {
      */
     function newCohort(address[] memory _newCohort) external onlyPolicy {
         uint256 trustees = cohorts[cohort].trustedNodes.length;
-        if(_newCohort.length > trustees) {
-            emit FundingRequest(voteReward * YEAR / GENERATION * (_newCohort.length - trustees));
+        if (_newCohort.length > trustees) {
+            emit FundingRequest(
+                ((voteReward * YEAR) / GENERATION) *
+                    (_newCohort.length - trustees)
+            );
         }
 
         cohort++;
