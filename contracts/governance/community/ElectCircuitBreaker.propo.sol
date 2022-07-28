@@ -6,8 +6,10 @@ import "../../policy/Policed.sol";
 import "./Proposal.sol";
 import "../../currency/ECO.sol";
 import "../../currency/ECOx.sol";
+import "../../governance/monetary/CurrencyGovernance.sol";
 
-/** @title ElectCircuitBreaker
+/**
+ * @title ElectCircuitBreaker
  * A proposal to elect an admin that can pause parts of the system.
  */
 contract ElectCircuitBreaker is Policy, Proposal {
@@ -56,10 +58,17 @@ contract ElectCircuitBreaker is Policy, Proposal {
     ) public override {
         bytes32 _ecoId = keccak256(abi.encodePacked("ECO"));
         bytes32 _ecoxId = keccak256(abi.encodePacked("ECOx"));
+        bytes32 _currencyGovernanceId = keccak256(
+            abi.encodePacked("CurrencyGovernance")
+        );
         ECO eco = ECO(policyFor(_ecoId));
         ECOx ecox = ECOx(policyFor(_ecoxId));
+        CurrencyGovernance currencyGovernance = CurrencyGovernance(
+            policyFor(_currencyGovernanceId)
+        );
 
         eco.setPauser(pauser);
         ecox.setPauser(pauser);
+        currencyGovernance.setPauser(pauser);
     }
 }

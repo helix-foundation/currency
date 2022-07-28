@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "./TrustedNodes.sol";
 import "../../policy/Policy.sol";
 import "../../policy/PolicedUtils.sol";
@@ -15,7 +16,7 @@ import "../../VDF/VDFVerifier.sol";
  * Trusted nodes vote on a policy that is implemented the following generation
  * to manage the relative price of Eco tokens.
  */
-contract CurrencyGovernance is PolicedUtils, TimeUtils {
+contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
     enum Stage {
         Propose,
         Commit,
@@ -70,6 +71,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     // used to denote the winning proposal when the vote is finalized
     address public winner;
 
+    // address that can pause currency governance
+    address public pauser;
+
     // emitted when a proposal is submitted to track the values
     event ProposalCreation(
         address indexed trusteeAddress,
@@ -108,6 +112,17 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
      * vote outcomes.
      */
     event VoteResult(address indexed winner);
+
+    /**
+     * @notice event indicating the pauser was updated
+     * @param pauser The new pauser
+     */
+    event PauserAssignment(address indexed pauser);
+
+    modifier onlyPauser() {
+        require(msg.sender == pauser, "CurrencyGovernance: not pauser");
+        _;
+    }
 
     modifier atStage(Stage _stage) {
         updateStage();
@@ -261,7 +276,11 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
     }
 
     function compute() external atStage(Stage.Compute) {
-        winner = leader;
+        // if paused then the default policy automatically wins
+        if (!paused()) {
+            winner = leader;
+        }
+
         currentStage = Stage.Finished;
 
         emit VoteResult(winner);
@@ -289,5 +308,31 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils {
 
     function getTrustedNodes() private view returns (TrustedNodes) {
         return TrustedNodes(policyFor(ID_TRUSTED_NODES));
+    }
+
+    /**
+     * @notice set the given address as the pauser
+     * @param _pauser The address that can pause this token
+     * @dev only the roleAdmin can call this function
+     */
+    function setPauser(address _pauser) public onlyPolicy {
+        pauser = _pauser;
+        emit PauserAssignment(_pauser);
+    }
+
+    /**
+     * @notice pauses transfers of this token
+     * @dev only callable by the pauser
+     */
+    function pause() external onlyPauser {
+        _pause();
+    }
+
+    /**
+     * @notice unpauses transfers of this token
+     * @dev only callable by the pauser
+     */
+    function unpause() external onlyPauser {
+        _unpause();
     }
 }
