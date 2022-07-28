@@ -11,7 +11,7 @@
     "format:prettier": "prettier --write 'contracts/**/*.sol'",
     "format:eslint": "eslint --fix 'tools/**/**.js' 'test/**/**.js' 'test/**/**.ts'",
     "lint": "concurrently 'npm:lint:*'",
-    "lint:depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,prettier-plugin-solidity,solhint-plugin-eco,concurrently",
+    "lint:depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,prettier-plugin-solidity,solhint-plugin-eco,concurrently,@types/mocha",
     "lint:solhint": "solhint 'contracts/**/*.sol'",
     "lint:eslint": "eslint 'tools/**/**.js' 'test/**/**.js'",
     "lint:prettier": "prettier --check 'contracts/**/*.sol'",
