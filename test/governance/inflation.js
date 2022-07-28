@@ -12,7 +12,7 @@ const { getTree, answer } = require('../../tools/randomInflationUtils');
 const { ecoFixture } = require('../utils/fixtures');
 const util = require('../../tools/test/util');
 
-describe('RandomInflation [@group=6]', () => {
+describe.only('RandomInflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;

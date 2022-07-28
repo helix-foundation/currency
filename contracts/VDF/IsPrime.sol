@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 /** @title Probable prime tester with Miller-Rabin
- *  A user first adds a primal to the contract, then they can test its primality in a subsequent block
  */
 contract IsPrime {
     /* Compute modular exponentiation using the modexp precompile contract

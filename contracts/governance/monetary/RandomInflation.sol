@@ -181,7 +181,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
                 !(_primal % 11 == 0) &&
                 !(_primal % 13 == 0) &&
                 vdfVerifier.isProbablePrime(_primal, MILLER_RABIN_ROUNDS),
-            "distance does not point to prime number, either the block has progressed or distance is wrong"
+            "input failed primality test"
         );
 
         entropyVDFSeed = _primal;
@@ -190,10 +190,17 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     }
 
     /** Sets a primal in storage associated to the commiting block
+     *  A user first adds a primal to the contract, then they can test its primality in a subsequent block
      *
      * @param _primal uint256 the prime number to commit for the block
      */
     function setPrimal(uint256 _primal) external {
+        uint256 _bhash = uint256(blockhash(block.number - 1));
+        require(
+            _primal > _bhash && _primal - _bhash < PRIME_BOUND,
+            "suggested prime is out of bounds"
+        );
+
         primals[_primal] = block.number;
     }
 

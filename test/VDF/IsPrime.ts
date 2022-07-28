@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 const bigintCryptoUtils = require('bigint-crypto-utils');
 const { deploy } = require('../utils/contracts');
 
-const MILLER_RABIN_ITERATIONS = 20;
+const MILLER_RABIN_ITERATIONS = 25;
 
 describe('IsPrime [@group=8]', () => {
   let instance: IsPrime;
