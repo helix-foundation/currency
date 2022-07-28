@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle, no-await-in-loop, no-console */
 
 const bigintCryptoUtils = require('bigint-crypto-utils');
-const { expect } = require('chai');
+const { expect, assert } = require('chai');
 const BN = require('bn.js');
 
 const { ethers } = require('hardhat');
@@ -12,7 +12,7 @@ const { getTree, answer } = require('../../tools/randomInflationUtils');
 const { ecoFixture } = require('../utils/fixtures');
 const util = require('../../tools/test/util');
 
-describe('RandomInflation [@group=6]', () => {
+describe.only('RandomInflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;
@@ -106,9 +106,8 @@ describe('RandomInflation [@group=6]', () => {
    * Recursively attempts to find a prime number that is within a distance to the latest blockhash
    * @returns The prime from the current blockhash that a probable prime is
    */
-  async function getPrimal() {
+  async function getPrimal(attempts = 0) {
     const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
-
     for (let i = 0; i < 1000; i++) {
       if (
         await bigintCryptoUtils.isProbablyPrime(
@@ -119,8 +118,10 @@ describe('RandomInflation [@group=6]', () => {
         return baseNum.addn(i).toString();
       }
     }
-    await time.advanceBlock();
-    return getPrimal();
+    if(attempts > 2){
+      assert.fail("Could not find a primal within bounds after 3 attempts");
+    }
+    return getPrimal(++attempts);
   }
 
   before(async () => {
