@@ -12,7 +12,7 @@ const { getTree, answer } = require('../../tools/randomInflationUtils');
 const { ecoFixture } = require('../utils/fixtures');
 const util = require('../../tools/test/util');
 
-describe.only('RandomInflation [@group=6]', () => {
+describe('RandomInflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;
@@ -118,8 +118,8 @@ describe.only('RandomInflation [@group=6]', () => {
         return baseNum.addn(i).toString();
       }
     }
-    if(attempts > 2){
-      assert.fail("Could not find a primal within bounds after 3 attempts");
+    if (attempts > 2) {
+      assert.fail('Could not find a primal within bounds after 3 attempts');
     }
     return getPrimal(++attempts);
   }
