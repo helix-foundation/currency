@@ -74,7 +74,7 @@ describe('Governance Trustee Change [@group=9]', () => {
     );
     expect(await singleTrusteeReplacement.name()).to.equal('Trustee Replacement Proposal Template');
     expect(await singleTrusteeReplacement.description()).to.equal(
-      'Replaces as single trustee with another',
+      'Replaces a single trustee with another',
     );
     expect(await singleTrusteeReplacement.url()).to.equal(
       'https://description.of.proposal make this link to a discussion of the no confidence vote',
