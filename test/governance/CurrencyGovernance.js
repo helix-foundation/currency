@@ -548,6 +548,51 @@ describe('CurrencyGovernance [@group=4]', () => {
       });
     });
   });
+  describe('one trustee', async () => {
+    let originalBorda;
+    let bordaCloner;
+    let davevote2;
+    let unallocatedRewards;
+
+    before(async () => {
+      const trustednodes = [
+        await dave.getAddress(),
+      ];
+
+      ({
+        policy, trustedNodes, faucet, ecox, timedPolicies,
+      } = await ecoFixture(trustednodes));
+
+      davevote2 = [
+        ethers.utils.randomBytes(32),
+        await dave.getAddress(),
+        [await dave.getAddress()],
+      ];
+      unallocatedRewards = (await trustedNodes.unallocatedRewardsCount()).toNumber();
+    });
+
+    it('doesnt let unallocatedRewards underflow', async () => {
+      /* eslint-disable no-await-in-loop */
+      for (let i = 0; i < unallocatedRewards + 1; i++) {
+        originalBorda = await deploy('CurrencyGovernance', policy.address);
+        bordaCloner = await deploy('Cloner', originalBorda.address);
+        borda = await ethers.getContractAt('CurrencyGovernance', await bordaCloner.clone());
+        await policy.testDirectSet('CurrencyGovernance', borda.address);
+
+        await borda.connect(dave)
+          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '');
+        await time.increase(3600 * 24 * 10);
+
+        await borda.connect(dave).commit(hash(davevote2));
+        await time.increase(3600 * 24 * 3);
+
+        await borda.connect(dave).reveal(davevote2[0], davevote2[2]);
+        await time.increase(3600 * 24 * 1);
+
+        await (timedPolicies.connect(alice).incrementGeneration());
+      }
+    });
+  });
 
   context('many trustees', () => {
     beforeEach(async () => {

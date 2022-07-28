@@ -35,7 +35,7 @@ contract SingleTrusteeReplacement is Policy, Proposal {
     /** A description of what the proposal does.
      */
     function description() public pure override returns (string memory) {
-        return "Replaces as single trustee with another";
+        return "Replaces a single trustee with another";
     }
 
     /** A URL where more details can be found.
