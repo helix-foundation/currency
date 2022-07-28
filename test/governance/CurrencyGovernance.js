@@ -357,7 +357,6 @@ describe('CurrencyGovernance [@group=4]', () => {
             );
           });
 
-
           describe('reward withdrawal', async () => {
             it('doesnt let you withdraw for votes from this year', async () => {
               await expect(
