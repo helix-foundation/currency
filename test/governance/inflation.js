@@ -12,7 +12,7 @@ const { getTree, answer } = require('../../tools/randomInflationUtils');
 const { ecoFixture } = require('../utils/fixtures');
 const util = require('../../tools/test/util');
 
-describe.only('RandomInflation [@group=6]', () => {
+describe('RandomInflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;
@@ -104,24 +104,8 @@ describe.only('RandomInflation [@group=6]', () => {
 
   /**
    * Recursively attempts to find a prime number that is within a distance to the latest blockhash
-   * @returns The distance from the current blockhash that a probable prime is
+   * @returns The prime from the current blockhash that a probable prime is
    */
-  async function getPrimeDistance() {
-    const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
-
-    for (let i = 0; i < 1000; i++) {
-      if (
-        await bigintCryptoUtils.isProbablyPrime(
-          BigInt(baseNum.addn(i).toString()),
-          30
-        )
-      ) {
-        return i;
-      }
-    }
-    await time.advanceBlock();
-    return getPrimeDistance();
-  }
   async function getPrimal() {
     const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
 
@@ -136,7 +120,7 @@ describe.only('RandomInflation [@group=6]', () => {
       }
     }
     await time.advanceBlock();
-    return getPrimeDistance();
+    return getPrimal();
   }
 
   before(async () => {
@@ -265,15 +249,15 @@ describe.only('RandomInflation [@group=6]', () => {
   describe('commitEntropyVDF', () => {
     it('should revert on uncommited primal', async () => {
       await expect(
-        inflation.commitEntropyVDFSeed(await getPrimeDistance())
+        inflation.commitEntropyVDFSeed(await getPrimal())
       ).to.be.revertedWith('primal block invalid');
     });
 
     it('should revert on primal commited in same block', async () => {
-      await inflation.setPrimal(await getPrimeDistance());
+      await inflation.setPrimal(await getPrimal());
 
       await expect(
-        inflation.commitEntropyVDFSeed(await getPrimeDistance())
+        inflation.commitEntropyVDFSeed(await getPrimal())
       ).to.be.revertedWith('primal block invalid');
     });
 
