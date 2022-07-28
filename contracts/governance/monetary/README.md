@@ -855,6 +855,30 @@ Attributes:
 
 Emitted by the `distrust` function.
 
+###### VotingRewardRedemption(address indexed recipient, uint256 amount)
+Attributes: 
+  - `recipient` (address) the address of the reward recipient. 
+    This will either be a trustee or the community hoard.
+  - `amount` (uint256) the amount of ECOx transferred redeemed to the recipient
+
+Emitted by the `redeemVoteRewards` function or the `annualUpdate` function
+if recipient is the hoard.
+
+###### FundingRequest(uint256 amount);
+Attributes:
+  - `amount` (uint256) the amount of ECOx that needs to be added to the TrustedNodes 
+  contract to ensure continued payouts going forward
+
+Emitted by 'newCohort' and 'annualUpdate'.
+
+###### RewardsTrackingUpdate(uint256 nextUpdateTimestamp, uint256 newRewardsCount);
+Attributes:
+  - `nextUpdateTimestamp` (uint256) the timestamp at which this contract needs to transfer
+    unallocated rewards to the hoard and be topped up with ECOx
+  - `newRewardsCount` (uint256) the number of voterewards this contract is funded for
+
+Emitted by the `annualUpdate` function.
+
 ##### trust
 Arguments:
   - `_node` (address) - the node to grant trust to

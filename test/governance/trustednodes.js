@@ -2,37 +2,27 @@ const { ethers } = require('hardhat');
 
 const { BigNumber } = ethers;
 const { expect } = require('chai');
-const { deploy } = require('../utils/contracts');
-const { singletonsFixture } = require('../utils/fixtures');
+const { time } = require('@openzeppelin/test-helpers');
+const { ecoFixture } = require('../utils/fixtures');
 
 describe('TrustedNodes [@group=7]', () => {
-  const fixture = async () => {
-    const accounts = await ethers.getSigners();
-    const alice = accounts[0];
-    const bob = accounts[1];
-    await singletonsFixture(alice);
-    const policy = await deploy('PolicyTest');
-    const trustedNodes = await deploy(
-      'TrustedNodes',
-      policy.address,
-      [await bob.getAddress()],
-      100
-    );
-    return {
-      policy,
-      trustedNodes,
-      alice,
-      bob,
-    };
-  };
-
   let policy;
   let trustedNodes;
+  let faucet;
+  let timedPolicies;
   let alice;
   let bob;
+  const reward = 10000000;
 
   beforeEach(async () => {
-    ({ policy, trustedNodes, alice, bob } = await fixture());
+    const accounts = await ethers.getSigners();
+    alice = accounts[0];
+    bob = accounts[1];
+    const nodes = [await bob.getAddress()];
+    ({ policy, trustedNodes, faucet, timedPolicies } = await ecoFixture(
+      nodes,
+      reward
+    ));
   });
 
   describe('trust', () => {
@@ -60,7 +50,7 @@ describe('TrustedNodes [@group=7]', () => {
               policy.testTrust(trustedNodes.address, await alice.getAddress())
             )
               .to.emit(trustedNodes, 'TrustedNodeAddition')
-              .withArgs(await alice.getAddress(), await trustedNodes.cohort());
+              .withArgs(await alice.getAddress(), BigNumber.from(0));
           });
 
           it('adds the address to the set', async () => {
@@ -119,7 +109,7 @@ describe('TrustedNodes [@group=7]', () => {
             policy.testDistrust(trustedNodes.address, await bob.getAddress())
           )
             .to.emit(trustedNodes, 'TrustedNodeRemoval')
-            .withArgs(await bob.getAddress(), await trustedNodes.cohort());
+            .withArgs(await bob.getAddress(), BigNumber.from(0));
         });
 
         it('removes the address from the set', async () => {
@@ -178,7 +168,7 @@ describe('TrustedNodes [@group=7]', () => {
             .false;
         });
 
-        it('Can remove and read both addresses', async () => {
+        it('Can remove and readd both addresses', async () => {
           await policy.testDistrust(
             trustedNodes.address,
             await bob.getAddress()
@@ -250,8 +240,49 @@ describe('TrustedNodes [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           trustedNodes.connect(bob).redeemVoteRewards()
-        ).to.be.revertedWith('No rewards to redeem');
+        ).to.be.revertedWith('No vested rewards to redeem');
       });
+    });
+  });
+
+  describe('annualUpdate', () => {
+    it('can only be called after yearEnd', async () => {
+      // console.log(await trustedNodes.connect(alice).yearStartGen());
+      // console.log(Date.now());
+      // await time.increase(3600 * 24 * 14 * 25);
+      await expect(
+        trustedNodes.connect(alice).annualUpdate()
+      ).to.be.revertedWith(
+        'cannot call this until the current year term has ended'
+      );
+
+      await time.increase(3600 * 24 * 14 * 26);
+      await faucet.mintx(
+        trustedNodes.address,
+        BigNumber.from(1 * 26 * 2 * reward)
+      );
+      await trustedNodes.connect(alice).annualUpdate();
+    });
+
+    it('sets things appropriately', async () => {
+      await faucet.mintx(
+        trustedNodes.address,
+        BigNumber.from(1 * 26 * 2 * reward)
+      );
+      const initialGeneration = await trustedNodes.yearStartGen();
+      await time.increase(3600 * 24 * 14 * 1);
+      await timedPolicies.connect(alice).incrementGeneration();
+      await time.increase(3600 * 24 * 14 * 1);
+      await timedPolicies.connect(alice).incrementGeneration();
+      await time.increase(3600 * 24 * 14 * 24);
+      const oldYearEnd = await trustedNodes.connect(alice).yearEnd();
+      await trustedNodes.connect(alice).annualUpdate();
+      const newYearEnd = await trustedNodes.connect(alice).yearEnd();
+      const newGeneration = await trustedNodes.yearStartGen();
+      await expect(newYearEnd - oldYearEnd).to.be.greaterThan(
+        3600 * 24 * 14 * 26
+      );
+      await expect(newGeneration - initialGeneration).to.equal(2);
     });
   });
 
