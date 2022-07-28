@@ -10,16 +10,30 @@ describe('EcoInitializable [@group=5]', () => {
   });
 
   it('fuses forward', async () => {
-    const ecoInitializable = await deploy('EcoInitializable', await accounts[1].getAddress());
+    const ecoInitializable = await deploy(
+      'EcoInitializable',
+      await accounts[1].getAddress()
+    );
     const proxy = await deploy('ForwardProxy', ecoInitializable.address);
-    const initializableProxy = await ethers.getContractAt('EcoInitializable', proxy.address);
+    const initializableProxy = await ethers.getContractAt(
+      'EcoInitializable',
+      proxy.address
+    );
 
     const newTarget = await deploy('SampleForward');
-    await initializableProxy.connect(accounts[1]).fuseImplementation(newTarget.address);
+    await initializableProxy
+      .connect(accounts[1])
+      .fuseImplementation(newTarget.address);
 
-    const proxiedTargetContract = await ethers.getContractAt('SampleForward', proxy.address);
+    const proxiedTargetContract = await ethers.getContractAt(
+      'SampleForward',
+      proxy.address
+    );
 
-    assert.deepEqual(await newTarget.value(), await proxiedTargetContract.value());
+    assert.deepEqual(
+      await newTarget.value(),
+      await proxiedTargetContract.value()
+    );
   });
 
   describe('when called by the owner', async () => {
@@ -29,7 +43,10 @@ describe('EcoInitializable [@group=5]', () => {
     beforeEach(async () => {
       owner = accounts[1];
 
-      initializableProxy = await deployProxy('EcoInitializable', await owner.getAddress());
+      initializableProxy = await deployProxy(
+        'EcoInitializable',
+        await owner.getAddress()
+      );
     });
 
     it('should copy the owner', async () => {
@@ -37,11 +54,18 @@ describe('EcoInitializable [@group=5]', () => {
     });
 
     it('should allow setting the implementation', async () => {
-      const targetContract = await (await ethers.getContractFactory('SampleForward')).deploy();
+      const targetContract = await (
+        await ethers.getContractFactory('SampleForward')
+      ).deploy();
 
-      await initializableProxy.connect(owner).fuseImplementation(targetContract.address);
+      await initializableProxy
+        .connect(owner)
+        .fuseImplementation(targetContract.address);
 
-      assert.equal(await initializableProxy.implementation(), targetContract.address);
+      assert.equal(
+        await initializableProxy.implementation(),
+        targetContract.address
+      );
     });
 
     describe('and the new target fails to initialize', () => {
@@ -55,7 +79,9 @@ describe('EcoInitializable [@group=5]', () => {
 
       it('reverts', async () => {
         await expect(
-          initializableProxy.connect(owner).fuseImplementation(failingInitializeTarget.address),
+          initializableProxy
+            .connect(owner)
+            .fuseImplementation(failingInitializeTarget.address)
         ).to.be.revertedWith('initialize call failed');
       });
     });
@@ -71,21 +97,26 @@ describe('EcoInitializable [@group=5]', () => {
       [, owner, other] = accounts;
       root = await deploy('EcoInitializable', await owner.getAddress());
       const proxyContract = await deploy('ForwardProxy', root.address);
-      initializableProxy = await ethers.getContractAt('EcoInitializable', proxyContract.address);
+      initializableProxy = await ethers.getContractAt(
+        'EcoInitializable',
+        proxyContract.address
+      );
     });
 
     it('should not allow setting the implementation', async () => {
       const targetContract = await deploy('SampleForward');
       await expect(
-        initializableProxy.connect(other).fuseImplementation(targetContract.address),
+        initializableProxy
+          .connect(other)
+          .fuseImplementation(targetContract.address)
       ).to.be.revertedWith('Only owner can change implementation');
     });
 
     describe('to the root contract', () => {
       it('should not allow calling initialize', async () => {
-        await expect(root.connect(other).initialize(root.address)).to.be.revertedWith(
-          'Can only be called during initialization',
-        );
+        await expect(
+          root.connect(other).initialize(root.address)
+        ).to.be.revertedWith('Can only be called during initialization');
       });
     });
   });

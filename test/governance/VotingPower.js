@@ -1,9 +1,8 @@
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -30,9 +29,8 @@ describe('VotingPower [@group=2]', () => {
     [deployer, alice, bob, charlie] = accounts;
     const trustednodes = [await bob.getAddress()];
 
-    ({
-      policy, eco, faucet, timedPolicies, ecox, ecoXStaking,
-    } = await ecoFixture(trustednodes));
+    ({ policy, eco, faucet, timedPolicies, ecox, ecoXStaking } =
+      await ecoFixture(trustednodes));
 
     await faucet.mint(await alice.getAddress(), one.mul(250));
     await faucet.mint(await bob.getAddress(), one.mul(250));
@@ -41,9 +39,13 @@ describe('VotingPower [@group=2]', () => {
     await time.increase(3600 * 24 * 14 + 1);
     await timedPolicies.incrementGeneration();
 
-    await ecox.connect(deployer).transfer(await alice.getAddress(), one.mul(400));
+    await ecox
+      .connect(deployer)
+      .transfer(await alice.getAddress(), one.mul(400));
     await ecox.connect(deployer).transfer(await bob.getAddress(), one.mul(400));
-    await ecox.connect(deployer).transfer(await charlie.getAddress(), one.mul(200));
+    await ecox
+      .connect(deployer)
+      .transfer(await charlie.getAddress(), one.mul(200));
 
     // calculated from the above variables for when ECOx is exchanged
     alicePower = '741824697641270317824';
@@ -55,7 +57,10 @@ describe('VotingPower [@group=2]', () => {
 
     proposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])),
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
+      )
     );
   });
 
@@ -65,14 +70,16 @@ describe('VotingPower [@group=2]', () => {
         // 1000 total, no ECOx power
         const ecoTotal = await eco.totalSupply();
         const ecoXTotal = await ecox.totalSupply();
-        expect(await proposals.totalVotingPower(blockNumber)).to.equal(ecoTotal.add(ecoXTotal));
+        expect(await proposals.totalVotingPower(blockNumber)).to.equal(
+          ecoTotal.add(ecoXTotal)
+        );
       });
 
       it('Has the right power for alice', async () => {
         // 250, no ECOx power
-        expect(await proposals.votingPower(await alice.getAddress(), blockNumber)).to.equal(
-          one.mul(250),
-        );
+        expect(
+          await proposals.votingPower(await alice.getAddress(), blockNumber)
+        ).to.equal(one.mul(250));
       });
     });
 
@@ -90,15 +97,15 @@ describe('VotingPower [@group=2]', () => {
         const ecoXTotal = await ecox.totalSupply();
         // The original 750 plus all of alice's power as ECO
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(
-          ecoTotal.add(ecoXTotal),
+          ecoTotal.add(ecoXTotal)
         );
       });
 
       it('Has the right power for alice', async () => {
         // correctly includes all the converted ECOx
-        expect(await proposals.votingPower(await alice.getAddress(), blockNumber)).to.equal(
-          alicePower,
-        );
+        expect(
+          await proposals.votingPower(await alice.getAddress(), blockNumber)
+        ).to.equal(alicePower);
       });
     });
   });
@@ -140,35 +147,56 @@ describe('VotingPower [@group=2]', () => {
 
       /* eslint-disable no-console */
       // gas tests for the older blocks
-      console.log(await proposals.estimateGas.votingPower(await alice.getAddress(), blockNumber1));
-      console.log(await proposals.estimateGas.votingPower(await alice.getAddress(), blockNumber2));
-      console.log(await proposals.estimateGas.votingPower(await alice.getAddress(), blockNumber3));
+      console.log(
+        await proposals.estimateGas.votingPower(
+          await alice.getAddress(),
+          blockNumber1
+        )
+      );
+      console.log(
+        await proposals.estimateGas.votingPower(
+          await alice.getAddress(),
+          blockNumber2
+        )
+      );
+      console.log(
+        await proposals.estimateGas.votingPower(
+          await alice.getAddress(),
+          blockNumber3
+        )
+      );
       /* eslint-enable no-console */
 
       // before everything
-      expect(await proposals.votingPower(await alice.getAddress(), blockNumber1)).to.equal(
-        one.mul(250),
-      );
-      expect(await proposals.votingPower(await bob.getAddress(), blockNumber1)).to.equal(0);
-      expect(await proposals.votingPower(await charlie.getAddress(), blockNumber1)).to.equal(
-        one.mul(750),
-      );
+      expect(
+        await proposals.votingPower(await alice.getAddress(), blockNumber1)
+      ).to.equal(one.mul(250));
+      expect(
+        await proposals.votingPower(await bob.getAddress(), blockNumber1)
+      ).to.equal(0);
+      expect(
+        await proposals.votingPower(await charlie.getAddress(), blockNumber1)
+      ).to.equal(one.mul(750));
       // in the middle
-      expect(await proposals.votingPower(await alice.getAddress(), blockNumber2)).to.equal(
-        one.mul(250),
-      );
-      expect(await proposals.votingPower(await bob.getAddress(), blockNumber2)).to.equal(0);
-      expect(await proposals.votingPower(await charlie.getAddress(), blockNumber2)).to.equal(
-        one.mul(750),
-      );
+      expect(
+        await proposals.votingPower(await alice.getAddress(), blockNumber2)
+      ).to.equal(one.mul(250));
+      expect(
+        await proposals.votingPower(await bob.getAddress(), blockNumber2)
+      ).to.equal(0);
+      expect(
+        await proposals.votingPower(await charlie.getAddress(), blockNumber2)
+      ).to.equal(one.mul(750));
       // after with a net transfer
-      expect(await proposals.votingPower(await alice.getAddress(), blockNumber3)).to.equal(
-        one.mul(290),
-      );
-      expect(await proposals.votingPower(await bob.getAddress(), blockNumber3)).to.equal(0);
-      expect(await proposals.votingPower(await charlie.getAddress(), blockNumber3)).to.equal(
-        one.mul(710),
-      );
+      expect(
+        await proposals.votingPower(await alice.getAddress(), blockNumber3)
+      ).to.equal(one.mul(290));
+      expect(
+        await proposals.votingPower(await bob.getAddress(), blockNumber3)
+      ).to.equal(0);
+      expect(
+        await proposals.votingPower(await charlie.getAddress(), blockNumber3)
+      ).to.equal(one.mul(710));
     });
 
     it('test of flashloan attacks', async () => {
@@ -182,25 +210,25 @@ describe('VotingPower [@group=2]', () => {
         await bob.getAddress(),
         await alice.getAddress(),
         one.mul(200),
-        one.mul(205),
+        one.mul(205)
       );
       const blockNumber2 = await time.latestBlock();
       await time.advanceBlock();
 
       // before everything
-      expect(await proposals.votingPower(await alice.getAddress(), blockNumber1)).to.equal(
-        one.mul(250),
-      );
-      expect(await proposals.votingPower(await bob.getAddress(), blockNumber1)).to.equal(
-        one.mul(250),
-      );
+      expect(
+        await proposals.votingPower(await alice.getAddress(), blockNumber1)
+      ).to.equal(one.mul(250));
+      expect(
+        await proposals.votingPower(await bob.getAddress(), blockNumber1)
+      ).to.equal(one.mul(250));
       // in the middle
-      expect(await proposals.votingPower(await alice.getAddress(), blockNumber2)).to.equal(
-        one.mul(245),
-      );
-      expect(await proposals.votingPower(await bob.getAddress(), blockNumber2)).to.equal(
-        one.mul(255),
-      );
+      expect(
+        await proposals.votingPower(await alice.getAddress(), blockNumber2)
+      ).to.equal(one.mul(245));
+      expect(
+        await proposals.votingPower(await bob.getAddress(), blockNumber2)
+      ).to.equal(one.mul(255));
     });
   });
 
@@ -211,9 +239,9 @@ describe('VotingPower [@group=2]', () => {
         await eco.connect(alice).delegate(await bob.getAddress());
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
-        expect(await proposals.votingPower(await bob.getAddress(), blockNumber)).to.equal(
-          one.mul(500),
-        );
+        expect(
+          await proposals.votingPower(await bob.getAddress(), blockNumber)
+        ).to.equal(one.mul(500));
       });
     });
   });
@@ -242,14 +270,16 @@ describe('VotingPower [@group=2]', () => {
 
       it('Has the correct total power', async () => {
         // 10k ECO total + 10k ECOx total
-        expect(await proposals.totalVotingPower(blockNumber)).to.equal(one.mul(2000));
+        expect(await proposals.totalVotingPower(blockNumber)).to.equal(
+          one.mul(2000)
+        );
       });
 
       it('Has the right power for alice', async () => {
         // 2.5k ECO + 4k ECOx
-        expect(await proposals.votingPower(await alice.getAddress(), blockNumber)).to.equal(
-          one.mul(650),
-        );
+        expect(
+          await proposals.votingPower(await alice.getAddress(), blockNumber)
+        ).to.equal(one.mul(650));
       });
     });
   });

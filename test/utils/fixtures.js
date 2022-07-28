@@ -1,14 +1,35 @@
 /* eslint-disable no-param-reassign, no-console, camelcase */
 const { ethers } = require('hardhat');
-const { ERC1820_REGISTRY, REGISTRY_DEPLOY_TX } = require('../../tools/constants');
+const {
+  ERC1820_REGISTRY,
+  REGISTRY_DEPLOY_TX,
+} = require('../../tools/constants');
 const { deployFrom } = require('./contracts');
 
-const ECOx_STAKING_HASH = ethers.utils.solidityKeccak256(['string'], ['ECOxStaking']);
-const CURRENCY_TIMER_HASH = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer']);
-const TIMED_POLICIES_HASH = ethers.utils.solidityKeccak256(['string'], ['TimedPolicies']);
-const POLICY_PROPOSALS_HASH = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
-const POLICY_VOTES_HASH = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
-const TRUSTED_NODES_HASH = ethers.utils.solidityKeccak256(['string'], ['TrustedNodes']);
+const ECOx_STAKING_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['ECOxStaking']
+);
+const CURRENCY_TIMER_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['CurrencyTimer']
+);
+const TIMED_POLICIES_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['TimedPolicies']
+);
+const POLICY_PROPOSALS_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['PolicyProposals']
+);
+const POLICY_VOTES_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['PolicyVotes']
+);
+const TRUSTED_NODES_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['TrustedNodes']
+);
 const ECO_HASH = ethers.utils.solidityKeccak256(['string'], ['ECO']);
 const ECOx_HASH = ethers.utils.solidityKeccak256(['string'], ['ECOx']);
 const FAUCET_HASH = ethers.utils.solidityKeccak256(['string'], ['Faucet']);
@@ -35,7 +56,12 @@ async function bindProxy(bootstrap, contract, index) {
  * For ECO Init fusedInit
  */
 function getSetters() {
-  return [CURRENCY_TIMER_HASH, TIMED_POLICIES_HASH, POLICY_PROPOSALS_HASH, POLICY_VOTES_HASH];
+  return [
+    CURRENCY_TIMER_HASH,
+    TIMED_POLICIES_HASH,
+    POLICY_PROPOSALS_HASH,
+    POLICY_VOTES_HASH,
+  ];
 }
 
 /**
@@ -86,7 +112,7 @@ exports.deploySingletons = async (from) => {
 exports.policyFor = async (policy, hash) => {
   const erc1820 = ethers.getContractAt(
     'IERC1820Registry',
-    '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24',
+    '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
   );
   return erc1820.getInterfaceImplementer(policy.address, hash);
 };
@@ -96,7 +122,12 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
 
   // ### Stage 1
   // Deploy bootstrap contract
-  const bootstrap = await deployFrom(wallet, 'EcoBootstrap', await wallet.getAddress(), 6);
+  const bootstrap = await deployFrom(
+    wallet,
+    'EcoBootstrap',
+    await wallet.getAddress(),
+    6
+  );
 
   // ### Stage 2
   // Deploy PolicyProxy, ECO, and ECOx contracts
@@ -105,7 +136,11 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   const policyInit = await deployFrom(wallet, 'PolicyInit');
   const policyProxy = await bindProxy(bootstrap, policyInit, 0);
 
-  const coreContracts = await exports.deployCoreContracts(wallet, bootstrap, policyProxy);
+  const coreContracts = await exports.deployCoreContracts(
+    wallet,
+    bootstrap,
+    policyProxy
+  );
 
   const { ecoImpl, ecoxImpl, ecoxInit } = coreContracts;
 
@@ -123,11 +158,14 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
     trustedNodes,
     voteReward,
     policyProxy,
-    Object.assign(coreContracts, { eco, ecox }),
+    Object.assign(coreContracts, { eco, ecox })
   );
   const { timedPolicies, policy } = peripheralContracts;
 
-  const policyProxyInit = await ethers.getContractAt('PolicyInit', policyProxy.address);
+  const policyProxyInit = await ethers.getContractAt(
+    'PolicyInit',
+    policyProxy.address
+  );
   await policyProxyInit.fusedInit(
     policy.address,
     getSetters(),
@@ -137,7 +175,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
       ...peripheralContracts,
       eco,
       ecox,
-    }),
+    })
   );
 
   // distribute initial tokens
@@ -146,7 +184,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   await ecoxInit.distributeTokens(
     ecox.address,
     [await wallet.getAddress()],
-    [ethers.utils.parseEther('1000')],
+    [ethers.utils.parseEther('1000')]
   );
 
   // ### Stage 4
@@ -179,7 +217,9 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
   const ecoInit = await deployFrom(wallet, 'EcoTokenInit');
 
   const deployments = [];
-  deployments.push(deployFrom(wallet, 'ECO', policyProxy.address, ecoInit.address, 0));
+  deployments.push(
+    deployFrom(wallet, 'ECO', policyProxy.address, ecoInit.address, 0)
+  );
   deployments.push(deployFrom(wallet, 'EcoXTokenInit'));
   const [ecoImpl, ecoxInit] = await Promise.all(deployments);
 
@@ -190,7 +230,7 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
     policyProxy.address,
     ecoxInit.address,
     initialECOxSupply,
-    ecoProxy.address,
+    ecoProxy.address
   );
 
   return {
@@ -221,13 +261,22 @@ exports.deployPeripheralContracts = async (
   trustedNodesList,
   voteReward,
   policyProxy,
-  coreContracts,
+  coreContracts
 ) => {
   const { eco, ecox } = coreContracts;
 
-  const vdfVerifier = await deployFrom(wallet, 'VDFVerifier', policyProxy.address);
+  const vdfVerifier = await deployFrom(
+    wallet,
+    'VDFVerifier',
+    policyProxy.address
+  );
 
-  const rootHashProposal = await deployFrom(wallet, 'InflationRootHashProposal', policyProxy.address, eco.address);
+  const rootHashProposal = await deployFrom(
+    wallet,
+    'InflationRootHashProposal',
+    policyProxy.address,
+    eco.address
+  );
 
   const inflation = await deployFrom(
     wallet,
@@ -236,7 +285,7 @@ exports.deployPeripheralContracts = async (
     vdfVerifier.address,
     3,
     rootHashProposal.address,
-    eco.address,
+    eco.address
   );
 
   const currencyTimerProxy = await getPlaceholder(bootstrap, 3);
@@ -246,17 +295,21 @@ exports.deployPeripheralContracts = async (
     'Lockup',
     policyProxy.address,
     eco.address,
-    currencyTimerProxy.address,
+    currencyTimerProxy.address
   );
 
-  const governance = await deployFrom(wallet, 'CurrencyGovernance', policyProxy.address);
+  const governance = await deployFrom(
+    wallet,
+    'CurrencyGovernance',
+    policyProxy.address
+  );
 
   const policyVotes = await deployFrom(
     wallet,
     'PolicyVotes',
     policyProxy.address,
     eco.address,
-    ecox.address,
+    ecox.address
   );
 
   const policyProposals = await deployFrom(
@@ -265,10 +318,15 @@ exports.deployPeripheralContracts = async (
     policyProxy.address,
     policyVotes.address,
     eco.address,
-    ecox.address,
+    ecox.address
   );
 
-  const ecoXStaking = await deployFrom(wallet, 'ECOxStaking', policyProxy.address, ecox.address);
+  const ecoXStaking = await deployFrom(
+    wallet,
+    'ECOxStaking',
+    policyProxy.address,
+    ecox.address
+  );
 
   const currencyTimerImpl = await deployFrom(
     wallet,
@@ -277,14 +335,14 @@ exports.deployPeripheralContracts = async (
     governance.address,
     inflation.address,
     lockup.address,
-    eco.address,
+    eco.address
   );
   await bindProxy(bootstrap, currencyTimerImpl, 3);
   const currencyTimer = await ethers.getContractAt(
     'CurrencyTimer',
     (
       await getPlaceholder(bootstrap, 3)
-    ).address,
+    ).address
   );
 
   const timedPoliciesImpl = await deployFrom(
@@ -292,14 +350,14 @@ exports.deployPeripheralContracts = async (
     'TimedPolicies',
     policyProxy.address,
     policyProposals.address,
-    [ECO_HASH, CURRENCY_TIMER_HASH, ECOx_STAKING_HASH],
+    [ECO_HASH, CURRENCY_TIMER_HASH, ECOx_STAKING_HASH]
   );
   await bindProxy(bootstrap, timedPoliciesImpl, 4);
   const timedPolicies = await ethers.getContractAt(
     'TimedPolicies',
     (
       await getPlaceholder(bootstrap, 4)
-    ).address,
+    ).address
   );
 
   const policy = await deployFrom(wallet, 'PolicyTest');
@@ -308,18 +366,21 @@ exports.deployPeripheralContracts = async (
     'EcoInitializable',
     (
       await getPlaceholder(bootstrap, 5)
-    ).address,
+    ).address
   );
   const trustedNodesImpl = await deployFrom(
     wallet,
     'TrustedNodes',
     policyProxy.address,
     trustedNodesList,
-    voteReward,
+    voteReward
   );
   await bindProxy(bootstrap, trustedNodesImpl, 5);
 
-  const trustedNodes = await ethers.getContractAt('TrustedNodes', trustedNodesProxy.address);
+  const trustedNodes = await ethers.getContractAt(
+    'TrustedNodes',
+    trustedNodesProxy.address
+  );
 
   const faucet = await deployFrom(wallet, 'EcoFaucet', policyProxy.address);
 
@@ -346,5 +407,8 @@ exports.ecoFixture = async (trustedNodes, voteReward) => {
 
 exports.singletonsFixture = async (signer) => {
   await exports.deploySingletons(signer);
-  return ethers.getContractAt('IERC1820Registry', '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24');
+  return ethers.getContractAt(
+    'IERC1820Registry',
+    '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
+  );
 };

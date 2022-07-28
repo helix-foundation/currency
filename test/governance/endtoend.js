@@ -17,9 +17,9 @@
 
 const { ethers } = require('hardhat');
 const { assert } = require('chai');
+const time = require('../utils/time.ts');
 const { deployFrom } = require('../utils/contracts');
 const { ecoFixture } = require('../utils/fixtures');
-const time = require('../utils/time');
 const util = require('../../tools/test/util');
 
 describe('Production Policy Change [@group=4]', () => {
@@ -36,7 +36,10 @@ describe('Production Policy Change [@group=4]', () => {
   it('Deploys the production system', async () => {
     accounts = await ethers.getSigners();
     ({
-      policy, eco, faucet: initInflation, timedPolicies,
+      policy,
+      eco,
+      faucet: initInflation,
+      timedPolicies,
     } = await ecoFixture([]));
   });
 
@@ -57,8 +60,17 @@ describe('Production Policy Change [@group=4]', () => {
   });
 
   it('Constructs the proposals', async () => {
-    makerich = await deployFrom(accounts[1], 'MakeRich', await accounts[5].getAddress(), 1000000);
-    backdoor = await deployFrom(accounts[2], 'MakeBackdoor', await accounts[2].getAddress());
+    makerich = await deployFrom(
+      accounts[1],
+      'MakeRich',
+      await accounts[5].getAddress(),
+      1000000
+    );
+    backdoor = await deployFrom(
+      accounts[2],
+      'MakeBackdoor',
+      await accounts[2].getAddress()
+    );
   });
 
   it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
@@ -72,11 +84,14 @@ describe('Production Policy Change [@group=4]', () => {
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
+    );
     //    await timedPolicies.incrementGeneration();
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash),
+      await util.policyFor(policy, proposalsHash)
     );
   });
 
@@ -84,12 +99,16 @@ describe('Production Policy Change [@group=4]', () => {
     await eco
       .connect(accounts[1])
       .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-    await policyProposals.connect(accounts[1]).registerProposal(makerich.address);
+    await policyProposals
+      .connect(accounts[1])
+      .registerProposal(makerich.address);
 
     await eco
       .connect(accounts[2])
       .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-    await policyProposals.connect(accounts[2]).registerProposal(backdoor.address);
+    await policyProposals
+      .connect(accounts[2])
+      .registerProposal(backdoor.address);
   });
 
   it('Adds stake to proposals to ensure they are in the top 10', async () => {
@@ -101,10 +120,13 @@ describe('Production Policy Change [@group=4]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    );
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash),
+      await util.policyFor(policy, policyVotesIdentifierHash)
     );
   });
 
@@ -128,11 +150,17 @@ describe('Production Policy Change [@group=4]', () => {
   });
 
   it('Confirms the backdoor is not there', async () => {
-    const backdoorHash = ethers.utils.solidityKeccak256(['string'], ['Backdoor']);
+    const backdoorHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['Backdoor']
+    );
     assert.equal(await util.policyFor(policy, backdoorHash), 0);
   });
 
   it('Celebrates accounts[5]', async () => {
-    assert.equal((await eco.balanceOf(await accounts[5].getAddress())).toString(), 1000000);
+    assert.equal(
+      (await eco.balanceOf(await accounts[5].getAddress())).toString(),
+      1000000
+    );
   });
 });

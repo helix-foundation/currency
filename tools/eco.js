@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* eslint-disable no-console */
 
 const Web3 = require('web3');
@@ -24,7 +22,9 @@ function loadConfig(fileNamePath) {
   if (fileNamePath[0] !== '/') {
     stem = '../';
   }
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, `${stem}${fileNamePath}`)));
+  return JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, `${stem}${fileNamePath}`))
+  );
 }
 
 const ECOABI = require('../artifacts/contracts/currency/ECO.sol/ECO.json');
@@ -114,7 +114,7 @@ async function parseOptions() {
     console.log('loaded config from file, CLI options not used');
   }
 
-  if ((!options.ganache) === (!options.webrpc)) {
+  if (!options.ganache === !options.webrpc) {
     throw new Error('Must specify exactly one of --ganache and --webrpc');
   }
 }
@@ -131,7 +131,11 @@ async function initWeb3() {
       });
     } else if (options.deployGovernance) {
       serverPort = 8546;
-      options.ganacheServer = ganache.server({ default_balance_ether: 1000000, blockTime: 0.1, fork: `${serverAddr}:${serverPort - 1}` });
+      options.ganacheServer = ganache.server({
+        default_balance_ether: 1000000,
+        blockTime: 0.1,
+        fork: `${serverAddr}:${serverPort - 1}`,
+      });
     }
     /* eslint-disable global-require, import/no-extraneous-dependencies */
     options.ganacheServer.listen(serverPort, serverAddr, (err) => {
@@ -145,12 +149,16 @@ async function initWeb3() {
     global.web3 = new Web3(options.ganacheServer.provider);
     ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc);
   } else {
-    ethersProvider = new ethers.providers.JsonRpcProvider(options.webrpc || defaultRpc);
+    ethersProvider = new ethers.providers.JsonRpcProvider(
+      options.webrpc || defaultRpc
+    );
   }
 
   const sync = await web3.eth.isSyncing();
   if (sync !== false) {
-    throw Error(`Node is still synchronizing ${sync.currentBlock}/${sync.highestBlock}`);
+    throw Error(
+      `Node is still synchronizing ${sync.currentBlock}/${sync.highestBlock}`
+    );
   }
 }
 
@@ -187,7 +195,9 @@ async function initUsers() {
   }
   if (!account) {
     // Use fallback account
-    const a = web3.eth.accounts.privateKeyToAccount('0x8981f8cbe9a797b9adac0730da85582b2164114e934e2b6aed5de5c785c0b4a6');
+    const a = web3.eth.accounts.privateKeyToAccount(
+      '0x8981f8cbe9a797b9adac0730da85582b2164114e934e2b6aed5de5c785c0b4a6'
+    );
     web3.eth.accounts.wallet.add(a);
     account = a.address;
   }
@@ -196,17 +206,29 @@ async function initUsers() {
   const balance = await ethersProvider.getBalance(account);
 
   if (balance < 1) {
-    console.log(`Deployment account ${account} should have at least 1 Ether, has only ${balance}`);
-    const chumpBalance = web3.utils.fromWei(await web3.eth.getBalance(chumpAccount), 'ether');
-    console.log(`funding account from ${chumpAccount} which has ${chumpBalance} ether`);
+    console.log(
+      `Deployment account ${account} should have at least 1 Ether, has only ${balance}`
+    );
+    const chumpBalance = web3.utils.fromWei(
+      await web3.eth.getBalance(chumpAccount),
+      'ether'
+    );
+    console.log(
+      `funding account from ${chumpAccount} which has ${chumpBalance} ether`
+    );
     await web3.eth.sendTransaction({
       from: chumpAccount,
       to: account,
       gas: 25000,
       value: web3.utils.toWei('1000', 'ether'),
     });
-    const fundedBalance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
-    console.log(`Deployment account ${account} now has balance ${fundedBalance}`);
+    const fundedBalance = web3.utils.fromWei(
+      await web3.eth.getBalance(account),
+      'ether'
+    );
+    console.log(
+      `Deployment account ${account} now has balance ${fundedBalance}`
+    );
   }
 
   // Verify account works
@@ -227,11 +249,13 @@ async function deployEco() {
     trustednodes.push(...options.trustednodes);
     trustednodes.unshift(options.account);
     await Promise.all(
-      trustednodes.map(
-        (a) => web3.eth.sendTransaction(
-          { from: options.account, to: a, value: web3.utils.toWei('50', 'ether') },
-        ),
-      ),
+      trustednodes.map((a) =>
+        web3.eth.sendTransaction({
+          from: options.account,
+          to: a,
+          value: web3.utils.toWei('50', 'ether'),
+        })
+      )
     );
   }
   if (options.deployTokens) {
@@ -246,14 +270,19 @@ async function deployEco() {
 
     if (options.devmode) {
       const eco = new web3.eth.Contract(ECOABI.abi, options.eco);
-      const policy = new web3.eth.Contract(PolicyABI.abi, await eco.methods.policy().call());
-      const faucetaddr = await policy.methods.policyFor(web3.utils.soliditySha3('Faucet')).call();
+      const policy = new web3.eth.Contract(
+        PolicyABI.abi,
+        await eco.methods.policy().call()
+      );
+      const faucetaddr = await policy.methods
+        .policyFor(web3.utils.soliditySha3('Faucet'))
+        .call();
       const faucet = new web3.eth.Contract(EcoFaucetABI.abi, faucetaddr);
 
       const mintAmount = web3.utils.toWei('500000', 'ether');
-      await faucet.methods.mint(options.account, mintAmount).send(
-        { from: options.account, gas: 1000000 },
-      );
+      await faucet.methods
+        .mint(options.account, mintAmount)
+        .send({ from: options.account, gas: 1000000 });
     }
   }
   console.log(`ECO token at ${options.eco.options.address}`);

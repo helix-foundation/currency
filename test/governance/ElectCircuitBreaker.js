@@ -8,12 +8,12 @@
  * how a full suite of trustees can be replaces, and how a new TrustedNodes
  * contract can replace the old one.
  */
+
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -64,24 +64,29 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
+    );
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash),
+      await util.policyFor(policy, proposalsHash)
     );
   });
 
   it('Constructs the proposals', async () => {
     electCircuitBreaker = await deploy(
       'ElectCircuitBreaker',
-      await bob.getAddress(),
+      await bob.getAddress()
     );
-    expect(await electCircuitBreaker.name()).to.equal('Circuit Breaker Election Proposal Template');
+    expect(await electCircuitBreaker.name()).to.equal(
+      'Circuit Breaker Election Proposal Template'
+    );
     expect(await electCircuitBreaker.description()).to.equal(
-      'Elects a new admin address that can call circuit breaker functions',
+      'Elects a new admin address that can call circuit breaker functions'
     );
     expect(await electCircuitBreaker.url()).to.equal(
-      'https://description.of.proposal make this link to a discussion of the new circuit breaker',
+      'https://description.of.proposal make this link to a discussion of the new circuit breaker'
     );
     expect(await electCircuitBreaker.pauser()).to.equal(await bob.getAddress());
   });
@@ -97,7 +102,9 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
     await eco
       .connect(alice)
       .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-    await policyProposals.connect(alice).registerProposal(electCircuitBreaker.address);
+    await policyProposals
+      .connect(alice)
+      .registerProposal(electCircuitBreaker.address);
 
     await time.increase(3600 * 24 * 2);
   });
@@ -112,7 +119,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
     const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes');
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash),
+      await util.policyFor(policy, policyVotesIdentifierHash)
     );
   });
 
@@ -142,31 +149,45 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       });
 
       it('transfers work', async () => {
-        const aliceInitialBalance = await eco.balanceOf(await alice.getAddress());
-        await eco.connect(alice).transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
-        expect(await eco.balanceOf(await alice.getAddress()))
-          .to.equal(aliceInitialBalance.sub(ethers.utils.parseEther('1')));
+        const aliceInitialBalance = await eco.balanceOf(
+          await alice.getAddress()
+        );
+        await eco
+          .connect(alice)
+          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
+        expect(await eco.balanceOf(await alice.getAddress())).to.equal(
+          aliceInitialBalance.sub(ethers.utils.parseEther('1'))
+        );
 
-        const aliceInitialBalanceX = await ecox.balanceOf(await alice.getAddress());
-        await ecox.connect(alice).transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
-        expect(await ecox.balanceOf(await alice.getAddress()))
-          .to.equal(aliceInitialBalanceX.sub(ethers.utils.parseEther('1')));
+        const aliceInitialBalanceX = await ecox.balanceOf(
+          await alice.getAddress()
+        );
+        await ecox
+          .connect(alice)
+          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
+        expect(await ecox.balanceOf(await alice.getAddress())).to.equal(
+          aliceInitialBalanceX.sub(ethers.utils.parseEther('1'))
+        );
       });
 
       it('can not be paused by non-pauser', async () => {
-        await expect(eco.connect(alice).pause())
-          .to.be.revertedWith('ERC20Pausable: not pauser');
+        await expect(eco.connect(alice).pause()).to.be.revertedWith(
+          'ERC20Pausable: not pauser'
+        );
 
-        await expect(ecox.connect(alice).pause())
-          .to.be.revertedWith('ERC20Pausable: not pauser');
+        await expect(ecox.connect(alice).pause()).to.be.revertedWith(
+          'ERC20Pausable: not pauser'
+        );
       });
 
       it('pauser cannot be set by non-admin', async () => {
-        await expect(eco.connect(alice).setPauser(await alice.getAddress()))
-          .to.be.revertedWith('ERC20Pausable: not admin');
+        await expect(
+          eco.connect(alice).setPauser(await alice.getAddress())
+        ).to.be.revertedWith('ERC20Pausable: not admin');
 
-        await expect(ecox.connect(alice).setPauser(await alice.getAddress()))
-          .to.be.revertedWith('ERC20Pausable: not admin');
+        await expect(
+          ecox.connect(alice).setPauser(await alice.getAddress())
+        ).to.be.revertedWith('ERC20Pausable: not admin');
       });
 
       it('can be paused by pauser', async () => {
@@ -182,55 +203,71 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       });
 
       it('transfers no longer work', async () => {
-        await expect(eco.connect(alice)
-          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1')))
-          .to.be.revertedWith('Pausable: paused');
+        await expect(
+          eco
+            .connect(alice)
+            .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'))
+        ).to.be.revertedWith('Pausable: paused');
 
-        await expect(eco.connect(bob)
-          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1')))
-          .to.be.revertedWith('Pausable: paused');
+        await expect(
+          eco
+            .connect(bob)
+            .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'))
+        ).to.be.revertedWith('Pausable: paused');
 
-        await expect(ecox.connect(alice)
-          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1')))
-          .to.be.revertedWith('Pausable: paused');
+        await expect(
+          ecox
+            .connect(alice)
+            .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'))
+        ).to.be.revertedWith('Pausable: paused');
 
-        await expect(ecox.connect(bob)
-          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1')))
-          .to.be.revertedWith('Pausable: paused');
+        await expect(
+          ecox
+            .connect(bob)
+            .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'))
+        ).to.be.revertedWith('Pausable: paused');
       });
 
       it('cannot be unpaused by non-pauser', async () => {
-        await expect(eco.connect(alice)
-          .unpause())
-          .to.be.revertedWith('ERC20Pausable: not pauser');
+        await expect(eco.connect(alice).unpause()).to.be.revertedWith(
+          'ERC20Pausable: not pauser'
+        );
 
-        await expect(ecox.connect(alice)
-          .unpause())
-          .to.be.revertedWith('ERC20Pausable: not pauser');
+        await expect(ecox.connect(alice).unpause()).to.be.revertedWith(
+          'ERC20Pausable: not pauser'
+        );
       });
 
       it('can be unpaused by pauser', async () => {
-        await expect(eco.connect(bob)
-          .unpause())
+        await expect(eco.connect(bob).unpause())
           .to.emit(eco, 'Unpaused')
           .withArgs(await bob.getAddress());
 
-        await expect(ecox.connect(bob)
-          .unpause())
+        await expect(ecox.connect(bob).unpause())
           .to.emit(ecox, 'Unpaused')
           .withArgs(await bob.getAddress());
       });
 
       it('transfers work again', async () => {
-        const aliceInitialBalance = await eco.balanceOf(await alice.getAddress());
-        await eco.connect(alice).transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
-        expect(await eco.balanceOf(await alice.getAddress()))
-          .to.equal(aliceInitialBalance.sub(ethers.utils.parseEther('1')));
+        const aliceInitialBalance = await eco.balanceOf(
+          await alice.getAddress()
+        );
+        await eco
+          .connect(alice)
+          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
+        expect(await eco.balanceOf(await alice.getAddress())).to.equal(
+          aliceInitialBalance.sub(ethers.utils.parseEther('1'))
+        );
 
-        const aliceInitialBalanceX = await ecox.balanceOf(await alice.getAddress());
-        await ecox.connect(alice).transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
-        expect(await ecox.balanceOf(await alice.getAddress()))
-          .to.equal(aliceInitialBalanceX.sub(ethers.utils.parseEther('1')));
+        const aliceInitialBalanceX = await ecox.balanceOf(
+          await alice.getAddress()
+        );
+        await ecox
+          .connect(alice)
+          .transfer(await charlie.getAddress(), ethers.utils.parseEther('1'));
+        expect(await ecox.balanceOf(await alice.getAddress())).to.equal(
+          aliceInitialBalanceX.sub(ethers.utils.parseEther('1'))
+        );
       });
     });
 
@@ -241,26 +278,37 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       });
 
       it('Kicks off a proposal round', async () => {
-        const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+        const proposalsHash = ethers.utils.solidityKeccak256(
+          ['string'],
+          ['PolicyProposals']
+        );
         policyProposals = await ethers.getContractAt(
           'PolicyProposals',
-          await util.policyFor(policy, proposalsHash),
+          await util.policyFor(policy, proposalsHash)
         );
       });
 
       it('still charges a fee', async () => {
         const newProposal = await deploy(
           'ElectCircuitBreaker',
-          await alice.getAddress(),
+          await alice.getAddress()
         );
-        const aliceBalanceBefore = await eco.balanceOf(await alice.getAddress());
+        const aliceBalanceBefore = await eco.balanceOf(
+          await alice.getAddress()
+        );
         await eco
           .connect(alice)
-          .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-        await policyProposals.connect(alice).registerProposal(newProposal.address);
+          .approve(
+            policyProposals.address,
+            await policyProposals.COST_REGISTER()
+          );
+        await policyProposals
+          .connect(alice)
+          .registerProposal(newProposal.address);
         const aliceBalanceAfter = await eco.balanceOf(await alice.getAddress());
-        expect(aliceBalanceAfter)
-          .to.equal(aliceBalanceBefore.sub(await policyProposals.COST_REGISTER()));
+        expect(aliceBalanceAfter).to.equal(
+          aliceBalanceBefore.sub(await policyProposals.COST_REGISTER())
+        );
       });
 
       it('no longer charges a fee when paused', async () => {
@@ -270,11 +318,17 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
         expect(await eco.paused()).to.be.true;
         const newProposal = await deploy(
           'ElectCircuitBreaker',
-          await charlie.getAddress(),
+          await charlie.getAddress()
         );
-        const charlieBalanceBefore = await eco.balanceOf(await charlie.getAddress());
-        await policyProposals.connect(charlie).registerProposal(newProposal.address);
-        const charlieBalanceAfter = await eco.balanceOf(await charlie.getAddress());
+        const charlieBalanceBefore = await eco.balanceOf(
+          await charlie.getAddress()
+        );
+        await policyProposals
+          .connect(charlie)
+          .registerProposal(newProposal.address);
+        const charlieBalanceAfter = await eco.balanceOf(
+          await charlie.getAddress()
+        );
         expect(charlieBalanceAfter).to.equal(charlieBalanceBefore);
       });
 
@@ -284,16 +338,24 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
           .withArgs(await bob.getAddress());
         const newProposal = await deploy(
           'ElectCircuitBreaker',
-          await alice.getAddress(),
+          await alice.getAddress()
         );
-        const aliceBalanceBefore = await eco.balanceOf(await alice.getAddress());
+        const aliceBalanceBefore = await eco.balanceOf(
+          await alice.getAddress()
+        );
         await eco
           .connect(alice)
-          .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-        await policyProposals.connect(alice).registerProposal(newProposal.address);
+          .approve(
+            policyProposals.address,
+            await policyProposals.COST_REGISTER()
+          );
+        await policyProposals
+          .connect(alice)
+          .registerProposal(newProposal.address);
         const aliceBalanceAfter = await eco.balanceOf(await alice.getAddress());
-        expect(aliceBalanceAfter)
-          .to.equal(aliceBalanceBefore.sub(await policyProposals.COST_REGISTER()));
+        expect(aliceBalanceAfter).to.equal(
+          aliceBalanceBefore.sub(await policyProposals.COST_REGISTER())
+        );
       });
     });
   });

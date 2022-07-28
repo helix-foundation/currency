@@ -23,19 +23,24 @@ function arrayToTree(items, min, max) {
       balance: items[min][1],
       sum,
       index,
-      hash: web3.utils.soliditySha3({
-        t: 'bytes20',
-        v: items[min][0].toString(),
-      }, {
-        t: 'uint256',
-        v: items[min][1],
-      }, {
-        t: 'uint256',
-        v: items[min][2],
-      }, {
-        t: 'uint256',
-        v: index,
-      }),
+      hash: web3.utils.soliditySha3(
+        {
+          t: 'bytes20',
+          v: items[min][0].toString(),
+        },
+        {
+          t: 'uint256',
+          v: items[min][1],
+        },
+        {
+          t: 'uint256',
+          v: items[min][2],
+        },
+        {
+          t: 'uint256',
+          v: index,
+        }
+      ),
     };
   }
   const spread = Math.floor((max - min) / 2);
@@ -46,13 +51,16 @@ function arrayToTree(items, min, max) {
   return {
     left: a,
     right: b,
-    hash: web3.utils.soliditySha3({
-      t: 'bytes32',
-      v: params[0],
-    }, {
-      t: 'bytes32',
-      v: params[1],
-    }),
+    hash: web3.utils.soliditySha3(
+      {
+        t: 'bytes32',
+        v: params[0],
+      },
+      {
+        t: 'bytes32',
+        v: params[1],
+      }
+    ),
   };
 }
 
@@ -124,8 +132,7 @@ function answer(tree, index) {
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1))
-    + min; // The maximum is inclusive and the minimum is inclusive
+  return Math.floor(Math.random() * (max - min + 1)) + min; // The maximum is inclusive and the minimum is inclusive
 }
 
 function shiftWithinRange(x, max) {
