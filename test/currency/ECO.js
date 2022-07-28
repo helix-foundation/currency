@@ -7,10 +7,12 @@ const { BigNumber } = ethers;
 const { signTypedData } = require('@metamask/eth-sig-util');
 
 const { ecoFixture } = require('../utils/fixtures');
-const time = require('../utils/time');
+const time = require('../utils/time.ts');
 const util = require('../../tools/test/util');
 const {
-  createPermitMessageData, permit, delegateBySig,
+  createPermitMessageData,
+  permit,
+  delegateBySig,
 } = require('../../tools/test/permit');
 
 describe('ECO [@group=1]', () => {
@@ -35,14 +37,15 @@ describe('ECO [@group=1]', () => {
     proposedInflationMult = `${digits10to19}${digits1to9}`;
     const trustednodes = [await bob.getAddress()];
 
-    ({
-      policy, eco, faucet, timedPolicies,
-    } = await ecoFixture(trustednodes));
+    ({ policy, eco, faucet, timedPolicies } = await ecoFixture(trustednodes));
 
     // enact a random amount of linear inflation for all tests
     const borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])),
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
     );
 
     await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult, '');
@@ -55,7 +58,7 @@ describe('ECO [@group=1]', () => {
     ];
     const bobvotehash = ethers.utils.solidityKeccak256(
       ['bytes32', 'address', 'address[]'],
-      [bobvote[0], bobvote[1], bobvote[2]],
+      [bobvote[0], bobvote[1], bobvote[2]]
     );
     await borda.connect(bob).commit(bobvotehash);
     await time.increase(3600 * 24 * 3);
@@ -121,23 +124,36 @@ describe('ECO [@group=1]', () => {
     context("when the sender doesn't have enough balance", () => {
       it('reverts', async () => {
         await expect(
-          eco.connect(accounts[2]).transfer(await accounts[3].getAddress(), amount),
-        ).to.be.revertedWith('ERC20: transfer amount exceeds balance', eco.constructor);
+          eco
+            .connect(accounts[2])
+            .transfer(await accounts[3].getAddress(), amount)
+        ).to.be.revertedWith(
+          'ERC20: transfer amount exceeds balance',
+          eco.constructor
+        );
       });
     });
 
     context('when the sender has enough balance', () => {
       it("reduces the sender's balance", async () => {
-        const startBalance = await eco.balanceOf(await accounts[1].getAddress());
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const startBalance = await eco.balanceOf(
+          await accounts[1].getAddress()
+        );
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const endBalance = await eco.balanceOf(await accounts[1].getAddress());
 
         expect(endBalance.add(amount)).to.equal(startBalance);
       });
 
       it('increases the balance of the recipient', async () => {
-        const startBalance = await eco.balanceOf(await accounts[2].getAddress());
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const startBalance = await eco.balanceOf(
+          await accounts[2].getAddress()
+        );
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const endBalance = await eco.balanceOf(await accounts[2].getAddress());
 
         expect(endBalance.sub(amount)).to.equal(startBalance);
@@ -147,16 +163,26 @@ describe('ECO [@group=1]', () => {
         const recipient = await accounts[2].getAddress();
         await expect(eco.connect(accounts[1]).transfer(recipient, amount))
           .to.emit(eco, 'Transfer')
-          .withArgs(await accounts[1].getAddress(), recipient, amount.toString());
+          .withArgs(
+            await accounts[1].getAddress(),
+            recipient,
+            amount.toString()
+          );
       });
 
       it('emits a BaseValueTransfer event', async () => {
         const recipient = await accounts[2].getAddress();
-        const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
+        const inflationMult = await eco.getPastLinearInflation(
+          inflationBlockNumber
+        );
         const gonsAmount = inflationMult.mul(amount);
         await expect(eco.connect(accounts[1]).transfer(recipient, amount))
           .to.emit(eco, 'BaseValueTransfer')
-          .withArgs(await accounts[1].getAddress(), recipient, gonsAmount.toString());
+          .withArgs(
+            await accounts[1].getAddress(),
+            recipient,
+            gonsAmount.toString()
+          );
       });
 
       it('returns true', async () => {
@@ -168,8 +194,13 @@ describe('ECO [@group=1]', () => {
 
       it('prevents a transfer to the 0 address', async () => {
         await expect(
-          eco.connect(accounts[1]).transfer(ethers.constants.AddressZero, amount),
-        ).to.be.revertedWith('ERC20: transfer to the zero address', eco.constructor);
+          eco
+            .connect(accounts[1])
+            .transfer(ethers.constants.AddressZero, amount)
+        ).to.be.revertedWith(
+          'ERC20: transfer to the zero address',
+          eco.constructor
+        );
       });
     });
   });
@@ -184,23 +215,33 @@ describe('ECO [@group=1]', () => {
     context("when the sender doesn't have enough balance", () => {
       it('reverts', async () => {
         await expect(
-          eco.connect(accounts[2]).burn(await accounts[2].getAddress(), amount),
-        ).to.be.revertedWith('ERC20: burn amount exceeds balance', eco.constructor);
+          eco.connect(accounts[2]).burn(await accounts[2].getAddress(), amount)
+        ).to.be.revertedWith(
+          'ERC20: burn amount exceeds balance',
+          eco.constructor
+        );
       });
     });
 
     context('when the sender is not the burning address', () => {
       it('reverts', async () => {
         await expect(
-          eco.connect(accounts[2]).burn(await accounts[1].getAddress(), amount),
-        ).to.be.revertedWith('Caller not authorized to burn tokens', eco.constructor);
+          eco.connect(accounts[2]).burn(await accounts[1].getAddress(), amount)
+        ).to.be.revertedWith(
+          'Caller not authorized to burn tokens',
+          eco.constructor
+        );
       });
     });
 
     context('when the sender has enough balance', () => {
       it("reduces the sender's balance", async () => {
-        const startBalance = await eco.balanceOf(await accounts[1].getAddress());
-        await eco.connect(accounts[1]).burn(await accounts[1].getAddress(), amount);
+        const startBalance = await eco.balanceOf(
+          await accounts[1].getAddress()
+        );
+        await eco
+          .connect(accounts[1])
+          .burn(await accounts[1].getAddress(), amount);
         const endBalance = await eco.balanceOf(await accounts[1].getAddress());
 
         expect(endBalance.add(amount)).to.equal(startBalance);
@@ -208,7 +249,9 @@ describe('ECO [@group=1]', () => {
 
       it('reduces totalsupply', async () => {
         const startSupply = await eco.totalSupply();
-        await eco.connect(accounts[1]).burn(await accounts[1].getAddress(), amount);
+        await eco
+          .connect(accounts[1])
+          .burn(await accounts[1].getAddress(), amount);
         const endSupply = await eco.totalSupply();
 
         expect(startSupply.sub(amount)).to.equal(endSupply);
@@ -236,19 +279,28 @@ describe('ECO [@group=1]', () => {
       const amount = one.mul(1000);
 
       it('emits an Approval event', async () => {
-        await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
+        await expect(eco.connect(from).approve(spender, amount)).to.emit(
+          eco,
+          'Approval'
+        );
       });
 
       it('prevents an approve for the 0 address', async () => {
         await expect(
-          eco.connect(from).approve(ethers.constants.AddressZero, amount),
-        ).to.be.revertedWith('ERC20: approve to the zero address', eco.constructor);
+          eco.connect(from).approve(ethers.constants.AddressZero, amount)
+        ).to.be.revertedWith(
+          'ERC20: approve to the zero address',
+          eco.constructor
+        );
       });
 
       context('when there is no existing allowance', () => {
         it('sets the allowance', async () => {
           await eco.connect(from).approve(spender, amount);
-          const allowance = await eco.allowance(await from.getAddress(), spender);
+          const allowance = await eco.allowance(
+            await from.getAddress(),
+            spender
+          );
           expect(allowance).to.equal(amount);
         });
       });
@@ -260,13 +312,19 @@ describe('ECO [@group=1]', () => {
 
         it('replaces the existing allowance', async () => {
           await eco.connect(from).approve(spender, amount);
-          const allowance = await eco.allowance(await from.getAddress(), spender);
+          const allowance = await eco.allowance(
+            await from.getAddress(),
+            spender
+          );
 
           expect(allowance).to.equal(amount);
         });
 
         it('emits the Approval event', async () => {
-          await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
+          await expect(eco.connect(from).approve(spender, amount)).to.emit(
+            eco,
+            'Approval'
+          );
         });
       });
     });
@@ -284,7 +342,9 @@ describe('ECO [@group=1]', () => {
         const amount = ethers.utils.parseEther('1').mul(1000);
 
         it('fails if signed from non-owner', async () => {
-          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const deadline = Math.floor(
+            new Date().getTime() / 1000 + 86400 * 3000
+          );
           const nonce = await eco.nonces(await owner.getAddress());
 
           const permitData = createPermitMessageData({
@@ -298,7 +358,10 @@ describe('ECO [@group=1]', () => {
             deadline,
           });
           const sig = signTypedData({
-            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            privateKey: Buffer.from(
+              owner._signingKey().privateKey.slice(2),
+              'hex'
+            ),
             data: permitData,
             version: 'V4',
           });
@@ -312,15 +375,15 @@ describe('ECO [@group=1]', () => {
               deadline,
               v,
               r,
-              s,
-            ),
-          ).to.be.revertedWith(
-            'ERC20Permit: invalid signature',
-          );
+              s
+            )
+          ).to.be.revertedWith('ERC20Permit: invalid signature');
         });
 
         it('fails with invalid nonce', async () => {
-          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const deadline = Math.floor(
+            new Date().getTime() / 1000 + 86400 * 3000
+          );
           const nonce = await eco.nonces(await owner.getAddress());
 
           const permitData = createPermitMessageData({
@@ -334,7 +397,10 @@ describe('ECO [@group=1]', () => {
             deadline,
           });
           const sig = signTypedData({
-            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            privateKey: Buffer.from(
+              owner._signingKey().privateKey.slice(2),
+              'hex'
+            ),
             data: permitData,
             version: 'V4',
           });
@@ -348,15 +414,15 @@ describe('ECO [@group=1]', () => {
               deadline,
               v,
               r,
-              s,
-            ),
-          ).to.be.revertedWith(
-            'ERC20Permit: invalid signature',
-          );
+              s
+            )
+          ).to.be.revertedWith('ERC20Permit: invalid signature');
         });
 
         it('fails with invalid spender', async () => {
-          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const deadline = Math.floor(
+            new Date().getTime() / 1000 + 86400 * 3000
+          );
           const nonce = await eco.nonces(await owner.getAddress());
 
           const permitData = createPermitMessageData({
@@ -370,7 +436,10 @@ describe('ECO [@group=1]', () => {
             deadline,
           });
           const sig = signTypedData({
-            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            privateKey: Buffer.from(
+              owner._signingKey().privateKey.slice(2),
+              'hex'
+            ),
             data: permitData,
             version: 'V4',
           });
@@ -384,11 +453,9 @@ describe('ECO [@group=1]', () => {
               deadline,
               v,
               r,
-              s,
-            ),
-          ).to.be.revertedWith(
-            'ERC20Permit: invalid signature',
-          );
+              s
+            )
+          ).to.be.revertedWith('ERC20Permit: invalid signature');
         });
 
         it('fails with invalid deadline', async () => {
@@ -406,7 +473,10 @@ describe('ECO [@group=1]', () => {
             deadline,
           });
           const sig = signTypedData({
-            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            privateKey: Buffer.from(
+              owner._signingKey().privateKey.slice(2),
+              'hex'
+            ),
             data: permitData,
             version: 'V4',
           });
@@ -420,15 +490,15 @@ describe('ECO [@group=1]', () => {
               deadline,
               v,
               r,
-              s,
-            ),
-          ).to.be.revertedWith(
-            'ERC20Permit: expired deadline',
-          );
+              s
+            )
+          ).to.be.revertedWith('ERC20Permit: expired deadline');
         });
 
         it('fails with signature reuse', async () => {
-          const deadline = Math.floor(new Date().getTime() / 1000 + (86400 * 3000));
+          const deadline = Math.floor(
+            new Date().getTime() / 1000 + 86400 * 3000
+          );
           const nonce = await eco.nonces(await owner.getAddress());
 
           const permitData = createPermitMessageData({
@@ -442,21 +512,14 @@ describe('ECO [@group=1]', () => {
             deadline,
           });
           const sig = signTypedData({
-            privateKey: Buffer.from(owner._signingKey().privateKey.slice(2), 'hex'),
+            privateKey: Buffer.from(
+              owner._signingKey().privateKey.slice(2),
+              'hex'
+            ),
             data: permitData,
             version: 'V4',
           });
           const { v, r, s } = ethers.utils.splitSignature(sig);
-
-          await expect(eco.permit(
-            await owner.getAddress(),
-            await permitSpender.getAddress(),
-            amount,
-            deadline,
-            v,
-            r,
-            s,
-          )).to.emit(eco, 'Approval');
 
           await expect(
             eco.permit(
@@ -466,32 +529,32 @@ describe('ECO [@group=1]', () => {
               deadline,
               v,
               r,
-              s,
-            ),
-          ).to.be.revertedWith(
-            'ERC20Permit: invalid signature',
-          );
+              s
+            )
+          ).to.emit(eco, 'Approval');
+
+          await expect(
+            eco.permit(
+              await owner.getAddress(),
+              await permitSpender.getAddress(),
+              amount,
+              deadline,
+              v,
+              r,
+              s
+            )
+          ).to.be.revertedWith('ERC20Permit: invalid signature');
         });
 
         it('emits an Approval event', async () => {
-          await expect(permit(
-            eco,
-            owner,
-            permitSpender,
-            chainId,
-            amount,
-          )).to.emit(eco, 'Approval');
+          await expect(
+            permit(eco, owner, permitSpender, chainId, amount)
+          ).to.emit(eco, 'Approval');
         });
 
         it('increments the nonce', async () => {
           const nonce = await eco.nonces(await owner.getAddress());
-          await permit(
-            eco,
-            owner,
-            permitSpender,
-            chainId,
-            amount,
-          );
+          await permit(eco, owner, permitSpender, chainId, amount);
           const nonceAfter = await eco.nonces(await owner.getAddress());
           expect(nonceAfter - nonce).to.equal(1);
         });
@@ -503,65 +566,45 @@ describe('ECO [@group=1]', () => {
             chainId,
             verifyingContract: eco.address,
           };
-          const expectedDomainSeparator = ethers.utils._TypedDataEncoder.hashDomain(domain);
-          expect(await eco.DOMAIN_SEPARATOR())
-            .to.equal(expectedDomainSeparator);
+          const expectedDomainSeparator =
+            ethers.utils._TypedDataEncoder.hashDomain(domain);
+          expect(await eco.DOMAIN_SEPARATOR()).to.equal(
+            expectedDomainSeparator
+          );
         });
 
         context('when there is no existing allowance', () => {
           it('sets the allowance', async () => {
-            await expect(permit(
-              eco,
-              owner,
-              permitSpender,
-              chainId,
-              amount,
-            )).to.emit(eco, 'Approval');
-            const allowance = await eco
-              .allowance(
-                await owner.getAddress(),
-                await permitSpender.getAddress(),
-              );
+            await expect(
+              permit(eco, owner, permitSpender, chainId, amount)
+            ).to.emit(eco, 'Approval');
+            const allowance = await eco.allowance(
+              await owner.getAddress(),
+              await permitSpender.getAddress()
+            );
             expect(allowance).to.equal(amount);
           });
         });
 
         context('when there is a pre-existing allowance', () => {
           beforeEach(async () => {
-            await permit(
-              eco,
-              owner,
-              permitSpender,
-              chainId,
-              amount.sub(50),
-            );
+            await permit(eco, owner, permitSpender, chainId, amount.sub(50));
           });
 
           it('replaces the existing allowance', async () => {
-            await permit(
-              eco,
-              owner,
-              permitSpender,
-              chainId,
-              amount,
+            await permit(eco, owner, permitSpender, chainId, amount);
+            const allowance = await eco.allowance(
+              await owner.getAddress(),
+              await permitSpender.getAddress()
             );
-            const allowance = await eco
-              .allowance(
-                await owner.getAddress(),
-                await permitSpender.getAddress(),
-              );
 
             expect(allowance).to.equal(amount);
           });
 
           it('emits the Approval event', async () => {
-            await expect(permit(
-              eco,
-              owner,
-              permitSpender,
-              chainId,
-              amount,
-            )).to.emit(eco, 'Approval');
+            await expect(
+              permit(eco, owner, permitSpender, chainId, amount)
+            ).to.emit(eco, 'Approval');
           });
         });
       });
@@ -575,13 +618,19 @@ describe('ECO [@group=1]', () => {
       });
 
       it('emits an Approval event', async () => {
-        await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
+        await expect(eco.connect(from).approve(spender, amount)).to.emit(
+          eco,
+          'Approval'
+        );
       });
 
       context('when there is no existing allowance', () => {
         it('sets the allowance', async () => {
           await eco.connect(from).approve(spender, amount);
-          const allowance = await eco.allowance(await from.getAddress(), spender);
+          const allowance = await eco.allowance(
+            await from.getAddress(),
+            spender
+          );
 
           expect(allowance).to.equal(amount);
         });
@@ -594,13 +643,19 @@ describe('ECO [@group=1]', () => {
 
         it('replaces the existing allowance', async () => {
           await eco.connect(from).approve(spender, amount);
-          const allowance = await eco.allowance(await from.getAddress(), spender);
+          const allowance = await eco.allowance(
+            await from.getAddress(),
+            spender
+          );
 
           expect(allowance).to.equal(amount);
         });
 
         it('emits the Approval event', async () => {
-          await expect(eco.connect(from).approve(spender, amount)).to.emit(eco, 'Approval');
+          await expect(eco.connect(from).approve(spender, amount)).to.emit(
+            eco,
+            'Approval'
+          );
         });
       });
     });
@@ -630,7 +685,11 @@ describe('ECO [@group=1]', () => {
           await expect(
             eco
               .connect(unauthorized)
-              .transferFrom(await from.getAddress(), await to.getAddress(), allowanceParts[0]),
+              .transferFrom(
+                await from.getAddress(),
+                await to.getAddress(),
+                allowanceParts[0]
+              )
           ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
         });
       });
@@ -643,8 +702,8 @@ describe('ECO [@group=1]', () => {
               .transferFrom(
                 await from.getAddress(),
                 await to.getAddress(),
-                allowance.add(one.mul(10)),
-              ),
+                allowance.add(one.mul(10))
+              )
           ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
         });
       });
@@ -656,10 +715,18 @@ describe('ECO [@group=1]', () => {
           await expect(
             eco
               .connect(authorized)
-              .transferFrom(await from.getAddress(), await to.getAddress(), allowanceParts[0]),
+              .transferFrom(
+                await from.getAddress(),
+                await to.getAddress(),
+                allowanceParts[0]
+              )
           )
             .to.emit(eco, 'Transfer')
-            .withArgs(await from.getAddress(), await to.getAddress(), allowanceParts[0].toString());
+            .withArgs(
+              await from.getAddress(),
+              await to.getAddress(),
+              allowanceParts[0].toString()
+            );
         });
 
         it('adds to the recipient balance', async () => {
@@ -668,7 +735,11 @@ describe('ECO [@group=1]', () => {
           const startBalance = await eco.balanceOf(await to.getAddress());
           await eco
             .connect(authorized)
-            .transferFrom(await from.getAddress(), await to.getAddress(), amount);
+            .transferFrom(
+              await from.getAddress(),
+              await to.getAddress(),
+              amount
+            );
           const endBalance = await eco.balanceOf(await to.getAddress());
 
           expect(endBalance.sub(startBalance)).to.equal(amount);
@@ -680,7 +751,11 @@ describe('ECO [@group=1]', () => {
           const startBalance = await eco.balanceOf(await from.getAddress());
           await eco
             .connect(authorized)
-            .transferFrom(await from.getAddress(), await to.getAddress(), amount);
+            .transferFrom(
+              await from.getAddress(),
+              await to.getAddress(),
+              amount
+            );
           const endBalance = await eco.balanceOf(await from.getAddress());
 
           expect(startBalance.sub(endBalance)).to.equal(amount);
@@ -691,14 +766,18 @@ describe('ECO [@group=1]', () => {
 
           const startAllowance = await eco.allowance(
             await from.getAddress(),
-            await authorized.getAddress(),
+            await authorized.getAddress()
           );
           await eco
             .connect(authorized)
-            .transferFrom(await from.getAddress(), await to.getAddress(), amount);
+            .transferFrom(
+              await from.getAddress(),
+              await to.getAddress(),
+              amount
+            );
           const endAllowance = await eco.allowance(
             await from.getAddress(),
-            await authorized.getAddress(),
+            await authorized.getAddress()
           );
 
           expect(startAllowance.sub(endAllowance)).to.equal(amount);
@@ -708,9 +787,15 @@ describe('ECO [@group=1]', () => {
           const startBalance = await eco.balanceOf(await from.getAddress());
 
           await Promise.all(
-            allowanceParts.map(async (part) => eco
-              .connect(authorized)
-              .transferFrom(await from.getAddress(), await to.getAddress(), part)),
+            allowanceParts.map(async (part) =>
+              eco
+                .connect(authorized)
+                .transferFrom(
+                  await from.getAddress(),
+                  await to.getAddress(),
+                  part
+                )
+            )
           );
 
           const endBalance = await eco.balanceOf(await from.getAddress());
@@ -725,11 +810,19 @@ describe('ECO [@group=1]', () => {
                 await expect(
                   eco
                     .connect(authorized)
-                    .transferFrom(await from.getAddress(), await to.getAddress(), part),
+                    .transferFrom(
+                      await from.getAddress(),
+                      await to.getAddress(),
+                      part
+                    )
                 )
                   .to.emit(eco, 'Transfer')
-                  .withArgs(await from.getAddress(), await to.getAddress(), part.toString());
-              }),
+                  .withArgs(
+                    await from.getAddress(),
+                    await to.getAddress(),
+                    part.toString()
+                  );
+              })
             );
           });
         });
@@ -741,7 +834,11 @@ describe('ECO [@group=1]', () => {
             await expect(
               eco
                 .connect(authorized)
-                .transferFrom(await from.getAddress(), await to.getAddress(), allowance.add(1)),
+                .transferFrom(
+                  await from.getAddress(),
+                  await to.getAddress(),
+                  allowance.add(1)
+                )
             ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
           });
         });
@@ -751,15 +848,25 @@ describe('ECO [@group=1]', () => {
             const extra = 1;
 
             await Promise.all(
-              allowanceParts.map(async (part) => eco
-                .connect(authorized)
-                .transferFrom(await from.getAddress(), await to.getAddress(), part)),
+              allowanceParts.map(async (part) =>
+                eco
+                  .connect(authorized)
+                  .transferFrom(
+                    await from.getAddress(),
+                    await to.getAddress(),
+                    part
+                  )
+              )
             );
 
             await expect(
               eco
                 .connect(authorized)
-                .transferFrom(await from.getAddress(), await to.getAddress(), extra),
+                .transferFrom(
+                  await from.getAddress(),
+                  await to.getAddress(),
+                  extra
+                )
             ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
           });
         });
@@ -768,7 +875,9 @@ describe('ECO [@group=1]', () => {
       context('when transferring 0', () => {
         it('emits a Transfer event', async () => {
           await expect(
-            eco.connect(authorized).transferFrom(await from.getAddress(), await to.getAddress(), 0),
+            eco
+              .connect(authorized)
+              .transferFrom(await from.getAddress(), await to.getAddress(), 0)
           )
             .to.emit(eco, 'Transfer')
             .withArgs(await from.getAddress(), await to.getAddress(), '0');
@@ -777,14 +886,14 @@ describe('ECO [@group=1]', () => {
         it('does not decrease the allowance', async () => {
           const startAllowance = await eco.allowance(
             await from.getAddress(),
-            await authorized.getAddress(),
+            await authorized.getAddress()
           );
           await eco
             .connect(authorized)
             .transferFrom(await from.getAddress(), await to.getAddress(), 0);
           const endAllowance = await eco.allowance(
             await from.getAddress(),
-            await authorized.getAddress(),
+            await authorized.getAddress()
           );
 
           expect(endAllowance).to.equal(startAllowance);
@@ -819,18 +928,26 @@ describe('ECO [@group=1]', () => {
     it('emits Transfer when minting', async () => {
       await expect(faucet.mint(await accounts[1].getAddress(), amount))
         .to.emit(eco, 'Transfer')
-        .withArgs(ethers.constants.AddressZero, await accounts[1].getAddress(), amount.toString());
+        .withArgs(
+          ethers.constants.AddressZero,
+          await accounts[1].getAddress(),
+          amount.toString()
+        );
     });
 
     it('emits Transfer when burning', async () => {
       await faucet.mint(await accounts[1].getAddress(), amount);
       const burnAmount = one.mul(100);
-      await expect(eco.connect(accounts[1]).burn(await accounts[1].getAddress(), burnAmount))
+      await expect(
+        eco
+          .connect(accounts[1])
+          .burn(await accounts[1].getAddress(), burnAmount)
+      )
         .to.emit(eco, 'Transfer')
         .withArgs(
           await accounts[1].getAddress(),
           ethers.constants.AddressZero,
-          burnAmount.toString(),
+          burnAmount.toString()
         );
     });
   });
@@ -857,7 +974,9 @@ describe('ECO [@group=1]', () => {
     });
 
     it('can get a checkpoint value', async () => {
-      const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
+      const inflationMult = await eco.getPastLinearInflation(
+        inflationBlockNumber
+      );
       const checkpoint = await eco.checkpoints(await from.getAddress(), 1);
       expect(checkpoint.value).to.be.equal(inflationMult.mul(balance));
     });
@@ -868,7 +987,9 @@ describe('ECO [@group=1]', () => {
     });
 
     it('can get the internal votes for an account', async () => {
-      const inflationMult = await eco.getPastLinearInflation(inflationBlockNumber);
+      const inflationMult = await eco.getPastLinearInflation(
+        inflationBlockNumber
+      );
       const votes = await eco.getVotingGons(await from.getAddress());
       expect(votes).to.be.equal(inflationMult.mul(balance));
     });
@@ -877,14 +998,23 @@ describe('ECO [@group=1]', () => {
       await expect(
         eco
           .connect(from)
-          .getPastVotingGons(await from.getAddress(), (await time.latestBlock()) + 1),
-      ).to.be.revertedWith('VoteCheckpoints: block not yet mined', eco.constructor);
+          .getPastVotingGons(
+            await from.getAddress(),
+            (await time.latestBlock()) + 1
+          )
+      ).to.be.revertedWith(
+        'VoteCheckpoints: block not yet mined',
+        eco.constructor
+      );
     });
 
     it('cannot get the past supply until the block requestsed has been mined', async () => {
       await expect(
-        eco.connect(from).getPastTotalSupply((await time.latestBlock()) + 1),
-      ).to.be.revertedWith('VoteCheckpoints: block not yet mined', eco.constructor);
+        eco.connect(from).getPastTotalSupply((await time.latestBlock()) + 1)
+      ).to.be.revertedWith(
+        'VoteCheckpoints: block not yet mined',
+        eco.constructor
+      );
     });
   });
 
@@ -901,15 +1031,19 @@ describe('ECO [@group=1]', () => {
 
     beforeEach(async () => {
       await faucet.mint(await from.getAddress(), balance);
-      await eco.connect(from).approve(await authorized.getAddress(), allowanceAmount);
+      await eco
+        .connect(from)
+        .approve(await authorized.getAddress(), allowanceAmount);
     });
 
     context('we can increase the allowance', () => {
       it('increases the allowance', async () => {
-        await eco.connect(from).increaseAllowance(await authorized.getAddress(), increment);
+        await eco
+          .connect(from)
+          .increaseAllowance(await authorized.getAddress(), increment);
         const allowance = await eco.allowance(
           await from.getAddress(),
-          await authorized.getAddress(),
+          await authorized.getAddress()
         );
         expect(allowance).to.be.equal(allowanceAmount.add(increment));
       });
@@ -917,10 +1051,12 @@ describe('ECO [@group=1]', () => {
 
     context('we can decrease the allowance', () => {
       it('decreases the allowance', async () => {
-        await eco.connect(from).decreaseAllowance(await authorized.getAddress(), increment);
+        await eco
+          .connect(from)
+          .decreaseAllowance(await authorized.getAddress(), increment);
         const allowance = await eco.allowance(
           await from.getAddress(),
-          await authorized.getAddress(),
+          await authorized.getAddress()
         );
         expect(allowance).to.be.equal(allowanceAmount.sub(increment));
       });
@@ -929,8 +1065,14 @@ describe('ECO [@group=1]', () => {
         await expect(
           eco
             .connect(from)
-            .decreaseAllowance(await authorized.getAddress(), allowanceAmount.add(1)),
-        ).to.be.revertedWith('ERC20: decreased allowance below zero', eco.constructor);
+            .decreaseAllowance(
+              await authorized.getAddress(),
+              allowanceAmount.add(1)
+            )
+        ).to.be.revertedWith(
+          'ERC20: decreased allowance below zero',
+          eco.constructor
+        );
       });
     });
   });
@@ -952,34 +1094,48 @@ describe('ECO [@group=1]', () => {
 
     context('delegate', () => {
       it('correct votes when delegated', async () => {
-        const tx1 = await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
+        const tx1 = await eco
+          .connect(accounts[1])
+          .delegate(await accounts[3].getAddress());
         const receipt1 = await tx1.wait();
         console.log(receipt1.gasUsed);
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount.mul(2));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount.mul(2));
 
-        const tx2 = await eco.connect(accounts[1]).delegate(await accounts[4].getAddress());
+        const tx2 = await eco
+          .connect(accounts[1])
+          .delegate(await accounts[4].getAddress());
         const receipt2 = await tx2.wait();
         console.log(receipt2.gasUsed);
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount);
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(voteAmount.mul(2));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount);
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.mul(2));
       });
 
       it('does not allow delegation if not enabled', async () => {
         await expect(
-          eco.connect(accounts[1]).delegate(await accounts[5].getAddress()),
+          eco.connect(accounts[1]).delegate(await accounts[5].getAddress())
         ).to.be.revertedWith('Primary delegates must enable delegation');
       });
 
       it('does not allow delegation to yourself', async () => {
         await expect(
-          eco.connect(accounts[1]).delegate(await accounts[1].getAddress()),
-        ).to.be.revertedWith('Use undelegate instead of delegating to yourself');
+          eco.connect(accounts[1]).delegate(await accounts[1].getAddress())
+        ).to.be.revertedWith(
+          'Use undelegate instead of delegating to yourself'
+        );
       });
 
       it('does not allow delegation if you are a delegatee', async () => {
         await expect(
-          eco.connect(accounts[3]).delegate(await accounts[4].getAddress()),
-        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
+          eco.connect(accounts[3]).delegate(await accounts[4].getAddress())
+        ).to.be.revertedWith(
+          'Cannot delegate if you have enabled primary delegation to yourself'
+        );
       });
     });
 
@@ -1000,79 +1156,114 @@ describe('ECO [@group=1]', () => {
 
     context('isOwnDelegate', () => {
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .true;
 
         await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .false;
 
         await eco.connect(accounts[1]).undelegate();
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .true;
       });
     });
 
     context('getPrimaryDelegate', () => {
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
-          await accounts[1].getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await accounts[1].getAddress())
+        ).to.equal(await accounts[1].getAddress());
 
         await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
-        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
-          await accounts[3].getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await accounts[1].getAddress())
+        ).to.equal(await accounts[3].getAddress());
 
         await eco.connect(accounts[1]).undelegate();
-        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
-          await accounts[1].getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await accounts[1].getAddress())
+        ).to.equal(await accounts[1].getAddress());
       });
     });
 
     context('delegate then transfer', () => {
       it('sender delegated', async () => {
         await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(voteAmount.mul(2));
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount);
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(voteAmount.mul(2));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount);
       });
 
       it('receiver delegated', async () => {
         await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(voteAmount.mul(3));
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.mul(3));
       });
 
       it('both delegated', async () => {
         await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
         await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(voteAmount);
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(voteAmount.mul(3));
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount);
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.mul(3));
       });
     });
 
     context('transfer gas testing', () => {
       it('no delegations', async () => {
-        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
       });
 
       it('sender delegated', async () => {
         await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
-        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
       });
 
       it('receiver delegated', async () => {
         await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
-        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
       });
@@ -1080,7 +1271,9 @@ describe('ECO [@group=1]', () => {
       it('both delegated', async () => {
         await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
         await eco.connect(accounts[2]).delegate(await accounts[4].getAddress());
-        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
       });
@@ -1091,9 +1284,13 @@ describe('ECO [@group=1]', () => {
     const amount = one.mul(1000);
     const delegator = ethers.Wallet.createRandom().connect(ethers.provider);
     const nonDelegatee = ethers.Wallet.createRandom().connect(ethers.provider);
-    const delegateTransferRecipient = ethers.Wallet.createRandom().connect(ethers.provider);
+    const delegateTransferRecipient = ethers.Wallet.createRandom().connect(
+      ethers.provider
+    );
     const delegatee = ethers.Wallet.createRandom().connect(ethers.provider);
-    const otherDelegatee = ethers.Wallet.createRandom().connect(ethers.provider);
+    const otherDelegatee = ethers.Wallet.createRandom().connect(
+      ethers.provider
+    );
     let voteAmount;
     let chainId;
 
@@ -1102,10 +1299,18 @@ describe('ECO [@group=1]', () => {
     });
 
     beforeEach(async () => {
-      await accounts[5].sendTransaction({ to: await delegator.getAddress(), value: one.mul(100) });
-      await accounts[6].sendTransaction({ to: await delegatee.getAddress(), value: one.mul(100) });
-      await accounts[7]
-        .sendTransaction({ to: await delegateTransferRecipient.getAddress(), value: one.mul(100) });
+      await accounts[5].sendTransaction({
+        to: await delegator.getAddress(),
+        value: one.mul(100),
+      });
+      await accounts[6].sendTransaction({
+        to: await delegatee.getAddress(),
+        value: one.mul(100),
+      });
+      await accounts[7].sendTransaction({
+        to: await delegateTransferRecipient.getAddress(),
+        value: one.mul(100),
+      });
       await accounts[8].sendTransaction({
         to: await otherDelegatee.getAddress(),
         value: one.mul(100),
@@ -1122,113 +1327,104 @@ describe('ECO [@group=1]', () => {
 
     context('delegateBySig', () => {
       it('correct votes when delegated', async () => {
-        const tx1 = await delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {});
-        const receipt1 = await tx1.wait();
-        console.log(receipt1.gasUsed);
-        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
-
-        const tx2 = await delegateBySig(eco, delegator, otherDelegatee, chainId, accounts[0], {});
-        const receipt2 = await tx2.wait();
-        console.log(receipt2.gasUsed);
-        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
-        expect(await eco
-          .getVotingGons(await otherDelegatee.getAddress())).to.equal(voteAmount.mul(2));
-      });
-
-      it('does not allow delegation if not enabled', async () => {
-        await expect(
-          delegateBySig(eco, delegator, nonDelegatee, chainId, accounts[0], {}),
-        ).to.be.revertedWith('Primary delegates must enable delegation');
-      });
-
-      it('does not allow delegation to yourself', async () => {
-        await expect(delegateBySig(eco, delegator, delegator, chainId, delegator, {}))
-          .to.be.revertedWith('Do not delegate to yourself');
-      });
-
-      it('allows executing own delegation', async () => {
-        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
-        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
-      });
-
-      it('allows delegation by signer', async () => {
-        await delegateBySig(eco, delegator, delegatee, chainId, delegator, {});
-        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount.mul(2));
-      });
-
-      it('does not allow delegation if you are a delegatee', async () => {
-        await expect(
-          delegateBySig(eco, delegatee, otherDelegatee, chainId, delegatee, {}),
-        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
-      });
-
-      it('does not allow delegation after deadline', async () => {
-        await expect(
-          delegateBySig(
-            eco,
-            delegator,
-            delegatee,
-            chainId,
-            accounts[0],
-            {
-              deadline: Math.floor(new Date().getTime() / 1000 - 5),
-            },
-          ),
-        ).to.be.revertedWith('DelegatePermit: expired deadline');
-      });
-
-      it('does not allow non-delegator signature', async () => {
-        await expect(
-          delegateBySig(
-            eco,
-            delegator,
-            delegatee,
-            chainId,
-            accounts[0],
-            {
-              signer: delegateTransferRecipient,
-            },
-          ),
-        ).to.be.revertedWith('DelegatePermit: invalid signature');
-      });
-
-      it('does not allow non-monotonic nonce', async () => {
-        await expect(
-          delegateBySig(
-            eco,
-            delegator,
-            delegatee,
-            chainId,
-            accounts[0],
-            {
-              nonce: 100,
-            },
-          ),
-        ).to.be.revertedWith('DelegatePermit: invalid signature');
-      });
-
-      it('does not allow nonce reuse', async () => {
-        await delegateBySig(
+        const tx1 = await delegateBySig(
           eco,
           delegator,
           delegatee,
           chainId,
           accounts[0],
-          {
-            nonce: 0,
-          },
+          {}
         );
+        const receipt1 = await tx1.wait();
+        console.log(receipt1.gasUsed);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(
+          voteAmount.mul(2)
+        );
+
+        const tx2 = await delegateBySig(
+          eco,
+          delegator,
+          otherDelegatee,
+          chainId,
+          accounts[0],
+          {}
+        );
+        const receipt2 = await tx2.wait();
+        console.log(receipt2.gasUsed);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(
+          voteAmount
+        );
+        expect(
+          await eco.getVotingGons(await otherDelegatee.getAddress())
+        ).to.equal(voteAmount.mul(2));
+      });
+
+      it('does not allow delegation if not enabled', async () => {
         await expect(
-          delegateBySig(
-            eco,
-            delegator,
-            delegatee,
-            chainId,
-            accounts[0],
-            {
-              nonce: 0,
-            },
-          ),
+          delegateBySig(eco, delegator, nonDelegatee, chainId, accounts[0], {})
+        ).to.be.revertedWith('Primary delegates must enable delegation');
+      });
+
+      it('does not allow delegation to yourself', async () => {
+        await expect(
+          delegateBySig(eco, delegator, delegator, chainId, delegator, {})
+        ).to.be.revertedWith('Do not delegate to yourself');
+      });
+
+      it('allows executing own delegation', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(
+          voteAmount.mul(2)
+        );
+      });
+
+      it('allows delegation by signer', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, delegator, {});
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(
+          voteAmount.mul(2)
+        );
+      });
+
+      it('does not allow delegation if you are a delegatee', async () => {
+        await expect(
+          delegateBySig(eco, delegatee, otherDelegatee, chainId, delegatee, {})
+        ).to.be.revertedWith(
+          'Cannot delegate if you have enabled primary delegation to yourself'
+        );
+      });
+
+      it('does not allow delegation after deadline', async () => {
+        await expect(
+          delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {
+            deadline: Math.floor(new Date().getTime() / 1000 - 5),
+          })
+        ).to.be.revertedWith('DelegatePermit: expired deadline');
+      });
+
+      it('does not allow non-delegator signature', async () => {
+        await expect(
+          delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {
+            signer: delegateTransferRecipient,
+          })
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+
+      it('does not allow non-monotonic nonce', async () => {
+        await expect(
+          delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {
+            nonce: 100,
+          })
+        ).to.be.revertedWith('DelegatePermit: invalid signature');
+      });
+
+      it('does not allow nonce reuse', async () => {
+        await delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {
+          nonce: 0,
+        });
+        await expect(
+          delegateBySig(eco, delegator, delegatee, chainId, accounts[0], {
+            nonce: 0,
+          })
         ).to.be.revertedWith('DelegatePermit: invalid signature');
       });
     });
@@ -1237,7 +1433,9 @@ describe('ECO [@group=1]', () => {
       it('correct state when undelegated after delegating', async () => {
         await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
 
-        const tx2 = await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
+        const tx2 = await eco
+          .connect(delegator)
+          .undelegate({ gasLimit: 1000000 });
         const receipt2 = await tx2.wait();
         console.log(receipt2.gasUsed);
 
@@ -1250,46 +1448,54 @@ describe('ECO [@group=1]', () => {
 
     context('isOwnDelegate', () => {
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.true;
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be
+          .true;
 
         await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
-        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.false;
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be
+          .false;
 
         await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
-        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be.true;
+        expect(await eco.isOwnDelegate(await delegator.getAddress())).to.be
+          .true;
       });
     });
 
     context('getPrimaryDelegate', () => {
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
-          await delegator.getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await delegator.getAddress())
+        ).to.equal(await delegator.getAddress());
 
         await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
-        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
-          await delegatee.getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await delegator.getAddress())
+        ).to.equal(await delegatee.getAddress());
 
         await eco.connect(delegator).undelegate({ gasLimit: 1000000 });
-        expect(await eco.getPrimaryDelegate(await delegator.getAddress())).to.equal(
-          await delegator.getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await delegator.getAddress())
+        ).to.equal(await delegator.getAddress());
       });
     });
 
     context('delegate then transfer', () => {
       it('sender delegated', async () => {
         await delegateBySig(eco, delegator, delegatee, chainId, delegatee, {});
-        await eco.connect(delegator)
-          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
-        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
-        expect(await eco
-          .getVotingGons(
-            await delegateTransferRecipient.getAddress(),
-          ))
-          .to.equal(voteAmount.mul(2));
-        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
+        await eco
+          .connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, {
+            gasLimit: 1000000,
+          });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(
+          0
+        );
+        expect(
+          await eco.getVotingGons(await delegateTransferRecipient.getAddress())
+        ).to.equal(voteAmount.mul(2));
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(
+          voteAmount
+        );
       });
 
       it('receiver delegated', async () => {
@@ -1299,17 +1505,22 @@ describe('ECO [@group=1]', () => {
           otherDelegatee,
           chainId,
           delegateTransferRecipient,
-          {},
+          {}
         );
-        await eco.connect(delegator)
-          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
-        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await delegateTransferRecipient.getAddress())).to.equal(0);
-        expect(await eco
-          .getVotingGons(
-            await otherDelegatee.getAddress(),
-          ))
-          .to.equal(voteAmount.mul(3));
+        await eco
+          .connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, {
+            gasLimit: 1000000,
+          });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(
+          0
+        );
+        expect(
+          await eco.getVotingGons(await delegateTransferRecipient.getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await otherDelegatee.getAddress())
+        ).to.equal(voteAmount.mul(3));
       });
 
       it('both delegated', async () => {
@@ -1320,18 +1531,25 @@ describe('ECO [@group=1]', () => {
           otherDelegatee,
           chainId,
           delegateTransferRecipient,
-          {},
+          {}
         );
-        await eco.connect(delegator)
-          .transfer(await delegateTransferRecipient.getAddress(), amount, { gasLimit: 1000000 });
-        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await delegateTransferRecipient.getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(voteAmount);
-        expect(await eco
-          .getVotingGons(
-            await otherDelegatee.getAddress(),
-          ))
-          .to.equal(voteAmount.mul(3));
+        await eco
+          .connect(delegator)
+          .transfer(await delegateTransferRecipient.getAddress(), amount, {
+            gasLimit: 1000000,
+          });
+        expect(await eco.getVotingGons(await delegator.getAddress())).to.equal(
+          0
+        );
+        expect(
+          await eco.getVotingGons(await delegateTransferRecipient.getAddress())
+        ).to.equal(0);
+        expect(await eco.getVotingGons(await delegatee.getAddress())).to.equal(
+          voteAmount
+        );
+        expect(
+          await eco.getVotingGons(await otherDelegatee.getAddress())
+        ).to.equal(voteAmount.mul(3));
       });
     });
   });
@@ -1358,30 +1576,34 @@ describe('ECO [@group=1]', () => {
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
         const receipt1 = await tx1.wait();
         console.log(receipt1.gasUsed);
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(voteAmount.div(2));
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
-          voteAmount.div(2).mul(3),
-        );
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(voteAmount.div(2));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount.div(2).mul(3));
 
         const tx2 = await eco
           .connect(accounts[1])
           .delegateAmount(await accounts[4].getAddress(), voteAmount.div(4));
         const receipt2 = await tx2.wait();
         console.log(receipt2.gasUsed);
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(voteAmount.div(4));
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
-          voteAmount.div(2).mul(3),
-        );
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
-          voteAmount.div(4).mul(5),
-        );
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(voteAmount.div(4));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount.div(2).mul(3));
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.div(4).mul(5));
       });
 
       it('does not allow delegation to yourself', async () => {
         await expect(
           eco
             .connect(accounts[1])
-            .delegateAmount(await accounts[1].getAddress(), voteAmount.div(5)),
+            .delegateAmount(await accounts[1].getAddress(), voteAmount.div(5))
         ).to.be.revertedWith('Do not delegate to yourself');
       });
 
@@ -1389,26 +1611,35 @@ describe('ECO [@group=1]', () => {
         await expect(
           eco
             .connect(accounts[3])
-            .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2)),
-        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself');
+            .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2))
+        ).to.be.revertedWith(
+          'Cannot delegate if you have enabled primary delegation to yourself'
+        );
       });
 
       it('does not allow you to delegate more than your balance', async () => {
         await expect(
           eco
             .connect(accounts[1])
-            .delegateAmount(await accounts[4].getAddress(), voteAmount.mul(3)),
-        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
+            .delegateAmount(await accounts[4].getAddress(), voteAmount.mul(3))
+        ).to.be.revertedWith(
+          'Must have an undelegated amount available to cover delegation'
+        );
 
         await eco
           .connect(accounts[1])
-          .delegateAmount(await accounts[4].getAddress(), voteAmount.mul(2).div(3));
+          .delegateAmount(
+            await accounts[4].getAddress(),
+            voteAmount.mul(2).div(3)
+          );
 
         await expect(
           eco
             .connect(accounts[1])
-            .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2)),
-        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
+            .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2))
+        ).to.be.revertedWith(
+          'Must have an undelegated amount available to cover delegation'
+        );
       });
 
       it('having a primary delegate means you cannot delegate an amount', async () => {
@@ -1417,21 +1648,33 @@ describe('ECO [@group=1]', () => {
         await expect(
           eco
             .connect(accounts[1])
-            .delegateAmount(await accounts[3].getAddress(), voteAmount.div(1000000)),
-        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
+            .delegateAmount(
+              await accounts[3].getAddress(),
+              voteAmount.div(1000000)
+            )
+        ).to.be.revertedWith(
+          'Must have an undelegated amount available to cover delegation'
+        );
       });
 
       it('having delegated an amount does not allow you to full delegate', async () => {
         await eco
           .connect(accounts[1])
-          .delegateAmount(await accounts[4].getAddress(), voteAmount.div(1000000));
+          .delegateAmount(
+            await accounts[4].getAddress(),
+            voteAmount.div(1000000)
+          );
 
         await expect(
-          eco.connect(accounts[1]).delegate(await accounts[3].getAddress()),
-        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
+          eco.connect(accounts[1]).delegate(await accounts[3].getAddress())
+        ).to.be.revertedWith(
+          'Must have an undelegated amount available to cover delegation'
+        );
         await expect(
-          eco.connect(accounts[1]).delegate(await accounts[4].getAddress()),
-        ).to.be.revertedWith('Must have an undelegated amount available to cover delegation');
+          eco.connect(accounts[1]).delegate(await accounts[4].getAddress())
+        ).to.be.revertedWith(
+          'Must have an undelegated amount available to cover delegation'
+        );
       });
     });
 
@@ -1451,13 +1694,19 @@ describe('ECO [@group=1]', () => {
         console.log(receipt1.gasUsed);
 
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[1].getAddress())
         ).to.equal(voteAmount.div(2));
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[3].getAddress())
         ).to.equal(voteAmount.div(2).mul(3));
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[4].getAddress())
         ).to.equal(voteAmount);
 
         const tx2 = await eco
@@ -1467,13 +1716,19 @@ describe('ECO [@group=1]', () => {
         console.log(receipt2.gasUsed);
 
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[1].getAddress())
         ).to.equal(voteAmount);
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[3].getAddress())
         ).to.equal(voteAmount);
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[4].getAddress())
         ).to.equal(voteAmount);
       });
     });
@@ -1489,34 +1744,52 @@ describe('ECO [@group=1]', () => {
 
         const tx1 = await eco
           .connect(accounts[1])
-          .undelegateAmountFromAddress(await accounts[4].getAddress(), voteAmount.div(8));
+          .undelegateAmountFromAddress(
+            await accounts[4].getAddress(),
+            voteAmount.div(8)
+          );
         const receipt1 = await tx1.wait();
         console.log(receipt1.gasUsed);
 
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[1].getAddress())
         ).to.equal(voteAmount.div(8).mul(3));
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[3].getAddress())
         ).to.equal(voteAmount.div(2).mul(3));
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[4].getAddress())
         ).to.equal(voteAmount.div(8).mul(9));
 
         const tx2 = await eco
           .connect(accounts[1])
-          .undelegateAmountFromAddress(await accounts[3].getAddress(), voteAmount.div(4));
+          .undelegateAmountFromAddress(
+            await accounts[3].getAddress(),
+            voteAmount.div(4)
+          );
         const receipt2 = await tx2.wait();
         console.log(receipt2.gasUsed);
 
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[1].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[1].getAddress())
         ).to.equal(voteAmount.div(8).mul(5));
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[3].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[3].getAddress())
         ).to.equal(voteAmount.div(4).mul(5));
         expect(
-          await eco.connect(accounts[1]).getVotingGons(await accounts[4].getAddress()),
+          await eco
+            .connect(accounts[1])
+            .getVotingGons(await accounts[4].getAddress())
         ).to.equal(voteAmount.div(8).mul(9));
       });
 
@@ -1525,43 +1798,60 @@ describe('ECO [@group=1]', () => {
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
 
-        await expect(eco
-          .connect(accounts[1])
-          .undelegateAmountFromAddress(await accounts[3].getAddress(), voteAmount))
-          .to.be.revertedWith('amount not available to undelegate');
+        await expect(
+          eco
+            .connect(accounts[1])
+            .undelegateAmountFromAddress(
+              await accounts[3].getAddress(),
+              voteAmount
+            )
+        ).to.be.revertedWith('amount not available to undelegate');
       });
 
       it('reverts if you try to undelegateAmountFromAddress as a primary delegator', async () => {
-        await eco
-          .connect(accounts[1])
-          .delegate(await accounts[3].getAddress());
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress());
 
-        await expect(eco
-          .connect(accounts[1])
-          .undelegateAmountFromAddress(await accounts[3].getAddress(), voteAmount.div(2)))
-          .to.be.revertedWith('undelegating amounts is only available for partial delegators');
+        await expect(
+          eco
+            .connect(accounts[1])
+            .undelegateAmountFromAddress(
+              await accounts[3].getAddress(),
+              voteAmount.div(2)
+            )
+        ).to.be.revertedWith(
+          'undelegating amounts is only available for partial delegators'
+        );
       });
     });
 
     context('isOwnDelegate', () => {
       it('correct state when delegating and undelegating', async () => {
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .true;
 
         await eco
           .connect(accounts[1])
           .delegateAmount(await accounts[2].getAddress(), voteAmount.div(4));
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .false;
 
         await eco
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(4));
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .false;
 
-        await eco.connect(accounts[1]).undelegateFromAddress(await accounts[3].getAddress());
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.false;
+        await eco
+          .connect(accounts[1])
+          .undelegateFromAddress(await accounts[3].getAddress());
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .false;
 
-        await eco.connect(accounts[1]).undelegateFromAddress(await accounts[2].getAddress());
-        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be.true;
+        await eco
+          .connect(accounts[1])
+          .undelegateFromAddress(await accounts[2].getAddress());
+        expect(await eco.isOwnDelegate(await accounts[1].getAddress())).to.be
+          .true;
       });
     });
 
@@ -1570,9 +1860,9 @@ describe('ECO [@group=1]', () => {
         await eco
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
-        expect(await eco.getPrimaryDelegate(await accounts[1].getAddress())).to.equal(
-          await accounts[1].getAddress(),
-        );
+        expect(
+          await eco.getPrimaryDelegate(await accounts[1].getAddress())
+        ).to.equal(await accounts[1].getAddress());
       });
     });
 
@@ -1581,14 +1871,18 @@ describe('ECO [@group=1]', () => {
         await eco
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(
-          voteAmount.mul(3).div(2),
-        );
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
-          voteAmount.mul(3).div(2),
-        );
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(voteAmount.mul(3).div(2));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount.mul(3).div(2));
       });
 
       it('sender delegated without enough to cover', async () => {
@@ -1596,9 +1890,11 @@ describe('ECO [@group=1]', () => {
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2));
         await expect(
-          eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount),
+          eco
+            .connect(accounts[1])
+            .transfer(await accounts[2].getAddress(), amount)
         ).to.be.revertedWith(
-          'Delegation too complicated to transfer. Undelegate and simplify before trying again',
+          'Delegation too complicated to transfer. Undelegate and simplify before trying again'
         );
       });
 
@@ -1606,21 +1902,31 @@ describe('ECO [@group=1]', () => {
         await eco
           .connect(accounts[2])
           .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2));
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(voteAmount.div(2));
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(voteAmount);
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
-          voteAmount.mul(3).div(2),
-        );
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(voteAmount.div(2));
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(voteAmount);
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.mul(3).div(2));
 
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(
-          voteAmount.mul(3).div(2),
-        );
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
-          voteAmount.mul(3).div(2),
-        );
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(voteAmount.mul(3).div(2));
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.mul(3).div(2));
       });
 
       it('both delegated', async () => {
@@ -1630,17 +1936,21 @@ describe('ECO [@group=1]', () => {
         await eco
           .connect(accounts[2])
           .delegateAmount(await accounts[4].getAddress(), voteAmount.div(4));
-        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount.div(2));
-        expect(await eco.getVotingGons(await accounts[1].getAddress())).to.equal(0);
-        expect(await eco.getVotingGons(await accounts[2].getAddress())).to.equal(
-          voteAmount.mul(5).div(4),
-        );
-        expect(await eco.getVotingGons(await accounts[3].getAddress())).to.equal(
-          voteAmount.mul(3).div(2),
-        );
-        expect(await eco.getVotingGons(await accounts[4].getAddress())).to.equal(
-          voteAmount.mul(5).div(4),
-        );
+        await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount.div(2));
+        expect(
+          await eco.getVotingGons(await accounts[1].getAddress())
+        ).to.equal(0);
+        expect(
+          await eco.getVotingGons(await accounts[2].getAddress())
+        ).to.equal(voteAmount.mul(5).div(4));
+        expect(
+          await eco.getVotingGons(await accounts[3].getAddress())
+        ).to.equal(voteAmount.mul(3).div(2));
+        expect(
+          await eco.getVotingGons(await accounts[4].getAddress())
+        ).to.equal(voteAmount.mul(5).div(4));
       });
     });
 
@@ -1660,7 +1970,9 @@ describe('ECO [@group=1]', () => {
         await eco
           .connect(accounts[2])
           .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2));
-        const tx = await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount);
+        const tx = await eco
+          .connect(accounts[1])
+          .transfer(await accounts[2].getAddress(), amount);
         const receipt = await tx.wait();
         console.log(receipt.gasUsed);
       });
@@ -1699,10 +2011,9 @@ describe('ECO [@group=1]', () => {
     });
 
     it('cannot be paused by random address', async () => {
-      await expect(eco.connect(accounts[0]).pause())
-        .to.be.revertedWith(
-          'ERC20Pausable: not pauser',
-        );
+      await expect(eco.connect(accounts[0]).pause()).to.be.revertedWith(
+        'ERC20Pausable: not pauser'
+      );
     });
   });
 });

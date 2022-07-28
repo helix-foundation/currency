@@ -20,14 +20,14 @@ describe('BigNumber [@group=3]', () => {
   describe('Input', () => {
     it('Rejects malformed bigint bytes', async () => {
       await expect(bignum.fromBytes('0x0001')).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned number',
+        'High-byte must be set for non-256bit-aligned number'
       );
     });
 
     it('Rejects malformed bigint words', async () => {
       const bigone = `0x${'00'.repeat(63)}01`;
       await expect(bignum.fromBytes(bigone)).to.be.revertedWith(
-        'High-word must be set for 256bit-aligned numbers',
+        'High-word must be set for 256bit-aligned numbers'
       );
     });
 
@@ -53,37 +53,47 @@ describe('BigNumber [@group=3]', () => {
     });
 
     it('Rejects asBytes size too small', async () => {
-      await expect(bignum.asBytes(`0x${'ff'.repeat(64)}`, 32)).to.be.revertedWith(
-        'Number too large to represent',
-      );
+      await expect(
+        bignum.asBytes(`0x${'ff'.repeat(64)}`, 32)
+      ).to.be.revertedWith('Number too large to represent');
     });
 
     it('Rejects invalid asBytes', async () => {
       await expect(bignum.asBytes('0x01', 33)).to.be.revertedWith(
-        'Size must be multiple of 0x20',
+        'Size must be multiple of 0x20'
       );
     });
 
     it('Rejects invalid rightShift value', async () => {
       await expect(bignum.rightShift('0x01', 4)).to.be.revertedWith(
-        'May only shift by 0x2',
+        'May only shift by 0x2'
       );
     });
 
     it('Rejects invalid rightShift input', async () => {
-      await expect(bignum.rightShift(`0x${'ff'.repeat(1092)}`, 2)).to.be.revertedWith(
-        'Length must be less than 8192 bits',
-      );
+      await expect(
+        bignum.rightShift(`0x${'ff'.repeat(1092)}`, 2)
+      ).to.be.revertedWith('Length must be less than 8192 bits');
     });
 
     it('fromBytes with one byte less than a whole word', async () => {
-      expect(await bignum
-        .fromBytes('0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d78348c39ff18627137ab25b4a7a2dde2fa3e3d05e8396c7b61cf752bb5b7490f3622a4639e9b46eb541b9d4644ba3d423af9d5fc4ef419c2ce2f32915ec52169efa0a773fbc6b94a2869d910fb0d97d613a712844e5abfbf774713efcc767dfa8178b201e54b3a060e1c618ff3f49c6dcbda7f94b7beb59b74eea8da0c7c7bb2e13e564fbb4bd5d0fb7e4a96cd3c8f0f0b7504c9e9e1fe4e6e308a01156aa33a650a62024e04cefe7f7cea1bf4d634a904921cd24af684715c0803253338f1ab024e31af141faa882d8af7c901135f31b51abb9a3854aafa45a7ab63422baf972')).to.equal('0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d78348c39ff18627137ab25b4a7a2dde2fa3e3d05e8396c7b61cf752bb5b7490f3622a4639e9b46eb541b9d4644ba3d423af9d5fc4ef419c2ce2f32915ec52169efa0a773fbc6b94a2869d910fb0d97d613a712844e5abfbf774713efcc767dfa8178b201e54b3a060e1c618ff3f49c6dcbda7f94b7beb59b74eea8da0c7c7bb2e13e564fbb4bd5d0fb7e4a96cd3c8f0f0b7504c9e9e1fe4e6e308a01156aa33a650a62024e04cefe7f7cea1bf4d634a904921cd24af684715c0803253338f1ab024e31af141faa882d8af7c901135f31b51abb9a3854aafa45a7ab63422baf972');
+      expect(
+        await bignum.fromBytes(
+          '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d78348c39ff18627137ab25b4a7a2dde2fa3e3d05e8396c7b61cf752bb5b7490f3622a4639e9b46eb541b9d4644ba3d423af9d5fc4ef419c2ce2f32915ec52169efa0a773fbc6b94a2869d910fb0d97d613a712844e5abfbf774713efcc767dfa8178b201e54b3a060e1c618ff3f49c6dcbda7f94b7beb59b74eea8da0c7c7bb2e13e564fbb4bd5d0fb7e4a96cd3c8f0f0b7504c9e9e1fe4e6e308a01156aa33a650a62024e04cefe7f7cea1bf4d634a904921cd24af684715c0803253338f1ab024e31af141faa882d8af7c901135f31b51abb9a3854aafa45a7ab63422baf972'
+        )
+      ).to.equal(
+        '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d78348c39ff18627137ab25b4a7a2dde2fa3e3d05e8396c7b61cf752bb5b7490f3622a4639e9b46eb541b9d4644ba3d423af9d5fc4ef419c2ce2f32915ec52169efa0a773fbc6b94a2869d910fb0d97d613a712844e5abfbf774713efcc767dfa8178b201e54b3a060e1c618ff3f49c6dcbda7f94b7beb59b74eea8da0c7c7bb2e13e564fbb4bd5d0fb7e4a96cd3c8f0f0b7504c9e9e1fe4e6e308a01156aa33a650a62024e04cefe7f7cea1bf4d634a904921cd24af684715c0803253338f1ab024e31af141faa882d8af7c901135f31b51abb9a3854aafa45a7ab63422baf972'
+      );
     });
 
     it('fromBytes with one word', async () => {
-      expect(await bignum
-        .fromBytes('0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d783')).to.equal('0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d783');
+      expect(
+        await bignum.fromBytes(
+          '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d783'
+        )
+      ).to.equal(
+        '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d783'
+      );
     });
   });
 
@@ -181,7 +191,10 @@ describe('BigNumber [@group=3]', () => {
               const r = await bignum.modexp(a, b, c);
               // BigNumber pow is too slow with high values so we keep BN here for now
               const red = BN.red(new BN(c.slice(2), 16));
-              const e = new BN(a.slice(2), 16).toRed(red).redPow(new BN(b.slice(2), 16)).fromRed();
+              const e = new BN(a.slice(2), 16)
+                .toRed(red)
+                .redPow(new BN(b.slice(2), 16))
+                .fromRed();
               if (e.eqn(0)) {
                 expect(r).to.equal('0x');
               } else {
@@ -206,7 +219,9 @@ describe('BigNumber [@group=3]', () => {
 
           it('Max Uint256', async () => {
             await snapshotGasCost(
-              bignum.estimateGas.fromBytes(ethers.constants.MaxUint256.toHexString()),
+              bignum.estimateGas.fromBytes(
+                ethers.constants.MaxUint256.toHexString()
+              )
             );
           });
         });
@@ -221,7 +236,9 @@ describe('BigNumber [@group=3]', () => {
           });
 
           it('Max Uint256', async () => {
-            await snapshotGasCost(bignum.estimateGas.fromUint(ethers.constants.MaxUint256));
+            await snapshotGasCost(
+              bignum.estimateGas.fromUint(ethers.constants.MaxUint256)
+            );
           });
         });
 
@@ -233,10 +250,12 @@ describe('BigNumber [@group=3]', () => {
           });
 
           it('Max Uint256 + Max Uint256', async () => {
-            await snapshotGasCost(bignum.estimateGas.add(
-              ethers.constants.MaxUint256.toHexString(),
-              ethers.constants.MaxUint256.toHexString(),
-            ));
+            await snapshotGasCost(
+              bignum.estimateGas.add(
+                ethers.constants.MaxUint256.toHexString(),
+                ethers.constants.MaxUint256.toHexString()
+              )
+            );
           });
         });
 
@@ -248,10 +267,12 @@ describe('BigNumber [@group=3]', () => {
           });
 
           it('Max Uint256 - Max Uint256', async () => {
-            await snapshotGasCost(bignum.estimateGas.absdiff(
-              ethers.constants.MaxUint256.toHexString(),
-              ethers.constants.MaxUint256.toHexString(),
-            ));
+            await snapshotGasCost(
+              bignum.estimateGas.absdiff(
+                ethers.constants.MaxUint256.toHexString(),
+                ethers.constants.MaxUint256.toHexString()
+              )
+            );
           });
         });
 
@@ -265,11 +286,13 @@ describe('BigNumber [@group=3]', () => {
 
           it('Max Uint256 % 7 * Max Uint256', async () => {
             const seven = `0x${'00'.repeat(31)}07`;
-            await snapshotGasCost(bignum.estimateGas.modmul(
-              ethers.constants.MaxUint256.toHexString(),
-              seven,
-              ethers.constants.MaxUint256.toHexString(),
-            ));
+            await snapshotGasCost(
+              bignum.estimateGas.modmul(
+                ethers.constants.MaxUint256.toHexString(),
+                seven,
+                ethers.constants.MaxUint256.toHexString()
+              )
+            );
           });
         });
 
@@ -283,11 +306,13 @@ describe('BigNumber [@group=3]', () => {
 
           it('Max Uint256 % 7 ** Max Uint256', async () => {
             const seven = `0x${'00'.repeat(31)}07`;
-            await snapshotGasCost(bignum.estimateGas.modexp(
-              ethers.constants.MaxUint256.toHexString(),
-              seven,
-              ethers.constants.MaxUint256.toHexString(),
-            ));
+            await snapshotGasCost(
+              bignum.estimateGas.modexp(
+                ethers.constants.MaxUint256.toHexString(),
+                seven,
+                ethers.constants.MaxUint256.toHexString()
+              )
+            );
           });
         });
 
@@ -299,10 +324,12 @@ describe('BigNumber [@group=3]', () => {
           });
 
           it('Max Uint256 cmp Max Uint256', async () => {
-            await snapshotGasCost(bignum.estimateGas.cmp(
-              ethers.constants.MaxUint256.toHexString(),
-              ethers.constants.MaxUint256.toHexString(),
-            ));
+            await snapshotGasCost(
+              bignum.estimateGas.cmp(
+                ethers.constants.MaxUint256.toHexString(),
+                ethers.constants.MaxUint256.toHexString()
+              )
+            );
           });
         });
       });

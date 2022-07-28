@@ -26,7 +26,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
     /** The number of checks to determine the prime seed to start the VDF
      */
-    uint256 public constant MILLER_RABIN_ROUNDS = 20;
+    uint256 public constant MILLER_RABIN_ROUNDS = 25;
 
     /** The per-participant reward amount in basic unit of 10^{-18} ECO (weico) selected by the voting process.
      */
@@ -69,6 +69,10 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
     // the ECO token address
     ECO public immutable ecoToken;
+
+    /** A mapping of primals asssociated to the block they were commited in
+     */
+    mapping(uint256 => uint256) public primals;
 
     /** Emitted when inflation starts.
      */
@@ -161,42 +165,43 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      * Can only be called after results are computed and the registration
      * period has ended. The VDF seed can only be set once.
      *
-     * @param _distance uint256 the distance from the last blockhash as uint256 and
-     *                  the prime number to commit
+     * @param _primal the primal to use, must have been committed to in a previous block
      */
-    function commitEntropyVDFSeed(uint256 _distance) external {
+    function commitEntropyVDFSeed(uint256 _primal) external {
         require(entropyVDFSeed == 0, "The VDF seed has already been set");
-
-        /* While the block hash is entirely predictable and manipulatable,
-         * the delay imposed by computing the VDF makes prediction or
-         * effective manipulation sufficiently difficult that it can't be
-         * done inside the block creation time, ensuring that miners can't
-         * manipulate the outcome.
-         * In order to discourage precomputation attacks, we require the
-         * VDF input to be prime.
-         */
-        uint256 _bhash = uint256(blockhash(block.number - 1));
-        uint256 _capDistance = type(uint256).max - _bhash;
-        uint256 _bound = _capDistance >= PRIME_BOUND
-            ? PRIME_BOUND
-            : _capDistance;
-        require(_distance < _bound, "suggested prime is out of bounds");
-
-        uint256 x = _bhash + _distance;
-
+        uint256 _primalCommitBlock = primals[_primal];
         require(
-            !(x % 3 == 0) &&
-                !(x % 5 == 0) &&
-                !(x % 7 == 0) &&
-                !(x % 11 == 0) &&
-                !(x % 13 == 0) &&
-                vdfVerifier.isProbablePrime(x, MILLER_RABIN_ROUNDS),
-            "distance does not point to prime number, either the block has progressed or distance is wrong"
+            _primalCommitBlock > 0 && _primalCommitBlock < block.number,
+            "primal block invalid"
+        );
+        require(
+            !(_primal % 3 == 0) &&
+                !(_primal % 5 == 0) &&
+                !(_primal % 7 == 0) &&
+                !(_primal % 11 == 0) &&
+                !(_primal % 13 == 0) &&
+                vdfVerifier.isProbablePrime(_primal, MILLER_RABIN_ROUNDS),
+            "input failed primality test"
         );
 
-        entropyVDFSeed = x;
+        entropyVDFSeed = _primal;
 
         emit EntropyVDFSeedCommit(entropyVDFSeed);
+    }
+
+    /** Sets a primal in storage associated to the commiting block
+     *  A user first adds a primal to the contract, then they can test its primality in a subsequent block
+     *
+     * @param _primal uint256 the prime number to commit for the block
+     */
+    function setPrimal(uint256 _primal) external {
+        uint256 _bhash = uint256(blockhash(block.number - 1));
+        require(
+            _primal > _bhash && _primal - _bhash < PRIME_BOUND,
+            "suggested prime is out of bounds"
+        );
+
+        primals[_primal] = block.number;
     }
 
     function startInflation(uint256 _numRecipients, uint256 _reward) external {

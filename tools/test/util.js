@@ -18,7 +18,7 @@ exports.deployPolicy = async (
   voteReward = '1000',
   production = false,
   verbose = false,
-  extraParams = {},
+  extraParams = {}
 ) => {
   const options = await Deploy.deploy({
     account,
@@ -49,11 +49,22 @@ exports.deployPolicy = async (
   const inflation = await ethers.getContractAt('RandomInflation', inflationAd);
   const vdf = await ethers.getContractAt('VDFVerifier', vdfAd);
   const ecox = await ethers.getContractAt('ECOx', ecoxAd);
-  const rootHashProposal = await ethers
-    .getContractAt('InflationRootHashProposal', rootHashProposalAd);
-  const timedPolicies = await ethers.getContractAt('TimedPolicies', timedPoliciesAd);
-  const trustedNodes = await ethers.getContractAt('TrustedNodes', trustedNodesAd);
-  const currencyTimer = await ethers.getContractAt('CurrencyTimer', currencyTimerAd);
+  const rootHashProposal = await ethers.getContractAt(
+    'InflationRootHashProposal',
+    rootHashProposalAd
+  );
+  const timedPolicies = await ethers.getContractAt(
+    'TimedPolicies',
+    timedPoliciesAd
+  );
+  const trustedNodes = await ethers.getContractAt(
+    'TrustedNodes',
+    trustedNodesAd
+  );
+  const currencyTimer = await ethers.getContractAt(
+    'CurrencyTimer',
+    currencyTimerAd
+  );
   const lockup = await ethers.getContractAt('Lockup', lockupAd);
   const ecoXStaking = await ethers.getContractAt('ECOxStaking', ecoXStakingAd);
   const faucet = await ethers.getContractAt('EcoFaucet', faucetAd);

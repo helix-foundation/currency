@@ -20,7 +20,9 @@ exports.trace = async (promise, verbose = false) => {
         console.log('No transactions performed');
       }
 
-      console.log(`Tracing block ${block.hash} (${block.number}) ${block.gasUsed}/${block.gasLimit}`);
+      console.log(
+        `Tracing block ${block.hash} (${block.number}) ${block.gasUsed}/${block.gasLimit}`
+      );
 
       for (const tid of block.transactions) {
         const transaction = await web3.eth.getTransactionReceipt(tid);
@@ -28,7 +30,10 @@ exports.trace = async (promise, verbose = false) => {
         const trace = await s({
           jsonrpc: '2.0',
           method: 'debug_traceTransaction',
-          params: [tid, { disableStorage: true, disableMemory: true, disableStack: false }],
+          params: [
+            tid,
+            { disableStorage: true, disableMemory: true, disableStack: false },
+          ],
           id: 99,
         });
         if (verbose) {
@@ -54,7 +59,15 @@ exports.trace = async (promise, verbose = false) => {
             addr = addrs[x.depth];
           }
 
-          console.log(sprintf('%-20s %10d %6d %s', ' '.repeat(x.depth) + x.op, x.gas, x.pc, addr));
+          console.log(
+            sprintf(
+              '%-20s %10d %6d %s',
+              ' '.repeat(x.depth) + x.op,
+              x.gas,
+              x.pc,
+              addr
+            )
+          );
           if (verbose) {
             console.log(x);
           }

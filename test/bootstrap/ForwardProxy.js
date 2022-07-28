@@ -4,15 +4,21 @@ const { loadFixture } = require('ethereum-waffle');
 
 describe('ForwardProxy [@group=2]', () => {
   const fixture = async () => {
-    const targetContract = await (await ethers.getContractFactory('SampleForward')).deploy();
+    const targetContract = await (
+      await ethers.getContractFactory('SampleForward')
+    ).deploy();
     const proxy = await ethers.getContractAt(
       'SampleForward',
       (
-        await (await ethers.getContractFactory('ForwardProxy')).deploy(targetContract.address)
-      ).address,
+        await (
+          await ethers.getContractFactory('ForwardProxy')
+        ).deploy(targetContract.address)
+      ).address
     );
 
-    const sumVerifier = await (await ethers.getContractFactory('SumVerifier')).deploy();
+    const sumVerifier = await (
+      await ethers.getContractFactory('SumVerifier')
+    ).deploy();
 
     return {
       accounts: await ethers.getSigners(),
@@ -28,9 +34,9 @@ describe('ForwardProxy [@group=2]', () => {
   let accounts;
 
   beforeEach(async () => {
-    ({
-      accounts, targetContract, proxy, sumVerifier,
-    } = await loadFixture(fixture));
+    ({ accounts, targetContract, proxy, sumVerifier } = await loadFixture(
+      fixture
+    ));
   });
 
   function compare(description, action, verify) {
@@ -62,15 +68,20 @@ describe('ForwardProxy [@group=2]', () => {
 
   compare(
     'transfers',
-    async (obj) => accounts[0].sendTransaction({ to: obj.address, value: 1000 }),
-    objectValue,
+    async (obj) =>
+      accounts[0].sendTransaction({ to: obj.address, value: 1000 }),
+    objectValue
   );
 
   compare('sums', async (obj) => obj.sums(1, 2, 3, 4, 5, 6), objectValue);
 
   compare('retsums', undefined, async (obj) => obj.retsums());
 
-  compare('increments + returns', async (obj) => sumVerifier.sumverify(obj.address), objectValue);
+  compare(
+    'increments + returns',
+    async (obj) => sumVerifier.sumverify(obj.address),
+    objectValue
+  );
 
   compare('intcall', async (obj) => obj.intcall(100), objectValue);
 

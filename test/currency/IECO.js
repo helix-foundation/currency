@@ -1,14 +1,13 @@
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 
 const { BigNumber } = ethers;
 const { ecoFixture } = require('../utils/fixtures');
 
-const time = require('../utils/time');
-
 const MAX_ACCOUNT_BALANCE = BigNumber.from(
-  '115792089237316195423570985008687907853269984665640564039457', // 584007913129639935', removed as we use 18 digits to store inflation
+  '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as we use 18 digits to store inflation
 );
 
 describe('IECO [@group=5]', () => {
@@ -19,7 +18,9 @@ describe('IECO [@group=5]', () => {
 
   before(async () => {
     accounts = await ethers.getSigners();
-    accounts.sort(async (a, b) => Number((await a.getAddress()) - (await b.getAddress())));
+    accounts.sort(async (a, b) =>
+      Number((await a.getAddress()) - (await b.getAddress()))
+    );
   });
 
   beforeEach('global setup', async () => {
@@ -76,9 +77,13 @@ describe('IECO [@group=5]', () => {
     context('for the inflation policy', () => {
       context('below MAX_ACCOUNT_BALANCE', async () => {
         it('should increase the balance when minting coins', async () => {
-          const startBalance = await eco.balanceOf(await accounts[0].getAddress());
+          const startBalance = await eco.balanceOf(
+            await accounts[0].getAddress()
+          );
           await faucet.mint(await accounts[0].getAddress(), mintAmount);
-          const endBalance = await eco.balanceOf(await accounts[0].getAddress());
+          const endBalance = await eco.balanceOf(
+            await accounts[0].getAddress()
+          );
 
           expect(endBalance.sub(startBalance)).to.equal(mintAmount);
         });
@@ -96,7 +101,9 @@ describe('IECO [@group=5]', () => {
         const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(BigNumber.from(500));
 
         it('should throw when minting coins that would create an unsafe cast for checkpoints', async () => {
-          await expect(faucet.mint(await accounts[1].getAddress(), nearMaxUint256)).to.be.reverted;
+          await expect(
+            faucet.mint(await accounts[1].getAddress(), nearMaxUint256)
+          ).to.be.reverted;
         });
       });
     });
@@ -104,14 +111,17 @@ describe('IECO [@group=5]', () => {
     context('for an unauthorized user', () => {
       it('should revert when minting coins', async () => {
         await expect(
-          eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000),
+          eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)
         ).to.be.revertedWith('not authorized');
       });
 
       it('should not increase the balance when reverting minting coins', async () => {
-        const startBalance = await eco.balanceOf(await accounts[1].getAddress());
-        await expect(eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)).to.be
-          .reverted;
+        const startBalance = await eco.balanceOf(
+          await accounts[1].getAddress()
+        );
+        await expect(
+          eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)
+        ).to.be.reverted;
         const endBalance = await eco.balanceOf(await accounts[1].getAddress());
 
         expect(endBalance).to.equal(startBalance);
@@ -119,8 +129,9 @@ describe('IECO [@group=5]', () => {
 
       it('should not increase the supply when reverting minting coins', async () => {
         const startSupply = await eco.balanceOf(await accounts[1].getAddress());
-        await expect(eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)).to.be
-          .reverted;
+        await expect(
+          eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)
+        ).to.be.reverted;
         const endSupply = await eco.balanceOf(await accounts[1].getAddress());
 
         expect(endSupply).to.equal(startSupply);
@@ -135,7 +146,9 @@ describe('IECO [@group=5]', () => {
       it('should succeed with a balance', async () => {
         await faucet.mint(await accounts[1].getAddress(), burnAmount);
         const preBalance = await eco.balanceOf(await accounts[1].getAddress());
-        await eco.connect(accounts[1]).burn(await accounts[1].getAddress(), burnAmount);
+        await eco
+          .connect(accounts[1])
+          .burn(await accounts[1].getAddress(), burnAmount);
         const postBalance = await eco.balanceOf(await accounts[1].getAddress());
         expect(preBalance - postBalance).to.equal(burnAmount);
       });
@@ -143,7 +156,9 @@ describe('IECO [@group=5]', () => {
       it('should decrease total supply', async () => {
         await faucet.mint(await accounts[1].getAddress(), burnAmount);
         const preSupply = await eco.totalSupply();
-        await eco.connect(accounts[1]).burn(await accounts[1].getAddress(), burnAmount);
+        await eco
+          .connect(accounts[1])
+          .burn(await accounts[1].getAddress(), burnAmount);
         const postSupply = await eco.totalSupply();
         expect(preSupply - postSupply).to.equal(burnAmount);
       });
@@ -152,7 +167,9 @@ describe('IECO [@group=5]', () => {
     context('for another user', () => {
       it('sound revert', async () => {
         await expect(
-          eco.connect(accounts[2]).burn(await accounts[1].getAddress(), burnAmount),
+          eco
+            .connect(accounts[2])
+            .burn(await accounts[1].getAddress(), burnAmount)
         ).to.be.revertedWith('not authorized');
       });
     });
@@ -161,7 +178,9 @@ describe('IECO [@group=5]', () => {
   describe('Generations', () => {
     context('when the store is not ready for a generation update', () => {
       it('does not allow incrementing generations', async () => {
-        await expect(timedPolicies.incrementGeneration()).to.be.revertedWith('please try later');
+        await expect(timedPolicies.incrementGeneration()).to.be.revertedWith(
+          'please try later'
+        );
       });
     });
 
@@ -175,14 +194,17 @@ describe('IECO [@group=5]', () => {
 
       it('allows incrementing generations', async () => {
         await timedPolicies.incrementGeneration();
-        assert.equal((await eco.currentGeneration()).toNumber(), originalGeneration + 1);
+        assert.equal(
+          (await eco.currentGeneration()).toNumber(),
+          originalGeneration + 1
+        );
       });
     });
 
     context('when generation has not increased', () => {
       it('reverts when call notifyGenerationIncrease', async () => {
         await expect(eco.notifyGenerationIncrease()).to.be.revertedWith(
-          'Generation has not increased',
+          'Generation has not increased'
         );
       });
     });
@@ -199,7 +221,10 @@ describe('IECO [@group=5]', () => {
         blockNumber = await time.latestBlock();
         await time.advanceBlock();
         originalGeneration = (await eco.currentGeneration()).toNumber();
-        initialBalance = await eco.getPastVotes(await accounts[1].getAddress(), blockNumber);
+        initialBalance = await eco.getPastVotes(
+          await accounts[1].getAddress(),
+          blockNumber
+        );
 
         await time.increase(31557600 / 10);
         await timedPolicies.incrementGeneration();
@@ -210,9 +235,9 @@ describe('IECO [@group=5]', () => {
       });
 
       it('uses the last-updated block number for old balances', async () => {
-        expect(await eco.getPastVotes(testAccount, (await time.latestBlock()) - 1)).to.be.equal(
-          initialBalance,
-        );
+        expect(
+          await eco.getPastVotes(testAccount, (await time.latestBlock()) - 1)
+        ).to.be.equal(initialBalance);
       });
 
       it('uses the last-updated block number as the balance', async () => {
@@ -221,9 +246,9 @@ describe('IECO [@group=5]', () => {
     });
 
     it('Cannot return future balances', async () => {
-      await expect(eco.getPastVotes(await accounts[1].getAddress(), 999999999)).to.be.revertedWith(
-        'InflationCheckpoints: block not yet mined',
-      );
+      await expect(
+        eco.getPastVotes(await accounts[1].getAddress(), 999999999)
+      ).to.be.revertedWith('InflationCheckpoints: block not yet mined');
     });
 
     context('after a long time', () => {
@@ -248,7 +273,9 @@ describe('IECO [@group=5]', () => {
       });
 
       it('preserves orignal balance', async () => {
-        expect(await eco.getPastVotes(testAccount, blockNumber)).to.equal(initialBalance);
+        expect(await eco.getPastVotes(testAccount, blockNumber)).to.equal(
+          initialBalance
+        );
       });
 
       context('after even longer', () => {
@@ -269,9 +296,9 @@ describe('IECO [@group=5]', () => {
         });
 
         it('preserves orignal balance', async () => {
-          expect(await eco.getPastVotes(testAccount, intermediateBlockNumber)).to.equal(
-            intermediateBalance,
-          );
+          expect(
+            await eco.getPastVotes(testAccount, intermediateBlockNumber)
+          ).to.equal(intermediateBalance);
         });
       });
     });
@@ -303,10 +330,16 @@ describe('IECO [@group=5]', () => {
         }
 
         for (let i = 0; i < 3; i += 1) {
-          const account1Balance = await eco.getPastVotes(testAccount1, checkPoints[i]);
+          const account1Balance = await eco.getPastVotes(
+            testAccount1,
+            checkPoints[i]
+          );
           expect(account1Balance).to.equal(testAccount1Balances[i]);
 
-          const account2Balance = await eco.getPastVotes(testAccount2, checkPoints[i]);
+          const account2Balance = await eco.getPastVotes(
+            testAccount2,
+            checkPoints[i]
+          );
           expect(account2Balance).to.equal(testAccount2Balances[i]);
         }
       });

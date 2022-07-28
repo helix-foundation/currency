@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const fs = require('fs');
 const { Transaction } = require('ethereumjs-tx');
 const EthereumUtil = require('ethereumjs-util');
@@ -16,7 +14,8 @@ const web3 = require('web3');
  * private keys cannot be efficiently recovered from ECDSA signatures.
  */
 const ECDSA_V_VALUE = 27;
-const ECDSA_R_VALUE = '0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798';
+const ECDSA_R_VALUE =
+  '0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798';
 
 /* Command line argument definitions for when this file is used as a command
  * line application.
@@ -109,7 +108,9 @@ function decorateTx(tx) {
     tx,
     json,
     from,
-    to: EthereumUtil.bufferToHex(EthereumUtil.generateAddress(tx.from, tx.nonce)),
+    to: EthereumUtil.bufferToHex(
+      EthereumUtil.generateAddress(tx.from, tx.nonce)
+    ),
     raw: EthereumUtil.bufferToHex(tx.serialize()),
   };
 }
@@ -153,7 +154,7 @@ function main() {
     options.signature,
     options.gas,
     options.gasPrice,
-    options.paramdata,
+    options.paramdata
   );
   createTxFile(tx, options.outfile);
 }

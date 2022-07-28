@@ -15,7 +15,13 @@ describe('TokenInit [@group=11]', () => {
     const ecoProxied = await ethers.getContractAt('ECO', ecoProxy.address);
 
     const ecoXInit = await deploy('EcoXTokenInit');
-    const ecoXToken = await deploy('ECOx', policy.address, ecoXInit.address, 10, ecoProxy.address);
+    const ecoXToken = await deploy(
+      'ECOx',
+      policy.address,
+      ecoXInit.address,
+      10,
+      ecoProxy.address
+    );
     const ecoXProxy = await deploy('ForwardProxy', ecoXToken.address);
     const ecoXProxied = await ethers.getContractAt('ECOx', ecoXProxy.address);
 
@@ -40,20 +46,17 @@ describe('TokenInit [@group=11]', () => {
   const deadbeef = '0xdeadbeefbadf00dc0ffee1ceb00dafaceb00cec0';
 
   beforeEach(async () => {
-    ({
-      ecoInit, ecoToken, ecoProxied, ecoXInit, ecoXToken, ecoXProxied,
-    } = await loadFixture(
-      fixture,
-    ));
+    ({ ecoInit, ecoToken, ecoProxied, ecoXInit, ecoXToken, ecoXProxied } =
+      await loadFixture(fixture));
   });
 
   describe('initialize', () => {
     it('should not be callable', async () => {
       await expect(ecoProxied.initialize(ecoInit.address)).to.be.revertedWith(
-        'Can only be called during initialization',
+        'Can only be called during initialization'
       );
       await expect(ecoXProxied.initialize(ecoXInit.address)).to.be.revertedWith(
-        'Can only be called during initialization',
+        'Can only be called during initialization'
       );
     });
   });
@@ -61,15 +64,17 @@ describe('TokenInit [@group=11]', () => {
   describe('distributeTokens', () => {
     describe('with mismatched array lengths', () => {
       it('reverts for eco', async () => {
-        await expect(ecoInit.distributeTokens(ecoInit.address, [], [10])).to.be.revertedWith(
-          '_initialHolders and _initialBalances must correspond exactly (length)',
+        await expect(
+          ecoInit.distributeTokens(ecoInit.address, [], [10])
+        ).to.be.revertedWith(
+          '_initialHolders and _initialBalances must correspond exactly (length)'
         );
       });
       it('reverts for ecox', async () => {
         await expect(
-          ecoXInit.distributeTokens(ecoXInit.address, [deadbeef], []),
+          ecoXInit.distributeTokens(ecoXInit.address, [deadbeef], [])
         ).to.be.revertedWith(
-          '_initialHolders and _initialBalances must correspond exactly (length)',
+          '_initialHolders and _initialBalances must correspond exactly (length)'
         );
       });
     });
@@ -85,7 +90,11 @@ describe('TokenInit [@group=11]', () => {
 
       it('ecoinit correctly funds the account', async () => {
         const mintAmount = '1000';
-        await ecoInit.distributeTokens(ecoProxied.address, [deadbeef], [mintAmount]);
+        await ecoInit.distributeTokens(
+          ecoProxied.address,
+          [deadbeef],
+          [mintAmount]
+        );
 
         const tokens = (await ecoProxied.balanceOf(deadbeef)).toString();
         expect(tokens).to.equal(mintAmount);
@@ -93,7 +102,11 @@ describe('TokenInit [@group=11]', () => {
 
       it('ecoXinit correctly funds the account', async () => {
         const mintAmount = '10';
-        await ecoXInit.distributeTokens(ecoXProxied.address, [deadbeef], [mintAmount]);
+        await ecoXInit.distributeTokens(
+          ecoXProxied.address,
+          [deadbeef],
+          [mintAmount]
+        );
 
         const tokens = (await ecoXProxied.balanceOf(deadbeef)).toString();
         expect(tokens).to.equal(mintAmount);

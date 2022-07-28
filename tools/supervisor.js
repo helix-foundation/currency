@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* eslint-env es6 */
 /* eslint no-bitwise: 0 */
 /* eslint-disable no-param-reassign, no-await-in-loop */

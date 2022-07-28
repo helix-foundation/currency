@@ -20,8 +20,9 @@ before(async () => {
   const block = await web3.eth.getBlock('latest');
   const limit = block.gasLimit;
   const o = web3.eth.Contract.prototype._getOrSetDefaultOptions;
-  web3.eth.Contract.prototype._getOrSetDefaultOptions = function getOrSetDefaultOptions(options) {
-    options.gas = limit;
-    return o.call(this, options);
-  };
+  web3.eth.Contract.prototype._getOrSetDefaultOptions =
+    function getOrSetDefaultOptions(options) {
+      options.gas = limit;
+      return o.call(this, options);
+    };
 });

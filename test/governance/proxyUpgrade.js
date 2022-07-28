@@ -13,9 +13,8 @@
 const { expect } = require('chai');
 
 const { ethers } = require('hardhat');
+const time = require('../utils/time.ts');
 const { ecoFixture } = require('../utils/fixtures');
-
-const time = require('../utils/time');
 const { deploy } = require('../utils/contracts');
 const util = require('../../tools/test/util');
 
@@ -41,10 +40,17 @@ describe('Proxy Policy Change [@group=9]', () => {
   before('Deploys the production system', async () => {
     const accounts = await ethers.getSigners();
     [alice, bob, charlie, dave] = accounts;
-    trustednodes = [await bob.getAddress(), await charlie.getAddress(), await dave.getAddress()];
+    trustednodes = [
+      await bob.getAddress(),
+      await charlie.getAddress(),
+      await dave.getAddress(),
+    ];
 
     ({
-      policy, eco, faucet: initInflation, timedPolicies,
+      policy,
+      eco,
+      faucet: initInflation,
+      timedPolicies,
     } = await ecoFixture(trustednodes));
   });
 
@@ -67,7 +73,10 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract is not poodles', async () => {
     poodleCheck = await ethers.getContractAt(
       'PoodleTrustedNodes',
-      await util.policyFor(policy, ethers.utils.solidityKeccak256(['string'], ['TrustedNodes'])),
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['TrustedNodes'])
+      )
     );
 
     // the contract at ID_TRUSTED_NODES is not poodles so it does not have this function
@@ -86,7 +95,7 @@ describe('Proxy Policy Change [@group=9]', () => {
     makeTrustedPoodles = await deploy(
       'MakeTrustedPoodles',
       poodleTrustedNodes.address,
-      implementationUpdatingTarget.address,
+      implementationUpdatingTarget.address
     );
     const name = await makeTrustedPoodles.name();
     expect(name).to.equal('MakeTrustedPoodles');
@@ -103,10 +112,13 @@ describe('Proxy Policy Change [@group=9]', () => {
   });
 
   it('Kicks off a proposal round', async () => {
-    const proposalsHash = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals']);
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
+    );
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash),
+      await util.policyFor(policy, proposalsHash)
     );
   });
 
@@ -114,7 +126,9 @@ describe('Proxy Policy Change [@group=9]', () => {
     await eco
       .connect(alice)
       .approve(policyProposals.address, await policyProposals.COST_REGISTER());
-    await policyProposals.connect(alice).registerProposal(makeTrustedPoodles.address);
+    await policyProposals
+      .connect(alice)
+      .registerProposal(makeTrustedPoodles.address);
 
     await time.increase(3600 * 24 * 2);
   });
@@ -126,10 +140,13 @@ describe('Proxy Policy Change [@group=9]', () => {
   });
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes']);
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    );
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash),
+      await util.policyFor(policy, policyVotesIdentifierHash)
     );
   });
 
@@ -152,8 +169,14 @@ describe('Proxy Policy Change [@group=9]', () => {
   });
 
   it('Checks that the address has not changed', async () => {
-    const trustNodesHash = ethers.utils.solidityKeccak256(['string'], ['TrustedNodes']);
-    const retryPoodleCheckAddress = await util.policyFor(policy, trustNodesHash);
+    const trustNodesHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['TrustedNodes']
+    );
+    const retryPoodleCheckAddress = await util.policyFor(
+      policy,
+      trustNodesHash
+    );
     expect(retryPoodleCheckAddress).to.equal(poodleCheck.address);
   });
 
