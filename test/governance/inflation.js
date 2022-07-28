@@ -12,7 +12,7 @@ const { getTree, answer } = require('../../tools/randomInflationUtils');
 const { ecoFixture } = require('../utils/fixtures');
 const util = require('../../tools/test/util');
 
-describe('RandomInflation [@group=6]', () => {
+describe.only('RandomInflation [@group=6]', () => {
   let policy;
   let eco;
   let governance;
@@ -102,6 +102,10 @@ describe('RandomInflation [@group=6]', () => {
     return [answer(tree, index), index, recipient];
   }
 
+  /**
+   * Recursively attempts to find a prime number that is within a distance to the latest blockhash
+   * @returns The distance from the current blockhash that a probable prime is
+   */
   async function getPrimeDistance() {
     const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
 
@@ -113,6 +117,22 @@ describe('RandomInflation [@group=6]', () => {
         )
       ) {
         return i;
+      }
+    }
+    await time.advanceBlock();
+    return getPrimeDistance();
+  }
+  async function getPrimal() {
+    const baseNum = new BN((await time.latestBlockHash()).slice(2), 16);
+
+    for (let i = 0; i < 1000; i++) {
+      if (
+        await bigintCryptoUtils.isProbablyPrime(
+          BigInt(baseNum.addn(i).toString()),
+          30
+        )
+      ) {
+        return baseNum.addn(i).toString();
       }
     }
     await time.advanceBlock();
@@ -243,22 +263,41 @@ describe('RandomInflation [@group=6]', () => {
   });
 
   describe('commitEntropyVDF', () => {
-    it('emits the EntropyVDFSeedCommit event', async () => {
-      //      time.increase(3600 * 24 * 2);
-
+    it('should revert on uncommited primal', async () => {
       await expect(
         inflation.commitEntropyVDFSeed(await getPrimeDistance())
-      ).to.emit(inflation, 'EntropyVDFSeedCommit');
+      ).to.be.revertedWith('primal block invalid');
     });
 
-    it('reverts when called twice', async () => {
-      //      time.increase(3600 * 24 * 2);
-
-      await inflation.commitEntropyVDFSeed(await getPrimeDistance());
+    it('should revert on primal commited in same block', async () => {
+      await inflation.setPrimal(await getPrimeDistance());
 
       await expect(
         inflation.commitEntropyVDFSeed(await getPrimeDistance())
-      ).to.be.revertedWith('seed has already been set');
+      ).to.be.revertedWith('primal block invalid');
+    });
+
+    it('should emit EntropyVDFSeedCommit event on success', async () => {
+      //      time.increase(3600 * 24 * 2);
+      const primal = await getPrimal();
+      await inflation.setPrimal(primal);
+      await time.advanceBlocks(1);
+      await expect(inflation.commitEntropyVDFSeed(primal)).to.emit(
+        inflation,
+        'EntropyVDFSeedCommit'
+      );
+    });
+
+    it('should reverts when called twice', async () => {
+      //      time.increase(3600 * 24 * 2);
+      const primal = await getPrimal();
+      await inflation.setPrimal(primal);
+      await time.advanceBlocks(1);
+      await inflation.commitEntropyVDFSeed(primal);
+
+      await expect(inflation.commitEntropyVDFSeed(primal)).to.be.revertedWith(
+        'seed has already been set'
+      );
     });
   });
 
@@ -271,8 +310,10 @@ describe('RandomInflation [@group=6]', () => {
 
     it("reverts when the VDF isn't proven", async () => {
       //      await time.increase(3600 * 24 * 2);
-
-      await inflation.commitEntropyVDFSeed(await getPrimeDistance());
+      const primal = await getPrimal();
+      await inflation.setPrimal(primal);
+      await time.advanceBlocks(1);
+      await inflation.commitEntropyVDFSeed(primal);
 
       await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
         'output value must be verified'
@@ -284,8 +325,10 @@ describe('RandomInflation [@group=6]', () => {
 
       beforeEach(async () => {
         //        await time.increase(3600 * 24 * 2);
-
-        await inflation.commitEntropyVDFSeed(await getPrimeDistance());
+        const primal = await getPrimal();
+        await inflation.setPrimal(primal);
+        await time.advanceBlocks(1);
+        await inflation.commitEntropyVDFSeed(primal);
         let u;
         const vdfseed = new BN(
           (await inflation.entropyVDFSeed()).toHexString().slice(2),
@@ -319,7 +362,10 @@ describe('RandomInflation [@group=6]', () => {
 
   describe('claim', () => {
     beforeEach(async () => {
-      await inflation.commitEntropyVDFSeed(await getPrimeDistance());
+      const primal = await getPrimal();
+      await inflation.setPrimal(primal);
+      await time.advanceBlocks(1);
+      await inflation.commitEntropyVDFSeed(primal);
     });
 
     context('but before the VDF is complete', () => {
@@ -498,7 +544,10 @@ describe('RandomInflation [@group=6]', () => {
 
     context('after the results are computed', () => {
       beforeEach(async () => {
-        await inflation.commitEntropyVDFSeed(await getPrimeDistance());
+        const primal = await getPrimal();
+        await inflation.setPrimal(primal);
+        await time.advanceBlocks(1);
+        await inflation.commitEntropyVDFSeed(primal);
       });
 
       context('with VDF, basic flow', () => {

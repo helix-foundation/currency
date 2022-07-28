@@ -169,8 +169,11 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      */
     function commitEntropyVDFSeed(uint256 _primal) external {
         require(entropyVDFSeed == 0, "The VDF seed has already been set");
-
-        require(primals[_primal] < block.number, "primal block invalid");
+        uint256 _primalCommitBlock = primals[_primal];
+        require(
+            _primalCommitBlock > 0 && _primalCommitBlock < block.number,
+            "primal block invalid"
+        );
         require(
             !(_primal % 3 == 0) &&
                 !(_primal % 5 == 0) &&
@@ -184,6 +187,14 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         entropyVDFSeed = _primal;
 
         emit EntropyVDFSeedCommit(entropyVDFSeed);
+    }
+
+    /** Sets a primal in storage associated to the commiting block
+     *
+     * @param _primal uint256 the prime number to commit for the block
+     */
+    function setPrimal(uint256 _primal) external {
+        primals[_primal] = block.number;
     }
 
     function startInflation(uint256 _numRecipients, uint256 _reward) external {
@@ -310,29 +321,5 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         uint256 _index
     ) external {
         claimFor(msg.sender, _sequence, _proof, _sum, _index);
-    }
-
-    /** Sets a primal in storage associated to the commiting block
-     *
-     * @param _distance uint256 the distance from the last blockhash as uint256 and
-     *                  the prime number to commit for the block
-     */
-    function setPrimal(uint256 _distance) external {
-        /* While the block hash is entirely predictable and manipulatable,
-         * the delay imposed by computing the VDF makes prediction or
-         * effective manipulation sufficiently difficult that it can't be
-         * done inside the block creation time, ensuring that miners can't
-         * manipulate the outcome.
-         * In order to discourage precomputation attacks, we require the
-         * VDF input to be prime.
-         */
-        uint256 _bhash = uint256(blockhash(block.number - 1));
-        uint256 _capDistance = type(uint256).max - _bhash;
-        uint256 _bound = _capDistance >= PRIME_BOUND
-            ? PRIME_BOUND
-            : _capDistance;
-        require(_distance < _bound, "suggested prime is out of bounds");
-
-        primals[_bhash + _distance] = block.number;
     }
 }
