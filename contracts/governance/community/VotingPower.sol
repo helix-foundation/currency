@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../monetary/ILockups.sol";
 import "../monetary/Lockup.sol";
 import "../../policy/PolicedUtils.sol";
 import "../../currency/ECO.sol";

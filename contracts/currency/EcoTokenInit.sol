@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../currency/ECOx.sol";
+import "./ECO.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/** @title ECOx initial token distribution contract
+/** @title ECO initial token distribution contract
  *
- * This contract is used to distribute the initial allocations of ECOx
+ * This contract is used to distribute the initial allocations of ECO
  */
-contract EcoXTokenInit is Ownable {
-    /** Transfer held ECOx for the initial distribution.
+contract EcoTokenInit is Ownable {
+    /** Transfer held ECO for the initial distribution.
      *
-     * @param _token The address of the ECOx token contract.
+     * @param _token The address of the ECO token contract.
      * @param _initialHolders The addresses to mint to.
      * @param _initialBalances How much to mint to each
      */
@@ -29,7 +29,7 @@ contract EcoXTokenInit is Ownable {
         // Loops boundaries must be reasonable.
         // This is not an airdrop to all users, but to holding/distribution contracts.
         for (uint256 i = 0; i < _initialHolders.length; ++i) {
-            ECOx(_token).transfer(_initialHolders[i], _initialBalances[i]);
+            ECO(_token).transfer(_initialHolders[i], _initialBalances[i]);
         }
     }
 

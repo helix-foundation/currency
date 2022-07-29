@@ -55,8 +55,8 @@ const ECOABI = require(`../${importPath}/contracts/currency/ECO.sol/ECO.json`);
 // const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
 const EcoFaucetABI = require(`../${importPath}/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`);
 const EcoTestCleanupABI = require(`../${importPath}/contracts/deploy/EcoTestCleanup.sol/EcoTestCleanup.json`);
-const EcoTokenInitABI = require(`../${importPath}/contracts/deploy/EcoTokenInit.sol/EcoTokenInit.json`);
-const EcoXTokenInitABI = require(`../${importPath}/contracts/deploy/EcoXTokenInit.sol/EcoXTokenInit.json`);
+const EcoTokenInitABI = require(`../${importPath}/contracts/currency/EcoTokenInit.sol/EcoTokenInit.json`);
+const EcoXTokenInitABI = require(`../${importPath}/contracts/currency/EcoXTokenInit.sol/EcoXTokenInit.json`);
 const VDFVerifierABI = require(`../${importPath}/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`);
 const ECOxABI = require(`../${importPath}/contracts/currency/ECOx.sol/ECOx.json`);
 /* eslint-enable import/no-unresolved */

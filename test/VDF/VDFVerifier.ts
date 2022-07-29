@@ -16,7 +16,7 @@ function vdfTrace(m: string) {
 }
 
 describe('VDFVerifier [@group=6]', () => {
-  const t = 3;
+  const t = 10;
   const xbn = new BN(
     '33489018563487178283330196417991470257782488426382532093764016677620128062547'
   );
@@ -228,7 +228,7 @@ describe('VDFVerifier [@group=6]', () => {
       let receipt = await result.wait();
       vdfTrace(`start: gas used ${receipt.gasUsed}`);
 
-      let totalGasInVerify = receipt.gasUsed;
+      let totalGasInVerify = Number(receipt.gasUsed);
 
       vdfTrace(`\nx: ${bnHex(xbn)}`);
       vdfTrace(`y: ${bnHex(ybn)}`);
@@ -247,17 +247,17 @@ describe('VDFVerifier [@group=6]', () => {
         result = await instanceVDFVerifier.update(bnHex(u));
         receipt = await result.wait();
         vdfTrace(`update: gas used ${receipt.gasUsed}`);
-        totalGasInVerify = totalGasInVerify.add(receipt.gasUsed);
+        totalGasInVerify += Number(receipt.gasUsed);
       }
 
       vdfTrace(
         `update: total gas used ${totalGasInVerify} (<${
-          Math.ceil(totalGasInVerify.div(100000).toNumber()) / 10
+          Math.ceil(totalGasInVerify / 100000) / 10
         } Mln) T=2^${t}`
       );
       vdfTrace(
         `update: total gas cost @20 Gwei ${
-          (20 * totalGasInVerify.toNumber()) / 1000000000
+          (20 * totalGasInVerify) / 1000000000
         } ETH`
       );
 

@@ -3,16 +3,12 @@
 pragma solidity ^0.8.0;
 
 import "./InflationCheckpoints.sol";
-import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
-// import "../governance/monetary/InflationRootHashProposal.sol";
-import "../governance/CurrencyTimer.sol";
 import "../governance/monetary/CurrencyGovernance.sol";
 import "../governance/IGeneration.sol";
 
 /** @title An ERC20 token interface to the Eco currency system.
  */
-contract ECO is InflationCheckpoints, TimeUtils {
+contract ECO is InflationCheckpoints {
     /** Fired when a proposal with a new inflation multiplier is selected and passed.
      * Used to calculate new values for the rebased token.
      */

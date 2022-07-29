@@ -3,9 +3,6 @@
 pragma solidity ^0.8.0;
 import "./IECO.sol";
 import "../policy/PolicedUtils.sol";
-import "../utils/TimeUtils.sol";
-import "../governance/monetary/Lockup.sol";
-import "../governance/CurrencyTimer.sol";
 import "./ERC20Pausable.sol";
 
 /** @title An ERC20 token interface for ECOx

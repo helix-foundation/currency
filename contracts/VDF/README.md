@@ -1,7 +1,7 @@
 # The Verifiable Delay Function _(VDF)_
-> Contract implementing the VDF, supporting testing code, and reference implementation of the off-the-chain Verifier.
+> Contract implementing the VDF, supporting testing code, and reference implementation for the off-the-chain Verifier.
 
-VDF functionality is a part of the currency project and implements the following components:
+VDF functionality is a tool for Random Inflation and implements the following components:
 
 1. VDFVerifier contract, implemented in Solidity. It follows the [Simple Verifiable Delay Functions](https://eprint.iacr.org/2018/627) method.
 2. The reference Prover code written in JavaScript that runs during self-tests.
@@ -17,7 +17,7 @@ VDF functionality is a part of the currency project and implements the following
  - [License](#license)
 
 ## Security
-The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. finding a valid prime x such that x^2 is also a false positive to the primality test is too hard of a constraint on the attacker. The value of x is controlled by a potential attacker, but is highly limited (must be close after the previous blockhash, caste as a uint256). This does not guarantee that any such malicious x is valid. See [Security Details Details](#security-details) for additional information.
+The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. finding a valid prime x such that x^2 is also a false positive to the primality test is too hard of a constraint on the attacker. The value of x is controlled by a potential attacker, but is highly limited (must be within 1000 after the previous blockhash, caste as a uint256). This does not guarantee that any such malicious x is valid. See [Security Details Details](#security-details) for additional information.
 
 ## Background
 The contract holds a constant `N` which is the RSA-style modulus. 2048-bit modulus is from the RSA-2048 challenge https://en.wikipedia.org/wiki/RSA_Factoring_Challenge. Our security assumptions rely on RSA challenge rules: no attacker knows or can obtain the factorization, and factorization wasn't recorded on generation of the number.
@@ -54,13 +54,13 @@ Initiates the store of state for the `msg.sender` and validates the inputs.
  - `x` must be at least 2
  - `y` must be at least 512 bit long
  - `y` must be less than `N`
- - `x` must be probable prime
+ - `x` is not constrained to be probable prime as our system enforces that elsewhere, however proving a non-prime x will not be constrained to the expected time window as expected.
 
 ### update
 Arguments:
   - `_ubytes` (bytes) - the corresponding proof value u[i], where i = _nextProgress
 
-The caller calls this function n-1 times. If each of these calls is successful, the `isVerified` will return true the last call. See the [VDF.js](../../test/VDF.js) for the details on the generation of each value u[i]. On the final call of `update` it checks for verification and then records and emits an event if successful, then deletes the user's state.
+The caller calls this function n-1 times. If each of these calls is successful, the `isVerified` will return true the last call. See the [vdf.js](../../tools/vdf.js) for the details on the generation of each value u[i]. On the final call of `update` it checks for verification and then records and emits an event if successful, then deletes the user's state as it is no longer needed.
 
 ### isVerified
 Arguments:
@@ -72,8 +72,7 @@ Arguments:
 Verifies and returns true if verified.
 
 ### Security Details
-x must be a 256-bit random uniformly-distributed number
-The modulus n must be a product of two 1024-bit safe primes. It is critical that nobody knows factorization of the modulus n. A regular RSA modulus is not a suitable choice of n for two reasons: 
+x must be a 256-bit random uniformly-distributed prime number for effectiveness. The modulus n must be a product of two 1024-bit safe primes. It is critical that nobody knows factorization of the modulus n. A regular RSA modulus is not a suitable choice of n for two reasons: 
  - somebody may know factorization of n
  - the factors of n, p and q, are likely to have a property that p-1 or q-1 are products of primes shorter than ~100 bits (allowing low-order elements with probability higher than 2^-100).
 
@@ -95,7 +94,7 @@ Selection of the value t must take into consideration the available processing p
 | 40 |      4  hr  |  23  hr  |      5 days  |
 
 ##### Time interval
-Let's assume that t=33 is selected. The Prover should pre-compute the pair of (x, y) ahead of time. It will take the Prover from 1 hr to 1 min, per single core, to accomplish this, depending on the selected CPU widely available for sale today. The commitment window for x should be under 1 min, ensuring that no attacker can compute y within this time.
+Let's assume that t=33 is selected. The Prover should pre-compute the pair of (x, y) ahead of time. It will take the Prover from 1 hr to 10 min, per single core, to accomplish this, depending on the selected CPU widely available for sale today. The commitment window for x should be under 10 min, ensuring that no attacker can compute y within this time.
 This example leaves little room to possible advances in computational power, and larger values, e.g. t=40 or higher, should be considered with a similarly brief commitment window, measured in seconds.
 Increasing t by 1 doubles every value in the row in the above table. 
 
@@ -105,15 +104,8 @@ Increasing t by 1 doubles every value in the row in the above table.
 
 |  t  | Gas       | Cost @20 Gwei, in ETH  |
 |-----|----------:|-----------------------:|
-| 10  | 11091346  |                  0.221 |
-| 20  | 23715545  |                  0.472 |
-
-1K modulus (for comparison, outdated):
-
-|  t  | Gas      | Cost @20 Gwei, in ETH  |
-|-----|---------:|-----------------------:|
-| 10  |  4814888 |                  0.096 |
-| 20  | 10251939 |                  0.205 |
+| 10  |  4285030  |                  0.085 |
+| 20  |  8168264  |                  0.163 |
 
 t is the number of iterations of the verifier. 
 
