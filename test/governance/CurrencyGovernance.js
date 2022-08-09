@@ -9,7 +9,7 @@ const { BigNumber } = ethers;
 const { ecoFixture } = require('../utils/fixtures');
 const { deploy } = require('../utils/contracts');
 
-describe.only('CurrencyGovernance [@group=4]', () => {
+describe('CurrencyGovernance [@group=4]', () => {
   let alice;
   let bob;
   let charlie;
@@ -397,16 +397,15 @@ describe.only('CurrencyGovernance [@group=4]', () => {
         });
 
         it('In a tie, should set the leader as the contract that hit the highest point total first', async () => {
-          
           await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
-          //should get {bob: 3, charlie: 2, dave: 1}, bob is leader first with 3
+          // should get {bob: 3, charlie: 2, dave: 1}, bob is leader first with 3
           expect(await borda.score(await bob.getAddress())).to.equal(3);
           expect(await borda.score(await charlie.getAddress())).to.equal(2);
           expect(await borda.score(await dave.getAddress())).to.equal(1);
 
           await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
 
-          //should get {bob: 3, charlie: 3, dave: 1}, bob is leader first with 3, but charlie is tied
+          // should get {bob: 3, charlie: 3, dave: 1}, bob is leader first with 3, but charlie is tied
           expect(await borda.score(await bob.getAddress())).to.equal(3);
           expect(await borda.score(await charlie.getAddress())).to.equal(3);
           expect(await borda.score(await dave.getAddress())).to.equal(1);
@@ -434,11 +433,11 @@ describe.only('CurrencyGovernance [@group=4]', () => {
 
         describe('Compute Phase', async () => {
           beforeEach(async () => {
-            await borda.connect(bob).reveal(bobvote[0], bobvote[2]);//321
+            await borda.connect(bob).reveal(bobvote[0], bobvote[2]); // 321
             // await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
-            await borda.connect(dave).reveal(davevote[0], davevote[2]);//4,4,4
+            await borda.connect(dave).reveal(davevote[0], davevote[2]); // 4,4,4
           });
-          
+
           it('Emits VoteResult', async () => {
             await time.increase(3600 * 24 * 1);
             await borda.updateStage();
