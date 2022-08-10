@@ -396,20 +396,40 @@ describe('CurrencyGovernance [@group=4]', () => {
           expect(await borda.leader()).to.equal(await charlie.getAddress());
         });
 
-        it('In a tie, should set the leader as the contract that hit the highest point total first', async () => {
-          await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
-          // should get {bob: 3, charlie: 2, dave: 1}, bob is leader first with 3
-          expect(await borda.score(await bob.getAddress())).to.equal(3);
-          expect(await borda.score(await charlie.getAddress())).to.equal(2);
-          expect(await borda.score(await dave.getAddress())).to.equal(1);
+        describe('In a tie', () => {
+          it('should set the leader as the proposal that hit the highest point total first', async () => {
+            await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+            // should get {bob: 3, charlie: 2, dave: 1}, bob is leader first with 3
+            expect(await borda.score(await bob.getAddress())).to.equal(3);
+            expect(await borda.score(await charlie.getAddress())).to.equal(2);
+            expect(await borda.score(await dave.getAddress())).to.equal(1);
 
-          await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
+            await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
+            // should get {bob: 3, charlie: 3, dave: 1}, bob is leader first with 3, but charlie is tied
+            expect(await borda.score(await bob.getAddress())).to.equal(3);
+            expect(await borda.score(await charlie.getAddress())).to.equal(3);
+            expect(await borda.score(await dave.getAddress())).to.equal(1);
 
-          // should get {bob: 3, charlie: 3, dave: 1}, bob is leader first with 3, but charlie is tied
-          expect(await borda.score(await bob.getAddress())).to.equal(3);
-          expect(await borda.score(await charlie.getAddress())).to.equal(3);
-          expect(await borda.score(await dave.getAddress())).to.equal(1);
-          expect(await borda.leader()).to.equal(await bob.getAddress());
+            // charlie should win because they were ahead in the prior vote before tying
+            expect(await borda.leader()).to.equal(await bob.getAddress());
+          });
+
+          it('should set the leader as the proposal that was ahead before the final vote created a tie', async () => {
+            await borda.connect(charlie).reveal(charlievote[0], charlievote[2]);
+            // should get {bob: 0, charlie: 1, dave: 0}, charlie is leader first with 1
+            expect(await borda.score(await bob.getAddress())).to.equal(0);
+            expect(await borda.score(await charlie.getAddress())).to.equal(1);
+            expect(await borda.score(await dave.getAddress())).to.equal(0);
+
+            await borda.connect(bob).reveal(bobvote[0], bobvote[2]);
+            // should get {bob: 3, charlie: 3, dave: 1}, charlie is leader first with 3, but bob is tied
+            expect(await borda.score(await bob.getAddress())).to.equal(3);
+            expect(await borda.score(await charlie.getAddress())).to.equal(3);
+            expect(await borda.score(await dave.getAddress())).to.equal(1);
+
+            // charlie should win because they were ahead in the prior vote before tying
+            expect(await borda.leader()).to.equal(await charlie.getAddress());
+          });
         });
 
         it('Computing defaults if no one reveals', async () => {
