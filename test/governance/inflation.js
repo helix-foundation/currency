@@ -108,13 +108,14 @@ describe('RandomInflation [@group=6]', () => {
    */
   async function getPrimal(attempts = 0) {
     const baseNum = new BN((await time.latestBlockHash()).slice(2), 16)
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 1; i < 1000; i++) {
       if (
         await bigintCryptoUtils.isProbablyPrime(
           BigInt(baseNum.addn(i).toString()),
           30
         )
       ) {
+        console.log(`primal i was ${i}, bhash was ${baseNum.toString()}`)
         return baseNum.addn(i).toString()
       }
     }
@@ -666,4 +667,4 @@ describe('RandomInflation [@group=6]', () => {
       })
     })
   })
-})
+}).timeout(60000)
