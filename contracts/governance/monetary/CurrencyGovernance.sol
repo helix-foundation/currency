@@ -252,7 +252,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         delete commitments[msg.sender];
 
         // remove the trustee's default vote
-        score[address(0)] = 0;
+        score[address(0)] -= 1;
 
         //store leader before we increment scores for current vote
         address priorLeader = leader;
