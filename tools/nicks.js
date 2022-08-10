@@ -1,8 +1,8 @@
-const fs = require('fs');
-const { Transaction } = require('ethereumjs-tx');
-const EthereumUtil = require('ethereumjs-util');
-const commandLineArgs = require('command-line-args');
-const web3 = require('web3');
+const fs = require('fs')
+const { Transaction } = require('ethereumjs-tx')
+const EthereumUtil = require('ethereumjs-util')
+const commandLineArgs = require('command-line-args')
+const web3 = require('web3')
 
 /* Constants used in ECDSA for generating sigatures.
  *
@@ -13,9 +13,9 @@ const web3 = require('web3');
  * cannot be efficiently recovered from the parameters here so long as ECDSA
  * private keys cannot be efficiently recovered from ECDSA signatures.
  */
-const ECDSA_V_VALUE = 27;
+const ECDSA_V_VALUE = 27
 const ECDSA_R_VALUE =
-  '0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798';
+  '0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798'
 
 /* Command line argument definitions for when this file is used as a command
  * line application.
@@ -60,7 +60,7 @@ const OPT_DEFS = [
     type: Number,
     defaultValue: 100000000000,
   },
-];
+]
 
 /** Create a transaction that executes the provided bytecode (presumed to be a
  * constructor) over the given parameter data (must be pre-encoded) and using
@@ -85,9 +85,9 @@ function generateTx(bytecode, s, gas, gasPrice, paramdata) {
     v: ECDSA_V_VALUE,
     r: ECDSA_R_VALUE,
     s,
-  });
+  })
 
-  return tx;
+  return tx
 }
 
 /** Wrap a transaction object in some convenience fields to make it easier to
@@ -96,13 +96,13 @@ function generateTx(bytecode, s, gas, gasPrice, paramdata) {
  * @param A transaction object (presumably from `generateTx`)
  */
 function decorateTx(tx) {
-  const from = EthereumUtil.bufferToHex(tx.from);
-  const json = {};
+  const from = EthereumUtil.bufferToHex(tx.from)
+  const json = {}
 
   // eslint-disable-next-line no-underscore-dangle
   tx._fields.forEach((k) => {
-    json[k] = EthereumUtil.bufferToHex(tx[k]);
-  });
+    json[k] = EthereumUtil.bufferToHex(tx[k])
+  })
 
   return {
     tx,
@@ -112,7 +112,7 @@ function decorateTx(tx) {
       EthereumUtil.generateAddress(tx.from, tx.nonce)
     ),
     raw: EthereumUtil.bufferToHex(tx.serialize()),
-  };
+  }
 }
 
 /** Write provided transaction data to an output file. This is used when the
@@ -125,15 +125,15 @@ function decorateTx(tx) {
  *                  `outFile === '-'` data will be written to STDOUT.
  */
 function createTxFile(tx, outFile) {
-  const txjs = decorateTx(tx);
-  txjs.tx = txjs.json;
-  delete txjs.json;
+  const txjs = decorateTx(tx)
+  txjs.tx = txjs.json
+  delete txjs.json
 
   if (outFile === '-') {
     // eslint-disable-next-line no-console
-    console.log(JSON.stringify(txjs, null, 2));
+    console.log(JSON.stringify(txjs, null, 2))
   } else {
-    fs.writeFileSync(outFile, JSON.stringify(txjs));
+    fs.writeFileSync(outFile, JSON.stringify(txjs))
   }
 }
 
@@ -141,13 +141,13 @@ module.exports = {
   generateTx,
   createTxFile,
   decorateTx,
-};
+}
 
 /** Primary entrypoint used when this file is execute as a command-line
  * application.
  */
 function main() {
-  const options = commandLineArgs(OPT_DEFS);
+  const options = commandLineArgs(OPT_DEFS)
 
   const tx = generateTx(
     JSON.parse(fs.readFileSync(options.contract, 'utf8')).bytecode,
@@ -155,13 +155,13 @@ function main() {
     options.gas,
     options.gasPrice,
     options.paramdata
-  );
-  createTxFile(tx, options.outfile);
+  )
+  createTxFile(tx, options.outfile)
 }
 
 /* Check to see if this file is running as a command-line application and if it
  * is call main.
  */
 if (typeof require !== 'undefined' && require.main === module) {
-  main(process.argv, process.argv.length);
+  main(process.argv, process.argv.length)
 }

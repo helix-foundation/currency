@@ -1,9 +1,9 @@
-const { signTypedData } = require('@metamask/eth-sig-util');
-const { ethers } = require('ethers');
+const { signTypedData } = require('@metamask/eth-sig-util')
+const { ethers } = require('ethers')
 
 exports.createPermitMessageData = function createPermitMessageData(data) {
   const { name, address, chainId, owner, spender, value, nonce, deadline } =
-    data;
+    data
 
   const message = {
     owner,
@@ -11,7 +11,7 @@ exports.createPermitMessageData = function createPermitMessageData(data) {
     value,
     nonce,
     deadline,
-  };
+  }
 
   return {
     types: {
@@ -64,8 +64,8 @@ exports.createPermitMessageData = function createPermitMessageData(data) {
       verifyingContract: address,
     },
     message,
-  };
-};
+  }
+}
 
 exports.permit = async function permit(
   token,
@@ -75,7 +75,7 @@ exports.permit = async function permit(
   amount,
   deadline = Math.floor(new Date().getTime() / 1000 + 86400 * 3000)
 ) {
-  const nonce = await token.nonces(await owner.getAddress());
+  const nonce = await token.nonces(await owner.getAddress())
 
   const permitData = exports.createPermitMessageData({
     name: await token.name(),
@@ -86,13 +86,13 @@ exports.permit = async function permit(
     nonce: nonce.toString(),
     chainId: chainId.toString(),
     deadline,
-  });
+  })
   const sig = signTypedData({
     privateKey: Buffer.from(owner.privateKey.slice(2), 'hex'),
     data: permitData,
     version: 'V4',
-  });
-  const { v, r, s } = ethers.utils.splitSignature(sig);
+  })
+  const { v, r, s } = ethers.utils.splitSignature(sig)
 
   return token.permit(
     await owner.getAddress(),
@@ -102,20 +102,20 @@ exports.permit = async function permit(
     v,
     r,
     s
-  );
-};
+  )
+}
 
 exports.createDelegatePermitMessageData =
   function createDelegatePermitMessageData(data) {
     const { name, address, chainId, delegator, delegatee, nonce, deadline } =
-      data;
+      data
 
     const message = {
       delegator,
       delegatee,
       nonce,
       deadline,
-    };
+    }
 
     return {
       types: {
@@ -164,8 +164,8 @@ exports.createDelegatePermitMessageData =
         verifyingContract: address,
       },
       message,
-    };
-  };
+    }
+  }
 
 exports.delegateBySig = async function delegateBySig(
   token,
@@ -182,7 +182,7 @@ exports.delegateBySig = async function delegateBySig(
   const nonceToUse =
     nonce === undefined
       ? await token.delegationNonces(await delegator.getAddress())
-      : nonce;
+      : nonce
 
   const delegationData = exports.createDelegatePermitMessageData({
     name: await token.name(),
@@ -192,13 +192,13 @@ exports.delegateBySig = async function delegateBySig(
     nonce: nonceToUse.toString(),
     chainId: chainId.toString(),
     deadline,
-  });
+  })
   const sig = signTypedData({
     privateKey: Buffer.from(signer.privateKey.slice(2), 'hex'),
     data: delegationData,
     version: 'V4',
-  });
-  const { v, r, s } = ethers.utils.splitSignature(sig);
+  })
+  const { v, r, s } = ethers.utils.splitSignature(sig)
 
   return token
     .connect(sender)
@@ -212,5 +212,5 @@ exports.delegateBySig = async function delegateBySig(
       {
         gasLimit: 1000000,
       }
-    );
-};
+    )
+}
