@@ -137,4 +137,4 @@ commands:
             nvm use
             echo $MOCHA_GREP
             <<# parameters.invert-group >>export MOCHA_INVERT=1<</ parameters.invert-group >>
-            tools/travis.sh << parameters.suite >>
+            tools/circleci.sh << parameters.suite >>

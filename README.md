@@ -1,5 +1,5 @@
 # Eco Currency and Governance _(currency)_
-[![Build Status](https://travis-ci.com/eco/currency.svg?token=Ys7HacuB4cQ6EmcRgqK1&branch=master)](https://travis-ci.com/eco/currency)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/eco/currency/tree/master.svg?style=svg&circle-token=8a1bde9cb67c1f0f5b92ab8d762c86b8c51b62df)](https://dl.circleci.com/status-badge/redirect/gh/eco/currency/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/eco/currency/badge.svg?branch=master&t=wGA2kK)](https://coveralls.io/github/eco/currency?branch=master)
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 > The Eco cryptocurrency contracts, governance contracts, and associated
