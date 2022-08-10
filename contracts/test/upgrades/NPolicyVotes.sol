@@ -5,7 +5,7 @@ import "../../governance/community/PolicyVotes.sol";
 
 contract NPolicyVotes is PolicyVotes {
     
-    constructor() PolicyVotes(Policy(address(0)), ECO(address(0)), ECOx(address(0))) {}
+    constructor(Policy _policy, ECO _eco, ECOx _ecox) PolicyVotes(_policy, _eco, _ecox) {}
 
     function hello() public pure returns (string memory) {
         return "Hello I'm NPolicyVotes";

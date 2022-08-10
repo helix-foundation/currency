@@ -5,7 +5,7 @@ import "../../governance/community/ECOxStaking.sol";
 
 contract NECOxStaking is ECOxStaking {
     
-    constructor() ECOxStaking(Policy(address(0)), address(0)) {}
+    constructor(Policy _policy, address _ecox) ECOxStaking(_policy, _ecox) {}
 
     function hello() public pure returns (string memory) {
         return "Hello I'm NECOxStaking";

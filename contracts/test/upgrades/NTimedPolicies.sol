@@ -5,7 +5,8 @@ import "../../governance/TimedPolicies.sol";
 
 contract NTimedPolicies is TimedPolicies {
     
-    constructor() TimedPolicies(Policy(address(0)), PolicyProposals(address(0)), new bytes32[](0)) {}
+    // only the policy is stored immutably
+    constructor(Policy _policy) TimedPolicies(_policy, PolicyProposals(address(0)), new bytes32[](0)) {}
 
     function hello() public pure returns (string memory) {
         return "Hello I'm NTimedPolicies";

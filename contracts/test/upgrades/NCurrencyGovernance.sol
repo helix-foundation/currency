@@ -5,7 +5,7 @@ import "../../governance/monetary/CurrencyGovernance.sol";
 
 contract NCurrencyGovernance is CurrencyGovernance {
     
-    constructor() CurrencyGovernance(Policy(address(0))) {}
+    constructor(Policy _policy) CurrencyGovernance(_policy) {}
 
     function hello() public pure returns (string memory) {
         return "Hello I'm NCurrencyGovernance";

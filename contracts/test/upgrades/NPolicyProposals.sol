@@ -5,7 +5,8 @@ import "../../governance/community/PolicyProposals.sol";
 
 contract NPolicyProposals is PolicyProposals {
     
-    constructor() PolicyProposals(Policy(address(0)), PolicyVotes(address(0)), ECO(address(0)), ECOx(address(0))) {}
+    // policy votes is held in contract storage so doesn't need to be passed
+    constructor(Policy _policy, ECO _eco, ECOx _ecox) PolicyProposals(_policy, PolicyVotes(address(0)), _eco, _ecox) {}
 
     function hello() public pure returns (string memory) {
         return "Hello I'm NPolicyProposals";
