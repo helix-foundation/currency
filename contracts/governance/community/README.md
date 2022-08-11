@@ -53,22 +53,9 @@ Computes the voting power using the total supply at `_blockNumber` for `ECO` and
 ### PolicyProposals
   - Inherits: `VotingPower`
 
-This contract controls the first half of the policy voting process where users
-submit and support proposed changes to the codebase. Proposals are submitted at
-anytime during a generation, for a fee, and are then open for public review.
-Proposals that are changing parts of the governance system will likely have to
-have updated versions of the contracts to be changed as secondary contracts.
-The `Proposal` abstract contract template gives accessor functions to `name`,
-`description`, and `url` properties to give the proposer venue to explain
-everything involved.
+This contract controls the first half of the policy voting process where users submit and signal vote for proposed changes to the codebase. Proposals are submitted at anytime during a generation, for a fee, and are then open for public review. Proposals that are changing parts of the governance system will likely have to have updated versions of the contracts to be changed as secondary contracts. The `Proposal` abstract contract template gives accessor functions to `name`, `description`, and `url` properties to give the proposer venue to explain everything the proposal entails.
 
-Once a proposal is submitted, addresses can `support` (see function below) the
-proposal with their voting power (see `VotingPower`). If any proposal is supported
-by 30% or more of the total available voting power, a vote for that proposal is
-triggered. A `PolicyVotes` contract is cloned and given the information about
-the proposal, followed by the clone of `PolicyProposals` shutting down. Any other
-proposal must be submitted again during the next generation, but its submitter
-is able to recoup some of the fee.
+Once a proposal is submitted, addresses can `support` (see function below) the proposal with their voting power (see `VotingPower`). If any proposal is supported by 30% or more of the total available voting power, a vote for that proposal is triggered. Supporting is halted and a `PolicyVotes` contract is cloned and given the information about the proposal that achieved support to be voted on. Any other proposal must be submitted again during the next generation, but its submitter is able to recoup some of the fee.
 
 #### Events
 ##### Register
@@ -83,23 +70,20 @@ Attributes:
   - `supporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
 
-Emitted when `support` is successfully called. Helps external systems keep tabs
-on the supporting process.
+Emitted when `support` is successfully called. Helps external systems keep tabs on the supporting process.
 
 ##### Unsupport
 Attributes:
   - `unsupporter` (address) - the address that supported the proposal
   - `proposalAddress` (address) - the address of the proposal being supported
 
-Emitted when `unsupport` is successfully called. Helps external systems keep tabs
-on the supporting process.
+Emitted when `unsupport` is successfully called. Helps external systems keep tabs on the supporting process.
 
 #### SupportThresholdReached
 Attributes:
   - `proposalAddress` (address) - the address of the proposal that reached the threshold
 
-Emitted when a proposal crosses the support threshold and is ready to be voted on.
-Indicates that deployProposalVoting can and should now be called.
+Emitted when a proposal crosses the support threshold and is ready to be voted on. Indicates that `deployProposalVoting` can and should now be called.
 
 ##### VoteStart
 Attributes:
@@ -110,107 +94,103 @@ Emitted once a proposal has reached sufficient support and voting has been start
 ##### ProposalRefund
 Attributes:
   - `proposer` (address) - the address of the proposal's initial submitter
+  - `proposalAddress` (address) - the address of the proposal that was refunded
 
-Emitted when an unsuccessful proposer recoups a part of their fee.
+Emitted when an unsuccessful proposer recieves their fee refund.
 
 #### registerProposal
 Arguments:
   - `_prop` (address) - the address of the proposal contract
 
-Register a new proposal for community review. Registration is necessary but does not
-guarantee a vote for its implementation. The proposal is stored in `allProposals`
-which is an array of all submissions. A `Register` event is emitted.
+Register a new proposal for community review. Registration is necessary but does not guarantee a vote for its implementation. The proposal is stored in `proposals` which is an array of all submissions as well as `allProposals` which stores the proposal addresses. A `Register` event is emitted.
 
-Registering a proposal requires a deposit of 1000 ECO (`COST_REGISTER`), which is
-transferred from the caller's balance to this contract. Approval of the transfer
-must be done before calling `registerProposal`. If the proposal does not get voted
-on then the caller will receive a refund of 800 ECO (`REFUND_IF_LOST`).
+Registering a proposal requires a deposit of 1000 ECO (`COST_REGISTER`), which is transferred from the caller's balance to this contract. An allowance for this transfer must be made before calling. If the proposal does not get voted on then the caller will be entitled to claim a refund of 800 ECO (`REFUND_IF_LOST`).
 
 ##### Security Notes
-  - Requires payment to call, to prevent abuse.
+  - Can only be called during the proposing period.
+  - Requires creating an allowance for payment to call to prevent abuse.
   - You cannot propose the 0 address.
-  - A proposal can only be registered once.
+  - A proposal can only be registered once, regardless of proposer.
 
-#### allProposalAddresses
-Arguments: none
+#### getPaginatedProposalData
+Arguments:
+  - `_page` (uint256) - the page of results in the array to query
+  - `_resultsPerPage` (uint256) - the amount of results per page
 
-Returns the array `allProposals` that lists the addresses of all submitted proposals.
+Returns the slice of `proposals` corresponding to the pagination inputs. The `Prop` object stores the `proposer`, the `proposal` address, and `totalStake` in support of the proposal. Individual stakes are instead stored in a mapping called `staked` that is not directly tied to this structure.
+
+##### Security Notes
+ - `_page` must be greater than zero, indexes from one.
+ - Will not revert, but will return an empty array if the inputs are beyond the end.
+ - The last page will return an array whose number of elements may be less than or equal to `_resultsPerPage`
+
+#### getPaginatedProposalAddresses
+Arguments:
+  - `_page` (uint256) - the page of results in the array to query
+  - `_resultsPerPage` (uint256) - the amount of results per page
+
+Returns the slice of `allProposals` corresponding to the pagination inputs.
+
+##### Security Notes
+ - `_page` must be greater than zero, indexes from one.
+ - Will not revert, but will return an empty array if the inputs are beyond the end.
+ - The last page will return an array whose number of elements may be less than or equal to `_resultsPerPage`
 
 #### support
 Arguments:
   - `_prop` (address) - the proposal to support
 
-The `support` method allows currency holders to indicate their support for a
-proposal. The caller's voting power (see `VotingPower` but is approximately
-understood as their balance at the end of the last generation) is added to
-the total supporting stake for the proposal. The support is not withdrawn from
-the user's balance and is not locked up.
+The `support` method allows currency holders to indicate their support for a proposal. The caller's voting power (see `VotingPower` but is approximately understood as their balance at the end of the last generation) is added to the total supporting stake for the proposal. The support is not withdrawn from the user's balance and is not locked up. Calling `support` for a proposal does not disallow an address from supporting other proposals who will all recieve the same support from the address as the first one did.
 
-If this causes the proposal to reach the 30% threshold of total voting power
-required for a vote, this function emits `SupportThresholdReached`, indicating that
-`deployProposalVoting` is ready to be called. 
+If this causes the proposal to reach the 30% threshold of total voting power required for a vote, this function emits `SupportThresholdReached`, indicating that `deployProposalVoting` is ready to be called, and the proposing period immediately ends.
 
 ##### Security Notes
-  - Can only be called during the staking period.
+  - Can only be called during the proposing period.
   - Can only be called by an account that held tokens at the last checkpoint.
   - Must be provided the address of a registered proposal.
-  - Can only be called once for each proposal by any given account.
-  - Cannot be called if a vote is triggered as the contract is no longer privileged.
+  - Supporting a proposal twice reverts.
 
 #### unsupport
 Arguments:
   - `_prop` (address) - the proposal to support
 
-This function withdraws a user's support from a proposal if they have previously supported it. This cannot be called to bring a proposal that has passed the 30% threshold down below that threshold as it cannot be called if voting has been triggered.
+This function withdraws a user's support from a proposal if they have previously supported it. This cannot be called to bring a proposal that has passed the 30% threshold down below that threshold as it cannot be called after the proposing period ends.
 
 ##### Security Notes
-  - Can only be called during the staking period.
+  - Can only be called during the proposing period.
   - Can only be called if support was previously given.
   - Must be provided the address of a registered proposal.
-  - Cannot be called if a vote is triggered as the contract is no longer privileged.
 
 #### deployProposalVoting
 Arguments: none
 
-Deploys the proposal voting contract. Caller pays the gas cost for deployment.
-Will revert if called before a proposal reaches the support threshold.
-It configures the `PolicyVotes` contract for the specific proposal, creates
-a cloned copy of the contract for voting, removes the proposal to be voted on
-from its own store (the submitter is not able to get a refund), emits a
-`VoteStart` event, and finally removes the `PolicyProposals` contract
-from having any policy permissions, ending the proposing process and making
-room for the next one at the start of the next generation. 
+Deploys the proposal voting contract if the proposing period is over, allowing the process to progress. Caller pays the gas cost for deployment. It creates a cloned copy of the `PolicyVotes` contract, configures the `PolicyVotes` contract for the specific proposal, emits a `VoteStart` event, and finally removes the proposal to be voted on from the list of proposals (the submitter does not get a refund). This starts the voting process.
 
 ##### Security Notes
-  - Can only be called if a proposal has passed the support threshold but has
-    not yet been moved to voting. 
-  - Does not take any inputs, can only deploy the voting contract for the previously
-    selected voting contract. 
-  - Cannot be called more than once within the same cycle. 
+  - Can only be called if a proposal has passed the support threshold but has not yet been moved to voting. 
+  - Does not take any inputs, can only deploy the voting contract for the already selected proposal.
+  - Cannot be called more than once within the same cycle.
 
 #### refund
 Arguments:
   - `_prop` (address) - the proposal to refund the fee for
 
-Partially refunds (80%) the fee for the registration of a proposal that did not
-make it to voting. Emits a `ProposalRefund` event.
+Partially refunds (80%) the fee for the registration of a proposal that did not make it to voting. Emits a `ProposalRefund` event.
 
 ##### Security Notes
-  - Can only be called after the proposal time.
-  - Always issues the refund to the original proposer. Regardless of who calls.
-  - Can only be called once per proposal.
+  - Can only be called after the voting has been deployed or if the initial proposing time window ends, likely because no proposal was selected to vote.
+  - Always issues the refund to the original proposer, regardless of who calls. Can be used to pay for gas recouping the fee from another address.
+  - Deletes the proposal from the list of proposals, can only be called once per proposal.
   - Cannot be called for the zero address.
 
 #### destruct
 Arguments: none
 
-Self-destructs the contract, freeing all storage. Any ECO held is transferred to
-the root policy contract.
+Removes the permissioning to the contract and any ECO held is transferred to the root policy contract.
 
 ##### Security Notes
   - Can only be called after all proposals have been refunded.
   - Can only be called after the proposal time, to disallow early exits.
-  - Removes itself from the policy.
 
 ### PolicyVotes
   - Inherits: `VotingPower`
