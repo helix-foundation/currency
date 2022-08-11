@@ -249,7 +249,7 @@ describe('RandomInflation [@group=6]', () => {
   })
 
   describe('blockNumber', () => {
-    it('doesnt have a balance at block blockNumber, but has one in the next block', async () => {
+    it('doesnt have a balance at block blockNumber', async () => {
       await expect(
         await eco.getPastVotes(inflation.address, await inflation.blockNumber())
       ).to.equal(0)
