@@ -51,7 +51,7 @@ Computes the voting power using the total supply at `_blockNumber` for `ECO` and
   - Will revert on each lower level call if `_blockNumber` is in the future.
 
 ### PolicyProposals
-  - Inherits: `VotingPower`
+  - Inherits: `VotingPower`, `TimeUtils`
 
 This contract controls the first half of the policy voting process where users submit and signal vote for proposed changes to the codebase. Proposals are submitted at anytime during a generation, for a fee, and are then open for public review. Proposals that are changing parts of the governance system will likely have to have updated versions of the contracts to be changed as secondary contracts. The `Proposal` abstract contract template gives accessor functions to `name`, `description`, and `url` properties to give the proposer venue to explain everything the proposal entails.
 
@@ -193,9 +193,9 @@ Removes the permissioning to the contract and any ECO held is transferred to the
   - Can only be called after the proposal time, to disallow early exits.
 
 ### PolicyVotes
-  - Inherits: `VotingPower`
+  - Inherits: `VotingPower`, `TimeUtils`
 
- Basically, lets you vote.
+Runs the voting and execution on the proposal selected by `PolicyProposals`. Voting runs a period of 3 days with a 1 day delay for execution if the proposal passes. If there is 50%+ support for the proposal of all available voting power, then the voting ends early and execution can be immediate. Executing a proposal delegate calls the `enacted` function of the proposal within the context of the root hash proposal with its own address as an argument. See [here](../../policy/README.md#internalcommand) for more detail.
 
 #### Events
 ##### VoteCompletion
