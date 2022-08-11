@@ -17,6 +17,7 @@
     "lint:prettier": "prettier --check 'contracts/**/*.sol'",
     "build": "hardhat compile",
     "test": "hardhat test",
+    "clean": "hardhat clean",
     "snapshots": "UPDATE_SNAPSHOT=1 hardhat test",
     "debug": "hardhat test",
     "coverage:js": "npx nyc --reporter=html --reporter=text --reporter=lcov --include 'tools/**.js' --report-dir coverage-nyc hardhat coverage",
