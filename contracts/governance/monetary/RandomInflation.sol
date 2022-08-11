@@ -149,7 +149,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      */
     function initialize(address _self) public override onlyConstruction {
         super.initialize(_self);
-        blockNumber = block.number;
+        blockNumber = block.number - 1;
 
         vdfVerifier = VDFVerifier(RandomInflation(_self).vdfVerifier().clone());
         randomVDFDifficulty = RandomInflation(_self).randomVDFDifficulty();

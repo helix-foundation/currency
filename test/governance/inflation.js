@@ -248,6 +248,23 @@ describe('RandomInflation [@group=6]', () => {
     })
   })
 
+  describe('blockNumber', () => {
+    it('doesnt have a balance at block blockNumber', async () => {
+      await expect(
+        await eco.getPastVotes(inflation.address, await inflation.blockNumber())
+      ).to.equal(0)
+    })
+
+    it('has a balance at block blockNumber + 1', async () => {
+      await expect(
+        await eco.getPastVotes(
+          inflation.address,
+          (await inflation.blockNumber()).toNumber() + 1
+        )
+      ).to.not.equal(0)
+    })
+  })
+
   describe('commitEntropyVDF', () => {
     it('should revert on uncommited primal', async () => {
       await expect(
