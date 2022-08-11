@@ -308,6 +308,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         votingEnds = proposalEnds + VOTING_TIME;
         revealEnds = votingEnds + REVEAL_TIME;
 
+        // should not emit an event
+        pauser = CurrencyGovernance(_self).pauser();
+
         GovernanceProposal storage p = proposals[address(0)];
         p.inflationMultiplier = IDEMPOTENT_INFLATION_MULTIPLIER;
 
