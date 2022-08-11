@@ -432,6 +432,11 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _sum,
         uint256 _index
     ) external hashIsNotAcceptedYet {
+        require(
+            _claimedBalance > 0,
+            "Accounts with zero balance not allowed in Merkle tree"
+        );
+
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
 

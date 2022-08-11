@@ -383,6 +383,27 @@ describe('InflationRootHashProposal', () => {
         )
       })
 
+      it('catches filler accounts', async () => {
+        const cheat = new Map(map)
+        const cheatBalance = new BN('0')
+        cheat.set(await accounts[3].getAddress(), cheatBalance)
+        const ct = getTree(cheat)
+        proposedRootHash = ct.hash
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            totalSum.add(cheatBalance.toString()),
+            amountOfAccounts + 1
+          )
+        expect(await verifyOnChain(ct, 2, accounts[2]))
+        expect(await verifyOnChain(ct, 1, accounts[2]))
+        expect(await verifyOnChain(ct, 0, accounts[2]))
+        await expect(verifyOnChain(ct, 3, accounts[2])).to.be.revertedWith(
+          'Accounts with zero balance not allowed in Merkle tree'
+        )
+      })
+
       it('doesnt allow double configuration', async () => {
         await expect(rootHashProposal.configure(1)).to.be.revertedWith(
           'This instance has already been configured'
