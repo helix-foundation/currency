@@ -26,6 +26,9 @@ describe('RandomInflation [@group=6]', () => {
   let vdf
   let accounts
 
+  let policyProposals
+  let preInflationEcoSupply
+
   //    const inflationVote = 800000;
   //    const rewardVote = 20000;
   const inflationVote = 10
@@ -165,6 +168,8 @@ describe('RandomInflation [@group=6]', () => {
       accountsBalances[2].toString()
     )
 
+    preInflationEcoSupply = await eco.totalSupply()
+
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
       await util.policyFor(
@@ -218,6 +223,31 @@ describe('RandomInflation [@group=6]', () => {
       await inflation.vdfVerifier()
     )
     await configureInflationRootHash()
+  })
+
+  describe('policyProposals blockNumber', () => {
+    beforeEach(async () => {
+      policyProposals = await ethers.getContractAt(
+        'PolicyProposals',
+        await util.policyFor(
+          policy,
+          ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
+        )
+      )
+    })
+    it('excludes randomInflation mint from totalSupply at blockNumber', async () => {
+      await expect(
+        await eco.totalSupplyAt(await policyProposals.blockNumber())
+      ).to.equal(preInflationEcoSupply)
+    })
+
+    it('includes randomInflation mint in totalSupply at blockNumber + 1', async () => {
+      await expect(
+        await eco.totalSupplyAt(
+          (await policyProposals.blockNumber()).toNumber() + 1
+        )
+      ).to.equal(preInflationEcoSupply.add(inflationVote * rewardVote))
+    })
   })
 
   describe('startInflation', () => {

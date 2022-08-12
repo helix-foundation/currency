@@ -171,7 +171,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
 
         proposalEnds = getTime() + PROPOSAL_TIME;
-        blockNumber = block.number;
+        blockNumber = block.number - 1;
     }
 
     /**
