@@ -44,7 +44,7 @@ Queries `ECO` for the addresses's voting total at `_blockNumber` and similarly f
 #### totalVotingPower
 Arguments: none
 
-A public variable set by the `configure` function of the voting contract that inherits from this contract.
+A public variable set by the `configure` function of the voting contract that inherits from this contract. Is just the snapshotted totals of ECO and ECOx token supplies added together.
 
 ### PolicyProposals
   - Inherits: `VotingPower`, `TimeUtils`
@@ -229,9 +229,11 @@ Emitted when an address votes in a split manner.
 #### configure
 Arguments:
   - `_proposal` (address) - the address of the proposal to vote on
+  - `_proposer` (address) - the person who proposed the proposal being voted on
+  - `_cutoffBlockNumber` (uint256) - the block number to measure user voting power at
+  - `_totalVotingPower` (uint256) - the snapshotted total voting power at the block number above
 
-Configures a policy vote, setting the policy to be voted on, the times that
-the voting ends, and the generation to use for voting power calculation.
+Configures a policy vote, setting the policy to be voted on, the times that the voting ends, the block to use for voting power calculation, and the `totalVotingPower` to use for the 50% threshold. The `proposer` is stored as the data is deleted in the `PolicyProposals` contract as we move to this stage, so it is preserved for the UI.
 
 ##### Security Notes
   - Is called atomically with instantiation.
