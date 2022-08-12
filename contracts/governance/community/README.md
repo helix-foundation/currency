@@ -42,13 +42,9 @@ Queries `ECO` for the addresses's voting total at `_blockNumber` and similarly f
   - Will revert on each lower level call if `_blockNumber` is in the future.
 
 #### totalVotingPower
-Arguments:
-  - `_blockNumber` (uint256) - the generation at which to compute.
+Arguments: none
 
-Computes the voting power using the total supply at `_blockNumber` for `ECO` and `ECOxStaking`.
-
-##### Security Notes
-  - Will revert on each lower level call if `_blockNumber` is in the future.
+A public variable set by the `configure` function of the voting contract that inherits from this contract.
 
 ### PolicyProposals
   - Inherits: `VotingPower`, `TimeUtils`
@@ -183,6 +179,16 @@ Partially refunds (80%) the fee for the registration of a proposal that did not 
   - Deletes the proposal from the list of proposals, can only be called once per proposal.
   - Cannot be called for the zero address.
 
+#### configure
+Arguments:
+  - `_totalVotingPower` (uint256) - the snapshot of total voting power
+
+Configures the voting aspect of the contract with `totalVotingPower` to measure the 30% threshold versus.
+
+##### Security Notes
+  - Is called atomically with instantiation by `CurrencyTimer`.
+  - Can only be called once, checks that the `totalVotingPower` hasn't been set.
+
 #### destruct
 Arguments: none
 
@@ -210,7 +216,15 @@ Attributes:
   - `vote` (bool) - the vote cast, `true` to pass, `false` to fail
   - `amount` (uint256) - the voting power of the vote
 
-Emitted when an address votes.
+Emitted when an address votes simply.
+
+##### PolicySplitVoteCast
+Attributes:
+  - `voter` (address) - the address of the voter
+  - `votesYes` (uint256) - the voting power contributed to yes
+  - `votesNo` (uint256) - the voting power contributed to no
+
+Emitted when an address votes in a split manner.
 
 #### configure
 Arguments:
