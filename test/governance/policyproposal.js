@@ -671,19 +671,32 @@ describe('PolicyProposals [@group=7]', () => {
       beforeEach(async () => {
         await policyProposals.connect(alice).support(testProposal.address)
         await policyProposals.connect(charlie).support(testProposal2.address)
-        await policyProposals.connect(charlie).deployProposalVoting()
       })
 
       it('tries to refund selected policy, reverts', async () => {
         await expect(
           policyProposals.refund(testProposal2.address)
-        ).to.be.revertedWith('The provided proposal address is not valid')
+        ).to.be.revertedWith(
+          'Refunds may not be distributed until the period is over'
+        )
       })
 
-      it('tries to refund non-selected policy, succeeds', async () => {
-        await expect(policyProposals.refund(testProposal.address))
-          .to.emit(policyProposals, 'ProposalRefund')
-          .withArgs(await alice.getAddress(), testProposal.address)
+      context('when the voting is deployed', () => {
+        beforeEach(async () => {
+          await policyProposals.connect(charlie).deployProposalVoting()
+        })
+
+        it('tries to refund selected policy, reverts', async () => {
+          await expect(
+            policyProposals.refund(testProposal2.address)
+          ).to.be.revertedWith('The provided proposal address is not valid')
+        })
+
+        it('tries to refund non-selected policy, succeeds', async () => {
+          await expect(policyProposals.refund(testProposal.address))
+            .to.emit(policyProposals, 'ProposalRefund')
+            .withArgs(await alice.getAddress(), testProposal.address)
+        })
       })
     })
 

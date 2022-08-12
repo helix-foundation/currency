@@ -428,7 +428,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     function refund(Proposal _prop) external {
         require(
-            proposalSelected || getTime() > proposalEnds,
+            (proposalSelected && address(proposalToConfigure) == address(0)) ||
+                getTime() > proposalEnds,
             "Refunds may not be distributed until the period is over"
         );
 
