@@ -1,9 +1,7 @@
 # Governance System
 > Governance policies for the Eco currency.
 
-These contracts provide the governance system for the eco currency. They
-specify how the currency is to be managed, and how the software and processes
-themselves are over-seen.
+The governance system of the ECO and ECOx currencies is designed to maintain and upgrade both the currencies and itself. The subfolders have their own READMEs outlining both [community](./community/README.md) and [monetary](./monetary/README.md) governance. This document describes the automation and storage machinery used to manage these processes and the generation update system.
 
 ## Table of Contents
   - [Security](#security)
@@ -15,160 +13,79 @@ themselves are over-seen.
   - [License](#license)
 
 ## Security
-The security of the governance contracts is built on a list of trustees.
-See the `TrustedNodes` contract for how the list maintained. Changes to the
-list of trustees can be only be made using policy proposals, and require
-the support of a majority of participating voters, weighted by stake.
+The contracts here only expose public functions that push the process of the currency forward and are only callable when that forward progress is desired. They take no inputs and are designed to be agnostic to the person who uses them. The idea is that the system doesn't mind who increases the generation clock, just that someone does.
 
 ## Background
-The trustee and community governance contracts provide a policy hierarchy (built
-in Eco's policy framework). It allows Eco's trustees (a list of which is
-managed by a `TrustedNodes` instance) to enact inflationary or deflationary
-measures, and allows all stake-holders in the currency to participate in
-elections for broader changes to the currency or how it's governed.
+The `TimedPolicies` contract oversees the generation clock and the community governance. It maintains a list of ERC1820 labels to notify of the generation increase and calls `notifyGenerationIncrease` on each of these contracts. At launch, this only calls to the `ECO` and the `CurrencyTimer` contract. It also clones and configures the `PolicyProposals` contract, kicking off the community governance process.
 
-The `TimedPolicies` contract implements the governmental schedule, and
-instantiates (by cloning) the appropriate contracts as well as notifying each
-other contract each time the cycle resets. There are two distinct types of
-periodic votes:
-  - Monetary Policy Decisions (managed by trustees)
-  - General Policy Decisions (open to every currency holder)
-
-Each type of periodic vote has different methods of coming to a decision.
-However, both votes are set to the global Generation Cycle of 14 days.
-
-> Note that the vote frequency is likely to change based on feedback and
-> observed use. It is bounded below by the VDF safety margins, setting a
-> maximum frequency of once every five days. 14 days was selected based on
-> estimates of how long it would take to observe the impact of a previous vote.
-
-### Monetary Policy Decisions
-Monetary Policy decisions involve only the Trusted Nodes. They're used to
-create and distribute new currency (to drive spending), to create and
-distribute deposit certificates (to discourage spending), or scale the currency
-across the board (to manage exchange value with other currencies). The different
-policy levers are designed to reward different behavior and provide incentives
-to achieve their desired results.
-
-This process runs in 3 phases. First is a 10 day period over which trustees each
-can submit their proposals for new values for the 3 monetary policy levers
-(detailed below). Then there is a 3 day phase in which the trustees create
-ballots ranking the proposals using a partial Borda Count method, then submit
-them in the form of a hash commit. Finally there is a 1 day phase where votes
-are revealed and counted ending in a winner being chosen and applied for the
-next generation.
-
-### Community Decisions
-The Community Decisions process provides a mechanism for upgrading contracts or
-making other changes to the currency or governance system. For example, the
-length of a generation could be modified by using the policy decisions process
-to replace the `TimedPolicies` contract with a new version using a different
-generational frequency.
-
-The process has two phases. Starting at the beginning of a generation,
-any currency holder may submit a proposal in the form of a contract to be executed
-along with a submission fee. During this period, any address can give and modify
-support to these proposals where the voting power is based on the most recent
-snapshot of their ECO and ECOx balances. If any proposal reaches support exceeding
-30% of the total available voting power in the system, it will progress to the
-voting phase where any currency holder may vote either for or against it using the
-same calculation of voting power as the supporting of the proposal. At the end of
-the 72 hour voting phase, the proposal passes if it has more yes votes than no
-votes. However, if the yes votes do not consist of a majority of the total voting
-power, there is a 24 hour delay to implementation. Proposals that were submitted
-but not voted on entitle the proposer to a partial refund of the fee as soon as
-the proposing phase ends.
+The `CurrencyTimer` contract oversees the monetary governance processes: starting the vote process and enacting the results of the previous vote (except for [linear inflation](../currency/README.md#inflationcheckpoints)). When its `notifyGenerationIncrease` is called, it ensures that the winner is computed on the previous generation's `CurrencyGovernance` contract and then reads out the results of the winning proposal. It then clones the necessary contracts, all detailed in the [monetary governance README](./monetary/README.md#monetary-governance-system), and mints ECO when necessary for these contracts. Finally, it clones the next `CurrencyGovernance` contract, starting the next generation's process.
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
 
 ## Usage
-The governance contracts deploy as a policy hierarchy implemented in Eco's
-[policy framework](../policy/README.md). The `TimedPolicies` contract should be
-deployed as the "TimedPolicies" policy object, and is constructed with references to
-the other contracts needed for specific votes and outcomes.
-
-The `TimedPolicies` contract will clone the referenced contracts as needed, and
-grant the clones the relevant permissions. See `startInflation` for an example.
-It will also notify all other `IGenerationIncrease` contracts each time a generation
-increases, coordinating the switchover to each subsequent generation.
+Ideally an automation system tracks the governance system so as to keep the generation clock ticking. All the system knows is when the next generation update can be called and does not keep a memory of when the last generation started. Without an automation system tracking the progress of the governance system offchain, it is possible for the generation start times to drift by late calls to `increaseGeneration`.
 
 ## API
-Each section here discusses the API used to interact with one part of the
-governance process, starting with the contract overseeing periodic voting and
-moving on to the periodic voting processes themselves.
 
-### Timing
-#### TimedPolicies
-  - Inherits: `Policed`
+### TimedPolicies
+  - Inherits: `Policed`, `TimeUtils`, `IGeneration`
 
-The `TimedPolicies` contract manages the time-based recurring processes that
-form the governance system. Existing processes that are activated by this
-inherit from the interface `IGenerationIncrease` to have the function 
-`notifyGenerationIncrease` which is called by this contract. The policy
-voting contract is directly cloned from this contract.
+The `TimedPolicies` contract manages the generation-based recurring processes that form the governance system. Existing processes that are activated by this inherit from the interface `IGenerationIncrease` to have the function  `notifyGenerationIncrease` which is called by this contract each time it starts a new generation. The community voting contract is directly cloned from this contract.
 
-##### Process Overview
-This contract holds and maintains an array `notificationHashes` which contains
-the ERC1820 keys for the different `IGenerationIncrease` contracts. This is set on
-construction. When the generation increase is triggered, this contract looks
-up the addresses for each of these contracts and calls their implementation
-of `notifyGenerationIncrease`.
+#### Process Overview
+This contract holds and maintains an array `notificationHashes` which contains the ERC1820 keys for the different `IGenerationIncrease` contracts. This is set on construction and onyl includes the `ECO` and `CurrencyTimer` at launch. When the generation increase is triggered, this contract looks up the addresses for each of these contracts and calls their implementation of `notifyGenerationIncrease`.
 
-##### Events
-###### PolicyDecisionStart
+#### Events
+##### PolicyDecisionStart
 Attributes:
   - `contractAddress` (address) - the address of the `PolicyProposals` contract
     supervising the vote
 
 Indicates the start of a policy vote.
 
-##### incrementGeneration
+##### NewGeneration
+Attributes:
+  - `generation` (uint256) - the generation being started
+
+Emitted at the end of a generation increment process. The value of `generation` is initialized at `1000`. This is marked by the constant `GENERATION_START`.
+
+#### incrementGeneration
 Arguments: none
 
-Increments the `internalGeneration` and sets the time at which the new generation
-will end. Then goes through the list of `notificationHashes` and calls
-`notifyGenerationIncrease()` on each of them. Finally calls `startPolicyProposal`
-(detailed below).
+Increments the `generation` variable and sets the time at which the new generation will end. It calculates the amount of ECO that will be minted during the process. Then it goes through the list of `notificationHashes` and calls `notifyGenerationIncrease` on each of them. Finally calls `startPolicyProposal`.
 
-###### Security Notes
-This method can only be invoked at most once every `TimedPolicies.GENERATION_DURATION`
-(currently 14 days), but can be invoked by anyone who wishes to begin a the next
-generation. Will likely be maintained by off-chain automation.
+##### Security Notes
+  - This method can only be invoked at most once every 14 days, marked by the constant `GENERATION_DURATION`.
+  - It can be invoked by anyone who wishes to begin a the next generation and will likely be maintained by off-chain automation.
 
-##### startPolicyProposal
-Arguments: none
+#### startPolicyProposal
+Arguments:
+  - `_mintedOnGenerationIncrease` (uint256) - the amount of ECO minted during the generation increment to be ignored by the community voting contracts.
 
-Begins a new policy voting process. A new instance of the `PolicyProposals`
-contract is created and granted appropriate permissions. The address of the
-new contract can be found by querying the root policy address for the
-`PolicyProposals` policy provider (see ERC1820 references for more info).
+Begins a new policy voting process. A new instance of the `PolicyProposals` contract is created, configured, and granted appropriate permissions. The address of the new contract can be found by querying the root policy address for the `PolicyProposals` policy provider (see [here](../policy/README.md#policyfor) for more info).
 
-A `PolicyDecisionStart` event is emitted with the `PolicyProposals` contract
-address to indicate the start of a new vote.
+A `PolicyDecisionStart` event is emitted with the `PolicyProposals` contract address to indicate the start of a new vote.
 
-###### Security Notes
-This function is internal.
+##### Security Notes
+  - This function is internal.
 
-#### CurrencyTimer
+### CurrencyTimer
   - Inherits: `PolicedUtils`, `IGenerationIncrease`, `ILockups`
 
-The `CurrencyTimer` contract is delegated the responsibility of implementing
-the decisions decided on by the trustees in their Currency Governance votes
-(detailed more below). It holds the on-chain address of clone template for the
-`CurrencyGoverance`, `RandomInflation`, and `Lockup` contracts as the public variables
-`bordaImpl`, `inflationImpl`, and `lockupImpl`, respectively.
+The `CurrencyTimer` contract is delegated the responsibility of implementing the decisions decided on by the trustees in their Currency Governance votes
+(detailed more below). It holds the on-chain address of clone template for the `CurrencyGoverance`, `RandomInflation`, and `Lockup` contracts as the public variables `bordaImpl`, `inflationImpl`, and `lockupImpl`, respectively. It also tracks all clones for `Lockup` and `RandomInflation` in the public mappings `lockups` and `randomInflations` respectively, keyed by the generation number where the policy decision for them originated. Finally, it is called by `Lockup` contracts to payout interest or enact penalties for withdrawals.
 
-##### Events
+#### Events
 
-###### NewCurrencyGovernance
+##### NewCurrencyGovernance
 Attributes:
   - `addr` (address) - the address of the new CurrencyGovernance contract.
   - `generation` (uint256) - the generation where currency governance will happen.
 
 Indicates the location of the new CurrencyGovernance contract.
 
-###### NewInflation
+##### NewInflation
 Attributes:
   - `addr` (address) - the address of the `RandomInflation` contract facilitating
     the distribution of random inflation.
@@ -176,20 +93,20 @@ Attributes:
 
 Indicates the start of a random inflation decision.
 
-###### NewLockup
+##### NewLockup
 Attributes:
   - `addr` (address) - the address of the `Lockup` contract being offered
   - `generation` (uint256) - the generation in which the new lockup was agreed upon
 
 Indicates the start of a lockup offering.
 
-##### notifyGenerationIncrease
+#### notifyGenerationIncrease
 Arguments: none
 
-When notified of a generation increase, this contract will find the existing clone of `CurrencyGovernance` to read the results of the most recent vote. If that vote calls for the creation of any new lockups or random inflation contracts, those are cloned. New lockups are added to the mapping `lockups` and new randomInflation is added to the mapping `randomInflations` which map the generation they were offered to the address. The old lockups offered during the previous generation are funded to be able to pay out interest, as they are now closed for contributions. Finally the new `CurrencyGovernance` contract is cloned. Events are emitted to represent the actions taken.
+When notified of a generation increase, this contract will find the existing clone of `CurrencyGovernance` to read the results of the most recent vote. If that vote calls for the creation of any new lockups or random inflation contracts, those are cloned. New lockups are added to the mapping `lockups` and new randomInflation is added to the mapping `randomInflations` which map the generation they were offered to the address. Finally the new `CurrencyGovernance` contract is cloned. Events are emitted to represent the actions taken.
 
-###### Security Notes
- - This method cannot be called until the `TimedPolicies` generation has changed from the one stored in this contract.
+##### Security Notes
+ - This method cannot be called until the `TimedPolicies` generation has changed from the one stored in this contract. That action is done atomically with a call to this function. However, this may still be called if one of the calls from `TimedPolicies` reverts so that there is still a chance that the system might survive.
 
 ## Contributing
 See the [main README](../../README.md).
