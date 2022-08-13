@@ -85,7 +85,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         string _description
     );
 
-    // emitted when a trustee unproposes their proposal
+    // emitted when a trustee retracts their proposal
     event ProposalRetraction(address indexed trustee);
 
     /** Fired when the voting stage begins.
@@ -254,6 +254,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         // remove the trustee's default vote
         score[address(0)] -= 1;
 
+        //store leader before we increment scores for current vote
+        address priorLeader = leader;
+
         for (uint256 i = 0; i < numVotes; ++i) {
             address v = _votes[i];
 
@@ -263,10 +266,16 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
             );
 
             score[v] += numVotes - i;
-
             if (score[v] > score[leader]) {
                 leader = v;
             }
+        }
+
+        //check if the prior leader has a tie with the current leader, after the new vote sums
+        //in case of tie, the prior leader should meaintain leadership in order
+        //to prevent trustees from having undue tie-braking power based on their position in the vote proposals
+        if (score[priorLeader] == score[leader]) {
+            leader = priorLeader;
         }
 
         // record the trustee's vote for compensation purposes
@@ -298,6 +307,9 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         proposalEnds = getTime() + PROPOSAL_TIME;
         votingEnds = proposalEnds + VOTING_TIME;
         revealEnds = votingEnds + REVEAL_TIME;
+
+        // should not emit an event
+        pauser = CurrencyGovernance(_self).pauser();
 
         GovernanceProposal storage p = proposals[address(0)];
         p.inflationMultiplier = IDEMPOTENT_INFLATION_MULTIPLIER;

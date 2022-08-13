@@ -621,11 +621,7 @@ async function deployStage3(options) {
   )
     .deploy({
       data: PolicyVotesContractABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        ecoProxyAddress,
-        ecoxProxyAddress,
-      ],
+      arguments: [options.policyProxy.options.address, ecoProxyAddress],
     })
     .send({
       from: options.account,
@@ -643,7 +639,6 @@ async function deployStage3(options) {
         options.policyProxy.options.address,
         options.policyVotesContract.options.address,
         ecoProxyAddress,
-        ecoxProxyAddress,
       ],
     })
     .send({
@@ -738,7 +733,7 @@ async function deployStage3(options) {
       arguments: [
         options.policyProxy.options.address,
         options.policyProposalContract.options.address,
-        [ecoHash, currencyTimerHash, ecoXStakingIdentifierHash],
+        [ecoHash, currencyTimerHash],
       ],
     })
     .send({

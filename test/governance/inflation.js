@@ -15,6 +15,7 @@ const util = require('../../tools/test/util')
 describe('RandomInflation [@group=6]', () => {
   let policy
   let eco
+  let ecox
   let governance
   let initInflation
   let addressRootHashProposal
@@ -25,6 +26,9 @@ describe('RandomInflation [@group=6]', () => {
   let currencyTimer
   let vdf
   let accounts
+
+  let policyProposals
+  let preInflationEcoSupply
 
   //    const inflationVote = 800000;
   //    const rewardVote = 20000;
@@ -144,6 +148,7 @@ describe('RandomInflation [@group=6]', () => {
     ;({
       policy,
       eco,
+      ecox,
       faucet: initInflation,
       timedPolicies,
       currencyTimer,
@@ -164,6 +169,8 @@ describe('RandomInflation [@group=6]', () => {
       await accounts[2].getAddress(),
       accountsBalances[2].toString()
     )
+
+    preInflationEcoSupply = await eco.totalSupply()
 
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
@@ -220,6 +227,26 @@ describe('RandomInflation [@group=6]', () => {
     await configureInflationRootHash()
   })
 
+  describe('policyProposals totalVotingPower', () => {
+    beforeEach(async () => {
+      policyProposals = await ethers.getContractAt(
+        'PolicyProposals',
+        await util.policyFor(
+          policy,
+          ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
+        )
+      )
+    })
+    it('excludes randomInflation mint from totalVotingPower at blockNumber', async () => {
+      const ecoXsupply = await ecox.totalSupply()
+      await expect(
+        await policyProposals.totalVotingPower(
+          await policyProposals.blockNumber()
+        )
+      ).to.equal(preInflationEcoSupply.add(ecoXsupply))
+    })
+  })
+
   describe('startInflation', () => {
     it('reverts if startInflation is called with zero value _numRecipients', async () => {
       await expect(inflation.startInflation(0, 1)).to.be.revertedWith(
@@ -245,6 +272,23 @@ describe('RandomInflation [@group=6]', () => {
       await expect(inflation.startInflation(1, 1)).to.be.revertedWith(
         'The sale can only be started once'
       )
+    })
+  })
+
+  describe('blockNumber', () => {
+    it('doesnt have a balance at block blockNumber', async () => {
+      await expect(
+        await eco.getPastVotes(inflation.address, await inflation.blockNumber())
+      ).to.equal(0)
+    })
+
+    it('has a balance at block blockNumber + 1', async () => {
+      await expect(
+        await eco.getPastVotes(
+          inflation.address,
+          (await inflation.blockNumber()).toNumber() + 1
+        )
+      ).to.not.equal(0)
     })
   })
 

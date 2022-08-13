@@ -82,11 +82,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
     /** Here we only call inherited constructor, and pass parameters to it
      */
     // solhint-disable-next-line no-empty-blocks
-    constructor(
-        Policy _policy,
-        ECO _ecoAddr,
-        ECOx _ecoXAddr
-    ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {}
+    constructor(Policy _policy, ECO _ecoAddr) VotingPower(_policy, _ecoAddr) {}
 
     /** Submit your yes/no support
      *
@@ -211,12 +207,16 @@ contract PolicyVotes is VotingPower, TimeUtils {
     function configure(
         Proposal _proposal,
         address _proposer,
-        uint256 _cutoffBlockNumber
+        uint256 _cutoffBlockNumber,
+        uint256 _totalECOxVotingPower,
+        uint256 _excludedVotingPower
     ) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
         blockNumber = _cutoffBlockNumber;
+        totalECOxVotingPower = _totalECOxVotingPower;
+        excludedVotingPower = _excludedVotingPower;
 
         proposal = _proposal;
         proposer = _proposer;

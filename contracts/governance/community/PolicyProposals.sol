@@ -146,14 +146,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
      * @param _policyvotes The address of the contract that will be cloned to
      *                     oversee the voting phase.
      * @param _ecoAddr The address of the ECO token contract.
-     * @param _ecoXAddr The address of the ECOx token contract.
      */
     constructor(
         Policy _policy,
         PolicyVotes _policyvotes,
-        ECO _ecoAddr,
-        ECOx _ecoXAddr
-    ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {
+        ECO _ecoAddr
+    ) VotingPower(_policy, _ecoAddr) {
         policyVotesImpl = _policyvotes;
     }
 
@@ -410,7 +408,13 @@ contract PolicyProposals is VotingPower, TimeUtils {
         delete proposalToConfigure;
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
-        pv.configure(votingProp.proposal, votingProp.proposer, blockNumber);
+        pv.configure(
+            votingProp.proposal,
+            votingProp.proposer,
+            blockNumber,
+            totalECOxVotingPower,
+            excludedVotingPower
+        );
         policy.setPolicy(ID_POLICY_VOTES, address(pv), ID_POLICY_PROPOSALS);
 
         emit VoteStart(pv);
@@ -428,7 +432,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     function refund(Proposal _prop) external {
         require(
-            proposalSelected || getTime() > proposalEnds,
+            (proposalSelected && address(proposalToConfigure) == address(0)) ||
+                getTime() > proposalEnds,
             "Refunds may not be distributed until the period is over"
         );
 
@@ -503,5 +508,19 @@ contract PolicyProposals is VotingPower, TimeUtils {
             : totalProposals - _startIndex;
 
         _loopEnd = _startIndex + _returnLength;
+    }
+
+    // configure the total voting power for the vote thresholds
+    function configure(
+        uint256 _totalECOxVotingPower,
+        uint256 _excludedVotingPower
+    ) external {
+        require(
+            totalECOxVotingPower == 0,
+            "This instance has already been configured"
+        );
+
+        totalECOxVotingPower = _totalECOxVotingPower;
+        excludedVotingPower = _excludedVotingPower;
     }
 }

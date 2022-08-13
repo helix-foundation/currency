@@ -7,6 +7,7 @@ import "./Proposal.sol";
 import "../../currency/ECO.sol";
 import "../../currency/ECOx.sol";
 import "../../governance/monetary/CurrencyGovernance.sol";
+import "../../governance/CurrencyTimer.sol";
 
 /**
  * @title ElectCircuitBreaker
@@ -61,14 +62,20 @@ contract ElectCircuitBreaker is Policy, Proposal {
         bytes32 _currencyGovernanceId = keccak256(
             abi.encodePacked("CurrencyGovernance")
         );
+        bytes32 _currencyTimerId = keccak256(abi.encodePacked("CurrencyTimer"));
+
         ECO eco = ECO(policyFor(_ecoId));
         ECOx ecox = ECOx(policyFor(_ecoxId));
         CurrencyGovernance currencyGovernance = CurrencyGovernance(
             policyFor(_currencyGovernanceId)
         );
+        CurrencyTimer currencyTimer = CurrencyTimer(
+            policyFor(_currencyTimerId)
+        );
 
         eco.setPauser(pauser);
         ecox.setPauser(pauser);
         currencyGovernance.setPauser(pauser);
+        CurrencyGovernance(currencyTimer.bordaImpl()).setPauser(pauser);
     }
 }

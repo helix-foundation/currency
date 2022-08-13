@@ -432,6 +432,11 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _sum,
         uint256 _index
     ) external hashIsNotAcceptedYet {
+        require(
+            _claimedBalance > 0,
+            "Accounts with zero balance not allowed in Merkle tree"
+        );
+
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
 
@@ -532,10 +537,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         challenge.challengeEnds += CONTESTING_TIME;
     }
 
-    /** @notice Checks  root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
+    /** @notice Checks root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
      *  new challenges is over and there is no unanswered challenges, root hash is accepted.
      *
-     *  @param _proposer    the roothash proposer address
+     *  @param _proposer the roothash proposer address
      *
      */
     function checkRootHashStatus(address _proposer) external {
@@ -563,10 +568,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     /** @notice Verifies that the account specified is associated with the provided cumulative sum in the approved
      * Merkle tree for the current generation.
      *
-     *  @param _who    address of the account attempting to claim
+     *  @param _who     address of the account attempting to claim
      *  @param _proof   the “other nodes” in the merkle tree.
      *  @param _sum     cumulative sum of a claiming account
-     *
+     *  @param _index   index of the account
      */
     function verifyClaimSubmission(
         address _who,
@@ -593,7 +598,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      *
      *  @param _who        fee recipient
      *  @param _proposer   the roothash proposer address
-     *
      */
     function claimFeeFor(address _who, address _proposer) public {
         RootHashProposal storage proposal = rootHashProposals[_proposer];

@@ -29,8 +29,6 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
     // the ECOx contract address
     IERC20 public immutable ecoXToken;
 
-    uint256 public currentGeneration;
-
     constructor(Policy _policy, address _ecoXAddr)
         // Note that the policy has the ability to pause transfers
         // through ERC20Pausable, although transfers are paused by default
@@ -78,18 +76,6 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
         returns (uint256)
     {
         return getPastTotalSupply(_blockNumber);
-    }
-
-    function initialize(address _self) public override onlyConstruction {
-        super.initialize(_self);
-        currentGeneration = IGeneration(policyFor(ID_TIMED_POLICIES))
-            .generation();
-    }
-
-    function notifyGenerationIncrease() public {
-        // update currentGeneration
-        currentGeneration = IGeneration(policyFor(ID_TIMED_POLICIES))
-            .generation();
     }
 
     function transfer(address, uint256) public pure override returns (bool) {

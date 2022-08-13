@@ -63,6 +63,13 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   it('Waits a generation', async () => {
     await time.increase(3600 * 24 * 40)
     await timedPolicies.incrementGeneration()
+    borda = await ethers.getContractAt(
+      'CurrencyGovernance',
+      await util.policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
+    )
   })
 
   it('Kicks off a proposal round', async () => {
@@ -94,15 +101,9 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   })
 
   it('Checks that bob does not have the circuit breaker permissions', async () => {
-    borda = await ethers.getContractAt(
-      'CurrencyGovernance',
-      await util.policyFor(
-        policy,
-        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-      )
-    )
     expect(await eco.pauser()).not.to.equal(await bob.getAddress())
     expect(await ecox.pauser()).not.to.equal(await bob.getAddress())
+    expect(await borda.pauser()).not.to.equal(await bob.getAddress())
     expect(await eco.pauser()).to.equal(ethers.constants.AddressZero)
     expect(await ecox.pauser()).to.equal(ethers.constants.AddressZero)
     expect(await borda.pauser()).to.equal(ethers.constants.AddressZero)
@@ -152,7 +153,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
     expect(await borda.pauser()).to.equal(await bob.getAddress())
   })
 
-  describe('currency governance paused', async () => {
+  describe('currency governance immediately pauseable', async () => {
     const hash = (x) =>
       ethers.utils.solidityKeccak256(
         ['bytes32', 'address', 'address[]'],
@@ -228,7 +229,101 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
     })
 
     it('should use default proposal', async () => {
-      // should vote in the default proposal even though bob one
+      // should vote in the default proposal even though bob won
+      await expect(borda.compute())
+        .to.emit(borda, 'VoteResult')
+        .withArgs(ethers.constants.AddressZero)
+    })
+  })
+
+  describe('currency governance pauseable in subsequent generations', async () => {
+    const hash = (x) =>
+      ethers.utils.solidityKeccak256(
+        ['bytes32', 'address', 'address[]'],
+        [x[0], x[1], x[2]]
+      )
+
+    before(async () => {
+      await timedPolicies.incrementGeneration()
+      borda = await ethers.getContractAt(
+        'CurrencyGovernance',
+        await util.policyFor(
+          policy,
+          ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+        )
+      )
+    })
+
+    it('is not paused', async () => {
+      expect(await borda.pauser()).to.equal(await bob.getAddress())
+      expect(await borda.paused()).to.be.false
+    })
+
+    it('cannot be paused by non-pauser', async () => {
+      await expect(borda.connect(alice).pause()).to.be.revertedWith(
+        'CurrencyGovernance: not pauser'
+      )
+    })
+
+    it('proposes, votes, and reveals', async () => {
+      const bobvote = [
+        ethers.utils.randomBytes(32),
+        await bob.getAddress(),
+        [
+          await bob.getAddress(),
+          await charlie.getAddress(),
+          await dave.getAddress(),
+        ],
+      ]
+      const charlievote = [
+        ethers.utils.randomBytes(32),
+        await charlie.getAddress(),
+        [await charlie.getAddress()],
+      ]
+      const davevote = [
+        ethers.utils.randomBytes(32),
+        await dave.getAddress(),
+        [
+          await dave.getAddress(),
+          await bob.getAddress(),
+          await charlie.getAddress(),
+        ],
+      ]
+      // propose
+      await borda
+        .connect(dave)
+        .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+      await borda
+        .connect(charlie)
+        .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+      await borda
+        .connect(bob)
+        .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+      await time.increase(3600 * 24 * 10)
+      await borda.updateStage()
+
+      // commit
+      await borda.connect(bob).commit(hash(bobvote))
+      await borda.connect(charlie).commit(hash(charlievote))
+      await borda.connect(dave).commit(hash(davevote))
+
+      await time.increase(3600 * 24 * 3)
+      // reveal
+      await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+      await borda.connect(charlie).reveal(charlievote[0], charlievote[2])
+      await borda.connect(dave).reveal(davevote[0], davevote[2])
+      expect(await borda.leader()).to.equal(await bob.getAddress())
+    })
+
+    it('can be paused quite late by pauser', async () => {
+      await borda.connect(bob).pause()
+      expect(await borda.paused()).to.be.true
+    })
+
+    it('should use default proposal', async () => {
+      await time.increase(3600 * 24 * 1)
+      await borda.updateStage()
+      // should vote in the default proposal even though bob won
       await expect(borda.compute())
         .to.emit(borda, 'VoteResult')
         .withArgs(ethers.constants.AddressZero)

@@ -61,23 +61,15 @@ describe('ecoXStaking [@group=12]', () => {
     })
   })
 
-  async function makeProposals() {
-    const implementation = await deploy(
-      'PolicyProposals',
-      policy.address,
-      (
-        await deploy('PolicyVotes', policy.address, eco.address, ecox.address)
-      ).address,
-      eco.address,
-      ecox.address
+  async function getProposals() {
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
     )
-    const cloner = await deploy('Cloner', implementation.address)
-    const policyProposalsClone = await ethers.getContractAt(
-      'PolicyProposals',
-      await cloner.clone()
-    )
-    await policy.testDirectSet('PolicyProposals', policyProposalsClone.address)
-    return policyProposalsClone
+
+    const proposalsAddress = await policy.policyFor(proposalsHash)
+
+    return await ethers.getContractAt('PolicyProposals', proposalsAddress)
   }
 
   context('authed recordVote', () => {
@@ -98,7 +90,7 @@ describe('ecoXStaking [@group=12]', () => {
       await time.increase(3600 * 24 * 14 + 1)
       await timedPolicies.incrementGeneration()
 
-      proposals = await makeProposals()
+      proposals = await getProposals()
 
       testProposal = await deploy('Empty', 1)
 
@@ -206,7 +198,7 @@ describe('ecoXStaking [@group=12]', () => {
         await time.increase(3600 * 24 * 14 + 1)
         await timedPolicies.incrementGeneration()
 
-        proposals = await makeProposals()
+        proposals = await getProposals()
 
         testProposal = await deploy('Empty', 1)
 

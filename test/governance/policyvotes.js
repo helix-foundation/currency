@@ -9,7 +9,6 @@ const util = require('../../tools/test/util')
 describe('PolicyVotes [@group=8]', () => {
   let policy
   let eco
-  let ecox
   let initInflation
   let policyVotes
   let proposal
@@ -31,7 +30,6 @@ describe('PolicyVotes [@group=8]', () => {
       eco,
       faucet: initInflation,
       timedPolicies,
-      ecox,
     } = await ecoFixture([]))
 
     await initInflation.mint(await alice.getAddress(), one.mul(5000))
@@ -41,12 +39,7 @@ describe('PolicyVotes [@group=8]', () => {
     await time.increase(3600 * 24 * 40)
     await timedPolicies.incrementGeneration()
 
-    policyVotes = await deploy(
-      'PolicyVotes',
-      policy.address,
-      eco.address,
-      ecox.address
-    )
+    policyVotes = await deploy('PolicyVotes', policy.address, eco.address)
     proposal = (await deploy('SampleProposal', 0)).address
     const proxy = await deploy('ForwardProxy', policyVotes.address)
     proxiedPolicyVotes = await ethers.getContractAt(
@@ -56,12 +49,6 @@ describe('PolicyVotes [@group=8]', () => {
     await policy.testDirectSet('PolicyVotes', proxiedPolicyVotes.address)
   })
 
-  // describe('initialize', () => {
-  //   it('can be proxied', async () => {
-  //     await ForwardProxy.new(policyVotes.address);
-  //   });
-  // });
-
   describe('configure', () => {
     describe('when called on a proxied instance', () => {
       context('that has not been configured', () => {
@@ -69,7 +56,9 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.configure(
             proposal,
             await alice.getAddress(),
-            await time.latestBlock()
+            await time.latestBlock(),
+            0,
+            0
           )
         })
 
@@ -77,7 +66,9 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.configure(
             proposal,
             await alice.getAddress(),
-            await time.latestBlock()
+            await time.latestBlock(),
+            0,
+            0
           )
 
           assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0)
@@ -89,7 +80,9 @@ describe('PolicyVotes [@group=8]', () => {
           await proxiedPolicyVotes.configure(
             proposal,
             await alice.getAddress(),
-            await time.latestBlock()
+            await time.latestBlock(),
+            0,
+            0
           )
         })
 
@@ -98,7 +91,9 @@ describe('PolicyVotes [@group=8]', () => {
             proxiedPolicyVotes.configure(
               proposal,
               await alice.getAddress(),
-              await time.latestBlock()
+              await time.latestBlock(),
+              0,
+              0
             )
           ).to.be.revertedWith('has already been configured')
         })
@@ -120,7 +115,9 @@ describe('PolicyVotes [@group=8]', () => {
         await proxiedPolicyVotes.configure(
           proposal,
           await alice.getAddress(),
-          await time.latestBlock()
+          await time.latestBlock(),
+          0,
+          0
         )
       })
 
@@ -248,7 +245,9 @@ describe('PolicyVotes [@group=8]', () => {
         await proxiedPolicyVotes.configure(
           proposal,
           await alice.getAddress(),
-          await time.latestBlock()
+          await time.latestBlock(),
+          0,
+          0
         )
       })
 
@@ -454,7 +453,9 @@ describe('PolicyVotes [@group=8]', () => {
       await proxiedPolicyVotes.configure(
         proposal,
         await alice.getAddress(),
-        await time.latestBlock()
+        await time.latestBlock(),
+        0,
+        0
       )
     })
 

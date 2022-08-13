@@ -308,8 +308,7 @@ exports.deployPeripheralContracts = async (
     wallet,
     'PolicyVotes',
     policyProxy.address,
-    eco.address,
-    ecox.address
+    eco.address
   )
 
   const policyProposals = await deployFrom(
@@ -317,8 +316,7 @@ exports.deployPeripheralContracts = async (
     'PolicyProposals',
     policyProxy.address,
     policyVotes.address,
-    eco.address,
-    ecox.address
+    eco.address
   )
 
   const ecoXStaking = await deployFrom(
@@ -350,7 +348,7 @@ exports.deployPeripheralContracts = async (
     'TimedPolicies',
     policyProxy.address,
     policyProposals.address,
-    [ECO_HASH, CURRENCY_TIMER_HASH, ECOx_STAKING_HASH]
+    [ECO_HASH, CURRENCY_TIMER_HASH]
   )
   await bindProxy(bootstrap, timedPoliciesImpl, 4)
   const timedPolicies = await ethers.getContractAt(

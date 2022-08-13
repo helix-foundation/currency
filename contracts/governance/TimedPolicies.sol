@@ -7,6 +7,8 @@ import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
 import "./community/PolicyProposals.sol";
+import "../currency/ECO.sol";
+import "../currency/ECOx.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
@@ -82,18 +84,37 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         nextGenerationStart = time + GENERATION_DURATION;
         generation++;
 
+        CurrencyGovernance bg = CurrencyGovernance(
+            policyFor(ID_CURRENCY_GOVERNANCE)
+        );
+
+        uint256 _numberOfRecipients;
+        uint256 _randomInflationReward;
+
+        if (address(bg) != address(0)) {
+            address winner = bg.winner();
+            if (winner != address(0)) {
+                (_numberOfRecipients, _randomInflationReward, , , , ) = bg
+                    .proposals(winner);
+            }
+        }
+
+        uint256 mintedOnGenerationIncrease = _numberOfRecipients *
+            _randomInflationReward;
+
         uint256 notificationHashesLength = notificationHashes.length;
         for (uint256 i = 0; i < notificationHashesLength; ++i) {
             IGenerationIncrease notified = IGenerationIncrease(
                 policy.policyFor(notificationHashes[i])
             );
-            // require(address(notifier) != address(0), "Broken state");
-            notified.notifyGenerationIncrease();
+            if (address(notified) != address(0)) {
+                notified.notifyGenerationIncrease();
+            }
         }
 
-        emit NewGeneration(generation);
+        startPolicyProposal(mintedOnGenerationIncrease);
 
-        startPolicyProposal();
+        emit NewGeneration(generation);
     }
 
     /** Begin a policies decision process.
@@ -106,10 +127,15 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      * Use `policyFor(ID_POLICY_PROPOSALS)` to find the resulting contract
      * address, or watch for the PolicyDecisionStart event.
      */
-    function startPolicyProposal() internal {
+    function startPolicyProposal(uint256 _mintedOnGenerationIncrease) internal {
         PolicyProposals _proposals = PolicyProposals(
             policyProposalImpl.clone()
         );
+
+        // snapshot the ECOx total
+        uint256 totalx = ECOx(policyFor(ID_ECOX)).totalSupply();
+
+        _proposals.configure(totalx, _mintedOnGenerationIncrease);
         policy.setPolicy(
             ID_POLICY_PROPOSALS,
             address(_proposals),
