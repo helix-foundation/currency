@@ -100,7 +100,7 @@ Arguments:
 
 Register a new proposal for community review. Registration is necessary but does not guarantee a vote for its implementation. The proposal is stored in `proposals` which is an array of all submissions as well as `allProposals` which stores the proposal addresses. A `Register` event is emitted.
 
-Registering a proposal requires a deposit of 1000 ECO (`COST_REGISTER`), which is transferred from the caller's balance to this contract. An allowance for this transfer must be made before calling. If the proposal does not get voted on then the caller will be entitled to claim a refund of 800 ECO (`REFUND_IF_LOST`).
+Registering a proposal requires a deposit of 1000 ECO (`COST_REGISTER`), which is transferred from the caller's balance to this contract. An allowance for this transfer must be made before calling. If the proposal does not get voted on then the caller will be entitled to claim a refund of 800 ECO (`REFUND_IF_LOST`). If the [Circuit Breaker](../../currency/README.md#erc20pausable) is enacted, this registration fee is waived as transfers cannot be made. This will confuse the `refund` function, but that is deprioritized in the case of a circuit breaker emergency.
 
 ##### Security Notes
   - Can only be called during the proposing period.
