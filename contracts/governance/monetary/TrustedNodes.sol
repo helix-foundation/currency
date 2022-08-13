@@ -180,6 +180,9 @@ contract TrustedNodes is PolicedUtils {
         }
     }
 
+    /** The calling trustee can redeem any rewards from the previous generation
+     *  that they have earned for participating in that generation's voting.
+     */
     function redeemVoteRewards() external {
         // rewards from last year
         uint256 yearGenerationCount = IGeneration(policyFor(ID_TIMED_POLICIES))
@@ -233,6 +236,8 @@ contract TrustedNodes is PolicedUtils {
         emit TrustedNodeAddition(_node, cohort);
     }
 
+    /** Checks if a node address is trusted in the current cohort
+     */
     function isTrusted(address _node) public view returns (bool) {
         return cohorts[cohort].trusteeNumbers[_node] > 0;
     }
@@ -257,6 +262,9 @@ contract TrustedNodes is PolicedUtils {
         }
     }
 
+    /** Updates the trustee rewards that they have earned for the year
+     * and then sends the unallocated reward to the hoard.
+     */
     function annualUpdate() external {
         require(
             block.timestamp > yearEnd,

@@ -163,7 +163,8 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     /** Commit to a VDF seed for inflation distribution entropy.
      *
      * Can only be called after results are computed and the registration
-     * period has ended. The VDF seed can only be set once.
+     * period has ended. The VDF seed can only be set once, and must be computed and
+     * set in the previous block.
      *
      * @param _primal the primal to use, must have been committed to in a previous block
      */
@@ -190,7 +191,8 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     }
 
     /** Sets a primal in storage associated to the commiting block
-     *  A user first adds a primal to the contract, then they can test its primality in a subsequent block
+     * A user first adds a primal to the contract, then they can test
+     * its primality in a subsequent block
      *
      * @param _primal uint256 the prime number to commit for the block
      */
@@ -204,6 +206,12 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         primals[_primal] = block.number;
     }
 
+    /** Starts the inflation payout period. Validates that the contract is sufficiently
+     * capitalized with Eco to meet the inflation demand. Can only be called once, ie by CurrencyTimer
+     *
+     * @param _numRecipients the number of recipients that will get rewards
+     * @param _reward the amount of ECO to be given as reward to each recipient
+     */
     function startInflation(uint256 _numRecipients, uint256 _reward) external {
         require(
             _numRecipients > 0 && _reward > 0,
@@ -257,6 +265,9 @@ contract RandomInflation is PolicedUtils, TimeUtils {
      * @param _who The address to claim a reward on behalf of.
      * @param _sequence The reward sequence number to determine if the address
      *                  gets paid.
+     * @param _proof the “other nodes” in the Merkle tree
+     * @param _sum cumulative sum of all account ECO votes before this node
+     * @param _index the index of the `who` address in the Merkle tree
      */
     function claimFor(
         address _who,

@@ -85,7 +85,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         string _description
     );
 
-    // emitted when a trustee unproposes their proposal
+    // emitted when a trustee retracts their proposal
     event ProposalRetraction(address indexed trustee);
 
     /** Fired when the voting stage begins.
