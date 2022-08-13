@@ -84,6 +84,24 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         nextGenerationStart = time + GENERATION_DURATION;
         generation++;
 
+        CurrencyGovernance bg = CurrencyGovernance(
+            policyFor(ID_CURRENCY_GOVERNANCE)
+        );
+
+        uint256 _numberOfRecipients;
+        uint256 _randomInflationReward;
+
+        if (address(bg) != address(0)) {
+            address winner = bg.winner();
+            if (winner != address(0)) {
+                (_numberOfRecipients, _randomInflationReward, , , , ) = bg
+                    .proposals(winner);
+            }
+        }
+
+        uint256 mintedOnGenerationIncrease = _numberOfRecipients *
+            _randomInflationReward;
+
         uint256 notificationHashesLength = notificationHashes.length;
         for (uint256 i = 0; i < notificationHashesLength; ++i) {
             IGenerationIncrease notified = IGenerationIncrease(
@@ -94,7 +112,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             }
         }
 
-        startPolicyProposal();
+        startPolicyProposal(mintedOnGenerationIncrease);
 
         emit NewGeneration(generation);
     }
@@ -109,15 +127,15 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      * Use `policyFor(ID_POLICY_PROPOSALS)` to find the resulting contract
      * address, or watch for the PolicyDecisionStart event.
      */
-    function startPolicyProposal() internal {
+    function startPolicyProposal(uint256 _mintedOnGenerationIncrease) internal {
         PolicyProposals _proposals = PolicyProposals(
             policyProposalImpl.clone()
         );
-        // grab the ECO total from the end of the previous generation to exclude the actions taken on generation update
-        uint256 total = ECO(policyFor(ID_ECO)).totalSupplyAt(block.number - 1);
-        // ECOx is not adjusted on generation update and therefore the snapshot is taken here
+
+        // snapshot the ECOx total
         uint256 totalx = ECOx(policyFor(ID_ECOX)).totalSupply();
-        _proposals.configure(total + totalx);
+
+        _proposals.configure(totalx, _mintedOnGenerationIncrease);
         policy.setPolicy(
             ID_POLICY_PROPOSALS,
             address(_proposals),

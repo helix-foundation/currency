@@ -169,7 +169,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
 
         proposalEnds = getTime() + PROPOSAL_TIME;
-        blockNumber = block.number - 1;
+        blockNumber = block.number;
     }
 
     /**
@@ -335,7 +335,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         emit Support(msg.sender, _prop);
 
-        uint256 _total = totalVotingPower;
+        uint256 _total = totalVotingPower(blockNumber);
 
         if (
             _p.totalStake >
@@ -412,7 +412,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
             votingProp.proposal,
             votingProp.proposer,
             blockNumber,
-            totalVotingPower
+            totalECOxVotingPower,
+            excludedVotingPower
         );
         policy.setPolicy(ID_POLICY_VOTES, address(pv), ID_POLICY_PROPOSALS);
 
@@ -510,12 +511,16 @@ contract PolicyProposals is VotingPower, TimeUtils {
     }
 
     // configure the total voting power for the vote thresholds
-    function configure(uint256 _totalVotingPower) external {
+    function configure(
+        uint256 _totalECOxVotingPower,
+        uint256 _excludedVotingPower
+    ) external {
         require(
-            totalVotingPower == 0,
+            totalECOxVotingPower == 0,
             "This instance has already been configured"
         );
 
-        totalVotingPower = _totalVotingPower;
+        totalECOxVotingPower = _totalECOxVotingPower;
+        excludedVotingPower = _excludedVotingPower;
     }
 }

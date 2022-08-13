@@ -15,6 +15,7 @@ const util = require('../../tools/test/util')
 describe('RandomInflation [@group=6]', () => {
   let policy
   let eco
+  let ecox
   let governance
   let initInflation
   let addressRootHashProposal
@@ -147,6 +148,7 @@ describe('RandomInflation [@group=6]', () => {
     ;({
       policy,
       eco,
+      ecox,
       faucet: initInflation,
       timedPolicies,
       currencyTimer,
@@ -225,7 +227,7 @@ describe('RandomInflation [@group=6]', () => {
     await configureInflationRootHash()
   })
 
-  describe('policyProposals blockNumber', () => {
+  describe('policyProposals totalVotingPower', () => {
     beforeEach(async () => {
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
@@ -235,18 +237,13 @@ describe('RandomInflation [@group=6]', () => {
         )
       )
     })
-    it('excludes randomInflation mint from totalSupply at blockNumber', async () => {
+    it('excludes randomInflation mint from totalVotingPower at blockNumber', async () => {
+      const ecoXsupply = await ecox.totalSupply()
       await expect(
-        await eco.totalSupplyAt(await policyProposals.blockNumber())
-      ).to.equal(preInflationEcoSupply)
-    })
-
-    it('includes randomInflation mint in totalSupply at blockNumber + 1', async () => {
-      await expect(
-        await eco.totalSupplyAt(
-          (await policyProposals.blockNumber()).toNumber() + 1
+        await policyProposals.totalVotingPower(
+          await policyProposals.blockNumber()
         )
-      ).to.equal(preInflationEcoSupply.add(inflationVote * rewardVote))
+      ).to.equal(preInflationEcoSupply.add(ecoXsupply))
     })
   })
 

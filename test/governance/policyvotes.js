@@ -22,8 +22,6 @@ describe('PolicyVotes [@group=8]', () => {
   let dave
   let frank
 
-  const totalSupply = one.mul(23000)
-
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave, frank] = accounts
@@ -59,7 +57,8 @@ describe('PolicyVotes [@group=8]', () => {
             proposal,
             await alice.getAddress(),
             await time.latestBlock(),
-            totalSupply
+            0,
+            0
           )
         })
 
@@ -68,7 +67,8 @@ describe('PolicyVotes [@group=8]', () => {
             proposal,
             await alice.getAddress(),
             await time.latestBlock(),
-            totalSupply
+            0,
+            0
           )
 
           assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0)
@@ -81,7 +81,8 @@ describe('PolicyVotes [@group=8]', () => {
             proposal,
             await alice.getAddress(),
             await time.latestBlock(),
-            totalSupply
+            0,
+            0
           )
         })
 
@@ -91,7 +92,8 @@ describe('PolicyVotes [@group=8]', () => {
               proposal,
               await alice.getAddress(),
               await time.latestBlock(),
-              totalSupply
+              0,
+              0
             )
           ).to.be.revertedWith('has already been configured')
         })
@@ -114,7 +116,8 @@ describe('PolicyVotes [@group=8]', () => {
           proposal,
           await alice.getAddress(),
           await time.latestBlock(),
-          totalSupply
+          0,
+          0
         )
       })
 
@@ -243,7 +246,8 @@ describe('PolicyVotes [@group=8]', () => {
           proposal,
           await alice.getAddress(),
           await time.latestBlock(),
-          totalSupply
+          0,
+          0
         )
       })
 
@@ -450,7 +454,8 @@ describe('PolicyVotes [@group=8]', () => {
         proposal,
         await alice.getAddress(),
         await time.latestBlock(),
-        totalSupply
+        0,
+        0
       )
     })
 
