@@ -1,9 +1,7 @@
 # Governance System
 > Governance policies for the Eco currency.
 
-These contracts provide the governance system for the eco currency. They
-specify how the currency is to be managed, and how the software and processes
-themselves are over-seen.
+The governance system of the ECO and ECOx currencies is designed to maintain and upgrade both the currencies and itself. The subfolders have their own READMEs outlining both [community](./community/README.md) and [monetary](./monetary/README.md) governance. This document describes the automation and storage machinery used to manage these processes and the generation update system.
 
 ## Table of Contents
   - [Security](#security)
@@ -15,83 +13,17 @@ themselves are over-seen.
   - [License](#license)
 
 ## Security
-The security of the governance contracts is built on a list of trustees.
-See the `TrustedNodes` contract for how the list maintained. Changes to the
-list of trustees can be only be made using policy proposals, and require
-the support of a majority of participating voters, weighted by stake.
+The contracts here only expose public functions that push the process of the currency forward and are only callable when that forward progress is desired. They take no inputs and are designed to be agnostic to the person who uses them. The idea is that the system doesn't mind who increases the generation clock, just that someone does.
 
 ## Background
-The trustee and community governance contracts provide a policy hierarchy (built
-in Eco's policy framework). It allows Eco's trustees (a list of which is
-managed by a `TrustedNodes` instance) to enact inflationary or deflationary
-measures, and allows all stake-holders in the currency to participate in
-elections for broader changes to the currency or how it's governed.
+The `TimedPolicies` contract oversees the generation clock and the community governance. It maintains a list of ERC1820 labels to notify of the generation increase and calls `notifyGenerationIncrease` on each of these contracts. At launch, this only calls to the `ECO` and the `CurrencyTimer` contract. It also clones and configures the `PolicyProposals` contract, kicking off the community governance process.
 
-The `TimedPolicies` contract implements the governmental schedule, and
-instantiates (by cloning) the appropriate contracts as well as notifying each
-other contract each time the cycle resets. There are two distinct types of
-periodic votes:
-  - Monetary Policy Decisions (managed by trustees)
-  - General Policy Decisions (open to every currency holder)
-
-Each type of periodic vote has different methods of coming to a decision.
-However, both votes are set to the global Generation Cycle of 14 days.
-
-> Note that the vote frequency is likely to change based on feedback and
-> observed use. It is bounded below by the VDF safety margins, setting a
-> maximum frequency of once every five days. 14 days was selected based on
-> estimates of how long it would take to observe the impact of a previous vote.
-
-### Monetary Policy Decisions
-Monetary Policy decisions involve only the Trusted Nodes. They're used to
-create and distribute new currency (to drive spending), to create and
-distribute deposit certificates (to discourage spending), or scale the currency
-across the board (to manage exchange value with other currencies). The different
-policy levers are designed to reward different behavior and provide incentives
-to achieve their desired results.
-
-This process runs in 3 phases. First is a 10 day period over which trustees each
-can submit their proposals for new values for the 3 monetary policy levers
-(detailed below). Then there is a 3 day phase in which the trustees create
-ballots ranking the proposals using a partial Borda Count method, then submit
-them in the form of a hash commit. Finally there is a 1 day phase where votes
-are revealed and counted ending in a winner being chosen and applied for the
-next generation.
-
-### Community Decisions
-The Community Decisions process provides a mechanism for upgrading contracts or
-making other changes to the currency or governance system. For example, the
-length of a generation could be modified by using the policy decisions process
-to replace the `TimedPolicies` contract with a new version using a different
-generational frequency.
-
-The process has two phases. Starting at the beginning of a generation,
-any currency holder may submit a proposal in the form of a contract to be executed
-along with a submission fee. During this period, any address can give and modify
-support to these proposals where the voting power is based on the most recent
-snapshot of their ECO and ECOx balances. If any proposal reaches support exceeding
-30% of the total available voting power in the system, it will progress to the
-voting phase where any currency holder may vote either for or against it using the
-same calculation of voting power as the supporting of the proposal. At the end of
-the 72 hour voting phase, the proposal passes if it has more yes votes than no
-votes. However, if the yes votes do not consist of a majority of the total voting
-power, there is a 24 hour delay to implementation. Proposals that were submitted
-but not voted on entitle the proposer to a partial refund of the fee as soon as
-the proposing phase ends.
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
 
 ## Usage
-The governance contracts deploy as a policy hierarchy implemented in Eco's
-[policy framework](../policy/README.md). The `TimedPolicies` contract should be
-deployed as the "TimedPolicies" policy object, and is constructed with references to
-the other contracts needed for specific votes and outcomes.
-
-The `TimedPolicies` contract will clone the referenced contracts as needed, and
-grant the clones the relevant permissions. See `startInflation` for an example.
-It will also notify all other `IGenerationIncrease` contracts each time a generation
-increases, coordinating the switchover to each subsequent generation.
+Ideally an automation system tracks the governance system so as to keep the generation clock ticking. All the system knows is when the next generation update can be called and does not keep a memory of when the last generation started. Without an automation system tracking the progress of the governance system offchain, it is possible for the generation start times to drift by late calls to `increaseGeneration`.
 
 ## API
 Each section here discusses the API used to interact with one part of the
