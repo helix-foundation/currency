@@ -42,9 +42,10 @@ Queries `ECO` for the addresses's voting total at `_blockNumber` and similarly f
   - Will revert on each lower level call if `_blockNumber` is in the future.
 
 #### totalVotingPower
-Arguments: none
+Arguments:
+  - `_blockNumber` (uint256) - the block number at which to compute the voting power.
 
-A public variable set by the `configure` function of the voting contract that inherits from this contract. Is just the snapshotted totals of ECO and ECOx token supplies added together.
+This combines the snapshotted token supply of ECOx that is provided to the child contracts on `configure` with the excluded tokens that are minted during generation update and the total supply of ECO at `_blockNumber`.
 
 ### PolicyProposals
   - Inherits: `VotingPower`, `TimeUtils`
@@ -181,13 +182,14 @@ Partially refunds (80%) the fee for the registration of a proposal that did not 
 
 #### configure
 Arguments:
-  - `_totalVotingPower` (uint256) - the snapshot of total voting power
+  - `_totalECOxVotingPower` (uint256) - the snapshot of total ECOx supply
+  - `_excludedVotingPower` (uint256) - the amount of voting power to exclude from the ECO supply
 
-Configures the voting aspect of the contract with `totalVotingPower` to measure the 30% threshold versus.
+Configures the voting aspect of the contract for `totalVotingPower` to measure the 30% threshold. `_totalECOxVotingPower` and `_excludedVotingPower` are saved and used in the inherited `VotingPower` functionality. `_excludedVotingPower` is the amount of ECO minted on the generation increase.
 
 ##### Security Notes
   - Is called atomically with instantiation by `CurrencyTimer`.
-  - Can only be called once, checks that the `totalVotingPower` hasn't been set.
+  - Can only be called once, checks that the `_totalECOxVotingPower` hasn't been set.
 
 #### destruct
 Arguments: none
@@ -231,9 +233,10 @@ Arguments:
   - `_proposal` (address) - the address of the proposal to vote on
   - `_proposer` (address) - the person who proposed the proposal being voted on
   - `_cutoffBlockNumber` (uint256) - the block number to measure user voting power at
-  - `_totalVotingPower` (uint256) - the snapshotted total voting power at the block number above
+  - `_totalECOxVotingPower` (uint256) - the snapshot of total ECOx supply
+  - `_excludedVotingPower` (uint256) - the amount of voting power to exclude from the ECO supply
 
-Configures a policy vote, setting the policy to be voted on, the times that the voting ends, the block to use for voting power calculation, and the `totalVotingPower` to use for the 50% threshold. The `proposer` is stored as the data is deleted in the `PolicyProposals` contract as we move to this stage, so it is preserved for the UI.
+Configures a policy vote, setting the policy to be voted on, the times that the voting ends, the block to use for voting power calculation, and the parameters to calculate `totalVotingPower` to use for the 50% threshold (see [here](./README.md#configure)). The `proposer` is stored as the data is deleted in the `PolicyProposals` contract as we move to this stage, so it is preserved for the UI.
 
 ##### Security Notes
   - Is called atomically with instantiation.
@@ -243,39 +246,42 @@ Configures a policy vote, setting the policy to be voted on, the times that the 
 Arguments:
   - `_vote` (bool) - the vote to submit, `true` to pass the proposal, `false` to fail
 
-Records the caller's vote, weighted by their voting power. Records the voting power of
-the caller in `totalStake` and in `yesStake` if the voter voted yes. Records yes votes
-in the mapping `yesVote` which maps addresses to votes. Emits a `PolicyVote` event.
+Records the caller's vote, weighted by their voting power. Records the voting power of the caller in `totalStake` and in `yesStake` if the voter voted yes. Records yes votes in the mapping `yesVote` which maps addresses to votes. Emits a `PolicyVote` event.
 
 ##### Security Notes
   - Cannot be called if the voting period is over
   - Fails if the user has no voting power to vote with
   - May be called again, with a different value of `_vote` to change the vote
 
+#### voteSplit
+Arguments:
+  - `_voteYes` (uint256) - the amount of the users voting power to submit as a yes vote
+  - `_voteNo` (uint256) - the amount of the users voting power to submit as a no vote
+
+This function allows an aggregator contract to correctly display a split of its users' voting decisions. Raw yes and no votes much be recorded so as to correctly capture the progress toward the 50% threshold for early enaction. Records the sum of the two inputs in `totalStake` and `voteYes` in `yesStake`. Emits a `PolicySplitVoteCast` event.
+
+##### Security Notes
+  - Cannot be called if the voting period is over
+  - Fails if the caller has no voting power to vote with
+  - Fails if the submitted amounts are greater than the caller's total voting power
+  - The caller may submit less than its total voting power, effectively abstaining with the non-included power
+  - May be called again, with a different values to update the vote
+  - Can be called if `vote` was used previously or vice versa
+
 
 #### execute
 Arguments: none
 
-Runs the default function on the proposal, if it passed, and then removes the
-permissions from the contract, transfers any tokens to the root policy, and
-then self-destructs. Emits a `VoteCompletion` event.
+Runs the `enacted` function on the proposal, if it passed, and then removes the permissions from this contract, and transfers any tokens to the root policy. Emits a `VoteCompletion` event.
 
 ##### Security Notes
-  - Enacted proposals can do anything they like. They're run in the context of
-    the root policy using `delegatecall`, allowing them to use `delegatecall` on
-    behalf of any managed contract.
-  - Can only be called before the voting period ends if the yes votes have already
-    reached a majority.
+  - Enacted proposals can do anything they like. They're run in the context of the root policy using `delegatecall`. See [internalCommand](../../policy/README.md#internalcommand) for context.
+  - Can only be called before the voting period ends if the yes votes have already reached a majority of all possible voting power.
 
 ### ECOxStaking
   - Inherits: `ERC20Votes`, `PolicedUtils`
 
-Contains the logic for depositing and withdrawing EcoX to/from lockup. The quantity of
-EcoX locked up relative to the total supply (both at a given block number) determine
-an individual's voting power. This contract also maintains a mapping of addresses -->
-the last generation in which that address cast a vote - this is used to determine
-whether or not an address is permitted to withdraw (withdrawal is not permitted until
-two generations after the last vote was cast by the withdrawing address).
+This contract is used to stake ECOx for the sake of voting with it in community governance. The quantity of EcoX locked up is the amount added to the individual's voting power. A [checkpointing system](../../currency/README.md#votecheckpoints) with delegation is used that is identical to the `ECO` contract. The stored ECOx (sECOx) cannot be transferred.
 
 #### Events
 
@@ -284,53 +290,45 @@ Attributes:
   - `source` (address) - The address that a deposit certificate has been issued to
   - `amount` (uint256) - The amount of ECOx tokens deposited
 
-The Deposit event indicates that ECOx has been locked up, credited to a particular
-address in a particular amount.
+The Deposit event indicates that ECOx has been locked up, credited to a particular address in a particular amount.
 
 ##### Withdrawal
 Attributes:
   - `destination` (address) The address that has made a withdrawal
   - `amount` (uint256) The amount in basic unit of 10^{-18} ECOx (weicoX) tokens withdrawn
 
-The Withdrawal event indicates that a withdrawal has been made to a particular address
-in a particular amount
+The Withdrawal event indicates that a withdrawal has been made to a particular address in a particular amount
 
 #### deposit
 Arguments:
   - `_amount` (uint256) - amount of EcoX sender is attempting to deposit
 
-Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract.
-A checkpoint is written to increase totalSupply and the voting balance of msg.sender by
-`_amount` for the current block number. This also results in a Deposit event being emitted.
+Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract. A checkpoint is written to increase totalSupply and the voting balance of msg.sender by `_amount` for the current block number. This also results in a `Deposit` event being emitted.
 
 ##### Security Notes
-  - only updates totalSupply and voting power balance if the transfer is successful i.e. if
-    msg.sender has at least `_amount` of EcoX in their balance
+  - only updates totalSupply and voting power balance if the transfer is successful i.e. if msg.sender has at least `_amount` of EcoX in their balance
 
 #### withdraw
 Arguments:
   - `_amount` (uint256) - amount of EcoX sender is attempting to withdraw
 
-Transfers EcoX in the amount `_amount` to msg.sender. Ensures that
-A checkpoint is written to decrease totalSupply and the voting balance of msg.sender by
-`_amount` for the current block number. This also results in a Withdrawal event being emitted.
+Transfers EcoX in the amount `_amount` to msg.sender. Ensures that a checkpoint is written to decrease totalSupply and the voting balance of msg.sender by `_amount` for the current block number. This also results in a `Withdrawal` event being emitted.
+
+##### Security Notes
+  - This function attempts to undelegate funds to attempt to withdraw but this may fail. See [undelegate](../../currency/README.md#undelegate) for more context.
 
 ### votingECOx
 Arguments:
   - `_voter` (address) - address whose voting power is being assessed
   - `_blocknumber` (uint256) - block number at which voting power is being assessed
 
-Fetches the EcoX voting power of a given address at a given block. This is accomplished by
-binary searching to find the earliest checkpoint taken after the given block number, and
-then getting the balance of the address in that checkpoint.
+Fetches the EcoX voting power of a given address at a given block. This is accomplished by binary searching to find the earliest checkpoint taken after the given block number, and then getting the balance of the address in that checkpoint.
 
 ### totalVotingECOx
 Arguments:
   - `_blocknumber` (uint256) - block number at which voting power is being assessed
 
-Fetches the total voting power at a given block. This is accomplished by binary searching to
-find the earliest checkpoint taken after the given block number, and then getting the sum of
-all balances at that checkpoint.
+Fetches the total voting power at a given block. This is accomplished by binary searching to find the earliest checkpoint taken after the given block number, and then getting the sum of all balances at that checkpoint. This only counts ECOx that are stored by users to be able to vote.
 
 ##### Security Notes
   - can only be invoked by the policy proposals contract or the policy votes contract
