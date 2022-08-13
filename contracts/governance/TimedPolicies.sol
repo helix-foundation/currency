@@ -15,15 +15,15 @@ import "../currency/ECOx.sol";
  * Eco currency.
  */
 contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
-    /** The minimum number of days between inflation votes.
-     */
-    uint256 public constant CURRENCY_TIME = 14 days;
-
+    // The minimum time of a generation.
     uint256 public constant GENERATION_DURATION = 14 days;
+    // The initial generation
     uint256 private constant GENERATION_START = 1000;
-    // Work around the bug in prettier for now
+    // Stores the current generation
     uint256 public override generation;
+    // Stores when the next generation is allowed to start
     uint256 public nextGenerationStart;
+    // Stores all contracts that need a function called on generation increase
     bytes32[] public notificationHashes;
 
     /** The on-chain address for the policy proposal process contract. The
