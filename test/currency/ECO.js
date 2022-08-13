@@ -76,7 +76,7 @@ describe('ECO [@group=1]', () => {
     // console.log((await eco.getPastLinearInflation(inflationBlockNumber)).toString())
   })
 
-  describe('total supply', () => {
+  describe('totalSupply', () => {
     const amount = one.mul(100)
 
     beforeEach(async () => {
@@ -85,6 +85,24 @@ describe('ECO [@group=1]', () => {
 
     it('returns the total amount of tokens', async () => {
       const supply = await eco.totalSupply()
+
+      expect(supply).to.equal(amount)
+    })
+  })
+
+  describe('totalSupplyAt', () => {
+    const amount = one.mul(100)
+    let blockNum
+
+    beforeEach(async () => {
+      await faucet.mint(await accounts[1].getAddress(), amount)
+      blockNum = await time.latestBlock()
+      await time.increase(10000)
+      await faucet.mint(await accounts[1].getAddress(), amount)
+    })
+
+    it('returns the total amount of tokens at the specified block', async () => {
+      const supply = await eco.totalSupplyAt(blockNum)
 
       expect(supply).to.equal(amount)
     })

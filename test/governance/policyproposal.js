@@ -14,7 +14,6 @@ describe('PolicyProposals [@group=7]', () => {
   let dave
   let policy
   let eco
-  let ecox
   let initInflation
   let timedPolicies
 
@@ -24,7 +23,6 @@ describe('PolicyProposals [@group=7]', () => {
     ;({
       policy,
       eco,
-      ecox,
       faucet: initInflation,
       timedPolicies,
     } = await ecoFixture([]))
@@ -45,23 +43,20 @@ describe('PolicyProposals [@group=7]', () => {
     await timedPolicies.incrementGeneration()
   })
 
-  async function makeProposals() {
-    const implementation = await deploy(
-      'PolicyProposals',
-      policy.address,
-      (
-        await deploy('PolicyVotes', policy.address, eco.address, ecox.address)
-      ).address,
-      eco.address,
-      ecox.address
+  async function getProposals() {
+    const proposalsHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyProposals']
     )
-    const cloner = await deploy('Cloner', implementation.address)
-    const policyProposalsClone = await ethers.getContractAt(
+
+    const proposalsAddress = await policy.policyFor(proposalsHash)
+
+    const proposals = await ethers.getContractAt(
       'PolicyProposals',
-      await cloner.clone()
+      proposalsAddress
     )
-    await policy.testDirectSet('PolicyProposals', policyProposalsClone.address)
-    return policyProposalsClone
+
+    return proposals
   }
 
   describe('registerProposal', () => {
@@ -70,7 +65,7 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal2
 
     beforeEach(async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
       testProposal2 = await deploy('Empty', 2)
     })
@@ -196,7 +191,7 @@ describe('PolicyProposals [@group=7]', () => {
     let allPropsData
     let policyProposals
     beforeEach(async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
 
       /* eslint-disable no-await-in-loop */
       for (let i = 0; i < totalProposals; i++) {
@@ -304,7 +299,7 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal2
     const totalProposals = 2
     beforeEach(async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
       testProposal2 = await deploy('Empty', 1)
 
@@ -431,7 +426,7 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal2
 
     beforeEach(async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
       testProposal2 = await deploy('Empty', 1)
 
@@ -525,7 +520,7 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal
 
     it('reverts if proposal not selected', async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
 
       await eco.approve(
@@ -546,7 +541,7 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal
 
     beforeEach(async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
 
       await eco.approve(
@@ -640,7 +635,7 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal
     let testProposal2
     beforeEach(async () => {
-      policyProposals = await makeProposals()
+      policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
       testProposal2 = await deploy('Empty', 2)
 
@@ -745,28 +740,9 @@ describe('PolicyProposals [@group=7]', () => {
     let testProposal
     let testProposal2
 
-    context('on the implementation contract itself', () => {
-      beforeEach(async () => {
-        policyProposals = await deploy(
-          'PolicyProposals',
-          policy.address,
-          (
-            await deploy(
-              'PolicyVotes',
-              policy.address,
-              eco.address,
-              ecox.address
-            )
-          ).address,
-          eco.address,
-          ecox.address
-        )
-      })
-    })
-
     context('before results are computed', () => {
       beforeEach(async () => {
-        policyProposals = await makeProposals()
+        policyProposals = await getProposals()
       })
 
       it('reverts', async () => {
@@ -778,7 +754,7 @@ describe('PolicyProposals [@group=7]', () => {
 
     context('after results are computed and proposals are refunded', () => {
       beforeEach(async () => {
-        policyProposals = await makeProposals()
+        policyProposals = await getProposals()
         testProposal = await deploy('Empty', 1)
         testProposal2 = await deploy('Empty', 2)
 
@@ -832,7 +808,7 @@ describe('PolicyProposals [@group=7]', () => {
 
     context('after results are computed with proposals not refunded', () => {
       beforeEach(async () => {
-        policyProposals = await makeProposals()
+        policyProposals = await getProposals()
         testProposal = await deploy('Empty', 1)
 
         await eco.approve(

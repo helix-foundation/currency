@@ -7,6 +7,8 @@ import "../utils/TimeUtils.sol";
 import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
 import "./community/PolicyProposals.sol";
+import "../currency/ECO.sol";
+import "../currency/ECOx.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
@@ -87,13 +89,14 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             IGenerationIncrease notified = IGenerationIncrease(
                 policy.policyFor(notificationHashes[i])
             );
-            // require(address(notifier) != address(0), "Broken state");
-            notified.notifyGenerationIncrease();
+            if (address(notified) != address(0)) {
+                notified.notifyGenerationIncrease();
+            }
         }
 
-        emit NewGeneration(generation);
-
         startPolicyProposal();
+
+        emit NewGeneration(generation);
     }
 
     /** Begin a policies decision process.
@@ -110,6 +113,11 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         PolicyProposals _proposals = PolicyProposals(
             policyProposalImpl.clone()
         );
+        // grab the ECO total from the end of the previous generation to exclude the actions taken on generation update
+        uint256 total = ECO(policyFor(ID_ECO)).totalSupplyAt(block.number - 1);
+        // ECOx is not adjusted on generation update and therefore the snapshot is taken here
+        uint256 totalx = ECOx(policyFor(ID_ECOX)).totalSupply();
+        _proposals.configure(total + totalx);
         policy.setPolicy(
             ID_POLICY_PROPOSALS,
             address(_proposals),

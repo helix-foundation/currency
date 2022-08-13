@@ -146,14 +146,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
      * @param _policyvotes The address of the contract that will be cloned to
      *                     oversee the voting phase.
      * @param _ecoAddr The address of the ECO token contract.
-     * @param _ecoXAddr The address of the ECOx token contract.
      */
     constructor(
         Policy _policy,
         PolicyVotes _policyvotes,
-        ECO _ecoAddr,
-        ECOx _ecoXAddr
-    ) VotingPower(_policy, _ecoAddr, _ecoXAddr) {
+        ECO _ecoAddr
+    ) VotingPower(_policy, _ecoAddr) {
         policyVotesImpl = _policyvotes;
     }
 
@@ -337,7 +335,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         emit Support(msg.sender, _prop);
 
-        uint256 _total = totalVotingPower(blockNumber);
+        uint256 _total = totalVotingPower;
 
         if (
             _p.totalStake >
@@ -410,7 +408,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
         delete proposalToConfigure;
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
-        pv.configure(votingProp.proposal, votingProp.proposer, blockNumber);
+        pv.configure(
+            votingProp.proposal,
+            votingProp.proposer,
+            blockNumber,
+            totalVotingPower
+        );
         policy.setPolicy(ID_POLICY_VOTES, address(pv), ID_POLICY_PROPOSALS);
 
         emit VoteStart(pv);
@@ -504,5 +507,15 @@ contract PolicyProposals is VotingPower, TimeUtils {
             : totalProposals - _startIndex;
 
         _loopEnd = _startIndex + _returnLength;
+    }
+
+    // configure the total voting power for the vote thresholds
+    function configure(uint256 _totalVotingPower) external {
+        require(
+            totalVotingPower == 0,
+            "This instance has already been configured"
+        );
+
+        totalVotingPower = _totalVotingPower;
     }
 }
