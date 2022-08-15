@@ -410,3 +410,5 @@ exports.singletonsFixture = async (signer) => {
     '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
   )
 }
+
+exports.ZERO_ADDR = '0x0000000000000000000000000000000000000000'

@@ -47,6 +47,7 @@ abstract contract DelegatePermit is EIP712 {
             block.timestamp <= deadline,
             "DelegatePermit: expired deadline"
         );
+        require(delegator != address(0), "invalid delegator");
 
         bytes32 structHash = keccak256(
             abi.encode(
@@ -69,7 +70,7 @@ abstract contract DelegatePermit is EIP712 {
      * @param owner The address to get nonce for
      * @return the current nonce of `owner`
      */
-    function delegationNonces(address owner) public view returns (uint256) {
+    function delegationNonce(address owner) public view returns (uint256) {
         return _nonces[owner].current();
     }
 

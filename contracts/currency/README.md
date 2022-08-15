@@ -272,7 +272,7 @@ Undelegates a specified amount from an address. Is only available to amounts set
 
 Implements a standard usage of EIP721 (read more [here](https://eips.ethereum.org/EIPS/eip-712)) for our `delegate` function. The typehash `keccak256("Delegate(address delegator,address delegatee,uint256 nonce,uint256 deadline)")` is used and the openzeppelin utility for `Counters` is used for the nonces. Other than allow the checking of nonces for addresses, all functionality of this contract is internal.
 
-#### delegationNonces
+#### delegationNonce
 Arguments:
  - `owner` (address) - the address to check the nonce for
 

@@ -179,9 +179,10 @@ exports.delegateBySig = async function delegateBySig(
     signer = delegator,
   }
 ) {
+  console.log(delegator.getAddress())
   const nonceToUse =
     nonce === undefined
-      ? await token.delegationNonces(await delegator.getAddress())
+      ? await token.delegationNonce(await delegator.getAddress())
       : nonce
 
   const delegationData = exports.createDelegatePermitMessageData({
