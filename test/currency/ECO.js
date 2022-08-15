@@ -1377,7 +1377,7 @@ describe('ECO [@group=1]', () => {
         ).to.be.revertedWith('Do not delegate to yourself')
       })
 
-      it('does not allow delegation to the zero address', async () => {
+      it('does not allow delegator to be the zero address', async () => {
         const zeroAccount = {
           getAddress: () => {
             return ZERO_ADDR
