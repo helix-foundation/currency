@@ -11,7 +11,7 @@ import "./ERC20Pausable.sol";
  */
 contract ECOx is ERC20Pausable, PolicedUtils {
     // bits of precision used in the exponentiation approximation
-    uint8 public constant PRECISION = 100;
+    uint8 public constant PRECISION_BITS = 100;
 
     uint256 public immutable initialSupply;
 
@@ -25,16 +25,13 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         Policy _policy,
         address _distributor,
         uint256 _initialSupply,
-        address _ecoAddr
+        IECO _ecoAddr
     ) ERC20Pausable("Eco-X", "ECOx", address(_policy)) PolicedUtils(_policy) {
-        require(
-            _initialSupply > 0 && _initialSupply <= type(uint256).max,
-            "initial supply not properly set"
-        );
+        require(_initialSupply > 0, "initial supply not properly set");
 
         initialSupply = _initialSupply;
         distributor = _distributor;
-        ecoToken = IECO(_ecoAddr);
+        ecoToken = _ecoAddr;
     }
 
     function initialize(address _self)
@@ -68,10 +65,12 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         view
         returns (uint256)
     {
-        uint256 _preciseRatio = safeLeftShift(_ecoXValue, PRECISION) /
+        uint256 _preciseRatio = safeLeftShift(_ecoXValue, PRECISION_BITS) /
             initialSupply;
 
-        return (generalExp(_preciseRatio, PRECISION) * _ecoSupply) >> PRECISION;
+        return
+            (generalExp(_preciseRatio, PRECISION_BITS) * _ecoSupply) >>
+            PRECISION_BITS;
     }
 
     function safeLeftShift(uint256 value, uint8 shift)
@@ -79,7 +78,6 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         pure
         returns (uint256)
     {
-        require(shift < 256, "shift amount too large");
         uint256 _result = value << shift;
         require(
             _result >> shift == value,
@@ -181,8 +179,7 @@ contract ECOx is ERC20Pausable, PolicedUtils {
 
     function mint(address _to, uint256 _value) external {
         require(
-            msg.sender == policyFor(ID_FAUCET) ||
-                msg.sender == policyFor(ID_ECO_LABS),
+            msg.sender == policyFor(ID_FAUCET),
             "Caller not authorized to mint tokens"
         );
 
