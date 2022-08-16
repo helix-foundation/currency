@@ -65,7 +65,7 @@ abstract contract InflationCheckpoints is
         address to,
         uint256 amount
     ) internal virtual override returns (uint256) {
-        super._beforeTokenTransfer(from, to, amount);
+        amount = super._beforeTokenTransfer(from, to, amount);
         uint256 gonsAmount = amount *
             _checkpointsLookup(_linearInflationCheckpoints, block.number);
 
