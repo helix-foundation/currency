@@ -75,7 +75,7 @@ exports.permit = async function permit(
   amount,
   deadline = Math.floor(new Date().getTime() / 1000 + 86400 * 3000)
 ) {
-  const nonce = await token.nonce(await owner.getAddress())
+  const nonce = await token.nonces(await owner.getAddress())
 
   const permitData = exports.createPermitMessageData({
     name: await token.name(),

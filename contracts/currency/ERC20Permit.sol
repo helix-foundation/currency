@@ -76,7 +76,7 @@ abstract contract ERC20Permit is IERC20Permit, EIP712 {
     /**
      * @dev See {IERC20Permit-nonces}.
      */
-    function nonce(address owner)
+    function nonces(address owner)
         public
         view
         virtual
