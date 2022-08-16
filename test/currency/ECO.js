@@ -357,7 +357,7 @@ describe('ECO [@group=1]', () => {
           const deadline = Math.floor(
             new Date().getTime() / 1000 + 86400 * 3000
           )
-          const nonce = await eco.nonces(await owner.getAddress())
+          const nonce = await eco.nonce(await owner.getAddress())
 
           const permitData = createPermitMessageData({
             name: await eco.name(),
@@ -396,7 +396,7 @@ describe('ECO [@group=1]', () => {
           const deadline = Math.floor(
             new Date().getTime() / 1000 + 86400 * 3000
           )
-          const nonce = await eco.nonces(await owner.getAddress())
+          const nonce = await eco.nonce(await owner.getAddress())
 
           const permitData = createPermitMessageData({
             name: await eco.name(),
@@ -435,7 +435,7 @@ describe('ECO [@group=1]', () => {
           const deadline = Math.floor(
             new Date().getTime() / 1000 + 86400 * 3000
           )
-          const nonce = await eco.nonces(await owner.getAddress())
+          const nonce = await eco.nonce(await owner.getAddress())
 
           const permitData = createPermitMessageData({
             name: await eco.name(),
@@ -472,7 +472,7 @@ describe('ECO [@group=1]', () => {
 
         it('fails with invalid deadline', async () => {
           const deadline = Math.floor(new Date().getTime() / 1000 - 100)
-          const nonce = await eco.nonces(await owner.getAddress())
+          const nonce = await eco.nonce(await owner.getAddress())
 
           const permitData = createPermitMessageData({
             name: await eco.name(),
@@ -511,7 +511,7 @@ describe('ECO [@group=1]', () => {
           const deadline = Math.floor(
             new Date().getTime() / 1000 + 86400 * 3000
           )
-          const nonce = await eco.nonces(await owner.getAddress())
+          const nonce = await eco.nonce(await owner.getAddress())
 
           const permitData = createPermitMessageData({
             name: await eco.name(),
@@ -565,9 +565,9 @@ describe('ECO [@group=1]', () => {
         })
 
         it('increments the nonce', async () => {
-          const nonce = await eco.nonces(await owner.getAddress())
+          const nonce = await eco.nonce(await owner.getAddress())
           await permit(eco, owner, permitSpender, chainId, amount)
-          const nonceAfter = await eco.nonces(await owner.getAddress())
+          const nonceAfter = await eco.nonce(await owner.getAddress())
           expect(nonceAfter - nonce).to.equal(1)
         })
 

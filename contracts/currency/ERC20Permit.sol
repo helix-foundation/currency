@@ -36,7 +36,9 @@ abstract contract ERC20Permit is IERC20Permit, EIP712 {
      *
      * It's a good idea to use the same `name` that is defined as the ERC20 token name.
      */
-    constructor(string memory name) EIP712(name, "1") {}
+    constructor(string memory name) EIP712(name, "1") {
+        //empty block in order to pass parameters to the parent EIP712 constructor
+    }
 
     /**
      * @dev See {IERC20Permit-permit}.
@@ -74,7 +76,7 @@ abstract contract ERC20Permit is IERC20Permit, EIP712 {
     /**
      * @dev See {IERC20Permit-nonces}.
      */
-    function nonces(address owner)
+    function nonce(address owner)
         public
         view
         virtual
