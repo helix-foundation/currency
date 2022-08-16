@@ -98,10 +98,6 @@ contract FakeCommander is PolicedUtils {
         return ID_ECO;
     }
 
-    function GET_ID_CLEANUP() external pure returns (bytes32) {
-        return ID_CLEANUP;
-    }
-
     function GET_ID_TIMED_POLICIES() external pure returns (bytes32) {
         return ID_TIMED_POLICIES;
     }

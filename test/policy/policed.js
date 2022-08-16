@@ -60,7 +60,6 @@ describe('Policed [@group=11]', () => {
       const ids = {
         ID_FAUCET: 'Faucet',
         ID_ECO: 'ECO',
-        ID_CLEANUP: 'ContractCleanup',
         ID_TIMED_POLICIES: 'TimedPolicies',
         ID_TRUSTED_NODES: 'TrustedNodes',
         ID_POLICY_PROPOSALS: 'PolicyProposals',
