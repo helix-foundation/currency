@@ -22,7 +22,6 @@ contract PolicyInit is Policy, Ownable {
      * @param _keys The identifiers for associated governance contracts.
      * @param _values The addresses of associated governance contracts (must
      *                align with _keys).
-     * //param _tokenResolvers Identifiers for the token contracts
      */
     function fusedInit(
         Policy _policy,
@@ -52,7 +51,9 @@ contract PolicyInit is Policy, Ownable {
         }
     }
 
-    constructor() Ownable() {}
+    constructor() Ownable() {
+        //calling parent ownable constructor
+    }
 
     /** Initialize the contract on a proxy
      *
