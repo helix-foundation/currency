@@ -6,7 +6,7 @@ const { ethers } = require('hardhat')
 const { BigNumber } = ethers
 const { signTypedData } = require('@metamask/eth-sig-util')
 
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
 const time = require('../utils/time.ts')
 const util = require('../../tools/test/util')
 const {
@@ -1375,6 +1375,19 @@ describe('ECO [@group=1]', () => {
         await expect(
           delegateBySig(eco, delegator, delegator, chainId, delegator, {})
         ).to.be.revertedWith('Do not delegate to yourself')
+      })
+
+      it('does not allow delegator to be the zero address', async () => {
+        const zeroAccount = {
+          getAddress: () => {
+            return ZERO_ADDR
+          },
+          privateKey:
+            '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        }
+        await expect(
+          delegateBySig(eco, zeroAccount, delegatee, chainId, delegatee, {})
+        ).to.be.revertedWith('invalid delegator')
       })
 
       it('allows executing own delegation', async () => {

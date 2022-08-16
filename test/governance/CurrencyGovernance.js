@@ -6,11 +6,10 @@ const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 
 const { BigNumber } = ethers
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 describe('CurrencyGovernance [@group=4]', () => {
-  const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
   let alice
   let bob
   let charlie
