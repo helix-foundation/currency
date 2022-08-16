@@ -15,7 +15,6 @@ contract ECO is InflationCheckpoints {
     event NewInflationMultiplier(uint256 inflationMultiplier);
 
     /* Current generation of the balance store. */
-    // need to set a default here
     uint256 public currentGeneration;
 
     // the address of the contract for initial distribution
@@ -46,7 +45,6 @@ contract ECO is InflationCheckpoints {
         require(
             msg.sender == policyFor(ID_CURRENCY_TIMER) ||
                 msg.sender == policyFor(ID_ECOX) ||
-                msg.sender == policyFor(ID_ECO_LABS) ||
                 msg.sender == policyFor(ID_FAUCET),
             "Caller not authorized to mint tokens"
         );
@@ -76,10 +74,16 @@ contract ECO is InflationCheckpoints {
         );
 
         if (address(bg) != address(0)) {
-            if (uint8(bg.currentStage()) < 3) {
+            if (
+                uint8(bg.currentStage()) <
+                uint8(CurrencyGovernance.Stage.Compute)
+            ) {
                 bg.updateStage();
             }
-            if (uint8(bg.currentStage()) == 3) {
+            if (
+                uint8(bg.currentStage()) ==
+                uint8(CurrencyGovernance.Stage.Compute)
+            ) {
                 bg.compute();
             }
             address winner = bg.winner();

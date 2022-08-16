@@ -118,10 +118,6 @@ contract FakeCommander is PolicedUtils {
         return ID_POLICY_VOTES;
     }
 
-    function GET_ID_ECO_LABS() external pure returns (bytes32) {
-        return ID_ECO_LABS;
-    }
-
     function GET_ID_CURRENCY_GOVERNANCE() external pure returns (bytes32) {
         return ID_CURRENCY_GOVERNANCE;
     }

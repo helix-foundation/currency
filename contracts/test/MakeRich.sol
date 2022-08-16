@@ -62,15 +62,11 @@ contract MakeRich is Policy, Proposal {
         // call the mint() function
 
         address _old = policyFor(_inflationId);
-        setPolicy(
-            keccak256("EcoLabs"),
-            address(this),
-            keccak256("PolicyVotes")
-        );
+        setPolicy(keccak256("Faucet"), address(this), keccak256("PolicyVotes"));
 
         IECO _eco = IECO(policyFor(_ecoId));
         _eco.mint(account, amount);
 
-        setPolicy(keccak256("EcoLabs"), _old, keccak256("PolicyVotes"));
+        setPolicy(keccak256("Faucet"), _old, keccak256("PolicyVotes"));
     }
 }

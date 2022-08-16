@@ -65,7 +65,6 @@ describe('Policed [@group=11]', () => {
         ID_TRUSTED_NODES: 'TrustedNodes',
         ID_POLICY_PROPOSALS: 'PolicyProposals',
         ID_POLICY_VOTES: 'PolicyVotes',
-        ID_ECO_LABS: 'EcoLabs',
         ID_CURRENCY_GOVERNANCE: 'CurrencyGovernance',
         ID_CURRENCY_TIMER: 'CurrencyTimer',
         ID_ECOX: 'ECOx',
