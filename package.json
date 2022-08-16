@@ -78,7 +78,7 @@
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-promise": "6.0.0",
     "ethereum-waffle": "3.4.4",
-    "hardhat": "2.10.1",
+    "hardhat": "2.10.2",
     "hardhat-gas-reporter": "1.0.8",
     "nyc": "15.1.0",
     "prettier": "2.7.1",
