@@ -5,30 +5,30 @@
   "from": "0x8015fcce39df92bf6a86956ead88e78ad73925cc8f42c8730830b0ba3fac26be",
   "initialECO": [
     {
-      "address": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
-      "amount": "1000"
+      "holder": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
+      "balance": "1000"
     },
     {
-      "address": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
-      "amount": "2000"
+      "holder": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
+      "balance": "2000"
     },
     {
-      "address": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
-      "amount": "3000"
+      "holder": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
+      "balance": "3000"
     }
   ],
   "initialECOx": [
     {
-      "address": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
-      "amount": "10"
+      "holder": "0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78",
+      "balance": "10"
     },
     {
-      "address": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
-      "amount": "20"
+      "holder": "0x5b3F85f21E22D93B37767a687C096b24914C24fc",
+      "balance": "20"
     },
     {
-      "address": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
-      "amount": "30"
+      "holder": "0x28C64c1a3c5699A13B7D492A7d6CF092B97564d6",
+      "balance": "30"
     }
   ]
 }

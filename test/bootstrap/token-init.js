@@ -9,16 +9,20 @@ describe('TokenInit [@group=11]', () => {
     await singletonsFixture((await ethers.getSigners())[0])
     const policy = await deploy('PolicyTestPolicy')
 
-    const ecoInit = await deploy('EcoTokenInit')
-    const ecoToken = await deploy('ECO', policy.address, ecoInit.address, 1000)
+    const tokenInit = await deploy('TokenInit')
+    const ecoToken = await deploy(
+      'ECO',
+      policy.address,
+      tokenInit.address,
+      1000
+    )
     const ecoProxy = await deploy('ForwardProxy', ecoToken.address)
     const ecoProxied = await ethers.getContractAt('ECO', ecoProxy.address)
 
-    const ecoXInit = await deploy('EcoXTokenInit')
     const ecoXToken = await deploy(
       'ECOx',
       policy.address,
-      ecoXInit.address,
+      tokenInit.address,
       10,
       ecoProxy.address
     )
@@ -26,91 +30,61 @@ describe('TokenInit [@group=11]', () => {
     const ecoXProxied = await ethers.getContractAt('ECOx', ecoXProxy.address)
 
     return {
-      ecoInit,
+      tokenInit,
       ecoToken,
       ecoProxied,
-      ecoXInit,
       ecoXToken,
       ecoXProxied,
     }
   }
 
-  let ecoInit
+  let tokenInit
   let ecoProxied
-  let ecoToken
 
-  let ecoXInit
   let ecoXProxied
-  let ecoXToken
 
   const deadbeef = '0xdeadbeefbadf00dc0ffee1ceb00dafaceb00cec0'
 
   beforeEach(async () => {
-    ;({ ecoInit, ecoToken, ecoProxied, ecoXInit, ecoXToken, ecoXProxied } =
-      await loadFixture(fixture))
+    ;({ tokenInit, ecoProxied, ecoXProxied } = await loadFixture(fixture))
   })
 
   describe('initialize', () => {
     it('should not be callable', async () => {
-      await expect(ecoProxied.initialize(ecoInit.address)).to.be.revertedWith(
+      await expect(ecoProxied.initialize(tokenInit.address)).to.be.revertedWith(
         'Can only be called during initialization'
       )
-      await expect(ecoXProxied.initialize(ecoXInit.address)).to.be.revertedWith(
-        'Can only be called during initialization'
-      )
+      await expect(
+        ecoXProxied.initialize(tokenInit.address)
+      ).to.be.revertedWith('Can only be called during initialization')
     })
   })
 
   describe('distributeTokens', () => {
-    describe('with mismatched array lengths', () => {
-      it('reverts for eco', async () => {
-        await expect(
-          ecoInit.distributeTokens(ecoInit.address, [], [10])
-        ).to.be.revertedWith(
-          '_initialHolders and _initialBalances must correspond exactly (length)'
-        )
-      })
-      it('reverts for ecox', async () => {
-        await expect(
-          ecoXInit.distributeTokens(ecoXInit.address, [deadbeef], [])
-        ).to.be.revertedWith(
-          '_initialHolders and _initialBalances must correspond exactly (length)'
-        )
-      })
+    it('correctly funds the account with eco', async () => {
+      const mintAmount = '1000'
+      await tokenInit.distributeTokens(ecoProxied.address, [
+        {
+          holder: deadbeef,
+          balance: mintAmount,
+        },
+      ])
+
+      const tokens = (await ecoProxied.balanceOf(deadbeef)).toString()
+      expect(tokens).to.equal(mintAmount)
     })
 
-    describe('with matching key/value array lengths', () => {
-      it('ecoinit allows empty array parameters', async () => {
-        await ecoInit.distributeTokens(ecoToken.address, [], [])
-      })
+    it('correctly funds the account with ecox', async () => {
+      const mintAmount = '10'
+      await tokenInit.distributeTokens(ecoXProxied.address, [
+        {
+          holder: deadbeef,
+          balance: mintAmount,
+        },
+      ])
 
-      it('ecoXinit allows empty array parameters', async () => {
-        await ecoXInit.distributeTokens(ecoXToken.address, [], [])
-      })
-
-      it('ecoinit correctly funds the account', async () => {
-        const mintAmount = '1000'
-        await ecoInit.distributeTokens(
-          ecoProxied.address,
-          [deadbeef],
-          [mintAmount]
-        )
-
-        const tokens = (await ecoProxied.balanceOf(deadbeef)).toString()
-        expect(tokens).to.equal(mintAmount)
-      })
-
-      it('ecoXinit correctly funds the account', async () => {
-        const mintAmount = '10'
-        await ecoXInit.distributeTokens(
-          ecoXProxied.address,
-          [deadbeef],
-          [mintAmount]
-        )
-
-        const tokens = (await ecoXProxied.balanceOf(deadbeef)).toString()
-        expect(tokens).to.equal(mintAmount)
-      })
+      const tokens = (await ecoXProxied.balanceOf(deadbeef)).toString()
+      expect(tokens).to.equal(mintAmount)
     })
   })
 })
