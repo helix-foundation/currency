@@ -540,11 +540,12 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         }
     }
 
+    // 
     function _writeCheckpoint(
         Checkpoint[] storage ckpts,
         function(uint256, uint256) view returns (uint256) op,
         uint256 delta
-    ) internal returns (uint256) {
+    ) internal {
         require(
             delta <= type(uint224).max,
             "newWeight cannot be casted safely"
@@ -558,17 +559,17 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
         /* if there are no checkpoints, just write the value
          * This part assumes that an account would never exist with a balance but without checkpoints.
-         * This function cannot be called directly, so there's no malicious way to exploit the fact that
-         * the op is not checked and assumed to be add or replace.
+         * This function cannot be called directly, so there's no malicious way to exploit this. If this
+         * is somehow called with op = _subtract, it will revert as that action is nonsensical.
          */
         if (pos == 0) {
             ckpts.push(
                 Checkpoint({
                     fromBlock: uint32(block.number),
-                    value: uint224(delta)
+                    value: uint224(op(0,delta))
                 })
             );
-            return delta;
+            return;
         }
 
         // else, we iterate on the existing checkpoints as per usual
@@ -592,7 +593,6 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
                 })
             );
         }
-        return newWeight;
     }
 
     function _add(uint256 a, uint256 b) internal pure returns (uint256) {
