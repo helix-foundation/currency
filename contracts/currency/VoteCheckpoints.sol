@@ -389,7 +389,10 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
      */
     function undelegate() public {
         address _primaryDelegate = getPrimaryDelegate(msg.sender);
-        require(_primaryDelegate != msg.sender, "Must specifiy address without a Primary Delegate");
+        require(
+            _primaryDelegate != msg.sender,
+            "Must specifiy address without a Primary Delegate"
+        );
         undelegateFromAddress(_primaryDelegate);
     }
 
@@ -581,7 +584,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
             ckpts.push(
                 Checkpoint({
                     fromBlock: uint32(block.number),
-                    value: uint224(op(0,delta))
+                    value: uint224(op(0, delta))
                 })
             );
             return delta;

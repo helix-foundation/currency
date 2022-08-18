@@ -1104,13 +1104,13 @@ describe('ECO [@group=1]', () => {
 
     context('enableDelegationTo', () => {
       it('cannot enable if already delegated', async () => {
-        await eco
-          .connect(accounts[1])
-          .delegate(await accounts[3].getAddress())
+        await eco.connect(accounts[1]).delegate(await accounts[3].getAddress())
 
         await expect(
           eco.connect(accounts[1]).enableDelegationTo()
-        ).to.be.revertedWith('Cannot enable delegation if you have outstanding delegation')
+        ).to.be.revertedWith(
+          'Cannot enable delegation if you have outstanding delegation'
+        )
       })
     })
 
@@ -1136,7 +1136,9 @@ describe('ECO [@group=1]', () => {
 
         await expect(
           eco.connect(accounts[4]).delegate(await accounts[3].getAddress())
-        ).to.be.revertedWith('Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates')
+        ).to.be.revertedWith(
+          'Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates'
+        )
       })
 
       it('can still disable delegation to you with outstanding delegations', async () => {
@@ -1179,7 +1181,9 @@ describe('ECO [@group=1]', () => {
 
         await expect(
           eco.connect(accounts[4]).reenableDelegating()
-        ).to.be.revertedWith('Cannot re-enable delegating if you have outstanding delegations to you')
+        ).to.be.revertedWith(
+          'Cannot re-enable delegating if you have outstanding delegations to you'
+        )
       })
     })
 
@@ -1243,9 +1247,9 @@ describe('ECO [@group=1]', () => {
       })
 
       it('disallows undelegate() with no delegate', async () => {
-        await expect(
-          eco.connect(accounts[1]).undelegate()
-        ).to.be.revertedWith('Must specifiy address without a Primary Delegate')
+        await expect(eco.connect(accounts[1]).undelegate()).to.be.revertedWith(
+          'Must specifiy address without a Primary Delegate'
+        )
       })
     })
 
@@ -1413,7 +1417,9 @@ describe('ECO [@group=1]', () => {
       await faucet.mint(await delegatee.getAddress(), amount)
       await faucet.mint(await otherDelegatee.getAddress(), amount)
       await eco.connect(delegatee).enableDelegationTo({ gasLimit: 1000000 })
-      await eco.connect(otherDelegatee).enableDelegationTo({ gasLimit: 1000000 })
+      await eco
+        .connect(otherDelegatee)
+        .enableDelegationTo({ gasLimit: 1000000 })
 
       voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
@@ -1788,9 +1794,9 @@ describe('ECO [@group=1]', () => {
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2))
 
-        await expect(
-          eco.connect(accounts[1]).undelegate()
-        ).to.be.revertedWith('Must specifiy address without a Primary Delegate')
+        await expect(eco.connect(accounts[1]).undelegate()).to.be.revertedWith(
+          'Must specifiy address without a Primary Delegate'
+        )
       })
 
       it('correct state when undelegated after delegating', async () => {
