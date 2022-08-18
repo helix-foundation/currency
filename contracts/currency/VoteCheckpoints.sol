@@ -154,9 +154,12 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
     /**
      * @dev Set yourself as being able to delegate again.
+     * also disables delegating to you
      * NOTE: the condition for this is not easy and cannot be unilaterally achieved
      */
     function reenableDelegating() public {
+        delegationEnabled[msg.sender] = false;
+
         require(
             _balances[msg.sender] == getVotingGons(msg.sender) &&
                 isOwnDelegate(msg.sender),
