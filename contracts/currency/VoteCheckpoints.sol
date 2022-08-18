@@ -76,7 +76,9 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         string memory _name,
         string memory _symbol,
         address admin
-    ) ERC20Pausable(_name, _symbol, admin) {}
+    ) ERC20Pausable(_name, _symbol, admin) {
+        // call to super constructor
+    }
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */
@@ -118,11 +120,12 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         virtual
         returns (uint32)
     {
+        uint256 _numCheckpoints = checkpoints[account].length;
         require(
-            checkpoints[account].length <= type(uint32).max,
+            _numCheckpoints <= type(uint32).max,
             "number of checkpoints cannot be casted safely"
         );
-        return uint32(checkpoints[account].length);
+        return uint32(_numCheckpoints);
     }
 
     /**
