@@ -176,7 +176,7 @@ describe('ecoXStaking [@group=12]', () => {
       await ecox.connect(bob).approve(ecoXStaking.address, one.mul(100))
       await ecoXStaking.connect(bob).deposit(one.mul(100))
 
-      await ecoXStaking.connect(bob).enableDelegation()
+      await ecoXStaking.connect(bob).enableDelegationTo()
     })
 
     it('delegate works as expected', async () => {

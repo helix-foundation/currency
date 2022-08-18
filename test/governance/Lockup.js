@@ -300,7 +300,7 @@ describe('Lockup [@group=3]', () => {
       await eco.connect(alice).approve(lockup.address, 2000000000)
       await lockup.connect(alice).deposit(2000000000)
 
-      await eco.connect(alice).enableDelegation()
+      await eco.connect(alice).enableDelegationTo()
 
       await faucet.connect(bob).mint(await bob.getAddress(), 3000000000)
       await eco.connect(bob).delegate(await alice.getAddress())
@@ -338,7 +338,7 @@ describe('Lockup [@group=3]', () => {
 
     describe('bob redelegates', () => {
       beforeEach(async () => {
-        await eco.connect(charlie).enableDelegation()
+        await eco.connect(charlie).enableDelegationTo()
         await eco.connect(bob).delegate(await charlie.getAddress())
       })
 

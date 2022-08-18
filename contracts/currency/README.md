@@ -191,28 +191,34 @@ Arguments:
 
 Returns the current primary delegate for `account`. If the `account` is its own delegate (i.e. a delegate has not been set), `account` will be returned. Note that each account is its own primary delegate by default. This function is used when determining where votes should be assigned when tokens are transferred to an address.
 
-#### enableDelegation
+#### enableDelegationTo
 Argument: none
 
-Sets the senders address as available for primary delegation in `delegationEnabled`. This is added because primary delegates are taking on the responsibility to vote for the people delegating to them. Additionally, the way delegation is implemented, there is no chaining, so this extra step is to constrain user behavior so that they do not believe they can further delegate votes.
+Sets the senders address as available for primary delegation in `delegationEnabled`. This is added because primary delegates are taking on the responsibility to vote for the people delegating to them. Additionally, this sets `delegatingDisabled` to true. The way delegation is implemented, there is no chaining: you can never delegate votes delegated to you. This extra step is to constrain user behavior so that they do not believe they can do this.
 
 ##### Security Notes
  - Can only be called if `isOwnDelegate` returns true.
  - Causes all calls to all forms of delegation to revert.
 
-#### disableDelegation
+#### disableDelegationTo
 Argument: none
 
-Sets `delegationEnabled` back to false for the sender. Note that the requirements for this are likely hard to achieve once people have started delegating to you, you cannot force them to undelegate.
+Sets `delegationEnabled` back to false for the sender. Note, this doesn't allow the user to delegate again, just disallows users to delegate to them.
+
+#### reenableDelegating
+Arguments: none
+
+Sets `delegatingDisabled` back to false for the sender, if the requirements are met.
 
 ##### Security Notes
  - Can only be called if `getVotingGons` returns the same value as the user balance. This is equivalent to the fact that the user has no one delegating to them.
+ - This requirement is not necessarily achievable. Likely, the best path is to move tokens to another address if you wish to delegate them.
 
 #### delegate
 Arguments:
  - `delegatee` (address) - the address that the sender is delegating to
 
-Sets the `delegatee` as the primary delegate for the sender. Requires that `delegatee` has called `enableDelegation` and requires that the sender is either completely undelegated or delegated to another primary delegate. Moves the voting power afforded by the users balance to the `delegatee`. Emits a `DelegatedVotes` and a `NewPrimaryDelegate` event for the user as well as `UpdatedVotes` events for everyone involved, including the previous primary delegate if applicable.
+Sets the `delegatee` as the primary delegate for the sender. Requires that `delegatee` has called `enableDelegationTo` and requires that the sender is either completely undelegated or delegated to another primary delegate. Moves the voting power afforded by the users balance to the `delegatee`. Emits a `DelegatedVotes` and a `NewPrimaryDelegate` event for the user as well as `UpdatedVotes` events for everyone involved, including the previous primary delegate if applicable.
 
 ##### Security Notes
  - Will revert if the sender has primary delegation to them enabled

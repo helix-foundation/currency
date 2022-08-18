@@ -1096,8 +1096,8 @@ describe('ECO [@group=1]', () => {
       await faucet.mint(await accounts[2].getAddress(), amount)
       await faucet.mint(await accounts[3].getAddress(), amount)
       await faucet.mint(await accounts[4].getAddress(), amount)
-      await eco.connect(accounts[3]).enableDelegation()
-      await eco.connect(accounts[4]).enableDelegation()
+      await eco.connect(accounts[3]).enableDelegationTo()
+      await eco.connect(accounts[4]).enableDelegationTo()
 
       voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
@@ -1142,7 +1142,7 @@ describe('ECO [@group=1]', () => {
         await expect(
           eco.connect(accounts[3]).delegate(await accounts[4].getAddress())
         ).to.be.revertedWith(
-          'Cannot delegate if you have enabled primary delegation to yourself'
+          'Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates'
         )
       })
     })
@@ -1331,8 +1331,8 @@ describe('ECO [@group=1]', () => {
       await faucet.mint(await delegateTransferRecipient.getAddress(), amount)
       await faucet.mint(await delegatee.getAddress(), amount)
       await faucet.mint(await otherDelegatee.getAddress(), amount)
-      await eco.connect(delegatee).enableDelegation({ gasLimit: 1000000 })
-      await eco.connect(otherDelegatee).enableDelegation({ gasLimit: 1000000 })
+      await eco.connect(delegatee).enableDelegationTo({ gasLimit: 1000000 })
+      await eco.connect(otherDelegatee).enableDelegationTo({ gasLimit: 1000000 })
 
       voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
@@ -1414,7 +1414,7 @@ describe('ECO [@group=1]', () => {
         await expect(
           delegateBySig(eco, delegatee, otherDelegatee, chainId, delegatee, {})
         ).to.be.revertedWith(
-          'Cannot delegate if you have enabled primary delegation to yourself'
+          'Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates'
         )
       })
 
@@ -1586,8 +1586,8 @@ describe('ECO [@group=1]', () => {
       await faucet.mint(await accounts[2].getAddress(), amount)
       await faucet.mint(await accounts[3].getAddress(), amount)
       await faucet.mint(await accounts[4].getAddress(), amount)
-      await eco.connect(accounts[3]).enableDelegation()
-      await eco.connect(accounts[4]).enableDelegation()
+      await eco.connect(accounts[3]).enableDelegationTo()
+      await eco.connect(accounts[4]).enableDelegationTo()
 
       voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
@@ -1636,7 +1636,7 @@ describe('ECO [@group=1]', () => {
             .connect(accounts[3])
             .delegateAmount(await accounts[4].getAddress(), voteAmount.div(2))
         ).to.be.revertedWith(
-          'Cannot delegate if you have enabled primary delegation to yourself'
+          'Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates'
         )
       })
 

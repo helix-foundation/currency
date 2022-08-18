@@ -41,8 +41,12 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     mapping(address => address) internal _primaryDelegates;
 
     // mapping that tracks if an address is willing to be delegated to
-    // if you have been delegated to, you cannot delegate
+    // if you have been primary delegated to, you cannot delegate
     mapping(address => bool) public delegationEnabled;
+
+    // mapping that tracks if an address is unable to delegate
+    // if you have been primary delegated to, you cannot delegate
+    mapping(address => bool) public delegatingDisabled;
 
     // mapping to the ordered arrays of voting checkpoints for each address
     mapping(address => Checkpoint[]) public checkpoints;
@@ -131,27 +135,35 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     /**
      * @dev Set yourself as willing to recieve delegates.
      */
-    function enableDelegation() public {
+    function enableDelegationTo() public {
         require(
             isOwnDelegate(msg.sender),
             "Cannot enable delegation if you have outstanding delegation"
         );
 
         delegationEnabled[msg.sender] = true;
+        delegatingDisabled[msg.sender] = true;
     }
 
     /**
      * @dev Set yourself as no longer recieving delegates.
+     */
+    function disableDelegationTo() public {
+        delegationEnabled[msg.sender] = false;
+    }
+
+    /**
+     * @dev Set yourself as being able to delegate again.
      * NOTE: the condition for this is not easy and cannot be unilaterally achieved
      */
-    function disableDelegation() public {
+    function reenableDelegating() public {
         require(
             _balances[msg.sender] == getVotingGons(msg.sender) &&
                 isOwnDelegate(msg.sender),
-            "Cannot disable delegation if you have outstanding delegations to you"
+            "Cannot re-enable delegating if you have outstanding delegations to you"
         );
 
-        delegationEnabled[msg.sender] = false;
+        delegatingDisabled[msg.sender] = false;
     }
 
     /**
@@ -357,8 +369,8 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         );
 
         require(
-            !delegationEnabled[delegator],
-            "Cannot delegate if you have enabled primary delegation to yourself"
+            !delegatingDisabled[delegator],
+            "Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates"
         );
 
         emit DelegatedVotes(delegator, delegatee, amount);
