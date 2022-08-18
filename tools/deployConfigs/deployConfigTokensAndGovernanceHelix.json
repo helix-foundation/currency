@@ -7,22 +7,22 @@
   "deployGovernance": true,
   "initialECO": [
     {
-      "address": "address1",
-      "amount": "400000000000000000000000000"
+      "holder": "address1",
+      "balance": "400000000000000000000000000"
     },
     {
-      "address": "address2",
-      "amount": "600000000000000000000000000"
+      "holder": "address2",
+      "balance": "600000000000000000000000000"
     }
   ],
   "initialECOx": [
     {
-      "address": "address1",
-      "amount": "700000000000000000000000000"
+      "holder": "address1",
+      "balance": "700000000000000000000000000"
     },
     {
-      "address": "address2",
-      "amount": "300000000000000000000000000"
+      "holder": "address2",
+      "balance": "300000000000000000000000000"
     }
   ],
   "trustednodes": ["address1", "address2"],
