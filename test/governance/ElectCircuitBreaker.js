@@ -379,6 +379,18 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
         ).to.be.revertedWith('ERC20Pausable: not admin')
       })
 
+      it('cannot set pauser to current pauser', async () => {
+        await expect(
+          policy.connect(bob).testSetPauser(eco.address, await bob.getAddress())
+        ).to.be.revertedWith('ERC20Pausable: must change pauser')
+
+        await expect(
+          policy
+            .connect(bob)
+            .testSetPauser(ecox.address, await bob.getAddress())
+        ).to.be.revertedWith('ERC20Pausable: must change pauser')
+      })
+
       it('can be paused by pauser', async () => {
         await expect(eco.connect(bob).pause())
           .to.emit(eco, 'Paused')

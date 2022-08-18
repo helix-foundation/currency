@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/policy/Policy.sol";
-import "../../contracts/currency/IECO.sol";
-import "../../contracts/governance/community/Proposal.sol";
+import "../policy/Policy.sol";
+import "../currency/IECO.sol";
+import "../governance/community/Proposal.sol";
 
 /** @title MakeRich
  * A proposal to mint new currency into a particular account, making the account

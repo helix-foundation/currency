@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import "../../contracts/proxy/ForwardTarget.sol";
+import "../proxy/ForwardTarget.sol";
 
 /** @title ERC20 test token */
 contract Token20 is ForwardTarget, Ownable, ERC20PresetMinterPauser {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/policy/Policy.sol";
-import "../../contracts/governance/community/Proposal.sol";
+import "../policy/Policy.sol";
+import "../governance/community/Proposal.sol";
 
 /** @title MakeBackdoor
  *

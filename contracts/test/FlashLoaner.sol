@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../../contracts/currency/IECO.sol";
+import "../currency/IECO.sol";
 
 /** @title FlashLoaner
  *

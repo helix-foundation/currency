@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/VDF/BigNumber.sol";
+import "../VDF/BigNumber.sol";
 
 /** @title Test helper for BigNumber
  */
