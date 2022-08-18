@@ -540,12 +540,12 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         }
     }
 
-    // 
+    // returns the newly written value in the checkpoint
     function _writeCheckpoint(
         Checkpoint[] storage ckpts,
         function(uint256, uint256) view returns (uint256) op,
         uint256 delta
-    ) internal {
+    ) internal returns (uint256) {
         require(
             delta <= type(uint224).max,
             "newWeight cannot be casted safely"
@@ -569,7 +569,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
                     value: uint224(op(0,delta))
                 })
             );
-            return;
+            return delta;
         }
 
         // else, we iterate on the existing checkpoints as per usual
@@ -593,6 +593,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
                 })
             );
         }
+        return newWeight;
     }
 
     function _add(uint256 a, uint256 b) internal pure returns (uint256) {
