@@ -1161,7 +1161,7 @@ describe('ECO [@group=1]', () => {
         expect(votes2).to.equal(voteAmount)
       })
 
-      it.only('disallows undelegate() with no delegate', async () => {
+      it('disallows undelegate() with no delegate', async () => {
         await expect(
           eco.connect(accounts[1]).undelegate()
         ).to.be.revertedWith('Must specifiy address without a Primary Delegate')
@@ -1702,7 +1702,7 @@ describe('ECO [@group=1]', () => {
     })
 
     context('undelegate', () => {
-      it.only('disallows undelegate() with no primary delegate', async () => {
+      it('disallows undelegate() with no primary delegate', async () => {
         await eco
           .connect(accounts[1])
           .delegateAmount(await accounts[3].getAddress(), voteAmount.div(2))
