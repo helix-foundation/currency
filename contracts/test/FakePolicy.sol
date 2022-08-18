@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./TestPolicy.sol";
-import "../../contracts/currency/IECO.sol";
+import "../currency/IECO.sol";
 
 /** @title FakePolicy
  * A policy contract used to test various policy actions/permissions.

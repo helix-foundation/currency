@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/policy/ERC1820Client.sol";
+import "../policy/ERC1820Client.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
-import "../../contracts/policy/PolicedUtils.sol";
-import "../../contracts/policy/Policy.sol";
-import "../../contracts/proxy/ForwardProxy.sol";
+import "../policy/PolicedUtils.sol";
+import "../policy/Policy.sol";
+import "../proxy/ForwardProxy.sol";
+import "../currency/ERC20Pausable.sol";
 
 /** @title PolicyTestPolicy
  * A policy object used for testing policy actions.

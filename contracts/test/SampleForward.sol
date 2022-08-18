@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/proxy/ForwardTarget.sol";
+import "../proxy/ForwardTarget.sol";
 
 /** @title Test forward target */
 contract SampleForward is ForwardTarget {

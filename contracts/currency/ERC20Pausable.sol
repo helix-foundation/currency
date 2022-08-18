@@ -48,18 +48,11 @@ contract ERC20Pausable is ERC20, Pausable {
      * @dev Hook that is called before any transfer of tokens. This includes
      * minting and burning.
      *
-     * Calling conditions:
-     *
-     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * will be transferred to `to`.
-     * - when `from` is zero, `amount` tokens will be minted for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
-     * - `from` and `to` are never both zero.
-     * - token not paused
+     * If the token is not paused, it will pass through the amount
      */
     function _beforeTokenTransfer(
-        address, // from
-        address, // to
+        address from,
+        address to,
         uint256 amount
     ) internal virtual override whenNotPaused returns (uint256) {
         return amount;
@@ -87,6 +80,7 @@ contract ERC20Pausable is ERC20, Pausable {
      * @dev only the roleAdmin can call this function
      */
     function setPauser(address _pauser) public onlyAdmin {
+        require(_pauser != pauser, "ERC20Pausable: must change pauser");
         pauser = _pauser;
         emit PauserAssignment(_pauser);
     }

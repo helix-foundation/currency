@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/governance/community/Proposal.sol";
-import "../../contracts/policy/Policy.sol";
-import "../../contracts/policy/PolicyInit.sol";
-import "../../contracts/proxy/ForwardProxy.sol";
-import "../../contracts/deploy/EcoInitializable.sol";
-import "../../contracts/deploy/EcoBootstrap.sol";
-import "../../contracts/governance/monetary/TrustedNodes.sol";
+import "../governance/community/Proposal.sol";
+import "../policy/Policy.sol";
+import "../policy/PolicyInit.sol";
+import "../proxy/ForwardProxy.sol";
+import "../deploy/EcoInitializable.sol";
+import "../deploy/EcoBootstrap.sol";
+import "../governance/monetary/TrustedNodes.sol";
 import "./FakePolicy.sol";
 
 /** @title Backdoor
@@ -160,6 +160,15 @@ contract PolicyTest is FakePolicy {
             keccak256(abi.encodePacked(_key)),
             _value
         );
+    }
+
+    /** Set the pauser on an ERC20Pausable this policy is the admin for
+     *
+     * @param _pausable The contract of which to change the pauser.
+     * @param _pauser The new pauser.
+     */
+    function testSetPauser(ERC20Pausable _pausable, address _pauser) external {
+        _pausable.setPauser(_pauser);
     }
 
     /** Test trusting an address.

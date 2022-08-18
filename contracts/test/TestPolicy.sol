@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts/policy/Policy.sol";
-import "../../contracts/policy/PolicyInit.sol";
-import "../../contracts/proxy/ForwardProxy.sol";
+import "../policy/Policy.sol";
+import "../policy/PolicyInit.sol";
+import "../proxy/ForwardProxy.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 
 /** @title TestPolicy
