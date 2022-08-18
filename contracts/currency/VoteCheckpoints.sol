@@ -176,8 +176,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     }
 
     /**
-     * @dev Get the primary address `account` is currently delegating to. Defaults to the account address itself if none specified.
-     * The primary delegate is the one that is delegated any new funds the address recieves.
+     * sets the primaryDelegate and emits an event to track it
      */
     function _setPrimaryDelegate(address delegator, address delegatee)
         internal
@@ -280,6 +279,8 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
     /**
      * @dev Delegate all votes from the sender to `delegatee`.
+     * NOTE: This function assumes that you do not have partial delegations
+     * It will revert with "Must have an undelegated amount available to cover delegation" if you do
      */
     function delegate(address delegatee) public {
         require(
@@ -303,6 +304,8 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
     /**
      * @dev Delegate all votes from the sender to `delegatee`.
+     * NOTE: This function assumes that you do not have partial delegations
+     * It will revert with "Must have an undelegated amount available to cover delegation" if you do
      */
     function delegateBySig(
         address delegator,
