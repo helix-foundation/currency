@@ -373,7 +373,9 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
      * @dev Undelegate all votes from the sender's primary delegate.
      */
     function undelegate() public {
-        undelegateFromAddress(getPrimaryDelegate(msg.sender));
+        address _primaryDelegate = getPrimaryDelegate(msg.sender);
+        require(_primaryDelegate != msg.sender, "Must specifiy address without a Primary Delegate");
+        undelegateFromAddress(_primaryDelegate);
     }
 
     /**
