@@ -24,6 +24,7 @@ contract EcoInitializable is ForwardTarget {
 
     /** Initialize contract */
     constructor(address payable _owner) {
+        require(_owner != address(0), "must set owner");
         owner = _owner;
     }
 

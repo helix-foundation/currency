@@ -28,6 +28,7 @@ contract EcoBootstrap is Ownable {
      *               address permitted to claim reserved addresses.
      */
     constructor(address _owner, uint8 _numPlaceholders) {
+        require(_numPlaceholders != 0, "must create placeholders");
         transferOwnership(_owner);
         NUM_PLACEHOLDERS = _numPlaceholders;
         ForwardTarget init = new EcoInitializable(payable(address(owner())));

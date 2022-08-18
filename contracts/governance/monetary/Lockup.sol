@@ -91,6 +91,14 @@ contract Lockup is PolicedUtils, TimeUtils {
         ECO _ecoAddr,
         CurrencyTimer _timerAddr
     ) PolicedUtils(_policy) {
+        require(
+            address(_ecoAddr) != address(0),
+            "do not set the _ecoAddr as the zero address"
+        );
+        require(
+            address(_timerAddr) != address(0),
+            "do not set the _timerAddr as the zero address"
+        );
         ecoToken = _ecoAddr;
         currencyTimer = _timerAddr;
     }

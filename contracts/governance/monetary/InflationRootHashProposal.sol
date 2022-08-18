@@ -268,6 +268,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     }
 
     constructor(Policy _policy, address _ecoAddr) PolicedUtils(_policy) {
+        require(
+            address(_ecoAddr) != address(0),
+            "do not set the _ecoAddr as the zero address"
+        );
         ecoToken = IECO(_ecoAddr);
     }
 

@@ -35,6 +35,10 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
         VoteCheckpoints("S-Eco-X", "sECOx", address(_policy))
         PolicedUtils(_policy)
     {
+        require(
+            address(_ecoXAddr) != address(0),
+            "Critical: do not set the _ecoXAddr as the zero address"
+        );
         ecoXToken = IERC20(_ecoXAddr);
     }
 

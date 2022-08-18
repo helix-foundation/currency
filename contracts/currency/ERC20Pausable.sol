@@ -27,6 +27,10 @@ contract ERC20Pausable is ERC20, Pausable {
         string memory symbol,
         address _roleAdmin
     ) ERC20(name, symbol) {
+        require(
+            address(_roleAdmin) != address(0),
+            "Unrecoverable: do not set the _roleAdmin as the zero address"
+        );
         roleAdmin = _roleAdmin;
     }
 

@@ -100,6 +100,22 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         InflationRootHashProposal _inflationRootHashProposalImpl,
         ECO _ecoAddr
     ) PolicedUtils(_policy) {
+        require(
+            address(_vdfVerifierImpl) != address(0),
+            "do not set the _vdfVerifierImpl as the zero address"
+        );
+        require(
+            _randomDifficulty > 0,
+            "do not set the _randomDifficulty to zero"
+        );
+        require(
+            address(_inflationRootHashProposalImpl) != address(0),
+            "do not set the _inflationRootHashProposalImpl as the zero address"
+        );
+        require(
+            address(_ecoAddr) != address(0),
+            "do not set the _ecoAddr as the zero address"
+        );
         vdfVerifier = _vdfVerifierImpl;
         randomVDFDifficulty = _randomDifficulty;
         inflationRootHashProposal = _inflationRootHashProposalImpl;

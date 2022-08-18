@@ -53,6 +53,14 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         PolicyProposals _policyproposal,
         bytes32[] memory _notificationHashes
     ) PolicedUtils(_policy) {
+        require(
+            address(_policyproposal) != address(0),
+            "Unrecoverable: do not set the _policyproposal as the zero address"
+        );
+        require(
+            _notificationHashes.length > 0,
+            "Unrecoverable: must set _notificationHashes"
+        );
         policyProposalImpl = _policyproposal;
         generation = GENERATION_START;
         notificationHashes = _notificationHashes;

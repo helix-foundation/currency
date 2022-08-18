@@ -54,6 +54,22 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
         Lockup _lockup,
         ECO _ecoAddr
     ) PolicedUtils(_policy) {
+        require(
+            address(_borda) != address(0),
+            "Critical: do not set the _borda as the zero address"
+        );
+        require(
+            address(_inflation) != address(0),
+            "Critical: do not set the _inflation as the zero address"
+        );
+        require(
+            address(_lockup) != address(0),
+            "Critical: do not set the _lockup as the zero address"
+        );
+        require(
+            address(_ecoAddr) != address(0),
+            "Critical: do not set the _ecoAddr as the zero address"
+        );
         bordaImpl = _borda;
         inflationImpl = _inflation;
         lockupImpl = _lockup;

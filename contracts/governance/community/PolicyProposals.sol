@@ -152,6 +152,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
         PolicyVotes _policyvotes,
         ECO _ecoAddr
     ) VotingPower(_policy, _ecoAddr) {
+        require(
+            address(_policyvotes) != address(0),
+            "Unrecoverable: do not set the _policyvotes as the zero address"
+        );
         policyVotesImpl = _policyvotes;
     }
 

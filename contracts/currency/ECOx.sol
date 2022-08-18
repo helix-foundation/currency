@@ -28,6 +28,10 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         IECO _ecoAddr
     ) ERC20Pausable("Eco-X", "ECOx", address(_policy)) PolicedUtils(_policy) {
         require(_initialSupply > 0, "initial supply not properly set");
+        require(
+            address(_ecoAddr) != address(0),
+            "Do not set the ECO address as the zero address"
+        );
 
         initialSupply = _initialSupply;
         distributor = _distributor;

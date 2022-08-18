@@ -14,14 +14,17 @@ import "../governance/CurrencyTimer.sol";
  * Eco currency.
  */
 contract PoodleCurrencyTimer is CurrencyTimer {
-    // this is to fulfil inheretence, the values are unused
+    address public constant TEST_FILL =
+        0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0;
+
+    // this is for use in test, the values are unused
     constructor()
         CurrencyTimer(
-            Policy(address(0)),
-            CurrencyGovernance(address(0)),
-            RandomInflation(address(0)),
-            Lockup(address(0)),
-            ECO(address(0))
+            Policy(TEST_FILL),
+            CurrencyGovernance(TEST_FILL),
+            RandomInflation(TEST_FILL),
+            Lockup(TEST_FILL),
+            ECO(TEST_FILL)
         )
     {}
 

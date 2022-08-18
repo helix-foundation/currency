@@ -31,6 +31,10 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
     }
 
     constructor(Policy _policy) {
+        require(
+            address(_policy) != address(0),
+            "Unrecoverable: do not set the policy as the zero address"
+        );
         policy = _policy;
         ERC1820REGISTRY.setManager(address(this), address(_policy));
     }

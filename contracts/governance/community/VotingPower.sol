@@ -21,6 +21,10 @@ contract VotingPower is PolicedUtils {
     ECO public immutable ecoToken;
 
     constructor(Policy _policy, ECO _ecoAddr) PolicedUtils(_policy) {
+        require(
+            address(_ecoAddr) != address(0),
+            "Unrecoverable: do not set the _ecoAddr as the zero address"
+        );
         ecoToken = _ecoAddr;
     }
 
