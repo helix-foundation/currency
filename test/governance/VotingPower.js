@@ -127,7 +127,7 @@ describe('VotingPower [@group=2]', () => {
     })
 
     it('gets the right voting power despite multiple transfers', async () => {
-      await eco.connect(charlie).enableDelegation()
+      await eco.connect(charlie).enableDelegationTo()
       await eco.connect(bob).delegate(await charlie.getAddress())
       const blockNumber1 = await time.latestBlock()
 
@@ -258,7 +258,7 @@ describe('VotingPower [@group=2]', () => {
 
     describe('only ECO power', () => {
       it('Has the right power for bob after alice delegates here votes to him', async () => {
-        await eco.connect(bob).enableDelegation()
+        await eco.connect(bob).enableDelegationTo()
         await eco.connect(alice).delegate(await bob.getAddress())
         blockNumber = await time.latestBlock()
         await time.advanceBlock()

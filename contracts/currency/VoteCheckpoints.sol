@@ -41,8 +41,10 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     mapping(address => address) internal _primaryDelegates;
 
     // mapping that tracks if an address is willing to be delegated to
-    // if you have been delegated to, you cannot delegate
-    mapping(address => bool) public delegationEnabled;
+    mapping(address => bool) public delegationToAddressEnabled;
+
+    // mapping that tracks if an address is unable to delegate
+    mapping(address => bool) public delegationFromAddressDisabled;
 
     // mapping to the ordered arrays of voting checkpoints for each address
     mapping(address => Checkpoint[]) public checkpoints;
@@ -76,7 +78,9 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         string memory _name,
         string memory _symbol,
         address admin
-    ) ERC20Pausable(_name, _symbol, admin) {}
+    ) ERC20Pausable(_name, _symbol, admin) {
+        // call to super constructor
+    }
 
     /** Returns the total (inflation corrected) token supply at a specified block number
      */
@@ -118,37 +122,49 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         virtual
         returns (uint32)
     {
+        uint256 _numCheckpoints = checkpoints[account].length;
         require(
-            checkpoints[account].length <= type(uint32).max,
+            _numCheckpoints <= type(uint32).max,
             "number of checkpoints cannot be casted safely"
         );
-        return uint32(checkpoints[account].length);
+        return uint32(_numCheckpoints);
     }
 
     /**
      * @dev Set yourself as willing to recieve delegates.
      */
-    function enableDelegation() public {
+    function enableDelegationTo() public {
         require(
             isOwnDelegate(msg.sender),
             "Cannot enable delegation if you have outstanding delegation"
         );
 
-        delegationEnabled[msg.sender] = true;
+        delegationToAddressEnabled[msg.sender] = true;
+        delegationFromAddressDisabled[msg.sender] = true;
     }
 
     /**
      * @dev Set yourself as no longer recieving delegates.
+     */
+    function disableDelegationTo() public {
+        delegationToAddressEnabled[msg.sender] = false;
+    }
+
+    /**
+     * @dev Set yourself as being able to delegate again.
+     * also disables delegating to you
      * NOTE: the condition for this is not easy and cannot be unilaterally achieved
      */
-    function disableDelegation() public {
+    function reenableDelegating() public {
+        delegationToAddressEnabled[msg.sender] = false;
+
         require(
             _balances[msg.sender] == getVotingGons(msg.sender) &&
                 isOwnDelegate(msg.sender),
-            "Cannot disable delegation if you have outstanding delegations to you"
+            "Cannot re-enable delegating if you have outstanding delegations to you"
         );
 
-        delegationEnabled[msg.sender] = false;
+        delegationFromAddressDisabled[msg.sender] = false;
     }
 
     /**
@@ -173,8 +189,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     }
 
     /**
-     * @dev Get the primary address `account` is currently delegating to. Defaults to the account address itself if none specified.
-     * The primary delegate is the one that is delegated any new funds the address recieves.
+     * sets the primaryDelegate and emits an event to track it
      */
     function _setPrimaryDelegate(address delegator, address delegatee)
         internal
@@ -277,6 +292,8 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
     /**
      * @dev Delegate all votes from the sender to `delegatee`.
+     * NOTE: This function assumes that you do not have partial delegations
+     * It will revert with "Must have an undelegated amount available to cover delegation" if you do
      */
     function delegate(address delegatee) public {
         require(
@@ -285,7 +302,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         );
 
         require(
-            delegationEnabled[delegatee],
+            delegationToAddressEnabled[delegatee],
             "Primary delegates must enable delegation"
         );
 
@@ -300,6 +317,8 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
     /**
      * @dev Delegate all votes from the sender to `delegatee`.
+     * NOTE: This function assumes that you do not have partial delegations
+     * It will revert with "Must have an undelegated amount available to cover delegation" if you do
      */
     function delegateBySig(
         address delegator,
@@ -311,7 +330,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     ) public {
         require(delegator != delegatee, "Do not delegate to yourself");
         require(
-            delegationEnabled[delegatee],
+            delegationToAddressEnabled[delegatee],
             "Primary delegates must enable delegation"
         );
 
@@ -351,8 +370,8 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         );
 
         require(
-            !delegationEnabled[delegator],
-            "Cannot delegate if you have enabled primary delegation to yourself"
+            !delegationFromAddressDisabled[delegator],
+            "Cannot delegate if you have enabled primary delegation to yourself and/or have outstanding delegates"
         );
 
         emit DelegatedVotes(delegator, delegatee, amount);
@@ -367,7 +386,12 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
      * @dev Undelegate all votes from the sender's primary delegate.
      */
     function undelegate() public {
-        undelegateFromAddress(getPrimaryDelegate(msg.sender));
+        address _primaryDelegate = getPrimaryDelegate(msg.sender);
+        require(
+            _primaryDelegate != msg.sender,
+            "Must specifiy address without a Primary Delegate"
+        );
+        undelegateFromAddress(_primaryDelegate);
     }
 
     /**
@@ -532,6 +556,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         }
     }
 
+    // returns the newly written value in the checkpoint
     function _writeCheckpoint(
         Checkpoint[] storage ckpts,
         function(uint256, uint256) view returns (uint256) op,
@@ -550,14 +575,14 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
 
         /* if there are no checkpoints, just write the value
          * This part assumes that an account would never exist with a balance but without checkpoints.
-         * This function cannot be called directly, so there's no malicious way to exploit the fact that
-         * the op is not checked and assumed to be add or replace.
+         * This function cannot be called directly, so there's no malicious way to exploit this. If this
+         * is somehow called with op = _subtract, it will revert as that action is nonsensical.
          */
         if (pos == 0) {
             ckpts.push(
                 Checkpoint({
                     fromBlock: uint32(block.number),
-                    value: uint224(delta)
+                    value: uint224(op(0, delta))
                 })
             );
             return delta;
