@@ -194,7 +194,7 @@ Returns the current primary delegate for `account`. If the `account` is its own 
 #### enableDelegationTo
 Argument: none
 
-Sets the senders address as available for primary delegation in `delegationEnabled`. This is added because primary delegates are taking on the responsibility to vote for the people delegating to them. Additionally, this sets `delegatingDisabled` to true. The way delegation is implemented, there is no chaining: you can never delegate votes delegated to you. This extra step is to constrain user behavior so that they do not believe they can do this.
+Sets the senders address as available for primary delegation in `delegationToAddressEnabled`. This is added because primary delegates are taking on the responsibility to vote for the people delegating to them. Additionally, this sets `delegationFromAddressDisabled` to true. The way delegation is implemented, there is no chaining: you can never delegate votes delegated to you. This extra step is to constrain user behavior so that they do not believe they can do this.
 
 ##### Security Notes
  - Can only be called if `isOwnDelegate` returns true.
@@ -203,12 +203,12 @@ Sets the senders address as available for primary delegation in `delegationEnabl
 #### disableDelegationTo
 Argument: none
 
-Sets `delegationEnabled` back to false for the sender. Note, this doesn't allow the user to delegate again, just disallows users to delegate to them.
+Sets `delegationToAddressEnabled` back to false for the sender. Note, this doesn't allow the user to delegate again, just disallows users to delegate to them.
 
 #### reenableDelegating
 Arguments: none
 
-Sets `delegatingDisabled` back to false for the sender, if the requirements are met.
+Sets `delegationFromAddressDisabled` back to false for the sender, if the requirements are met.
 
 ##### Security Notes
  - Can only be called if `getVotingGons` returns the same value as the user balance. This is equivalent to the fact that the user has no one delegating to them.
