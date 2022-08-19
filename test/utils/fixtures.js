@@ -142,7 +142,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
     policyProxy
   )
 
-  const { ecoImpl, ecoxImpl, ecoxInit } = coreContracts
+  const { ecoImpl, ecoxImpl, tokenInit } = coreContracts
 
   const eco = await bindProxy(bootstrap, ecoImpl, 1)
   const ecox = await bindProxy(bootstrap, ecoxImpl, 2)
@@ -179,13 +179,14 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   )
 
   // distribute initial tokens
-  // await ecoInit
+  // await tokenInit
   // .distributeTokens(eco.address, [await wallet.getAddress()], [ethers.utils.parseEther('10')]);
-  await ecoxInit.distributeTokens(
-    ecox.address,
-    [await wallet.getAddress()],
-    [ethers.utils.parseEther('1000')]
-  )
+  await tokenInit.distributeTokens(ecox.address, [
+    {
+      holder: await wallet.getAddress(),
+      balance: ethers.utils.parseEther('1000'),
+    },
+  ])
 
   // ### Stage 4
   // Here we mint some initial tokens. The initialization
@@ -193,7 +194,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   //
   // Finally, now that everything is in place, we increment the first generation
   // which sends the code live to be used.
-  //  await ecoInit.initializeAndFuse(eco.address);
+  //  await tokenInit.initializeAndFuse(eco.address);
   await timedPolicies.incrementGeneration()
 
   return {
@@ -214,29 +215,28 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
 exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
   const ecoProxy = await getPlaceholder(bootstrap, 1)
 
-  const ecoInit = await deployFrom(wallet, 'EcoTokenInit')
+  const _tokenInit = await deployFrom(wallet, 'TokenInit')
 
   const deployments = []
   deployments.push(
-    deployFrom(wallet, 'ECO', policyProxy.address, ecoInit.address, 0)
+    deployFrom(wallet, 'ECO', policyProxy.address, _tokenInit.address, 0)
   )
-  deployments.push(deployFrom(wallet, 'EcoXTokenInit'))
-  const [ecoImpl, ecoxInit] = await Promise.all(deployments)
+  deployments.push(deployFrom(wallet, 'TokenInit'))
+  const [ecoImpl, tokenInit] = await Promise.all(deployments)
 
   const initialECOxSupply = ethers.utils.parseEther('1000')
   const ecoxImpl = await deployFrom(
     wallet,
     'ECOx',
     policyProxy.address,
-    ecoxInit.address,
+    tokenInit.address,
     initialECOxSupply,
     ecoProxy.address
   )
 
   return {
     ecoImpl,
-    ecoInit,
-    ecoxInit,
+    tokenInit,
     ecoxImpl,
   }
 }

@@ -23,6 +23,7 @@
  */
 
 // ## Dependencies
+// const { web3 } = require('@openzeppelin/test-helpers/src/setup')
 const nick = require('./nicks')
 
 let BLOCK_GAS_LIMIT = 6000000
@@ -55,8 +56,7 @@ const ECOABI = require(`../${importPath}/contracts/currency/ECO.sol/ECO.json`)
 // const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
 const EcoFaucetABI = require(`../${importPath}/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`)
 const EcoTestCleanupABI = require(`../${importPath}/contracts/deploy/EcoTestCleanup.sol/EcoTestCleanup.json`)
-const EcoTokenInitABI = require(`../${importPath}/contracts/currency/EcoTokenInit.sol/EcoTokenInit.json`)
-const EcoXTokenInitABI = require(`../${importPath}/contracts/currency/EcoXTokenInit.sol/EcoXTokenInit.json`)
+const TokenInitABI = require(`../${importPath}/contracts/currency/TokenInit.sol/TokenInit.json`)
 const VDFVerifierABI = require(`../${importPath}/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
 const ECOxABI = require(`../${importPath}/contracts/currency/ECOx.sol/ECOx.json`)
 /* eslint-enable import/no-unresolved */
@@ -98,22 +98,22 @@ async function parseFlags(options) {
   }
 
   if (options.initialECO) {
-    options.initialECOAddr = options.initialECO.map(
-      (initial) => initial.address
-    )
+    // options.initialECOAddr = options.initialECO.map(
+    //   (initial) => initial.address
+    // )
     options.initialECOAmount = options.initialECO.map(
-      (initial) => initial.amount
+      (initial) => initial.balance
     )
     options.initialECOSupply = options.initialECOAmount.reduce((a, b) =>
       web3.utils.toBN(a).add(web3.utils.toBN(b)).toString()
     )
   }
   if (options.initialECOx) {
-    options.initialECOxAddr = options.initialECOx.map(
-      (initial) => initial.address
-    )
+    // options.initialECOxAddr = options.initialECOx.map(
+    //   (initial) => initial.address
+    // )
     options.initialECOxAmount = options.initialECOx.map(
-      (initial) => initial.amount
+      (initial) => initial.balance
     )
     options.initialECOxSupply = options.initialECOxAmount.reduce((a, b) =>
       web3.utils.toBN(a).add(web3.utils.toBN(b)).toString()
@@ -282,10 +282,9 @@ async function deployStage1(options) {
 // integrations to have constant references that will always be able to host all the data, but
 // still allow upgrades to the currency to be performed.
 //
-// To distribute the initial currency, two contracts are deployed, EcoTokenInit and EcoXTokenInit.
-// The currency contracts mint the initial supply to their respective distribution contract. From
-// there, this stage calls to the distribution contracts using the processed initialECO and
-// initialECOx data processed in parseFlags.
+// To distribute the initial currency we deploy TokenInit. The currency contracts mint the initial
+// supply to the distribution contract. From there, this stage calls to the distribution contracts
+// using the processed initialECO and initialECOx data processed in parseFlags.
 //
 async function deployStage2(options) {
   if (options.verbose) {
@@ -300,25 +299,11 @@ async function deployStage2(options) {
 
   // deploy the token initial distribution contracts
   if (options.verbose) {
-    console.log('deploying the ECO token initial distribution contract...')
+    console.log('deploying the initial token distribution contract...')
   }
-  const ecoInit = await new web3.eth.Contract(EcoTokenInitABI.abi)
+  const tokenInit = await new web3.eth.Contract(TokenInitABI.abi)
     .deploy({
-      data: EcoTokenInitABI.bytecode,
-      arguments: [],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-
-  if (options.verbose) {
-    console.log('deploying the ECOx token initial distribution contract...')
-  }
-  const ecoxInit = await new web3.eth.Contract(EcoXTokenInitABI.abi)
-    .deploy({
-      data: EcoXTokenInitABI.bytecode,
+      data: TokenInitABI.bytecode,
       arguments: [],
     })
     .send({
@@ -336,7 +321,7 @@ async function deployStage2(options) {
       data: ECOABI.bytecode,
       arguments: [
         options.policyProxyAddress,
-        ecoInit.options.address,
+        tokenInit.options.address,
         options.initialECOSupply,
       ],
     })
@@ -354,7 +339,7 @@ async function deployStage2(options) {
       data: ECOxABI.bytecode,
       arguments: [
         options.policyProxyAddress,
-        ecoxInit.options.address,
+        tokenInit.options.address,
         options.initialECOxSupply,
         ecoProxyAddress,
       ],
@@ -410,15 +395,8 @@ async function deployStage2(options) {
   if (options.verbose) {
     console.log('distributing initial ECO...')
   }
-  await new web3.eth.Contract(
-    EcoTokenInitABI.abi,
-    ecoInit.options.address
-  ).methods
-    .distributeTokens(
-      ecoProxyAddress,
-      options.initialECOAddr,
-      options.initialECOAmount
-    )
+  await tokenInit.methods
+    .distributeTokens(ecoProxyAddress, options.initialECO)
     .send({
       from: options.account,
       gas: BLOCK_GAS_LIMIT,
@@ -428,15 +406,8 @@ async function deployStage2(options) {
   if (options.verbose) {
     console.log('distributing initial ECOx...')
   }
-  await new web3.eth.Contract(
-    EcoXTokenInitABI.abi,
-    ecoxInit.options.address
-  ).methods
-    .distributeTokens(
-      ecoxProxyAddress,
-      options.initialECOxAddr,
-      options.initialECOxAmount
-    )
+  await tokenInit.methods
+    .distributeTokens(ecoxProxyAddress, options.initialECOx)
     .send({
       from: options.account,
       gas: BLOCK_GAS_LIMIT,
