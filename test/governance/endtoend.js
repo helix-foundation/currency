@@ -60,15 +60,8 @@ describe('Production Policy Change [@group=4]', () => {
   })
 
   it('Constructs the proposals', async () => {
-    makerich = await deploy(
-      'MakeRich',
-      await accounts[5].getAddress(),
-      1000000
-    )
-    backdoor = await deploy(
-      'MakeBackdoor',
-      await accounts[2].getAddress()
-    )
+    makerich = await deploy('MakeRich', await accounts[5].getAddress(), 1000000)
+    backdoor = await deploy('MakeBackdoor', await accounts[2].getAddress())
   })
 
   it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
