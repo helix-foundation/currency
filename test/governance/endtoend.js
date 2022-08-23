@@ -18,8 +18,8 @@
 const { ethers } = require('hardhat')
 const { assert } = require('chai')
 const time = require('../utils/time.ts')
-const { deployFrom } = require('../utils/contracts')
 const { ecoFixture } = require('../utils/fixtures')
+const { deploy } = require('../utils/contracts')
 const util = require('../../tools/test/util')
 
 describe('Production Policy Change [@group=4]', () => {
@@ -60,14 +60,12 @@ describe('Production Policy Change [@group=4]', () => {
   })
 
   it('Constructs the proposals', async () => {
-    makerich = await deployFrom(
-      accounts[1],
+    makerich = await deploy(
       'MakeRich',
       await accounts[5].getAddress(),
       1000000
     )
-    backdoor = await deployFrom(
-      accounts[2],
+    backdoor = await deploy(
       'MakeBackdoor',
       await accounts[2].getAddress()
     )
