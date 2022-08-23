@@ -120,7 +120,7 @@ describe('Policy [@group=11]', () => {
 
         await expect(
           commander.command(policed.address, revertingAction.address)
-        ).to.be.revertedWith('failed during delegatecall')
+        ).to.be.revertedWith('Command failed during delegatecall')
       })
     })
   })

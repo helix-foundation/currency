@@ -15,7 +15,7 @@ describe('ForwardTarget [@group=2]', () => {
     const proxied = await ethers.getContractAt('ForwardTarget', proxy.address)
 
     await expect(proxied.initialize(target.address)).to.be.revertedWith(
-      'only be called during initialization'
+      'Can only be called during initialization'
     )
   })
 

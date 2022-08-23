@@ -326,7 +326,7 @@ describe('RandomInflation [@group=6]', () => {
       await inflation.commitEntropyVDFSeed(primal)
 
       await expect(inflation.commitEntropyVDFSeed(primal)).to.be.revertedWith(
-        'seed has already been set'
+        'The VDF seed has already been set'
       )
     })
   })
@@ -334,7 +334,7 @@ describe('RandomInflation [@group=6]', () => {
   describe('submitEntropyVDF', () => {
     it('reverts when the seed has not been set', async () => {
       await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
-        'seed must be set'
+        'Initial seed must be set'
       )
     })
 
@@ -346,7 +346,7 @@ describe('RandomInflation [@group=6]', () => {
       await inflation.commitEntropyVDFSeed(primal)
 
       await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
-        'output value must be verified'
+        'The VDF output value must be verified by the VDF verification contract'
       )
     })
 
@@ -384,7 +384,7 @@ describe('RandomInflation [@group=6]', () => {
         await inflation.submitEntropyVDF(bnHex(y))
 
         await expect(inflation.submitEntropyVDF(bnHex(y))).to.be.revertedWith(
-          'only submit once'
+          'Can only submit once'
         )
       })
     })
@@ -481,7 +481,9 @@ describe('RandomInflation [@group=6]', () => {
           inflation
             .connect(recipient)
             .claim(3, a[1].reverse(), a[0].sum.toString(), index)
-        ).to.be.revertedWith('can only be made after enough time')
+        ).to.be.revertedWith(
+          'A claim can only be made after enough time has passed'
+        )
       })
 
       context('when already called this period', () => {
@@ -499,7 +501,7 @@ describe('RandomInflation [@group=6]', () => {
               .connect(recipient)
               .claim(0, a[1].reverse(), a[0].sum.toString(), index)
           ).to.be.revertedWith(
-            'claim can only be made if it has not already been made'
+            'A claim can only be made if it has not already been made'
           )
         })
       })
@@ -559,7 +561,7 @@ describe('RandomInflation [@group=6]', () => {
     context('before seed reveal', () => {
       it('reverts', async () => {
         await expect(inflation.destruct()).to.be.revertedWith(
-          'Entropy not set, wait until end of full claim period to abort.'
+          'Entropy not set, wait until end of full claim period to abort'
         )
       })
 
@@ -632,7 +634,7 @@ describe('RandomInflation [@group=6]', () => {
         context('and claimNumbers have not been paid out', () => {
           it('reverts', async () => {
             await expect(inflation.destruct()).to.be.revertedWith(
-              'rewards must be claimed prior'
+              'All rewards must be claimed prior to destruct'
             )
           })
 
@@ -643,7 +645,7 @@ describe('RandomInflation [@group=6]', () => {
 
             it('still reverts', async () => {
               await expect(inflation.destruct()).to.be.revertedWith(
-                'rewards must be claimed prior'
+                'All rewards must be claimed prior to destruct'
               )
             })
           })

@@ -30,7 +30,7 @@ describe('TrustedNodes [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           trustedNodes.trust(await alice.getAddress())
-        ).to.be.revertedWith('Only the policy contract')
+        ).to.be.revertedWith('Only the policy contract may call this method')
       })
     })
 
@@ -39,7 +39,7 @@ describe('TrustedNodes [@group=7]', () => {
         it('reverts', async () => {
           await expect(
             policy.testTrust(trustedNodes.address, await bob.getAddress())
-          ).to.be.revertedWith('already trusted')
+          ).to.be.revertedWith('Node is already trusted')
         })
       })
 
@@ -98,7 +98,7 @@ describe('TrustedNodes [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           trustedNodes.distrust(await bob.getAddress())
-        ).to.be.revertedWith('Only the policy contract')
+        ).to.be.revertedWith('Only the policy contract may call this method')
       })
     })
 

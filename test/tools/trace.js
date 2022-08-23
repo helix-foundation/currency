@@ -20,6 +20,6 @@ describe('trace', () => {
   it('traces reverting transactions', async () => {
     await expect(
       util.trace(trustedNodes.trust(await alice.getAddress()))
-    ).to.be.revertedWith('Only the policy contract')
+    ).to.be.revertedWith('Only the policy contract may call this method')
   })
 })

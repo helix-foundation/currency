@@ -42,7 +42,7 @@ describe('VDFVerifier [@group=6]', () => {
           gasLimit: 6000000,
         })
       ).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned number'
+        'High-byte must be set for non-256bit-aligned numbers'
       )
     })
 

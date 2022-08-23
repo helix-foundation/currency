@@ -41,7 +41,7 @@ abstract contract PolicedUtils is Policed, CloneFactory {
     {
         require(
             _addr == address(policy) || _addr == expectedInterfaceSet,
-            "Only the policy or interface contract can set the interface."
+            "Only the policy or interface contract can set the interface"
         );
         return ERC1820_ACCEPT_MAGIC;
     }

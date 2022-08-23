@@ -6,6 +6,8 @@ const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const util = require('../../tools/test/util')
 
+const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
+
 describe('PolicyVotes [@group=8]', () => {
   let policy
   let eco
@@ -95,7 +97,7 @@ describe('PolicyVotes [@group=8]', () => {
               0,
               0
             )
-          ).to.be.revertedWith('has already been configured')
+          ).to.be.revertedWith('This instance has already been configured')
         })
       })
     })
@@ -138,7 +140,9 @@ describe('PolicyVotes [@group=8]', () => {
           it('reverts', async () => {
             await expect(
               proxiedPolicyVotes.connect(frank).vote(true)
-            ).to.be.revertedWith('must have held tokens')
+            ).to.be.revertedWith(
+              'Voters must have held tokens before this voting cycle'
+            )
           })
         })
 
@@ -268,7 +272,9 @@ describe('PolicyVotes [@group=8]', () => {
           it('reverts', async () => {
             await expect(
               proxiedPolicyVotes.connect(frank).voteSplit(0, 0)
-            ).to.be.revertedWith('must have held tokens')
+            ).to.be.revertedWith(
+              'Voters must have held tokens before this voting cycle'
+            )
           })
         })
 
@@ -477,7 +483,9 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('called on a non-proxied instance', () => {
         it('reverts', async () => {
-          await expect(policyVotes.execute()).to.be.revertedWith('revert')
+          await expect(policyVotes.execute()).to.be.revertedWithPanic(
+            PANIC_CODES.DIVISION_BY_ZERO
+          )
         })
       })
 

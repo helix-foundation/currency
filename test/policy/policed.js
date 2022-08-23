@@ -87,7 +87,7 @@ describe('Policed [@group=11]', () => {
           testPoliced.address
         )
       ).to.be.revertedWith(
-        'Only the policy or interface contract can set the interface.'
+        'Only the policy or interface contract can set the interface'
       )
     })
 
@@ -99,7 +99,7 @@ describe('Policed [@group=11]', () => {
       )
 
       await expect(registrationAttemptContract.register()).to.be.revertedWith(
-        'Only the policy or interface contract can set the interface.'
+        'Only the policy or interface contract can set the interface'
       )
     })
   })
@@ -114,7 +114,7 @@ describe('Policed [@group=11]', () => {
       )
 
       await expect(registrationAttemptContract.register()).to.be.revertedWith(
-        'This contract only implements interfaces for the policy contract.'
+        'This contract only implements interfaces for the policy contract'
       )
     })
 
@@ -143,20 +143,22 @@ describe('Policed [@group=11]', () => {
   })
 
   it('Policer should not allow calls from non-policy', async () => {
-    await expect(policer.doit()).to.be.revertedWith('Only the policy contract')
+    await expect(policer.doit()).to.be.revertedWith(
+      'Only the policy contract may call this method'
+    )
   })
 
   it('Policed should not allow calls from non-policy', async () => {
     const iface = new ethers.utils.Interface(['function doit()'])
     await expect(
       testPoliced.policyCommand(policer.address, iface.getSighash('doit'))
-    ).to.be.revertedWith('Only the policy contract')
+    ).to.be.revertedWith('Only the policy contract may call this method')
   })
 
   it('Should modifier-reject calls from wrong address', async () => {
     const inflation = await deploy('DummyInflation', policy.address)
     await expect(inflation.callModifierTest()).to.be.revertedWith(
-      'Only the inflation contract'
+      'Only the inflation contract may call this function'
     )
   })
 
@@ -208,7 +210,7 @@ describe('Policed [@group=11]', () => {
       testRawPolicedUtils
         .connect(accounts[1])
         .setExpectedInterfaceSet(await accounts[1].getAddress())
-    ).to.be.revertedWith('Only the policy contract may call this method.')
+    ).to.be.revertedWith('Only the policy contract may call this method')
   })
 
   it('setExpectedInterfaceSet allows delegated canImplementInterfaceForAddress', async () => {

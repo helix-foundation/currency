@@ -141,7 +141,7 @@ describe('PolicyProposals [@group=7]', () => {
         it('cannot register a second time', async () => {
           await expect(
             policyProposals.registerProposal(testProposal.address)
-          ).to.be.revertedWith('proposal may only be registered once')
+          ).to.be.revertedWith('A proposal may only be registered once')
         })
       })
 
@@ -180,7 +180,9 @@ describe('PolicyProposals [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           policyProposals.registerProposal(testProposal.address)
-        ).to.be.revertedWith('no longer be registered')
+        ).to.be.revertedWith(
+          'Proposals may no longer be registered because the registration period has ended'
+        )
       })
     })
   })
@@ -394,7 +396,9 @@ describe('PolicyProposals [@group=7]', () => {
         it('reverts', async () => {
           await expect(
             policyProposals.connect(dave).support(testProposal.address)
-          ).to.be.revertedWith('must stake a non-zero amount')
+          ).to.be.revertedWith(
+            'In order to support a proposal you must stake a non-zero amount of tokens'
+          )
         })
       })
 
@@ -402,7 +406,7 @@ describe('PolicyProposals [@group=7]', () => {
         it('reverts', async () => {
           await expect(
             policyProposals.support(ethers.constants.AddressZero)
-          ).to.be.revertedWith('proposal is not registered')
+          ).to.be.revertedWith('The supported proposal is not registered')
         })
       })
     })
@@ -415,7 +419,9 @@ describe('PolicyProposals [@group=7]', () => {
       it('does not allow staking', async () => {
         await expect(
           policyProposals.support(testProposal.address)
-        ).to.be.revertedWith('registration period has ended')
+        ).to.be.revertedWith(
+          'Proposals may no longer be supported because the registration period has ended'
+        )
       })
     })
   })
@@ -658,7 +664,9 @@ describe('PolicyProposals [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           policyProposals.refund(testProposal.address)
-        ).to.be.revertedWith('may not be distributed until the period is over')
+        ).to.be.revertedWith(
+          'Refunds may not be distributed until the period is over'
+        )
       })
     })
 
@@ -747,7 +755,7 @@ describe('PolicyProposals [@group=7]', () => {
 
       it('reverts', async () => {
         await expect(policyProposals.destruct()).to.be.revertedWith(
-          'can only be performed when the period is over'
+          'The destruct operation can only be performed when the period is over'
         )
       })
     })
@@ -824,7 +832,7 @@ describe('PolicyProposals [@group=7]', () => {
 
       it('reverts', async () => {
         await expect(policyProposals.destruct()).to.be.revertedWith(
-          'refund all missed proposals'
+          'Must refund all missed proposals first'
         )
       })
     })

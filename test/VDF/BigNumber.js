@@ -20,7 +20,7 @@ describe('BigNumber [@group=3]', () => {
   describe('Input', () => {
     it('Rejects malformed bigint bytes', async () => {
       await expect(bignum.fromBytes('0x0001')).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned number'
+        'High-byte must be set for non-256bit-aligned numbers'
       )
     })
 

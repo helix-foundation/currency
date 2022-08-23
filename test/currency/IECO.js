@@ -110,7 +110,7 @@ describe('IECO [@group=5]', () => {
       it('should revert when minting coins', async () => {
         await expect(
           eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)
-        ).to.be.revertedWith('not authorized')
+        ).to.be.revertedWith('Caller not authorized to mint tokens')
       })
 
       it('should not increase the balance when reverting minting coins', async () => {
@@ -166,7 +166,7 @@ describe('IECO [@group=5]', () => {
           eco
             .connect(accounts[2])
             .burn(await accounts[1].getAddress(), burnAmount)
-        ).to.be.revertedWith('not authorized')
+        ).to.be.revertedWith('Caller not authorized to burn tokens')
       })
     })
   })
@@ -175,7 +175,7 @@ describe('IECO [@group=5]', () => {
     context('when the store is not ready for a generation update', () => {
       it('does not allow incrementing generations', async () => {
         await expect(timedPolicies.incrementGeneration()).to.be.revertedWith(
-          'please try later'
+          'Cannot update the generation counter so soon'
         )
       })
     })

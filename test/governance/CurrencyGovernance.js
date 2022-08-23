@@ -76,6 +76,12 @@ describe('CurrencyGovernance [@group=4]', () => {
         ).to.be.revertedWith('Only trusted nodes can call this method')
       })
 
+      it('reverts if proposed inflationMultiplier is zero', async () => {
+        await expect(
+          borda.connect(bob).propose(33, 34, 35, 36, 0, '')
+        ).to.be.revertedWith('Inflation multiplier cannot be zero')
+      })
+
       it('reverts if description is too long, doesnt if not', async () => {
         const a = 'a'
         const maxString = a.repeat(160)
@@ -90,7 +96,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               BigNumber.from('1000000000000000000'),
               `${maxString}!`
             )
-        ).to.be.revertedWith('Description is too long.')
+        ).to.be.revertedWith('Description is too long')
 
         await borda
           .connect(bob)
