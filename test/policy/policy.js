@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat')
 const { expect } = require('chai')
-const { loadFixture } = require('ethereum-waffle')
+const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const { deploy } = require('../utils/contracts')
 const { singletonsFixture } = require('../utils/fixtures')
 

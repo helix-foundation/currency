@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat')
 const { assert } = require('chai')
-const { loadFixture } = require('ethereum-waffle')
+const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 
 describe('ForwardProxy [@group=2]', () => {
   const fixture = async () => {
