@@ -64,16 +64,6 @@ describe('Production Policy Change [@group=4]', () => {
     backdoor = await deploy('MakeBackdoor', await accounts[2].getAddress())
   })
 
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
-  })
-
   it('Kicks off a proposal round', async () => {
     const proposalsHash = ethers.utils.solidityKeccak256(
       ['string'],
