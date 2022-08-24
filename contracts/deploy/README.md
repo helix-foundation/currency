@@ -49,17 +49,17 @@ node ../../tools/nicks.js -s 0x0abababababababababababababababababababababababab
 
 `-g`: Gas limit. Defaults to 800000
 
-Replace `0x6bAB1BD10Aa94431FF5d5bad537C93fCC2A78843` with the address that should own the allocated proxy addresses (the deployer address).
+Replace `0x6bAB1BD10Aa94431FF5d5bad537C93fCC2A78843` with the address that should own the allocated proxy addresses (the deployer address). Then to deploy, you will need to create an `ethersProvider` for the network you're deploying to and an `ethersSigner` for the address you are using to deploy on that network.
 
-### Deploy using web3
+### Deploy using ethers
 ```javascript
 // Load the transaction data
 txdata = require('./bootstrap.json')
 // Fund the account that will run the transaction via the first test account
-gasCost = web3.utils.toBN(txdata.tx.gasPrice).mul(web3.toBN(txdata.tx.gasLimit))
-await web3.eth.sendTransaction({from:(await web3.eth.getAccounts())[0],to:txdata.from,value:gasCost})
+gasCost = new BN(txdata.tx.gasPrice).mul(new BN(txdata.tx.gasLimit))
+await ethersSigner.sendTransaction({to:txdata.from,value:gasCost})
 // Run the transaction
-web3.eth.sendSignedTransaction(txdata.raw)
+await ethersProvider.sendTransaction(txdata.raw)
 ```
 
 ## API
