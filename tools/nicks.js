@@ -2,7 +2,6 @@ const fs = require('fs')
 const { Transaction } = require('ethereumjs-tx')
 const EthereumUtil = require('ethereumjs-util')
 const commandLineArgs = require('command-line-args')
-const web3 = require('web3')
 
 /* Constants used in ECDSA for generating sigatures.
  *
@@ -81,7 +80,7 @@ function generateTx(bytecode, s, gas, gasPrice, paramdata) {
     gasLimit: gas,
     value: 0,
     data:
-      bytecode + (web3.utils.isHexStrict(paramdata) ? paramdata.slice(2) : ''),
+      bytecode + (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : ''),
     v: ECDSA_V_VALUE,
     r: ECDSA_R_VALUE,
     s,
