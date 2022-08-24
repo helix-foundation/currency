@@ -10,7 +10,7 @@ const { BigNumber } = ethers
 const { ecoFixture } = require('../utils/fixtures')
 const util = require('../../tools/test/util')
 
-describe('CurrencyTimer [@group=6]', () => {
+describe('CurrencyTimer [@group=4]', () => {
   let alice
   let bob
   let charlie
