@@ -27,7 +27,7 @@ function arrayToTree(items, min, max) {
       index,
       hash: ethers.utils.solidityKeccak256(
         ['bytes20', 'uint256', 'uint256', 'uint256'],
-        [items[min][0].toString(), items[min][1], items[min][2], index],
+        [items[min][0].toString(), items[min][1].toString(), items[min][2].toString(), index],
       ),
     }
   }
@@ -68,7 +68,7 @@ function getTree(map, wrongSum = [], swapIndex = []) {
 
   const wantitems = 2 ** Math.ceil(Math.log2(len))
   for (let i = len; i < wantitems; i += 1) {
-    items.push([0, 0])
+    items.push([ethers.constants.AddressZero, 0])
   }
   let sum = new BN(0)
   for (let i = 0; i < len; i += 1) {
