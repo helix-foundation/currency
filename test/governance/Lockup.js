@@ -248,7 +248,7 @@ describe('Lockup [@group=3]', () => {
           'CurrencyGovernance',
           await util.policyFor(
             policy,
-            web3.utils.soliditySha3('CurrencyGovernance')
+            ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )
         )
 
@@ -257,13 +257,13 @@ describe('Lockup [@group=3]', () => {
         await time.increase(3600 * 24 * 10.1)
 
         const alicevote = [
-          web3.utils.randomHex(32),
+          ethers.utils.randomBytes(32),
           await alice.getAddress(),
           [await bob.getAddress()],
         ]
         await borda.connect(alice).commit(hash(alicevote))
         const bobvote = [
-          web3.utils.randomHex(32),
+          ethers.utils.randomBytes(32),
           await bob.getAddress(),
           [await bob.getAddress()],
         ]

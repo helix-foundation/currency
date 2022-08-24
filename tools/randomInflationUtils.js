@@ -7,6 +7,8 @@
  * Takes an array of sorted items and recursively builds an merkle tree
  */
 
+const BN = require('bn.js')
+
 function arrayToTree(items, min, max) {
   let index
   let sum
@@ -23,23 +25,9 @@ function arrayToTree(items, min, max) {
       balance: items[min][1],
       sum,
       index,
-      hash: web3.utils.soliditySha3(
-        {
-          t: 'bytes20',
-          v: items[min][0].toString(),
-        },
-        {
-          t: 'uint256',
-          v: items[min][1],
-        },
-        {
-          t: 'uint256',
-          v: items[min][2],
-        },
-        {
-          t: 'uint256',
-          v: index,
-        }
+      hash: ethers.utils.solidityKeccak256(
+        ['bytes20', 'uint256', 'uint256', 'uint256'],
+        [items[min][0].toString(), items[min][1], items[min][2], index],
       ),
     }
   }
@@ -47,19 +35,12 @@ function arrayToTree(items, min, max) {
   const a = arrayToTree(items, min, min + spread)
   const b = arrayToTree(items, max - spread, max)
   const params = [a.hash, b.hash]
-  // web3.utils.toBN(a.hash).lt(web3.utils.toBN(b.hash)) ? [a.hash, b.hash] : [b.hash, a.hash];
   return {
     left: a,
     right: b,
-    hash: web3.utils.soliditySha3(
-      {
-        t: 'bytes32',
-        v: params[0],
-      },
-      {
-        t: 'bytes32',
-        v: params[1],
-      }
+    hash: ethers.utils.solidityKeccak256(
+      ['bytes32', 'bytes32'],
+      [params[0], params[1]],
     ),
   }
 }
@@ -89,11 +70,11 @@ function getTree(map, wrongSum = [], swapIndex = []) {
   for (let i = len; i < wantitems; i += 1) {
     items.push([0, 0])
   }
-  let sum = new web3.utils.BN(0)
+  let sum = new BN(0)
   for (let i = 0; i < len; i += 1) {
     if (wrongSum.length > 0) {
       if (i === wrongSum[0]) {
-        sum = web3.utils.toBN(wrongSum[1])
+        sum = new BN(wrongSum[1])
       }
     }
 

@@ -127,7 +127,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   })
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes')
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes'])
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash)
