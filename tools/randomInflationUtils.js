@@ -13,7 +13,7 @@ function arrayToTree(items, min, max) {
   let index
   let sum
   if (min === max) {
-    if (items[min][0] === 0) {
+    if (items[min][0] === ethers.constants.AddressZero) {
       index = 0
       sum = 0
     } else {
