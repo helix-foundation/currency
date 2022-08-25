@@ -202,7 +202,7 @@ describe('VDFVerifier [@group=6]', () => {
             const receipt = await tx.wait()
             const log = receipt.events ? receipt.events[0] : undefined
             expect(log?.event).to.equal('SuccessfulVerification')
-            expect(log?.args?.t).to.equal(t.toString())
+            expect(log?.args?.t).to.equal(t)
             expect(log?.args?.x).to.equal(bnHex(xbn))
             expect(log?.args?.y).to.equal(bnHex(ybn))
           })

@@ -1,6 +1,3 @@
-
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
@@ -73,8 +70,7 @@ describe('PolicyVotes [@group=8]', () => {
             0
           )
 
-          expect((await proxiedPolicyVotes.voteEnds()).toString()).to.not.be
-            .zero
+          expect((await proxiedPolicyVotes.voteEnds()).eq(0)).to.be.false
         })
       })
 
@@ -542,7 +538,7 @@ describe('PolicyVotes [@group=8]', () => {
           expect(await util.policyFor(policy, adoptedPolicyIdHash)).to.be.zero
         })
 
-        it.only('removes itself from the PolicyVotes role', async () => {
+        it('removes itself from the PolicyVotes role', async () => {
           expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
@@ -561,7 +557,7 @@ describe('PolicyVotes [@group=8]', () => {
             'SampleHandler',
             await util.policyFor(policy, adoptedPolicyIdHash)
           )
-          expect((await newPolicy.id()).toString()).to.be.zero
+          expect(await newPolicy.id()).to.be.zero
         })
 
         it('removes itself from the PolicyVotes role', async () => {

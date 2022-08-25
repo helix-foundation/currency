@@ -1,11 +1,9 @@
-
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 
-const { BigNumber } = ethers
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+
+const one = ethers.utils.parseEther('1')
 
 describe('PolicyProposals [@group=7]', () => {
   let alice
@@ -352,8 +350,7 @@ describe('PolicyProposals [@group=7]', () => {
         )[2]
 
         expect(postSupportStake).to.equal(
-          BigNumber.from(10)
-            .pow(BigNumber.from(18))
+          one
             .mul(50000)
             .add(preSupportStake)
         )
@@ -482,19 +479,19 @@ describe('PolicyProposals [@group=7]', () => {
       })
 
       it('subtracts the correct stake amount', async () => {
-        const preUnsupportStake = BigNumber.from(
+        const preUnsupportStake = ethers.BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
         await policyProposals.unsupport(testProposal.address)
 
-        const postUnsupportStake = BigNumber.from(
+        const postUnsupportStake = ethers.BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
         expect(postUnsupportStake).to.equal(
           preUnsupportStake.sub(
-            BigNumber.from(10).pow(BigNumber.from(18)).mul(50000)
+            one.mul(50000)
           )
         )
       })
@@ -509,12 +506,12 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.unsupport(testProposal.address)
         await policyProposals.support(testProposal.address)
 
-        const supportedStake = BigNumber.from(
+        const supportedStake = ethers.BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
         expect(supportedStake).to.equal(
-          BigNumber.from(10).pow(BigNumber.from(18)).mul(50000)
+          one.mul(50000)
         )
       })
     })
@@ -724,17 +721,17 @@ describe('PolicyProposals [@group=7]', () => {
       // });
 
       it('transfers the refund tokens', async () => {
-        const refundAmount = BigNumber.from(
+        const refundAmount = ethers.BigNumber.from(
           await policyProposals.REFUND_IF_LOST()
         )
-        const preRefundBalance = BigNumber.from(
+        const preRefundBalance = ethers.BigNumber.from(
           await eco.balanceOf(await alice.getAddress())
         )
 
         await policyProposals.refund(testProposal.address)
 
         expect(
-          BigNumber.from(await eco.balanceOf(await alice.getAddress()))
+          ethers.BigNumber.from(await eco.balanceOf(await alice.getAddress()))
             .sub(preRefundBalance)
             .eq(refundAmount)
         ).to.be.true
@@ -784,8 +781,8 @@ describe('PolicyProposals [@group=7]', () => {
         const balancePPAfter = await eco.balanceOf(policyProposals.address)
         const balancePolicyAfter = await eco.balanceOf(policy.address)
         expect(
-          balancePolicyAfter.toString() ===
-            BigNumber.from(balancePolicyBefore + balancePPBefore).toString()
+          balancePolicyAfter.eq(
+            balancePolicyBefore + balancePPBefore)
         )
         expect(balancePPAfter.toNumber() === 0)
       })

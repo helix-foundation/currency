@@ -172,8 +172,8 @@ describe('Policed [@group=11]', () => {
     const { testPoliced: policied } = await fixture()
     await policied.cloneMe()
     const clone = await deploy('DummyPolicedUtils', await policied.c())
-    expect((await policied.value()).toString()).to.equal(
-      (await clone.value()).toString()
+    expect(await policied.value()).to.equal(
+      await clone.value()
     )
   })
 

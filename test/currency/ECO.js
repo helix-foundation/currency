@@ -180,7 +180,7 @@ describe('ECO [@group=1]', () => {
           .withArgs(
             await accounts[1].getAddress(),
             recipient,
-            amount.toString()
+            amount
           )
       })
 
@@ -195,7 +195,7 @@ describe('ECO [@group=1]', () => {
           .withArgs(
             await accounts[1].getAddress(),
             recipient,
-            gonsAmount.toString()
+            gonsAmount
           )
       })
 
@@ -273,7 +273,7 @@ describe('ECO [@group=1]', () => {
         const source = await accounts[1].getAddress()
         await expect(eco.connect(accounts[1]).burn(source, amount))
           .to.emit(eco, 'Transfer')
-          .withArgs(source, ethers.constants.AddressZero, amount.toString())
+          .withArgs(source, ethers.constants.AddressZero, amount)
       })
     })
   })
@@ -735,7 +735,7 @@ describe('ECO [@group=1]', () => {
             .withArgs(
               await from.getAddress(),
               await to.getAddress(),
-              allowanceParts[0].toString()
+              allowanceParts[0]
             )
         })
 
@@ -830,7 +830,7 @@ describe('ECO [@group=1]', () => {
                   .withArgs(
                     await from.getAddress(),
                     await to.getAddress(),
-                    part.toString()
+                    part
                   )
               })
             )
@@ -941,7 +941,7 @@ describe('ECO [@group=1]', () => {
         .withArgs(
           ethers.constants.AddressZero,
           await accounts[1].getAddress(),
-          amount.toString()
+          amount
         )
     })
 
@@ -957,7 +957,7 @@ describe('ECO [@group=1]', () => {
         .withArgs(
           await accounts[1].getAddress(),
           ethers.constants.AddressZero,
-          burnAmount.toString()
+          burnAmount
         )
     })
   })

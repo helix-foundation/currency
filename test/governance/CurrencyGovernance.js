@@ -30,7 +30,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       [x[0], x[1], x[2]]
     )
 
-  const votingReward = '1000000000000000'
+  const votingReward = ethers.BigNumber.from(1000000000000000)
   // 76000000000000000
 
   before(async () => {
@@ -559,7 +559,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               // rewards for the current year and the next year
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((2 * trustees * 26 * votingReward).toString())
+                votingReward.mul(2 * trustees * 26),
               )
               await time.increase(3600 * 24 * 14 * 26)
 
@@ -567,7 +567,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                 .to.emit(trustedNodes, 'VotingRewardRedemption')
                 .withArgs(
                   await trustedNodes.connect(alice).hoard(),
-                  BigNumber.from((rewards * votingReward).toString())
+                  votingReward.mul(rewards),
                 )
 
               daveCurrentVotes = await trustedNodes
@@ -609,7 +609,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               // dave reveals once in year 1
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((2 * trustees * 26 * votingReward).toString())
+                votingReward.mul(2 * trustees * 26),
               )
               await time.increase(3600 * 24 * 14 * 26)
               const tx = await trustedNodes.connect(dave).annualUpdate()
@@ -724,7 +724,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((trustees * 26 * votingReward).toString())
+                votingReward.mul(trustees * 26),
               )
               await trustedNodes.connect(dave).annualUpdate()
 

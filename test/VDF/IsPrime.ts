@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop, no-loop-func */
 import { expect } from 'chai'
 import { IsPrime } from '../../typechain-types'
-import { BigNumber } from 'ethers'
 const bigintCryptoUtils = require('bigint-crypto-utils')
 const { deploy } = require('../utils/contracts')
 
@@ -35,11 +34,11 @@ describe('IsPrime [@group=8]', () => {
     // eslint-disable-next-line no-bitwise
     const rnd =
       bigintCryptoUtils.randBetween(BigInt(2) ** BigInt(256)) | BigInt(1)
-    it(`Primality test ${rnd.toString()}`, async () => {
+    it(`Primality test ${rnd}`, async () => {
       const isPrime = await bigintCryptoUtils.isProbablyPrime(rnd)
       expect(
         await instance.isProbablePrime(
-          BigNumber.from(rnd.toString()),
+          rnd,
           MILLER_RABIN_ITERATIONS
         )
       ).to.equal(isPrime)

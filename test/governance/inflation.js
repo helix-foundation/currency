@@ -75,7 +75,7 @@ describe('RandomInflation [@group=6]', () => {
     )
     await rootHashProposal
       .connect(accounts[0])
-      .proposeRootHash(proposedRootHash, totalSum.toString(), amountOfAccounts)
+      .proposeRootHash(proposedRootHash, totalSum, amountOfAccounts)
     await time.increase(3600 * 25)
     await expect(
       rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())
@@ -157,15 +157,15 @@ describe('RandomInflation [@group=6]', () => {
 
     await initInflation.mint(
       await accounts[0].getAddress(),
-      accountsBalances[0].toString()
+      accountsBalances[0]
     )
     await initInflation.mint(
       await accounts[1].getAddress(),
-      accountsBalances[1].toString()
+      accountsBalances[1]
     )
     await initInflation.mint(
       await accounts[2].getAddress(),
-      accountsBalances[2].toString()
+      accountsBalances[2]
     )
 
     preInflationEcoSupply = await eco.totalSupply()
@@ -401,7 +401,7 @@ describe('RandomInflation [@group=6]', () => {
         await expect(
           inflation
             .connect(accounts[0])
-            .claim(0, a[1].reverse(), a[0].sum.toString(), 0)
+            .claim(0, a[1].reverse(), a[0].sum, 0)
         ).to.be.revertedWith('Must prove VDF before claims can be paid')
       })
     })
@@ -427,7 +427,7 @@ describe('RandomInflation [@group=6]', () => {
         const beforeBalance = await eco.balanceOf(recipient.getAddress())
         const tx = await inflation
           .connect(recipient)
-          .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+          .claim(0, a[1].reverse(), a[0].sum, index)
         const receipt = await tx.wait()
         console.log(`gas used ${receipt.gasUsed}`)
         const afterBalance = await eco.balanceOf(recipient.getAddress())
@@ -440,7 +440,7 @@ describe('RandomInflation [@group=6]', () => {
         await expect(
           inflation
             .connect(recipient)
-            .claim(3, a[1].reverse(), a[0].sum.toString(), index)
+            .claim(3, a[1].reverse(), a[0].sum, index)
         )
           .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 3)
@@ -453,7 +453,7 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(numRecipients, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(numRecipients, a[1].reverse(), a[0].sum, index)
           ).to.be.revertedWith(
             'The provided sequence number must be within the set of recipients'
           )
@@ -464,7 +464,7 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(0, a[1].reverse(), (a[0].sum + 1000000).toString(), index)
+              .claim(0, a[1].reverse(), a[0].sum + 1000000, index)
           ).to.be.revertedWith(
             'A claim submission failed root hash verification'
           )
@@ -476,7 +476,7 @@ describe('RandomInflation [@group=6]', () => {
         await expect(
           inflation
             .connect(recipient)
-            .claim(3, a[1].reverse(), a[0].sum.toString(), index)
+            .claim(3, a[1].reverse(), a[0].sum, index)
         ).to.be.revertedWith(
           'A claim can only be made after enough time has passed'
         )
@@ -487,7 +487,7 @@ describe('RandomInflation [@group=6]', () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 0)
           await inflation
             .connect(recipient)
-            .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+            .claim(0, a[1].reverse(), a[0].sum, index)
         })
 
         it('reverts', async () => {
@@ -495,7 +495,7 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(0, a[1].reverse(), a[0].sum, index)
           ).to.be.revertedWith(
             'A claim can only be made if it has not already been made'
           )
@@ -521,7 +521,7 @@ describe('RandomInflation [@group=6]', () => {
           )
           await inflation
             .connect(recipient)
-            .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+            .claim(0, a[1].reverse(), a[0].sum, index)
           await time.increase(3600 * 24 * 30)
         })
 
@@ -536,10 +536,10 @@ describe('RandomInflation [@group=6]', () => {
             )
             await inflation
               .connect(recipient)
-              .claim(i, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(i, a[1].reverse(), a[0].sum, index)
             expect(
-              (await eco.balanceOf(await recipient.getAddress())).toString()
-            ).to.equal(updatedMap.get(await recipient.getAddress()).toString())
+              (await eco.balanceOf(await recipient.getAddress()))
+            ).to.equal(updatedMap.get(await recipient.getAddress()))
           }
         })
       })
@@ -590,7 +590,7 @@ describe('RandomInflation [@group=6]', () => {
             const [a, index, recipient] = await getClaimParameters(inflation, i)
             await inflation
               .connect(recipient)
-              .claim(i, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(i, a[1].reverse(), a[0].sum, index)
           }
         })
 
@@ -657,7 +657,7 @@ describe('RandomInflation [@group=6]', () => {
                     )
                     await inflation
                       .connect(recipient)
-                      .claim(i, a[1].reverse(), a[0].sum.toString(), index)
+                      .claim(i, a[1].reverse(), a[0].sum, index)
                   } catch (e) {
                     if (
                       !e.message.includes('provided address does not hold') &&
