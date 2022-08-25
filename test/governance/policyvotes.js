@@ -70,7 +70,7 @@ describe('PolicyVotes [@group=8]', () => {
             0
           )
 
-          expect((await proxiedPolicyVotes.voteEnds()).eq(0)).to.be.false
+          expect(await proxiedPolicyVotes.voteEnds()).to.not.eq(0)
         })
       })
 
@@ -157,9 +157,7 @@ describe('PolicyVotes [@group=8]', () => {
 
             expect(
               startStake
-                .add(await eco.balanceOf(await alice.getAddress()))
-                .eq(await proxiedPolicyVotes.totalStake())
-            ).to.be.true
+                .add(await eco.balanceOf(await alice.getAddress()))).to.equal(await proxiedPolicyVotes.totalStake())
           })
 
           it('increases the yes stake on yes', async () => {
@@ -298,9 +296,8 @@ describe('PolicyVotes [@group=8]', () => {
 
               expect(
                 startStake
-                  .add(await eco.balanceOf(await alice.getAddress()))
+                  .add(await eco.balanceOf(await alice.getAddress()))).to
                   .eq(await proxiedPolicyVotes.totalStake())
-              ).to.be.true
             })
 
             it('when some of the balance is voted', async () => {
@@ -310,9 +307,8 @@ describe('PolicyVotes [@group=8]', () => {
 
               expect(
                 startStake
-                  .add(one.mul(1700))
+                  .add(one.mul(1700))).to
                   .eq(await proxiedPolicyVotes.totalStake())
-              ).to.be.true
             })
           })
 

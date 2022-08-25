@@ -1153,7 +1153,7 @@ describe('InflationRootHashProposal', () => {
           let rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.lastLiveChallenge.eq(0)).to.be.true
+          expect(rhp.lastLiveChallenge).to.equal(0)
           let tx = await rootHashProposal
             .connect(accounts[1])
             .challengeRootHashRequestAccount(await accounts[0].getAddress(), 0)
@@ -1162,8 +1162,7 @@ describe('InflationRootHashProposal', () => {
             await accounts[0].getAddress()
           )
           expect(
-            rhp.lastLiveChallenge.eq(t + 3600 * 25)
-          ).to.be.true
+            rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
 
           /* another challenger comes in, last live challenge gets updated */
 
@@ -1176,8 +1175,7 @@ describe('InflationRootHashProposal', () => {
             await accounts[0].getAddress()
           )
           expect(
-            rhp.lastLiveChallenge.eq(t + 3600 * 25)
-          ).to.be.true
+            rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
 
           /* time passes, first challenger comes back, lastLiveChallenge remain the same. */
 
@@ -1189,15 +1187,14 @@ describe('InflationRootHashProposal', () => {
             await accounts[0].getAddress()
           )
           expect(
-            rhp.lastLiveChallenge.eq(t + 3600 * 25)
-          ).to.be.true
+            rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
         })
 
         it('doesnt allow a challenge past the time limit', async () => {
           let rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(0)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(0)
 
           await rootHashProposal
             .connect(accounts[1])
@@ -1206,7 +1203,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(1)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(1)
 
           const a = answer(tree, 0)
           await time.increase(86400000)
@@ -1228,7 +1225,7 @@ describe('InflationRootHashProposal', () => {
           let rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(0)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(0)
 
           await rootHashProposal
             .connect(accounts[1])
@@ -1237,7 +1234,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(1)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(1)
 
           let a = answer(tree, 0)
           await rootHashProposal
@@ -1254,7 +1251,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(0)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(0)
 
           await rootHashProposal
             .connect(accounts[1])
@@ -1266,7 +1263,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(2)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(2)
 
           a = answer(tree, 1)
           await rootHashProposal
@@ -1283,7 +1280,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(1)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(1)
 
           a = answer(tree, 2)
           await rootHashProposal
@@ -1300,7 +1297,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(rhp.amountPendingChallenges.eq(0)).to.be.true
+          expect(rhp.amountPendingChallenges).to.equal(0)
         })
 
         it('newChallengerSubmissionEnds correct calculation', async () => {
@@ -1309,7 +1306,7 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[1])
             .proposeRootHash(
               ethers.BigNumber.from(proposedRootHash)
-                .add(ethers.BigNumber.from(1))
+                .add(1)
                 .toHexString(),
               totalSum,
               amountOfAccounts
@@ -1390,7 +1387,7 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[1])
             .proposeRootHash(
               ethers.BigNumber.from(proposedRootHash)
-                .add(ethers.BigNumber.from(1))
+                .add(1)
                 .toHexString(),
               totalSum,
               10

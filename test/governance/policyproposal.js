@@ -110,7 +110,7 @@ describe('PolicyProposals [@group=7]', () => {
           const stake = (
             await policyProposals.proposals(testProposal.address)
           )[2]
-          expect(stake.eq(0)).to.be.true
+          expect(stake).to.equal(0)
         })
 
         it('emits the Register event', async () => {
@@ -227,8 +227,8 @@ describe('PolicyProposals [@group=7]', () => {
     })
 
     it('should return all proposals', async () => {
-      expect(allProposals.length).to.eq(totalProposals)
-      expect(allPropsData.length).to.eq(totalProposals)
+      expect(allProposals.length).to.equal(totalProposals)
+      expect(allPropsData.length).to.equal(totalProposals)
     })
 
     it('should return all proposals on overflow of end bound', async () => {
@@ -731,10 +731,9 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.refund(testProposal.address)
 
         expect(
-          ethers.BigNumber.from(await eco.balanceOf(await alice.getAddress()))
+          (await eco.balanceOf(await alice.getAddress()))
             .sub(preRefundBalance)
-            .eq(refundAmount)
-        ).to.be.true
+        ).to.equal(refundAmount)
       })
     })
   })
@@ -781,9 +780,8 @@ describe('PolicyProposals [@group=7]', () => {
         const balancePPAfter = await eco.balanceOf(policyProposals.address)
         const balancePolicyAfter = await eco.balanceOf(policy.address)
         expect(
-          balancePolicyAfter.eq(
+          balancePolicyAfter).to.equal(
             balancePolicyBefore + balancePPBefore)
-        )
         expect(balancePPAfter).to.equal(0)
       })
 

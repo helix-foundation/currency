@@ -601,7 +601,7 @@ describe('RandomInflation [@group=6]', () => {
         it('burns the minted tokens', async () => {
           await inflation.destruct()
 
-          expect((await eco.balanceOf(inflation.address)).eq(0)).to.be.true
+          expect(await eco.balanceOf(inflation.address)).to.equal(0)
         })
       })
 
@@ -681,7 +681,7 @@ describe('RandomInflation [@group=6]', () => {
             })
 
             it('has no leftover tokens', async () => {
-              expect((await eco.balanceOf(inflation.address)).eq(0)).to.be.true
+              expect(await eco.balanceOf(inflation.address)).to.equal(0)
             })
 
             it('is no longer the inflation policy', async () => {

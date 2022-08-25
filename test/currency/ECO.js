@@ -1,9 +1,5 @@
 /* eslint-disable no-console, no-underscore-dangle */
 
-
-const { ethers } = require('hardhat')
-
-const { BigNumber } = ethers
 const { signTypedData } = require('@metamask/eth-sig-util')
 
 const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
@@ -1099,7 +1095,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('enableDelegationTo', () => {
@@ -1421,7 +1417,7 @@ describe('ECO [@group=1]', () => {
         .connect(otherDelegatee)
         .enableDelegationTo({ gasLimit: 1000000 })
 
-      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateBySig', () => {
@@ -1676,7 +1672,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateAmount', () => {

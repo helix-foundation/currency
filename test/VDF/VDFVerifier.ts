@@ -56,11 +56,10 @@ describe('VDFVerifier [@group=6]', () => {
 
   describe('testing VDF contract', () => {
     it('Matches N in contract and testing', async () => {
-      expect(n.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))).to.be
-        .true
+      expect(n).to.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))
     })
 
-    it('Computed solutions match expectations', async () => {
+    it.only('Computed solutions match expectations', async () => {
       const x = new BN(3)
 
       // We expect this to be 3, squared 2^t + 1 times
@@ -71,7 +70,7 @@ describe('VDFVerifier [@group=6]', () => {
         s = s.mul(s)
       }
 
-      expect(s.eq(y)).to.be.true
+      expect(s).to.eq(y)
     })
 
     describe('When starting', () => {

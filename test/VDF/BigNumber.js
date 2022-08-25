@@ -8,8 +8,6 @@ const BN = require('bn.js')
 
 const { deploy } = require('../utils/contracts')
 
-const { BigNumber } = ethers
-
 describe('BigNumber [@group=3]', () => {
   let bignum
 
@@ -116,8 +114,8 @@ describe('BigNumber [@group=3]', () => {
       ]
       list.forEach((a) => {
         list.forEach((b) => {
-          const bigA = a === '0x' ? BigNumber.from(0) : BigNumber.from(a)
-          const bigB = b === '0x' ? BigNumber.from(0) : BigNumber.from(b)
+          const bigA = a === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(a)
+          const bigB = b === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(b)
 
           it(`${a} + ${b}`, async () => {
             const r = await bignum.add(a, b)
@@ -175,9 +173,9 @@ describe('BigNumber [@group=3]', () => {
         list.forEach((b) => {
           modulos.forEach((c) => {
             it(`${a} * ${b} % ${c}`, async () => {
-              const bigA = a === '0x' ? BigNumber.from(0) : BigNumber.from(a)
-              const bigB = b === '0x' ? BigNumber.from(0) : BigNumber.from(b)
-              const bigC = c === '0x' ? BigNumber.from(0) : BigNumber.from(c)
+              const bigA = a === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(a)
+              const bigB = b === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(b)
+              const bigC = c === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(c)
               const r = await bignum.modmul(a, b, c)
               const e = bigA.mul(bigB).mod(bigC)
               if (e.eq(0)) {
@@ -198,7 +196,7 @@ describe('BigNumber [@group=3]', () => {
               if (e.eqn(0)) {
                 expect(r).to.equal('0x')
               } else {
-                expect(new BN(r.slice(2), 16).eq(e)).to.be.true
+                expect(new BN(r.slice(2), 16)).to.eq(e)
               }
             })
           })

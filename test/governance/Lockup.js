@@ -314,7 +314,7 @@ describe('Lockup [@group=3]', () => {
         lockup.address,
         await time.latestBlock()
       )
-      expect(lockupPower.eq(0)).to.be.true
+      expect(lockupPower).to.equal(0)
     })
 
     it('users have correct voting power', async () => {
@@ -331,9 +331,9 @@ describe('Lockup [@group=3]', () => {
         await time.latestBlock()
       )
 
-      expect(alicePower.eq(5000000000)).to.be.true
-      expect(bobPower.eq(0)).to.be.true
-      expect(charliePower.eq(1000000000)).to.be.true
+      expect(alicePower).to.equal(5000000000)
+      expect(bobPower).to.equal(0)
+      expect(charliePower).to.equal(1000000000)
     })
 
     describe('bob redelegates', () => {
@@ -356,9 +356,9 @@ describe('Lockup [@group=3]', () => {
           await time.latestBlock()
         )
 
-        expect(alicePower.eq(3000000000)).to.be.true
-        expect(bobPower.eq(0)).to.be.true
-        expect(charliePower.eq(3000000000)).to.be.true
+        expect(alicePower).to.equal(3000000000)
+        expect(bobPower).to.equal(0)
+        expect(charliePower).to.equal(3000000000)
       })
 
       it('nonintuitive behavior fixes when bob withdraws', async () => {
@@ -378,9 +378,9 @@ describe('Lockup [@group=3]', () => {
           await time.latestBlock()
         )
 
-        expect(alicePower.eq(2000000000)).to.be.true
-        expect(bobPower.eq(0)).to.be.true
-        expect(charliePower.eq(4050000000)).to.be.true
+        expect(alicePower).to.equal(2000000000)
+        expect(bobPower).to.equal(0)
+        expect(charliePower).to.equal(4050000000)
       })
     })
   })
