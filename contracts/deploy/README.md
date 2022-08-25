@@ -56,7 +56,7 @@ Replace `0x6bAB1BD10Aa94431FF5d5bad537C93fCC2A78843` with the address that shoul
 // Load the transaction data
 txdata = require('./bootstrap.json')
 // Fund the account that will run the transaction via the first test account
-gasCost = new BN(txdata.tx.gasPrice).mul(new BN(txdata.tx.gasLimit))
+gasCost = ethers.BigNumber.from(txdata.tx.gasPrice).mul(ethers.BigNumber.from(txdata.tx.gasLimit))
 await ethersSigner.sendTransaction({to:txdata.from,value:gasCost})
 // Run the transaction
 await ethersProvider.sendTransaction(txdata.raw)

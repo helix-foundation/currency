@@ -4,9 +4,6 @@
 /* eslint no-bitwise: 0 */
 /* eslint no-return-await: 0 */
 
-
-
-const BN = require('bn.js')
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const {
@@ -59,7 +56,7 @@ describe('InflationRootHashProposal', () => {
   })
 
   const balanceBN = async (token, account) =>
-    new BN((await token.balanceOf(await account.getAddress())).toString())
+    ethers.BigNumber.from((await token.balanceOf(await account.getAddress())).toString())
 
   beforeEach('global setup', async () => {
     const [, bob, charlie, dave] = accounts
@@ -228,9 +225,9 @@ describe('InflationRootHashProposal', () => {
     let map
     beforeEach(async () => {
       map = new Map([
-        [await accounts[0].getAddress(), new BN('50000000000000000000000000')],
-        [await accounts[1].getAddress(), new BN('100000000000000000000000000')],
-        [await accounts[2].getAddress(), new BN('150000000000000000000000000')],
+        [await accounts[0].getAddress(), ethers.BigNumber.from('50000000000000000000000000')],
+        [await accounts[1].getAddress(), ethers.BigNumber.from('100000000000000000000000000')],
+        [await accounts[2].getAddress(), ethers.BigNumber.from('150000000000000000000000000')],
       ])
       await initInflation.mint(
         await accounts[0].getAddress(),
@@ -364,7 +361,7 @@ describe('InflationRootHashProposal', () => {
 
       it('catches balance cheats', async () => {
         const cheat = new Map(map)
-        const cheatBalance = new BN('200000000000000000000000000')
+        const cheatBalance = ethers.BigNumber.from('200000000000000000000000000')
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -385,7 +382,7 @@ describe('InflationRootHashProposal', () => {
 
       it('catches filler accounts', async () => {
         const cheat = new Map(map)
-        const cheatBalance = new BN('0')
+        const cheatBalance = ethers.BigNumber.from('0')
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -1446,7 +1443,7 @@ describe('InflationRootHashProposal', () => {
       let tmp = BigNumber.from('0')
       for (let i = 1; i <= amountOfAccounts; i += 1) {
         tmp = BigNumber.from('10000000000000000000000000').mul(i)
-        list.push([await accounts[i - 1].getAddress(), new BN(tmp.toString())])
+        list.push([await accounts[i - 1].getAddress(), ethers.BigNumber.from(tmp.toString())])
         await initInflation.mint(
           await accounts[i - 1].getAddress(),
           tmp.toString()
@@ -1468,11 +1465,11 @@ describe('InflationRootHashProposal', () => {
       const cheatMap = new Map(bigMap)
       cheatMap.set(
         await accounts[4].getAddress(),
-        new BN('100000000000000000000000000')
+        ethers.BigNumber.from('100000000000000000000000000')
       )
       cheatMap.set(
         await accounts[5].getAddress(),
-        new BN('10000000000000000000000000')
+        ethers.BigNumber.from('10000000000000000000000000')
       )
 
       const bigt = getTree(bigMap)
@@ -1504,7 +1501,7 @@ describe('InflationRootHashProposal', () => {
           )
           list.push([
             await accounts[2 * i].getAddress(),
-            new BN(tmp.toString()),
+            ethers.BigNumber.from(tmp.toString()),
           ])
           await initInflation.mint(
             await accounts[2 * i].getAddress(),
@@ -1537,7 +1534,7 @@ describe('InflationRootHashProposal', () => {
             await accounts[
               getRandomIntInclusiveOdd(0, 2 * amountOfAccounts - 1)
             ].getAddress(),
-            new BN(tmp.toString())
+            ethers.BigNumber.from(tmp.toString())
           )
         } else if (action === 1) {
           /* Remove something */
@@ -1555,7 +1552,7 @@ describe('InflationRootHashProposal', () => {
             getRandomIntInclusive(1, 10000)
           )
           totalSum = totalSum.add(tmp)
-          badmap.set(await acc.getAddress(), new BN(tmp.toString()))
+          badmap.set(await acc.getAddress(), ethers.BigNumber.from(tmp.toString()))
         } else if (action === 3) {
           /* swap adjacent balances */
           if (amountOfAccounts <= 2) {

@@ -7,8 +7,6 @@
  * Takes an array of sorted items and recursively builds an merkle tree
  */
 
-const BN = require('bn.js')
-
 function arrayToTree(items, min, max) {
   let index
   let sum
@@ -28,9 +26,9 @@ function arrayToTree(items, min, max) {
       hash: ethers.utils.solidityKeccak256(
         ['bytes20', 'uint256', 'uint256', 'uint256'],
         [
-          items[min][0].toString(),
-          items[min][1].toString(),
-          items[min][2].toString(),
+          items[min][0],
+          items[min][1],
+          items[min][2],
           index,
         ]
       ),
@@ -75,16 +73,16 @@ function getTree(map, wrongSum = [], swapIndex = []) {
   for (let i = len; i < wantitems; i += 1) {
     items.push([ethers.constants.AddressZero, 0])
   }
-  let sum = new BN(0)
+  let sum = ethers.BigNumber.from(0)
   for (let i = 0; i < len; i += 1) {
     if (wrongSum.length > 0) {
       if (i === wrongSum[0]) {
-        sum = new BN(wrongSum[1])
+        sum = ethers.BigNumber.from(wrongSum[1])
       }
     }
 
     items[i].push(sum)
-    sum = sum.add(items[i][1])
+    sum = sum.add(ethers.BigNumber.from(items[i][1]))
   }
   for (let i = len; i < wantitems; i += 1) {
     items[i].push(0)
