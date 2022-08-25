@@ -47,6 +47,7 @@ module.exports = {
     web3: "readonly",
     artifacts: "readonly",
     contract: "readonly",
-    assert: "readonly"
+    expect: "readonly",
+    ethers: "readonly"
   }
 }

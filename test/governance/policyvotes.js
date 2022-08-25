@@ -73,7 +73,8 @@ describe('PolicyVotes [@group=8]', () => {
             0
           )
 
-          assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0)
+          expect((await proxiedPolicyVotes.voteEnds()).toString()).to.not.be
+            .zero
         })
       })
 
@@ -158,11 +159,11 @@ describe('PolicyVotes [@group=8]', () => {
 
             await proxiedPolicyVotes.vote(true)
 
-            assert(
+            expect(
               startStake
                 .add(await eco.balanceOf(await alice.getAddress()))
                 .eq(await proxiedPolicyVotes.totalStake())
-            )
+            ).to.be.true
           })
 
           it('increases the yes stake on yes', async () => {
@@ -299,11 +300,11 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2000), one.mul(3000))
 
-              assert(
+              expect(
                 startStake
                   .add(await eco.balanceOf(await alice.getAddress()))
                   .eq(await proxiedPolicyVotes.totalStake())
-              )
+              ).to.be.true
             })
 
             it('when some of the balance is voted', async () => {
@@ -311,11 +312,11 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(1500), one.mul(200))
 
-              assert(
+              expect(
                 startStake
                   .add(one.mul(1700))
                   .eq(await proxiedPolicyVotes.totalStake())
-              )
+              ).to.be.true
             })
           })
 
@@ -538,11 +539,11 @@ describe('PolicyVotes [@group=8]', () => {
         })
 
         it('does not enact the policies', async () => {
-          assert.equal(await util.policyFor(policy, adoptedPolicyIdHash), 0)
+          expect(await util.policyFor(policy, adoptedPolicyIdHash)).to.be.zero
         })
 
-        it('removes itself from the PolicyVotes role', async () => {
-          assert.equal(await util.policyFor(policy, votesPolicyIdHash), 0)
+        it.only('removes itself from the PolicyVotes role', async () => {
+          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
 
@@ -560,11 +561,11 @@ describe('PolicyVotes [@group=8]', () => {
             'SampleHandler',
             await util.policyFor(policy, adoptedPolicyIdHash)
           )
-          assert.equal((await newPolicy.id()).toString(), 0)
+          expect((await newPolicy.id()).toString()).to.be.zero
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          assert.equal(await util.policyFor(policy, votesPolicyIdHash), 0)
+          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
     })

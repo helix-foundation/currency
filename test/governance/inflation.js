@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle, no-await-in-loop, no-console */
 
 const bigintCryptoUtils = require('bigint-crypto-utils')
-const { expect, assert } = require('chai')
+const { expect } = require('chai')
 const BN = require('bn.js')
 
 const { ethers } = require('hardhat')
@@ -124,7 +124,7 @@ describe('RandomInflation [@group=6]', () => {
       }
     }
     if (attempts > 2) {
-      assert.fail('Could not find a primal within bounds after 3 attempts')
+      expect.fail('Could not find a primal within bounds after 3 attempts')
     }
     return getPrimal(++attempts)
   }
@@ -543,11 +543,9 @@ describe('RandomInflation [@group=6]', () => {
             await inflation
               .connect(recipient)
               .claim(i, a[1].reverse(), a[0].sum.toString(), index)
-            assert.equal(
-              (await eco.balanceOf(await recipient.getAddress())).toString(),
-              updatedMap.get(await recipient.getAddress()).toString(),
-              'Should get an inflation'
-            )
+            expect(
+              (await eco.balanceOf(await recipient.getAddress())).toString()
+            ).to.equal(updatedMap.get(await recipient.getAddress()).toString())
           }
         })
       })
@@ -610,7 +608,7 @@ describe('RandomInflation [@group=6]', () => {
         it('burns the minted tokens', async () => {
           await inflation.destruct()
 
-          assert.equal((await eco.balanceOf(inflation.address)).toString(), 0)
+          expect((await eco.balanceOf(inflation.address)).eq(0)).to.be.true
         })
       })
 
@@ -691,10 +689,7 @@ describe('RandomInflation [@group=6]', () => {
             })
 
             it('has no leftover tokens', async () => {
-              assert.equal(
-                (await eco.balanceOf(inflation.address)).toString(),
-                0
-              )
+              expect((await eco.balanceOf(inflation.address)).eq(0)).to.be.true
             })
 
             it('is no longer the inflation policy', async () => {
@@ -703,8 +698,7 @@ describe('RandomInflation [@group=6]', () => {
                 ['CurrencyGovernance']
               )
 
-              assert.notEqual(
-                await util.policyFor(policy, govhash),
+              expect(await util.policyFor(policy, govhash)).to.not.equal(
                 inflation.address
               )
             })
@@ -713,4 +707,4 @@ describe('RandomInflation [@group=6]', () => {
       })
     })
   })
-}).timeout(60000)
+})

@@ -27,7 +27,12 @@ function arrayToTree(items, min, max) {
       index,
       hash: ethers.utils.solidityKeccak256(
         ['bytes20', 'uint256', 'uint256', 'uint256'],
-        [items[min][0].toString(), items[min][1].toString(), items[min][2].toString(), index],
+        [
+          items[min][0].toString(),
+          items[min][1].toString(),
+          items[min][2].toString(),
+          index,
+        ]
       ),
     }
   }
@@ -40,7 +45,7 @@ function arrayToTree(items, min, max) {
     right: b,
     hash: ethers.utils.solidityKeccak256(
       ['bytes32', 'bytes32'],
-      [params[0], params[1]],
+      [params[0], params[1]]
     ),
   }
 }

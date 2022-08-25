@@ -80,7 +80,8 @@ function generateTx(bytecode, s, gas, gasPrice, paramdata) {
     gasLimit: gas,
     value: 0,
     data:
-      bytecode + (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : ''),
+      bytecode +
+      (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : ''),
     v: ECDSA_V_VALUE,
     r: ECDSA_R_VALUE,
     s,

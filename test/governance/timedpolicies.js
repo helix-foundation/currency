@@ -1,5 +1,3 @@
-const { assert } = require('chai')
-
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
@@ -15,7 +13,7 @@ describe('TimedPolicies [@group=12]', () => {
     ;({ policy, timedPolicies } = await ecoFixture([]))
   })
 
-  it('Should do a simple voting cycle', async () => {
+  it('Should do an empty voting cycle', async () => {
     const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
       ['string'],
       ['PolicyVotes']
@@ -25,23 +23,22 @@ describe('TimedPolicies [@group=12]', () => {
       ['PolicyProposals']
     )
 
-    assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0)
+    expect(await util.policyFor(policy, policyVotesIdentifierHash)).to.be.zero
 
-    assert.notEqual(
-      await util.policyFor(policy, policyProposalsIdentifierHash),
-      0
-    )
+    expect(await util.policyFor(policy, policyProposalsIdentifierHash)).to.not
+      .be.zero
 
     const policyProposals = await ethers.getContractAt(
       'PolicyProposals',
       await util.policyFor(policy, policyProposalsIdentifierHash)
     )
-    await time.increase(3600 * 24 * 15)
+    await time.increase(3600 * 24 * 14)
 
-    assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0)
+    expect(await util.policyFor(policy, policyVotesIdentifierHash)).to.be.zero
 
     await policyProposals.destruct()
-    assert.equal(await util.policyFor(policy, policyProposalsIdentifierHash), 0)
+    expect(await util.policyFor(policy, policyProposalsIdentifierHash)).to.be
+      .zero
   })
 
   describe('initialize', () => {

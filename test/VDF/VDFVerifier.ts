@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 
 import { ethers } from 'hardhat'
-import { expect, assert } from 'chai'
+import { expect } from 'chai'
 import { VDFVerifier } from '../../typechain-types'
 import { ContractTransaction } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
@@ -264,11 +264,7 @@ describe('VDFVerifier [@group=6]', () => {
       expect(await instanceVDFVerifier.isVerified(bnHex(xbn), t, bnHex(ybn))).to
         .be.true
 
-      assert.equal(
-        seenShorterU,
-        true,
-        'Although not critical, we would like to see log2(u) < log(n), because we set u.bitlen = n.bitlen in the contract'
-      )
+      expect(seenShorterU).to.be.true
     })
   })
 })

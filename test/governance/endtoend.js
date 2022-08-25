@@ -16,7 +16,6 @@
  */
 
 const { ethers } = require('hardhat')
-const { assert } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
@@ -135,12 +134,11 @@ describe('Production Policy Change [@group=4]', () => {
       ['string'],
       ['Backdoor']
     )
-    assert.equal(await util.policyFor(policy, backdoorHash), 0)
+    expect(await util.policyFor(policy, backdoorHash)).to.be.zero
   })
 
   it('Celebrates accounts[5]', async () => {
-    assert.equal(
-      (await eco.balanceOf(await accounts[5].getAddress())).toString(),
+    expect(await eco.balanceOf(await accounts[5].getAddress())).to.equal(
       1000000
     )
   })

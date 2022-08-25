@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop, no-nested-ternary */
 
-const { assert, expect } = require('chai')
+const { expect } = require('chai')
 
 const { ethers } = require('hardhat')
 const snapshotGasCost = require('@uniswap/snapshot-gas-cost').default
@@ -32,15 +32,15 @@ describe('BigNumber [@group=3]', () => {
     })
 
     it('Matches 1', async () => {
-      assert.equal(await bignum.fromUint(1), '0x01')
+      expect(await bignum.fromUint(1)).to.equal('0x01')
     })
 
     it('Matches uint 0', async () => {
-      assert.equal(await bignum.fromUint(0), '0x')
+      expect(await bignum.fromUint(0)).to.equal('0x')
     })
 
     it('Matches byte 0', async () => {
-      assert.equal(await bignum.fromBytes('0x'), '0x')
+      expect(await bignum.fromBytes('0x')).to.equal('0x')
     })
 
     it('Matches byte 1', async () => {

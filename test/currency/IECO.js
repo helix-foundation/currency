@@ -29,8 +29,7 @@ describe('IECO [@group=5]', () => {
 
   describe('Decimals', () => {
     it('returns the right number', async () => {
-      // assert.equal(await eco.decimals(), 18, 'wrong number');
-      expect(await eco.decimals()).to.equal(18, 'no')
+      expect(await eco.decimals()).to.equal(18)
     })
   })
 
@@ -190,8 +189,7 @@ describe('IECO [@group=5]', () => {
 
       it('allows incrementing generations', async () => {
         await timedPolicies.incrementGeneration()
-        assert.equal(
-          (await eco.currentGeneration()).toNumber(),
+        expect((await eco.currentGeneration()).toNumber()).to.equal(
           originalGeneration + 1
         )
       })

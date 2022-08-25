@@ -1147,7 +1147,7 @@ describe('InflationRootHashProposal', () => {
     })
 
     context(
-      'white box testing of state variables for accepting/rejecting root hahses',
+      'white box testing of state variables for accepting/rejecting root hashes',
       () => {
         async function getTime(tx) {
           const blockHash = tx.blockHash
@@ -1574,7 +1574,7 @@ describe('InflationRootHashProposal', () => {
 
         const badTree = getTree(badmap)
 
-        assert.notDeepEqual(goodMap, badmap)
+        expect(goodMap).to.not.deep.equal(badmap)
 
         await rootHashProposal
           .connect(accounts[0])
@@ -1586,11 +1586,11 @@ describe('InflationRootHashProposal', () => {
           accounts[0]
         )
 
-        assert(!res)
-        assert(
-          tests <= Math.ceil(Math.log2(amountOfAccounts)),
+        expect(res).to.be.false
+        expect(
+          tests,
           `Needed ${tests}, expected ${Math.ceil(Math.log2(amountOfAccounts))}`
-        )
+        ).to.be.lessThanOrEqual(Math.ceil(Math.log2(amountOfAccounts)))
       })
     }
   })

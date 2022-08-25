@@ -103,7 +103,7 @@ describe('PolicyProposals [@group=7]', () => {
           await policyProposals.registerProposal(testProposal.address)
           const allProposalAddresses =
             await policyProposals.getPaginatedProposalAddresses(1, 1)
-          assert.deepEqual(allProposalAddresses, [testProposal.address])
+          expect(allProposalAddresses).to.deep.equal([testProposal.address])
         })
 
         it('starts with the correct supporting stake', async () => {
@@ -112,8 +112,7 @@ describe('PolicyProposals [@group=7]', () => {
           const stake = (
             await policyProposals.proposals(testProposal.address)
           )[2]
-
-          assert.equal(stake.toString(), '0')
+          expect(stake.eq(0)).to.be.true
         })
 
         it('emits the Register event', async () => {
@@ -734,11 +733,11 @@ describe('PolicyProposals [@group=7]', () => {
 
         await policyProposals.refund(testProposal.address)
 
-        assert(
+        expect(
           BigNumber.from(await eco.balanceOf(await alice.getAddress()))
             .sub(preRefundBalance)
             .eq(refundAmount)
-        )
+        ).to.be.true
       })
     })
   })
