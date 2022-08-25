@@ -8,7 +8,7 @@ describe('TrustedNodes [@group=7]', () => {
   let timedPolicies
   let alice
   let bob
-  const reward = 10000000
+  const reward = ethers.BigNumber.from(10000000)
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
