@@ -59,7 +59,7 @@ describe('VDFVerifier [@group=6]', () => {
       expect(n).to.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))
     })
 
-    it.only('Computed solutions match expectations', async () => {
+    it('Computed solutions match expectations', async () => {
       const x = new BN(3)
 
       // We expect this to be 3, squared 2^t + 1 times

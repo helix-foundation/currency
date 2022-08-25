@@ -1,4 +1,3 @@
-
 const { ethers } = require('hardhat')
 
 const Nick = require('../../tools/nicks')

@@ -223,9 +223,18 @@ describe('InflationRootHashProposal', () => {
     let map
     beforeEach(async () => {
       map = new Map([
-        [await accounts[0].getAddress(), ethers.BigNumber.from('50000000000000000000000000')],
-        [await accounts[1].getAddress(), ethers.BigNumber.from('100000000000000000000000000')],
-        [await accounts[2].getAddress(), ethers.BigNumber.from('150000000000000000000000000')],
+        [
+          await accounts[0].getAddress(),
+          ethers.BigNumber.from('50000000000000000000000000'),
+        ],
+        [
+          await accounts[1].getAddress(),
+          ethers.BigNumber.from('100000000000000000000000000'),
+        ],
+        [
+          await accounts[2].getAddress(),
+          ethers.BigNumber.from('150000000000000000000000000'),
+        ],
       ])
       await initInflation.mint(
         await accounts[0].getAddress(),
@@ -359,7 +368,9 @@ describe('InflationRootHashProposal', () => {
 
       it('catches balance cheats', async () => {
         const cheat = new Map(map)
-        const cheatBalance = ethers.BigNumber.from('200000000000000000000000000')
+        const cheatBalance = ethers.BigNumber.from(
+          '200000000000000000000000000'
+        )
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -948,11 +959,7 @@ describe('InflationRootHashProposal', () => {
           rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())
         )
           .to.emit(rootHashProposal, 'RootHashAcceptance')
-          .withArgs(
-            await accounts[0].getAddress(),
-            totalSum,
-            amountOfAccounts
-          )
+          .withArgs(await accounts[0].getAddress(), totalSum, amountOfAccounts)
 
         await rootHashProposal
           .connect(accounts[0])
@@ -976,11 +983,7 @@ describe('InflationRootHashProposal', () => {
           rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())
         )
           .to.emit(rootHashProposal, 'RootHashAcceptance')
-          .withArgs(
-            await accounts[0].getAddress(),
-            totalSum,
-            amountOfAccounts
-          )
+          .withArgs(await accounts[0].getAddress(), totalSum, amountOfAccounts)
 
         await rootHashProposal
           .connect(accounts[0])
@@ -1161,8 +1164,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(
-            rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
+          expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
 
           /* another challenger comes in, last live challenge gets updated */
 
@@ -1174,8 +1176,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(
-            rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
+          expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
 
           /* time passes, first challenger comes back, lastLiveChallenge remain the same. */
 
@@ -1186,8 +1187,7 @@ describe('InflationRootHashProposal', () => {
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
-          expect(
-            rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
+          expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
         })
 
         it('doesnt allow a challenge past the time limit', async () => {
@@ -1305,9 +1305,7 @@ describe('InflationRootHashProposal', () => {
           await rootHashProposal
             .connect(accounts[1])
             .proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash)
-                .add(1)
-                .toHexString(),
+              ethers.BigNumber.from(proposedRootHash).add(1).toHexString(),
               totalSum,
               amountOfAccounts
             )
@@ -1386,9 +1384,7 @@ describe('InflationRootHashProposal', () => {
           await rootHashProposal
             .connect(accounts[1])
             .proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash)
-                .add(1)
-                .toHexString(),
+              ethers.BigNumber.from(proposedRootHash).add(1).toHexString(),
               totalSum,
               10
             )
@@ -1438,10 +1434,7 @@ describe('InflationRootHashProposal', () => {
       for (let i = 1; i <= amountOfAccounts; i += 1) {
         tmp = ethers.BigNumber.from('10000000000000000000000000').mul(i)
         list.push([await accounts[i - 1].getAddress(), tmp])
-        await initInflation.mint(
-          await accounts[i - 1].getAddress(),
-          tmp
-        )
+        await initInflation.mint(await accounts[i - 1].getAddress(), tmp)
         totalSum = totalSum.add(tmp)
       }
       rootHashProposal = await getRootHash()
@@ -1493,14 +1486,8 @@ describe('InflationRootHashProposal', () => {
           tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
-          list.push([
-            await accounts[2 * i].getAddress(),
-            tmp,
-          ])
-          await initInflation.mint(
-            await accounts[2 * i].getAddress(),
-            tmp
-          )
+          list.push([await accounts[2 * i].getAddress(), tmp])
+          await initInflation.mint(await accounts[2 * i].getAddress(), tmp)
           totalSum = totalSum.add(tmp)
         }
 

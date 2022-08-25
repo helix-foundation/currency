@@ -1,4 +1,3 @@
-
 const EthereumUtil = require('ethereumjs-util')
 
 const { ethers } = require('hardhat')

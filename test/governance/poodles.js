@@ -10,7 +10,6 @@
  * (the number of poodles at the current generation).
  */
 
-
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')

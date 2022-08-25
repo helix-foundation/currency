@@ -198,9 +198,9 @@ describe('TrustedNodes [@group=7]', () => {
 
           await policy.testTrust(trustedNodes.address, await alice.getAddress())
 
-          expect(
-            (await trustedNodes.numTrustees()).sub(preAddLength)
-          ).to.equal(1)
+          expect((await trustedNodes.numTrustees()).sub(preAddLength)).to.equal(
+            1
+          )
         })
       })
     })
@@ -215,9 +215,7 @@ describe('TrustedNodes [@group=7]', () => {
           await alice.getAddress()
         )
 
-        expect(
-          preAddLength.sub(await trustedNodes.numTrustees())
-        ).to.equal(1)
+        expect(preAddLength.sub(await trustedNodes.numTrustees())).to.equal(1)
       })
     })
   })
@@ -244,18 +242,12 @@ describe('TrustedNodes [@group=7]', () => {
       )
 
       await time.increase(3600 * 24 * 14 * 26)
-      await faucet.mintx(
-        trustedNodes.address,
-        reward.mul(1 * 26 * 2),
-      )
+      await faucet.mintx(trustedNodes.address, reward.mul(1 * 26 * 2))
       await trustedNodes.connect(alice).annualUpdate()
     })
 
     it('sets things appropriately', async () => {
-      await faucet.mintx(
-        trustedNodes.address,
-        reward.mul(1 * 26 * 2),
-      )
+      await faucet.mintx(trustedNodes.address, reward.mul(1 * 26 * 2))
       const initialGeneration = await trustedNodes.yearStartGen()
       await time.increase(3600 * 24 * 14 * 1)
       await timedPolicies.connect(alice).incrementGeneration()

@@ -37,10 +37,7 @@ describe('IsPrime [@group=8]', () => {
     it(`Primality test ${rnd}`, async () => {
       const isPrime = await bigintCryptoUtils.isProbablyPrime(rnd)
       expect(
-        await instance.isProbablePrime(
-          rnd,
-          MILLER_RABIN_ITERATIONS
-        )
+        await instance.isProbablePrime(rnd, MILLER_RABIN_ITERATIONS)
       ).to.equal(isPrime)
     })
   }

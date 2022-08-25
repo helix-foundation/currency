@@ -10,8 +10,6 @@
  * This kind of proxy upgrade does not change the address stored in the policy.
  */
 
-
-
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')

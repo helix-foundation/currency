@@ -173,11 +173,7 @@ describe('ECO [@group=1]', () => {
         const recipient = await accounts[2].getAddress()
         await expect(eco.connect(accounts[1]).transfer(recipient, amount))
           .to.emit(eco, 'Transfer')
-          .withArgs(
-            await accounts[1].getAddress(),
-            recipient,
-            amount
-          )
+          .withArgs(await accounts[1].getAddress(), recipient, amount)
       })
 
       it('emits a BaseValueTransfer event', async () => {
@@ -188,11 +184,7 @@ describe('ECO [@group=1]', () => {
         const gonsAmount = inflationMult.mul(amount)
         await expect(eco.connect(accounts[1]).transfer(recipient, amount))
           .to.emit(eco, 'BaseValueTransfer')
-          .withArgs(
-            await accounts[1].getAddress(),
-            recipient,
-            gonsAmount
-          )
+          .withArgs(await accounts[1].getAddress(), recipient, gonsAmount)
       })
 
       it('returns true', async () => {

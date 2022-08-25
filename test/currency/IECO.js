@@ -91,7 +91,9 @@ describe('IECO [@group=5]', () => {
       })
 
       context('overflowing Weight', () => {
-        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(ethers.BigNumber.from(500))
+        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(
+          ethers.BigNumber.from(500)
+        )
 
         it('should throw when minting coins that would create an unsafe cast for checkpoints', async () => {
           await expect(

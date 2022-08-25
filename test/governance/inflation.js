@@ -99,7 +99,9 @@ describe('RandomInflation [@group=6]', () => {
       [await inf.seed(), sequence]
     )
     const [index, recipient] = getRecipient(
-      ethers.BigNumber.from(chosenClaimNumberHash).mod(ethers.BigNumber.from(totalSum))
+      ethers.BigNumber.from(chosenClaimNumberHash).mod(
+        ethers.BigNumber.from(totalSum)
+      )
     )
     return [answer(tree, index), index, recipient]
   }
@@ -109,7 +111,7 @@ describe('RandomInflation [@group=6]', () => {
    * @returns The prime from the current blockhash that a probable prime is
    */
   async function getPrimal(attempts = 0) {
-    const baseNum = ethers.BigNumber.from((await time.latestBlockHash()))
+    const baseNum = ethers.BigNumber.from(await time.latestBlockHash())
     for (let i = 1; i < 1000; i++) {
       if (
         await bigintCryptoUtils.isProbablyPrime(
@@ -399,9 +401,7 @@ describe('RandomInflation [@group=6]', () => {
       it('rejects any claims', async () => {
         const a = answer(tree, 0)
         await expect(
-          inflation
-            .connect(accounts[0])
-            .claim(0, a[1].reverse(), a[0].sum, 0)
+          inflation.connect(accounts[0]).claim(0, a[1].reverse(), a[0].sum, 0)
         ).to.be.revertedWith('Must prove VDF before claims can be paid')
       })
     })
@@ -438,9 +438,7 @@ describe('RandomInflation [@group=6]', () => {
         await time.increase(3600 * 24 * 10 + 1)
         const [a, index, recipient] = await getClaimParameters(inflation, 3)
         await expect(
-          inflation
-            .connect(recipient)
-            .claim(3, a[1].reverse(), a[0].sum, index)
+          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum, index)
         )
           .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 3)
@@ -474,9 +472,7 @@ describe('RandomInflation [@group=6]', () => {
       it('reverts when called for the next period', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 1000)
         await expect(
-          inflation
-            .connect(recipient)
-            .claim(3, a[1].reverse(), a[0].sum, index)
+          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum, index)
         ).to.be.revertedWith(
           'A claim can only be made after enough time has passed'
         )
@@ -509,15 +505,18 @@ describe('RandomInflation [@group=6]', () => {
             updatedMap.set(
               await accounts[i].getAddress(),
               ethers.BigNumber.from(
-                (await eco.balanceOf(await accounts[i].getAddress()))
-                  .toHexString()
+                (
+                  await eco.balanceOf(await accounts[i].getAddress())
+                ).toHexString()
               )
             )
           }
           const [a, index, recipient] = await getClaimParameters(inflation, 0)
           updatedMap.set(
             await recipient.getAddress(),
-            updatedMap.get(await recipient.getAddress()).add(ethers.BigNumber.from(rewardVote))
+            updatedMap
+              .get(await recipient.getAddress())
+              .add(ethers.BigNumber.from(rewardVote))
           )
           await inflation
             .connect(recipient)
@@ -537,9 +536,9 @@ describe('RandomInflation [@group=6]', () => {
             await inflation
               .connect(recipient)
               .claim(i, a[1].reverse(), a[0].sum, index)
-            expect(
-              (await eco.balanceOf(await recipient.getAddress()))
-            ).to.equal(updatedMap.get(await recipient.getAddress()))
+            expect(await eco.balanceOf(await recipient.getAddress())).to.equal(
+              updatedMap.get(await recipient.getAddress())
+            )
           }
         })
       })

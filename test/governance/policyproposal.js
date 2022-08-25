@@ -349,11 +349,7 @@ describe('PolicyProposals [@group=7]', () => {
           await policyProposals.proposals(testProposal.address)
         )[2]
 
-        expect(postSupportStake).to.equal(
-          one
-            .mul(50000)
-            .add(preSupportStake)
-        )
+        expect(postSupportStake).to.equal(one.mul(50000).add(preSupportStake))
       })
 
       it('has the correct data in allProposalData', async () => {
@@ -490,9 +486,7 @@ describe('PolicyProposals [@group=7]', () => {
         )
 
         expect(postUnsupportStake).to.equal(
-          preUnsupportStake.sub(
-            one.mul(50000)
-          )
+          preUnsupportStake.sub(one.mul(50000))
         )
       })
 
@@ -510,9 +504,7 @@ describe('PolicyProposals [@group=7]', () => {
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
-        expect(supportedStake).to.equal(
-          one.mul(50000)
-        )
+        expect(supportedStake).to.equal(one.mul(50000))
       })
     })
   })
@@ -731,8 +723,7 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.refund(testProposal.address)
 
         expect(
-          (await eco.balanceOf(await alice.getAddress()))
-            .sub(preRefundBalance)
+          (await eco.balanceOf(await alice.getAddress())).sub(preRefundBalance)
         ).to.equal(refundAmount)
       })
     })
@@ -779,9 +770,9 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.destruct()
         const balancePPAfter = await eco.balanceOf(policyProposals.address)
         const balancePolicyAfter = await eco.balanceOf(policy.address)
-        expect(
-          balancePolicyAfter).to.equal(
-            balancePolicyBefore + balancePPBefore)
+        expect(balancePolicyAfter).to.equal(
+          balancePolicyBefore + balancePPBefore
+        )
         expect(balancePPAfter).to.equal(0)
       })
 
