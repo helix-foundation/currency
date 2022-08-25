@@ -85,7 +85,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract has data', async () => {
     const numTrustees = await poodleCheck.numTrustees()
 
-    expect(numTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(numTrustees).to.equal(trustednodes.length)
   })
 
   it('Constructs the proposals', async () => {
@@ -173,7 +173,7 @@ describe('Proxy Policy Change [@group=9]', () => {
 
   it('Checks that the new trustee contract retains all old data', async () => {
     const poodleTrustees = await poodleCheck.numTrustees()
-    expect(poodleTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(poodleTrustees).to.equal(trustednodes.length)
 
     for (let i = 0; i < trustednodes.length; i++) {
       /* eslint-disable no-await-in-loop */

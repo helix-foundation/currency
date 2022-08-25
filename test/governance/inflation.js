@@ -284,7 +284,7 @@ describe('RandomInflation [@group=6]', () => {
       await expect(
         await eco.getPastVotes(
           inflation.address,
-          (await inflation.blockNumber()).toNumber() + 1
+          (await inflation.blockNumber()).add(1)
         )
       ).to.not.equal(0)
     })
@@ -431,7 +431,7 @@ describe('RandomInflation [@group=6]', () => {
         const receipt = await tx.wait()
         console.log(`gas used ${receipt.gasUsed}`)
         const afterBalance = await eco.balanceOf(recipient.getAddress())
-        expect(afterBalance.sub(beforeBalance).toNumber()).to.equal(rewardVote)
+        expect(afterBalance.sub(beforeBalance)).to.equal(rewardVote)
       })
 
       it('emits the Claim event', async () => {

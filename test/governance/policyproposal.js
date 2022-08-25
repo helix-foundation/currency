@@ -784,18 +784,18 @@ describe('PolicyProposals [@group=7]', () => {
           balancePolicyAfter.eq(
             balancePolicyBefore + balancePPBefore)
         )
-        expect(balancePPAfter.toNumber() === 0)
+        expect(balancePPAfter).to.equal(0)
       })
 
       it('succeeds if proposal selected ahead of time', async () => {
+        const costRegister = await policyProposals.COST_REGISTER()
+        const refundAmount = await policyProposals.REFUND_IF_LOST()
         await eco.approve(
           policyProposals.address,
           await policyProposals.COST_REGISTER()
         )
 
         await policyProposals.registerProposal(testProposal2.address)
-
-        const charlieBalance = eco.balanceOf(await charlie.getAddress())
 
         await policyProposals.support(testProposal.address)
         await policyProposals.connect(charlie).support(testProposal2.address)
@@ -806,7 +806,9 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.destruct()
 
         const balancePPAfter = await eco.balanceOf(policyProposals.address)
-        expect(balancePPAfter.toNumber() === charlieBalance)
+        const balanceTreasury = await eco.balanceOf(policy.address)
+        expect(balancePPAfter).to.equal(0)
+        expect(balanceTreasury).to.equal(costRegister.mul(2).sub(refundAmount))
       })
     })
 

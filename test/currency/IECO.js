@@ -183,14 +183,14 @@ describe('IECO [@group=5]', () => {
       let originalGeneration
 
       beforeEach(async () => {
-        originalGeneration = (await eco.currentGeneration()).toNumber()
+        originalGeneration = await eco.currentGeneration()
         await time.increase(31557600 / 10)
       })
 
       it('allows incrementing generations', async () => {
         await timedPolicies.incrementGeneration()
-        expect((await eco.currentGeneration()).toNumber()).to.equal(
-          originalGeneration + 1
+        expect(await eco.currentGeneration()).to.equal(
+          originalGeneration.add(1)
         )
       })
     })
@@ -214,7 +214,7 @@ describe('IECO [@group=5]', () => {
         await faucet.mint(testAccount, BigNumber.from(1000))
         blockNumber = await time.latestBlock()
         await time.advanceBlock()
-        originalGeneration = (await eco.currentGeneration()).toNumber()
+        originalGeneration = await eco.currentGeneration()
         initialBalance = await eco.getPastVotes(
           await accounts[1].getAddress(),
           blockNumber
