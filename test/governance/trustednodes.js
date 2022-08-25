@@ -1,7 +1,7 @@
 const { ethers } = require('hardhat')
 
 const { BigNumber } = ethers
-const { expect } = require('chai')
+
 const { time } = require('@openzeppelin/test-helpers')
 const { ecoFixture } = require('../utils/fixtures')
 

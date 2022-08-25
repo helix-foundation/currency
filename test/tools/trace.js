@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat')
-const { expect } = require('chai')
+
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const util = require('../../tools/test/util')
 const { ecoFixture } = require('../utils/fixtures')

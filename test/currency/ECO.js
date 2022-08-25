@@ -1,6 +1,6 @@
 /* eslint-disable no-console, no-underscore-dangle */
 
-const { expect } = require('chai')
+
 const { ethers } = require('hardhat')
 
 const { BigNumber } = ethers

@@ -10,7 +10,7 @@
  * This kind of proxy upgrade does not change the address stored in the policy.
  */
 
-const { expect } = require('chai')
+
 
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')

@@ -2,7 +2,7 @@
 
 const { ethers } = require('hardhat')
 const { BigNumber } = require('ethers')
-const { expect } = require('chai')
+
 const { ecoFixture } = require('../utils/fixtures')
 const { permit } = require('../../tools/test/permit')
 

@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle, no-await-in-loop, no-console */
 
 const bigintCryptoUtils = require('bigint-crypto-utils')
-const { expect } = require('chai')
+
 const BN = require('bn.js')
 
 const { ethers } = require('hardhat')

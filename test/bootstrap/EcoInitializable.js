@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat')
-const { expect } = require('chai')
+
 const { deploy, deployProxy } = require('../utils/contracts')
 
 describe('EcoInitializable [@group=5]', () => {
