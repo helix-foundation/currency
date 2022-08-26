@@ -1,6 +1,3 @@
-const { expect } = require('chai')
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
@@ -73,7 +70,7 @@ describe('PolicyVotes [@group=8]', () => {
             0
           )
 
-          assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0)
+          expect(await proxiedPolicyVotes.voteEnds()).to.not.eq(0)
         })
       })
 
@@ -158,11 +155,9 @@ describe('PolicyVotes [@group=8]', () => {
 
             await proxiedPolicyVotes.vote(true)
 
-            assert(
-              startStake
-                .add(await eco.balanceOf(await alice.getAddress()))
-                .eq(await proxiedPolicyVotes.totalStake())
-            )
+            expect(
+              startStake.add(await eco.balanceOf(await alice.getAddress()))
+            ).to.equal(await proxiedPolicyVotes.totalStake())
           })
 
           it('increases the yes stake on yes', async () => {
@@ -299,11 +294,9 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2000), one.mul(3000))
 
-              assert(
-                startStake
-                  .add(await eco.balanceOf(await alice.getAddress()))
-                  .eq(await proxiedPolicyVotes.totalStake())
-              )
+              expect(
+                startStake.add(await eco.balanceOf(await alice.getAddress()))
+              ).to.eq(await proxiedPolicyVotes.totalStake())
             })
 
             it('when some of the balance is voted', async () => {
@@ -311,10 +304,8 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(1500), one.mul(200))
 
-              assert(
-                startStake
-                  .add(one.mul(1700))
-                  .eq(await proxiedPolicyVotes.totalStake())
+              expect(startStake.add(one.mul(1700))).to.eq(
+                await proxiedPolicyVotes.totalStake()
               )
             })
           })
@@ -538,11 +529,11 @@ describe('PolicyVotes [@group=8]', () => {
         })
 
         it('does not enact the policies', async () => {
-          assert.equal(await util.policyFor(policy, adoptedPolicyIdHash), 0)
+          expect(await util.policyFor(policy, adoptedPolicyIdHash)).to.be.zero
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          assert.equal(await util.policyFor(policy, votesPolicyIdHash), 0)
+          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
 
@@ -560,11 +551,11 @@ describe('PolicyVotes [@group=8]', () => {
             'SampleHandler',
             await util.policyFor(policy, adoptedPolicyIdHash)
           )
-          assert.equal((await newPolicy.id()).toString(), 0)
+          expect(await newPolicy.id()).to.be.zero
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          assert.equal(await util.policyFor(policy, votesPolicyIdHash), 0)
+          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
     })

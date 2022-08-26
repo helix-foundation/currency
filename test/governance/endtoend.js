@@ -16,7 +16,6 @@
  */
 
 const { ethers } = require('hardhat')
-const { assert } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
@@ -62,16 +61,6 @@ describe('Production Policy Change [@group=4]', () => {
   it('Constructs the proposals', async () => {
     makerich = await deploy('MakeRich', await accounts[5].getAddress(), 1000000)
     backdoor = await deploy('MakeBackdoor', await accounts[2].getAddress())
-  })
-
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
   })
 
   it('Kicks off a proposal round', async () => {
@@ -145,12 +134,11 @@ describe('Production Policy Change [@group=4]', () => {
       ['string'],
       ['Backdoor']
     )
-    assert.equal(await util.policyFor(policy, backdoorHash), 0)
+    expect(await util.policyFor(policy, backdoorHash)).to.be.zero
   })
 
   it('Celebrates accounts[5]', async () => {
-    assert.equal(
-      (await eco.balanceOf(await accounts[5].getAddress())).toString(),
+    expect(await eco.balanceOf(await accounts[5].getAddress())).to.equal(
       1000000
     )
   })

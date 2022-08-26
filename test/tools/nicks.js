@@ -49,14 +49,13 @@ describe('Nicks Method', () => {
     it('attaches sender information', async () => {
       const decorated = decorateTx(tx)
 
-      assert.equal(decorated.from, EthereumUtil.bufferToHex(tx.from))
+      expect(decorated.from).to.equal(EthereumUtil.bufferToHex(tx.from))
     })
 
     it('attaches recipient information', async () => {
       const decorated = decorateTx(tx)
 
-      assert.equal(
-        decorated.to,
+      expect(decorated.to).to.equal(
         EthereumUtil.bufferToHex(
           EthereumUtil.generateAddress(tx.from, tx.nonce)
         )

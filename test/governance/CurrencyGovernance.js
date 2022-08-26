@@ -1,11 +1,7 @@
 /* eslint-disable no-underscore-dangle, no-console */
 
-const { expect } = require('chai')
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 
-const { BigNumber } = ethers
 const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
@@ -30,7 +26,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       [x[0], x[1], x[2]]
     )
 
-  const votingReward = '1000000000000000'
+  const votingReward = ethers.BigNumber.from(1000000000000000)
   // 76000000000000000
 
   before(async () => {
@@ -70,7 +66,7 @@ describe('CurrencyGovernance [@group=4]', () => {
             34,
             35,
             36,
-            BigNumber.from('1000000000000000000'),
+            ethers.BigNumber.from('1000000000000000000'),
             ''
           )
         ).to.be.revertedWith('Only trusted nodes can call this method')
@@ -93,7 +89,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               34,
               35,
               36,
-              BigNumber.from('1000000000000000000'),
+              ethers.BigNumber.from('1000000000000000000'),
               `${maxString}!`
             )
         ).to.be.revertedWith('Description is too long')
@@ -105,7 +101,7 @@ describe('CurrencyGovernance [@group=4]', () => {
             34,
             35,
             36,
-            BigNumber.from('1000000000000000000'),
+            ethers.BigNumber.from('1000000000000000000'),
             maxString
           )
       })
@@ -113,7 +109,14 @@ describe('CurrencyGovernance [@group=4]', () => {
       it('Allows trustees to propose', async () => {
         await borda
           .connect(bob)
-          .propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            33,
+            34,
+            35,
+            36,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         const p = await borda.proposals(await bob.getAddress())
         expect(p.inflationMultiplier).to.equal('1000000000000000000')
@@ -134,7 +137,14 @@ describe('CurrencyGovernance [@group=4]', () => {
       it('Allows removing proposals', async () => {
         await borda
           .connect(bob)
-          .propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            33,
+            34,
+            35,
+            36,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         await borda.connect(bob).unpropose()
 
@@ -145,7 +155,14 @@ describe('CurrencyGovernance [@group=4]', () => {
       it('Emits ProposalCreation event when proposal is created', async () => {
         await borda
           .connect(bob)
-          .propose(33, 34, 35, 36, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            33,
+            34,
+            35,
+            36,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         const [evt] = await borda.queryFilter('ProposalCreation')
         expect(evt.args.trusteeAddress).to.equal(await bob.getAddress())
@@ -161,13 +178,34 @@ describe('CurrencyGovernance [@group=4]', () => {
       beforeEach(async () => {
         await borda
           .connect(dave)
-          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            10,
+            10,
+            10,
+            10,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
         await borda
           .connect(charlie)
-          .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            20,
+            20,
+            20,
+            20,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
         await borda
           .connect(bob)
-          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            30,
+            30,
+            30,
+            30,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         await time.increase(3600 * 24 * 10.1)
       })
@@ -245,7 +283,14 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         await borda
           .connect(bob)
-          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            30,
+            30,
+            30,
+            30,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         await time.increase(3600 * 24 * 10.1)
         await borda
@@ -284,7 +329,14 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         await borda
           .connect(bob)
-          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            30,
+            30,
+            30,
+            30,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         await time.increase(3600 * 24 * 10.1)
         await borda
@@ -303,7 +355,14 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         await borda
           .connect(bob)
-          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            30,
+            30,
+            30,
+            30,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
 
         await time.increase(3600 * 24 * 10.1)
         await borda
@@ -368,19 +427,54 @@ describe('CurrencyGovernance [@group=4]', () => {
         beforeEach(async () => {
           await borda
             .connect(dave)
-            .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              10,
+              10,
+              10,
+              10,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
           await borda
             .connect(charlie)
-            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              20,
+              20,
+              20,
+              20,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
           await borda
             .connect(bob)
-            .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              30,
+              30,
+              30,
+              30,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
           await borda
             .connect(niko)
-            .propose(40, 40, 40, 40, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              40,
+              40,
+              40,
+              40,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
           await borda
             .connect(mila)
-            .propose(50, 50, 50, 50, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              50,
+              50,
+              50,
+              50,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
 
           await time.increase(3600 * 24 * 10.1)
 
@@ -528,15 +622,15 @@ describe('CurrencyGovernance [@group=4]', () => {
             // bob and dave do reveal
             expect(
               await trustedNodes.votingRecord(await bob.getAddress())
-            ).to.equal(BigNumber.from(1))
+            ).to.equal(1)
             expect(
               await trustedNodes.votingRecord(await dave.getAddress())
-            ).to.equal(BigNumber.from(1))
+            ).to.equal(1)
 
             // charlie didn't reveal
             expect(
               await trustedNodes.votingRecord(await charlie.getAddress())
-            ).to.equal(BigNumber.from(0))
+            ).to.equal(0)
           })
 
           describe('reward withdrawal', async () => {
@@ -559,7 +653,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               // rewards for the current year and the next year
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((2 * trustees * 26 * votingReward).toString())
+                votingReward.mul(2 * trustees * 26)
               )
               await time.increase(3600 * 24 * 14 * 26)
 
@@ -567,7 +661,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                 .to.emit(trustedNodes, 'VotingRewardRedemption')
                 .withArgs(
                   await trustedNodes.connect(alice).hoard(),
-                  BigNumber.from((rewards * votingReward).toString())
+                  votingReward.mul(rewards)
                 )
 
               daveCurrentVotes = await trustedNodes
@@ -595,7 +689,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               expect(
                 await trustedNodes.lastYearVotingRecord(await dave.getAddress())
-              ).to.equal(BigNumber.from(0))
+              ).to.equal(0)
             })
 
             it('pays out trustee appropriately in complex case', async () => {
@@ -609,7 +703,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               // dave reveals once in year 1
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((2 * trustees * 26 * votingReward).toString())
+                votingReward.mul(2 * trustees * 26)
               )
               await time.increase(3600 * 24 * 14 * 26)
               const tx = await trustedNodes.connect(dave).annualUpdate()
@@ -645,7 +739,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                   10,
                   10,
                   10,
-                  BigNumber.from('1000000000000000000'),
+                  ethers.BigNumber.from('1000000000000000000'),
                   ''
                 )
               await time.increase(3600 * 24 * 10.1)
@@ -702,7 +796,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                   10,
                   10,
                   10,
-                  BigNumber.from('1000000000000000000'),
+                  ethers.BigNumber.from('1000000000000000000'),
                   ''
                 )
               await time.increase(3600 * 24 * 10.1)
@@ -724,7 +818,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((trustees * 26 * votingReward).toString())
+                votingReward.mul(trustees * 26)
               )
               await trustedNodes.connect(dave).annualUpdate()
 
@@ -844,7 +938,14 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         await borda
           .connect(dave)
-          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+          .propose(
+            10,
+            10,
+            10,
+            10,
+            ethers.BigNumber.from('1000000000000000000'),
+            ''
+          )
         await time.increase(3600 * 24 * 10)
 
         await borda.connect(dave).commit(hash(davevote2))
@@ -886,13 +987,33 @@ describe('CurrencyGovernance [@group=4]', () => {
         it(`testing revealing with ${i + 4} proposals`, async () => {
           await borda
             .connect(dave)
-            .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              10,
+              10,
+              10,
+              10,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
           await borda
             .connect(charlie)
-            .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000', ''))
+            .propose(
+              20,
+              20,
+              20,
+              20,
+              ethers.BigNumber.from('1000000000000000000', '')
+            )
           await borda
             .connect(bob)
-            .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+            .propose(
+              30,
+              30,
+              30,
+              30,
+              ethers.BigNumber.from('1000000000000000000'),
+              ''
+            )
 
           for (let j = 0; j < additionalTrustees.length; j++) {
             await borda
@@ -902,7 +1023,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                 40,
                 40,
                 40,
-                BigNumber.from('1000000000000000000'),
+                ethers.BigNumber.from('1000000000000000000'),
                 ''
               )
           }

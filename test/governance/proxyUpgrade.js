@@ -10,8 +10,6 @@
  * This kind of proxy upgrade does not change the address stored in the policy.
  */
 
-const { expect } = require('chai')
-
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
@@ -85,7 +83,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract has data', async () => {
     const numTrustees = await poodleCheck.numTrustees()
 
-    expect(numTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(numTrustees).to.equal(trustednodes.length)
   })
 
   it('Constructs the proposals', async () => {
@@ -98,16 +96,6 @@ describe('Proxy Policy Change [@group=9]', () => {
     )
     const name = await makeTrustedPoodles.name()
     expect(name).to.equal('MakeTrustedPoodles')
-  })
-
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
   })
 
   it('Kicks off a proposal round', async () => {
@@ -183,7 +171,7 @@ describe('Proxy Policy Change [@group=9]', () => {
 
   it('Checks that the new trustee contract retains all old data', async () => {
     const poodleTrustees = await poodleCheck.numTrustees()
-    expect(poodleTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(poodleTrustees).to.equal(trustednodes.length)
 
     for (let i = 0; i < trustednodes.length; i++) {
       /* eslint-disable no-await-in-loop */

@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat')
-const { expect } = require('chai')
+
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const { deploy } = require('../utils/contracts')
 const { singletonsFixture } = require('../utils/fixtures')
@@ -71,11 +71,10 @@ describe('Policed [@group=11]', () => {
       }
       await Promise.all(
         Object.entries(ids).map(async ([key, value]) => {
-          assert.equal(
+          expect(
             await commander[`GET_${key}`](),
-            ethers.utils.solidityKeccak256(['string'], [value]),
             `${key} != keccak(${value})`
-          )
+          ).to.equal(ethers.utils.solidityKeccak256(['string'], [value]))
         })
       )
     })
@@ -128,11 +127,11 @@ describe('Policed [@group=11]', () => {
   })
 
   it('Should set values on the dummy object', async () => {
-    assert.equal(await testPoliced.value(), 1)
+    expect(await testPoliced.value()).to.equal(1)
     await commander
       .connect(accounts[2])
       .command(testPoliced.address, policer.address)
-    assert.equal(await testPoliced.value(), 3)
+    expect(await testPoliced.value()).to.equal(3)
   })
 
   it('does not allow non-approved callers to run internalCommand', async () => {
@@ -173,10 +172,7 @@ describe('Policed [@group=11]', () => {
     const { testPoliced: policied } = await fixture()
     await policied.cloneMe()
     const clone = await deploy('DummyPolicedUtils', await policied.c())
-    assert.equal(
-      (await policied.value()).toString(),
-      (await clone.value()).toString()
-    )
+    expect(await policied.value()).to.equal(await clone.value())
   })
 
   it('Clones should not be cloneable', async () => {

@@ -9,8 +9,6 @@
  * contract can replace the old one.
  */
 
-const { expect } = require('chai')
-
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')

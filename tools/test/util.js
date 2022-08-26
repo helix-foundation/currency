@@ -8,8 +8,6 @@ const { singletons } = require('@openzeppelin/test-helpers')
 const Deploy = require('../deploy')
 const { deploy } = require('../../test/utils/contracts')
 
-const { trace } = require('./trace')
-
 // const totalECOx = '1000000000000000000000';
 
 exports.deployPolicy = async (
@@ -104,5 +102,3 @@ exports.policyFor = async (policy, hash) => {
   const erc1820 = await singletons.ERC1820Registry()
   return erc1820.getInterfaceImplementer(policy.address, hash)
 }
-
-exports.trace = trace

@@ -1,9 +1,5 @@
 /* eslint-disable no-console, no-underscore-dangle */
 
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
-
-const { BigNumber } = ethers
 const { signTypedData } = require('@metamask/eth-sig-util')
 
 const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
@@ -177,11 +173,7 @@ describe('ECO [@group=1]', () => {
         const recipient = await accounts[2].getAddress()
         await expect(eco.connect(accounts[1]).transfer(recipient, amount))
           .to.emit(eco, 'Transfer')
-          .withArgs(
-            await accounts[1].getAddress(),
-            recipient,
-            amount.toString()
-          )
+          .withArgs(await accounts[1].getAddress(), recipient, amount)
       })
 
       it('emits a BaseValueTransfer event', async () => {
@@ -192,11 +184,7 @@ describe('ECO [@group=1]', () => {
         const gonsAmount = inflationMult.mul(amount)
         await expect(eco.connect(accounts[1]).transfer(recipient, amount))
           .to.emit(eco, 'BaseValueTransfer')
-          .withArgs(
-            await accounts[1].getAddress(),
-            recipient,
-            gonsAmount.toString()
-          )
+          .withArgs(await accounts[1].getAddress(), recipient, gonsAmount)
       })
 
       it('returns true', async () => {
@@ -273,7 +261,7 @@ describe('ECO [@group=1]', () => {
         const source = await accounts[1].getAddress()
         await expect(eco.connect(accounts[1]).burn(source, amount))
           .to.emit(eco, 'Transfer')
-          .withArgs(source, ethers.constants.AddressZero, amount.toString())
+          .withArgs(source, ethers.constants.AddressZero, amount)
       })
     })
   })
@@ -735,7 +723,7 @@ describe('ECO [@group=1]', () => {
             .withArgs(
               await from.getAddress(),
               await to.getAddress(),
-              allowanceParts[0].toString()
+              allowanceParts[0]
             )
         })
 
@@ -830,7 +818,7 @@ describe('ECO [@group=1]', () => {
                   .withArgs(
                     await from.getAddress(),
                     await to.getAddress(),
-                    part.toString()
+                    part
                   )
               })
             )
@@ -941,7 +929,7 @@ describe('ECO [@group=1]', () => {
         .withArgs(
           ethers.constants.AddressZero,
           await accounts[1].getAddress(),
-          amount.toString()
+          amount
         )
     })
 
@@ -957,7 +945,7 @@ describe('ECO [@group=1]', () => {
         .withArgs(
           await accounts[1].getAddress(),
           ethers.constants.AddressZero,
-          burnAmount.toString()
+          burnAmount
         )
     })
   })
@@ -1099,7 +1087,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('enableDelegationTo', () => {
@@ -1421,7 +1409,7 @@ describe('ECO [@group=1]', () => {
         .connect(otherDelegatee)
         .enableDelegationTo({ gasLimit: 1000000 })
 
-      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateBySig', () => {
@@ -1676,7 +1664,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateAmount', () => {
