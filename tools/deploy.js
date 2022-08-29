@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign, no-console */
 // # Deploying the Currency Contracts
 // Currency deployment is broke into 4 distinct stages, each laying the
-// foundation for the following stages. The process depends on web3-1.0, and the
+// foundation for the following stages. The process depends on ethers.js, and the
 // compiled JSON ABIs and deploy transaction bytecode for the contracts
 // involved. It also depends on creating and sending a pre-generated and pre-signed
 // transaction to bootstrap the process. This transaction is generated using Nick's Method to
@@ -23,42 +23,34 @@
  */
 
 // ## Dependencies
-// const { web3 } = require('@openzeppelin/test-helpers/src/setup')
 const nick = require('./nicks')
+const ethers = require('ethers')
 
 let BLOCK_GAS_LIMIT = 6000000
-const importPath = 'artifacts'
-
-// if (process.env.IS_COVERAGE === '1') {
-//  importPath = '.coverage_artifacts';
-// } else {
-//  importPath = 'build';
-// }
 
 // ### Contract ABIs and Bytecode
 /* eslint-disable import/no-unresolved, import/no-dynamic-require */
-const PolicyABI = require(`../${importPath}/contracts/policy/Policy.sol/Policy.json`)
-const PolicyTestABI = require(`../${importPath}/contracts/test/Backdoor.sol/PolicyTest.json`)
-const PolicyInitABI = require(`../${importPath}/contracts/policy/PolicyInit.sol/PolicyInit.json`)
-const EcoBootstrapABI = require(`../${importPath}/contracts/deploy/EcoBootstrap.sol/EcoBootstrap.json`)
-const EcoInitializableABI = require(`../${importPath}/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`)
-const TimedPoliciesABI = require(`../${importPath}/contracts/governance/TimedPolicies.sol/TimedPolicies.json`)
-const TrustedNodesABI = require(`../${importPath}/contracts/governance/monetary/TrustedNodes.sol/TrustedNodes.json`)
-const rootHashProposalABI = require(`../${importPath}/contracts/governance/monetary/InflationRootHashProposal.sol/InflationRootHashProposal.json`)
-const InflationContractABI = require(`../${importPath}/contracts/governance/monetary/RandomInflation.sol/RandomInflation.json`)
-const CurrencyGovernanceABI = require(`../${importPath}/contracts/governance/monetary/CurrencyGovernance.sol/CurrencyGovernance.json`)
-const CurrencyTimerContractABI = require(`../${importPath}/contracts/governance/CurrencyTimer.sol/CurrencyTimer.json`)
-const LockupContractABI = require(`../${importPath}/contracts/governance/monetary/Lockup.sol/Lockup.json`)
-const PolicyProposalContractABI = require(`../${importPath}/contracts/governance/community/PolicyProposals.sol/PolicyProposals.json`)
-const PolicyVotesContractABI = require(`../${importPath}/contracts/governance/community/PolicyVotes.sol/PolicyVotes.json`)
-const ECOxStakingContractABI = require(`../${importPath}/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json`)
-const ECOABI = require(`../${importPath}/contracts/currency/ECO.sol/ECO.json`)
-// const IERC20ABI = require(`../${importPath}/contracts/IERC20.json`);
-const EcoFaucetABI = require(`../${importPath}/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`)
-const EcoTestCleanupABI = require(`../${importPath}/contracts/deploy/EcoTestCleanup.sol/EcoTestCleanup.json`)
-const TokenInitABI = require(`../${importPath}/contracts/currency/TokenInit.sol/TokenInit.json`)
-const VDFVerifierABI = require(`../${importPath}/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
-const ECOxABI = require(`../${importPath}/contracts/currency/ECOx.sol/ECOx.json`)
+const PolicyABI = require(`../artifacts/contracts/policy/Policy.sol/Policy.json`)
+const PolicyTestABI = require(`../artifacts/contracts/test/Backdoor.sol/PolicyTest.json`)
+const PolicyInitABI = require(`../artifacts/contracts/policy/PolicyInit.sol/PolicyInit.json`)
+const EcoBootstrapABI = require(`../artifacts/contracts/deploy/EcoBootstrap.sol/EcoBootstrap.json`)
+const EcoInitializableABI = require(`../artifacts/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`)
+const TimedPoliciesABI = require(`../artifacts/contracts/governance/TimedPolicies.sol/TimedPolicies.json`)
+const TrustedNodesABI = require(`../artifacts/contracts/governance/monetary/TrustedNodes.sol/TrustedNodes.json`)
+const rootHashProposalABI = require(`../artifacts/contracts/governance/monetary/InflationRootHashProposal.sol/InflationRootHashProposal.json`)
+const InflationContractABI = require(`../artifacts/contracts/governance/monetary/RandomInflation.sol/RandomInflation.json`)
+const CurrencyGovernanceABI = require(`../artifacts/contracts/governance/monetary/CurrencyGovernance.sol/CurrencyGovernance.json`)
+const CurrencyTimerContractABI = require(`../artifacts/contracts/governance/CurrencyTimer.sol/CurrencyTimer.json`)
+const LockupContractABI = require(`../artifacts/contracts/governance/monetary/Lockup.sol/Lockup.json`)
+const PolicyProposalContractABI = require(`../artifacts/contracts/governance/community/PolicyProposals.sol/PolicyProposals.json`)
+const PolicyVotesContractABI = require(`../artifacts/contracts/governance/community/PolicyVotes.sol/PolicyVotes.json`)
+const ECOxStakingContractABI = require(`../artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json`)
+const ECOABI = require(`../artifacts/contracts/currency/ECO.sol/ECO.json`)
+const EcoFaucetABI = require(`../artifacts/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`)
+const EcoTestCleanupABI = require(`../artifacts/contracts/deploy/EcoTestCleanup.sol/EcoTestCleanup.json`)
+const TokenInitABI = require(`../artifacts/contracts/currency/TokenInit.sol/TokenInit.json`)
+const VDFVerifierABI = require(`../artifacts/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
+const ECOxABI = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json`)
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
@@ -70,12 +62,10 @@ async function parseFlags(options) {
   }
 
   if (!options.gasPrice) {
-    options.gasPrice = `0x${web3.utils
-      .toBN(await web3.eth.getGasPrice())
-      .muln(options.gasMultiplier)
-      .toString(16)}`
+    options.gasPrice = (await options.signer.getGasPrice())
+      .mul(options.gasMultiplier)
   } else {
-    options.gasPrice = web3.utils.toBN(options.gasPrice)
+    options.gasPrice = ethers.BigNumber.from(options.gasPrice)
   }
 
   if (!options.randomVDFDifficulty) {
@@ -98,25 +88,17 @@ async function parseFlags(options) {
   }
 
   if (options.initialECO) {
-    // options.initialECOAddr = options.initialECO.map(
-    //   (initial) => initial.address
-    // )
-    options.initialECOAmount = options.initialECO.map(
+    options.initialECOSupply = options.initialECO.map(
       (initial) => initial.balance
-    )
-    options.initialECOSupply = options.initialECOAmount.reduce((a, b) =>
-      web3.utils.toBN(a).add(web3.utils.toBN(b)).toString()
+    ).reduce((a, b) =>
+      ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
     )
   }
   if (options.initialECOx) {
-    // options.initialECOxAddr = options.initialECOx.map(
-    //   (initial) => initial.address
-    // )
-    options.initialECOxAmount = options.initialECOx.map(
+    options.initialECOxSupply = options.initialECOx.map(
       (initial) => initial.balance
-    )
-    options.initialECOxSupply = options.initialECOxAmount.reduce((a, b) =>
-      web3.utils.toBN(a).add(web3.utils.toBN(b)).toString()
+    ).reduce((a, b) =>
+      ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
     )
   }
 
@@ -160,9 +142,8 @@ async function parseFlags(options) {
 // network (i.e. they're higher than they need to be).
 //
 async function deployStage1(options) {
-  let bootstrapGasCost
   let bootstrapGas
-  const limit = (await web3.eth.getBlock('latest')).gasLimit
+  const limit = (await options.ethersProvider.getBlock('latest')).gasLimit
 
   if (options.production) {
     if (BLOCK_GAS_LIMIT > 0.95 * limit) {
@@ -170,27 +151,25 @@ async function deployStage1(options) {
         `Gas limit (${BLOCK_GAS_LIMIT}) too high compared to block limit (${limit}); unlikely to succeed in deploying`
       )
     }
-    bootstrapGasCost = web3.utils.toWei(web3.utils.toBN(80), 'gwei')
     // bootstrapGas = 4538418; // old estimate, included 20 proxies
     bootstrapGas = 1526410
   } else {
     BLOCK_GAS_LIMIT = limit
-    bootstrapGasCost = options.gasPrice
-    // bootstrapGas = BLOCK_GAS_LIMIT; // try the real gas amount in test to keep it current
     bootstrapGas = 1700000
-    if (process.env.IS_COVERAGE === '1') {
-      bootstrapGas = limit
-    }
   }
 
   if (options.verbose) {
     console.log(
-      `Deploying with gasPrice ${web3.utils.fromWei(
-        options.gasPrice,
+      `Deploying with gasPrice ${ethers.utils.formatUnits(
+        options.gasPrice.toString(),
         'gwei'
       )} gwei and limit of ${BLOCK_GAS_LIMIT}/${limit} gas`
     )
   }
+  console.log(ethers.utils.defaultAbiCoder.encode(
+    ['address', 'uint8'],
+    [options.account, options.numPlaceholders]
+  ))
   // ### Bootstrap Transaction Data
   const stage1 = JSON.parse(
     JSON.stringify(
@@ -199,8 +178,8 @@ async function deployStage1(options) {
           EcoBootstrapABI.bytecode,
           '0x1234',
           bootstrapGas,
-          bootstrapGasCost,
-          web3.eth.abi.encodeParameters(
+          options.gasPrice,
+          ethers.utils.defaultAbiCoder.encode(
             ['address', 'uint8'],
             [options.account, options.numPlaceholders]
           )
