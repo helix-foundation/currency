@@ -26,7 +26,6 @@
     "generate": "tools/nicks.js $(pwd)/build/contracts/EcoBootstrap.json -s 0x1234 -d 0x00000000000000000000000028e69be378b59264018b11616fbbd15eb345668c -o bootstrap.json -g 3038418",
     "prepack": "npm run build",
     "deploy": "npm run build && node tools/eco.js --config",
-    "deploy:dev": "node tools/eco.js --supervise --ganache --deploy --devmode",
     "test:all": "yarn test && yarn test:hardhat",
     "typechain": "hardhat typechain",
     "test:hardhat": "yarn typechain && hardhat test test/**/*.ts"

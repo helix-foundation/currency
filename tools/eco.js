@@ -1,17 +1,10 @@
 /* eslint-disable no-console */
-
-const Web3 = require('web3')
-const ethers = require('ethers')
-
-global.web3 = new Web3()
-let ethersProvider
-
+const { ethers } = require('hardhat')
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
 const bip39 = require('bip39')
 const { hdkey } = require('ethereumjs-wallet')
-const express = require('express')
 const ganache = require('ganache-cli')
 const { deployTokens, deployGovernance } = require('./deploy')
 
@@ -26,10 +19,6 @@ function loadConfig(fileNamePath) {
     fs.readFileSync(path.resolve(__dirname, `${stem}${fileNamePath}`))
   )
 }
-
-const ECOABI = require('../artifacts/contracts/currency/ECO.sol/ECO.json')
-const PolicyABI = require('../artifacts/contracts/policy/Policy.sol/Policy.json')
-const EcoFaucetABI = require('../artifacts/contracts/deploy/EcoFaucet.sol/EcoFaucet.json')
 
 let options
 
@@ -57,16 +46,6 @@ async function parseOptions() {
       defaultValue: false,
     },
     {
-      name: 'devmode',
-      type: Boolean,
-      defaultValue: false,
-    },
-    {
-      name: 'selftest',
-      type: Boolean,
-      defaultValue: false,
-    },
-    {
       name: 'deployTokens',
       type: Boolean,
       defaultValue: false,
@@ -86,10 +65,6 @@ async function parseOptions() {
     },
     {
       name: 'from',
-      type: String,
-    },
-    {
-      name: 'erc20',
       type: String,
     },
     {
@@ -119,7 +94,7 @@ async function parseOptions() {
   }
 }
 
-async function initWeb3() {
+async function initEthers() {
   if (options.ganache) {
     const serverAddr = '0.0.0.0'
     let serverPort
@@ -146,39 +121,31 @@ async function initWeb3() {
 
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`)
     })
-    global.web3 = new Web3(options.ganacheServer.provider)
-    ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc)
+    options.ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc)
   } else {
-    ethersProvider = new ethers.providers.JsonRpcProvider(
+    options.ethersProvider = new ethers.providers.JsonRpcProvider(
       options.webrpc || defaultRpc
-    )
-  }
-
-  const sync = await web3.eth.isSyncing()
-  if (sync !== false) {
-    throw Error(
-      `Node is still synchronizing ${sync.currentBlock}/${sync.highestBlock}`
     )
   }
 }
 
 async function initUsers() {
   let account
-  let chumpAccount
   if (!options.production) {
-    ;[chumpAccount] = await ethersProvider.listAccounts()
+    let chumpAccount
+    ;[chumpAccount] = await options.ethersProvider.listAccounts()
     options.chumpAccount = chumpAccount
+    options.chumpSigner = await options.ethersProvider.getSigner(chumpAccount)
     console.log(`chump account is ${options.chumpAccount}`)
-
-    options.signer = await ethersProvider.getSigner()
   }
 
   if (options.from) {
-    if (web3.utils.isAddress(options.from)) {
+    if (ethers.utils.isAddress(options.from)) {
       account = options.from
+      options.signer = await options.ethersProvider.getSigner(account)
     } else {
       let priv
-      if (web3.utils.isHexStrict(options.from)) {
+      if (ethers.utils.isHexString(options.from, 32)) {
         priv = options.from
       } else {
         const seed = await bip39.mnemonicToSeed(options.from)
@@ -186,45 +153,33 @@ async function initUsers() {
         const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
         priv = `0x${myWallet.getPrivateKey().toString('hex')}`
       }
-      const a = web3.eth.accounts.privateKeyToAccount(priv)
-      web3.eth.accounts.wallet.add(a)
-      account = a.address
+      account = ethers.utils.computeAddress(priv)
+      options.signer = new ethers.Wallet(priv, options.ethersProvider)
     }
   } else {
-    account = chumpAccount
-  }
-  if (!account) {
-    // Use fallback account
-    const a = web3.eth.accounts.privateKeyToAccount(
-      '0x8981f8cbe9a797b9adac0730da85582b2164114e934e2b6aed5de5c785c0b4a6'
-    )
-    web3.eth.accounts.wallet.add(a)
-    account = a.address
+    account = options.chumpAccount
+    options.signer = options.chumpSigner
   }
 
-  // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
-  const balance = await ethersProvider.getBalance(account)
+  const balance = await options.ethersProvider.getBalance(account)
 
   if (balance < 1) {
     console.log(
       `Deployment account ${account} should have at least 1 Ether, has only ${balance}`
     )
-    const chumpBalance = web3.utils.fromWei(
-      await web3.eth.getBalance(chumpAccount),
-      'ether'
+    const chumpBalance = ethers.utils.formatEther(
+      await options.ethersProvider.getBalance(options.chumpAccount)
     )
     console.log(
-      `funding account from ${chumpAccount} which has ${chumpBalance} ether`
+      `funding account from ${options.chumpAccount} which has ${chumpBalance} ether`
     )
-    await web3.eth.sendTransaction({
-      from: chumpAccount,
+
+    await options.chumpSigner.sendTransaction({
       to: account,
-      gas: 25000,
-      value: web3.utils.toWei('1000', 'ether'),
+      value: ethers.utils.parseEther(1000),
     })
-    const fundedBalance = web3.utils.fromWei(
-      await web3.eth.getBalance(account),
-      'ether'
+    const fundedBalance = ethers.utils.formatEther(
+      await web3.eth.getBalance(account)
     )
     console.log(
       `Deployment account ${account} now has balance ${fundedBalance}`
@@ -232,124 +187,52 @@ async function initUsers() {
   }
 
   // Verify account works
-  await web3.eth.sendTransaction({
-    from: account,
+  await options.signer.sendTransaction({
     to: account,
-    gas: 25000,
-    value: web3.utils.toWei('1', 'gwei'),
+    value: ethers.utils.parseUnits(1, 'gwei'),
   })
 
-  console.log(`using account ${account} for deployment`)
   options.account = account
+  console.log(`using account ${options.account} for deployment`)
 }
 
 async function deployEco() {
-  if (options.devmode && options.trustednodes) {
-    const trustednodes = []
-    trustednodes.push(...options.trustednodes)
-    trustednodes.unshift(options.account)
-    await Promise.all(
-      trustednodes.map((a) =>
-        web3.eth.sendTransaction({
-          from: options.account,
-          to: a,
-          value: web3.utils.toWei('50', 'ether'),
-        })
-      )
-    )
-  }
   if (options.deployTokens) {
     options = await deployTokens(options)
     const printOptions = options
     delete printOptions.correctPolicyABI
     delete printOptions.ganacheServer
+    delete printOptions.ethersProvider
+    delete printOptions.signer
     console.log(JSON.stringify(printOptions, null, 2))
   }
   if (options.deployGovernance) {
     options = await deployGovernance(options)
-
-    if (options.devmode) {
-      const eco = new web3.eth.Contract(ECOABI.abi, options.eco)
-      const policy = new web3.eth.Contract(
-        PolicyABI.abi,
-        await eco.methods.policy().call()
-      )
-      const faucetaddr = await policy.methods
-        .policyFor(web3.utils.soliditySha3('Faucet'))
-        .call()
-      const faucet = new web3.eth.Contract(EcoFaucetABI.abi, faucetaddr)
-
-      const mintAmount = web3.utils.toWei('500000', 'ether')
-      await faucet.methods
-        .mint(options.account, mintAmount)
-        .send({ from: options.account, gas: 1000000 })
-    }
   }
   console.log(`ECO token at ${options.eco.options.address}`)
   console.log(`ECOx token at ${options.ecox.options.address}`)
-}
-
-async function findPolicy() {
-  if (options.eco && options.deployGovernance) {
-    const root = new web3.eth.Contract(ECOABI.abi, options.eco.options.address)
-    options.policy = await root.methods.policy().call()
-    console.log(`Policy at ${options.policy}`)
-  }
-}
-
-async function startExpress() {
-  if (options.devmode && options.policy) {
-    const app = express()
-    app.get('/', (req, res) => res.send(options.policy))
-    options.expressServer = app.listen(8548)
-  }
+  console.log(`Policy at ${options.policyProxyAddress}`)
 }
 
 async function supervise() {
   if (options.supervise) {
-    if (options.selftest) {
-      // const supervisor = new Supervisor(defaultRpc, options.policy);
-      // await supervisor.processAllBlocks();
-    } else {
-      console.log('storing supervisor inputs')
-      const content = `${defaultRpc}\n${options.policy}`
-      fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
-        if (e) {
-          console.log(e)
-        }
-      })
-      // await Supervisor.start(
-      //   defaultRpc,
-      //   options.policy,
-      // );
-    }
-  }
-}
-
-async function closeTest() {
-  if (options.selftest) {
-    if (web3.currentProvider.connection) {
-      await web3.currentProvider.connection.close()
-    }
-    if (options.expressServer) {
-      await options.expressServer.close()
-    }
-    if (options.ganacheServer) {
-      await options.ganacheServer.close()
-    }
+    console.log('storing supervisor inputs')
+    const content = `${options.webrpc ? options.webrpc : defaultRpc}\n${options.policyProxyAddress}`
+    fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
+      if (e) {
+        console.log(e)
+      }
+    })
   }
 }
 
 ;(async () => {
   try {
     await parseOptions()
-    await initWeb3()
+    await initEthers()
     await initUsers()
     await deployEco()
-    await findPolicy()
-    await startExpress()
     await supervise()
-    await closeTest()
   } catch (e) {
     console.log(e.toString(), e)
   }
