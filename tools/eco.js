@@ -10,7 +10,6 @@ const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
 const bip39 = require('bip39')
-const { hdkey } = require('ethereumjs-wallet')
 const express = require('express')
 const ganache = require('ganache-cli')
 const { deployTokens, deployGovernance } = require('./deploy')
@@ -181,10 +180,10 @@ async function initUsers() {
       if (web3.utils.isHexStrict(options.from)) {
         priv = options.from
       } else {
-        const seed = await bip39.mnemonicToSeed(options.from)
-        const hdwallet = hdkey.fromMasterSeed(seed)
-        const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
-        priv = `0x${myWallet.getPrivateKey().toString('hex')}`
+        // const seed = await bip39.mnemonicToSeed(options.from)
+        // const hdwallet = hdkey.fromMasterSeed(seed)
+        // const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
+        // priv = `0x${myWallet.getPrivateKey().toString('hex')}`
       }
       const a = web3.eth.accounts.privateKeyToAccount(priv)
       web3.eth.accounts.wallet.add(a)
