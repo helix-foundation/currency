@@ -1,6 +1,5 @@
 const fs = require('fs')
-const { Transaction } = require('ethereumjs-tx')
-const EthereumUtil = require('ethereumjs-util')
+const ethers = require('ethers')
 const commandLineArgs = require('command-line-args')
 
 /* Constants used in ECDSA for generating sigatures.
@@ -74,18 +73,22 @@ const OPT_DEFS = [
  *                    the result forms the data field of the transaction object.
  */
 function generateTx(bytecode, s, gas, gasPrice, paramdata) {
-  const tx = new Transaction({
-    nonce: 0,
-    gasPrice,
-    gasLimit: gas,
-    value: 0,
-    data:
-      bytecode +
-      (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : ''),
-    v: ECDSA_V_VALUE,
-    r: ECDSA_R_VALUE,
-    s,
-  })
+  const tx = ethers.utils.serializeTransaction(
+    {
+      nonce: 0,
+      gasPrice,
+      gasLimit: gas,
+      value: 0,
+      data:
+        bytecode +
+        (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : '')
+    },
+    {
+      v: ECDSA_V_VALUE,
+      r: ECDSA_R_VALUE,
+      s,
+    }
+  )
 
   return tx
 }
@@ -96,22 +99,12 @@ function generateTx(bytecode, s, gas, gasPrice, paramdata) {
  * @param A transaction object (presumably from `generateTx`)
  */
 function decorateTx(tx) {
-  const from = EthereumUtil.bufferToHex(tx.from)
-  const json = {}
-
-  // eslint-disable-next-line no-underscore-dangle
-  tx._fields.forEach((k) => {
-    json[k] = EthereumUtil.bufferToHex(tx[k])
-  })
+  const transaction = ethers.utils.parseTransaction(tx)
 
   return {
-    tx,
-    json,
-    from,
-    to: EthereumUtil.bufferToHex(
-      EthereumUtil.generateAddress(tx.from, tx.nonce)
-    ),
-    raw: EthereumUtil.bufferToHex(tx.serialize()),
+    from: transaction.from,
+    to: ethers.utils.getContractAddress( transaction ),
+    raw: tx,
   }
 }
 

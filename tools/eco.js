@@ -4,7 +4,6 @@ const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
 const bip39 = require('bip39')
-const { hdkey } = require('ethereumjs-wallet')
 const ganache = require('ganache-cli')
 const { deployTokens, deployGovernance } = require('./deploy')
 
@@ -148,10 +147,10 @@ async function initUsers() {
       if (ethers.utils.isHexString(options.from, 32)) {
         priv = options.from
       } else {
-        const seed = await bip39.mnemonicToSeed(options.from)
-        const hdwallet = hdkey.fromMasterSeed(seed)
-        const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
-        priv = `0x${myWallet.getPrivateKey().toString('hex')}`
+        // const seed = await bip39.mnemonicToSeed(options.from)
+        // const hdwallet = hdkey.fromMasterSeed(seed)
+        // const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
+        // priv = `0x${myWallet.getPrivateKey().toString('hex')}`
       }
       account = ethers.utils.computeAddress(priv)
       options.signer = new ethers.Wallet(priv, options.ethersProvider)

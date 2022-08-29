@@ -26,7 +26,7 @@ describe("Nick's method [@group=2]", async () => {
       )
     )
 
-    expect((await ethers.provider.getCode(nick.to)).length).to.be.lessThan(10)
+    expect(await ethers.provider.getCode(nick.to)).to.equal('0x')
 
     await accounts[0].sendTransaction({
       to: nick.from,
