@@ -81,7 +81,7 @@ function generateTx(bytecode, s, gas, gasPrice, paramdata) {
       value: 0,
       data:
         bytecode +
-        (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : '')
+        (ethers.utils.isHexString(paramdata) ? paramdata.slice(2) : ''),
     },
     {
       v: ECDSA_V_VALUE,
@@ -103,7 +103,7 @@ function decorateTx(tx) {
 
   return {
     from: transaction.from,
-    to: ethers.utils.getContractAddress( transaction ),
+    to: ethers.utils.getContractAddress(transaction),
     raw: tx,
   }
 }

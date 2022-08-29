@@ -9,7 +9,6 @@ let ethersProvider
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
-const bip39 = require('bip39')
 const express = require('express')
 const ganache = require('ganache-cli')
 const { deployTokens, deployGovernance } = require('./deploy')
