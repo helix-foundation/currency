@@ -3,7 +3,6 @@ const ethers = require('ethers')
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
-const bip39 = require('bip39')
 const ganache = require('ganache-cli')
 const { deployTokens, deployGovernance } = require('./deploy')
 
@@ -143,17 +142,12 @@ async function initUsers() {
       account = options.from
       options.signer = await options.ethersProvider.getSigner(account)
     } else {
-      let priv
       if (ethers.utils.isHexString(options.from, 32)) {
-        priv = options.from
+        options.signer = new ethers.Wallet(options.from, options.ethersProvider)
       } else {
-        // const seed = await bip39.mnemonicToSeed(options.from)
-        // const hdwallet = hdkey.fromMasterSeed(seed)
-        // const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
-        // priv = `0x${myWallet.getPrivateKey().toString('hex')}`
+        options.signer = ethers.Wallet.fromMnemonic(options.from)
       }
-      account = ethers.utils.computeAddress(priv)
-      options.signer = new ethers.Wallet(priv, options.ethersProvider)
+      account = await options.signer.getAddress()
     }
   } else {
     account = options.chumpAccount
