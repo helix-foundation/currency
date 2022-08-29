@@ -89,7 +89,7 @@
     "sprintf-js": "1.1.2",
     "ts-node": "10.9.1",
     "typechain": "8.1.0",
-    "typescript": "4.7.4"
+    "typescript": "4.8.2"
   },
   "dependencies": {
     "@metamask/eth-sig-util": "^4.0.1",
