@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const { ethers } = require('hardhat')
+const ethers = require('ethers')
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
@@ -176,7 +176,7 @@ async function initUsers() {
 
     await options.chumpSigner.sendTransaction({
       to: account,
-      value: ethers.utils.parseEther(1000),
+      value: ethers.utils.parseEther('1000'),
     })
     const fundedBalance = ethers.utils.formatEther(
       await web3.eth.getBalance(account)
@@ -189,7 +189,7 @@ async function initUsers() {
   // Verify account works
   await options.signer.sendTransaction({
     to: account,
-    value: ethers.utils.parseUnits(1, 'gwei'),
+    value: ethers.utils.parseUnits('1', 'gwei'),
   })
 
   options.account = account
