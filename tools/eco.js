@@ -96,22 +96,23 @@ async function initEthers() {
   if (options.ganache) {
     const serverAddr = '0.0.0.0'
     let serverPort
+    let ganacheServer
     if (options.deployTokens) {
       serverPort = 8545
-      options.ganacheServer = ganache.server({
+      ganacheServer = ganache.server({
         default_balance_ether: 1000000,
         blockTime: 0.1,
       })
     } else if (options.deployGovernance) {
       serverPort = 8546
-      options.ganacheServer = ganache.server({
+      ganacheServer = ganache.server({
         default_balance_ether: 1000000,
         blockTime: 0.1,
         fork: `${serverAddr}:${serverPort - 1}`,
       })
     }
     /* eslint-disable global-require, import/no-extraneous-dependencies */
-    options.ganacheServer.listen(serverPort, serverAddr, (err) => {
+    ganacheServer.listen(serverPort, serverAddr, (err) => {
       if (err) {
         console.log(err)
         return
@@ -196,9 +197,8 @@ async function initUsers() {
 async function deployEco() {
   if (options.deployTokens) {
     options = await deployTokens(options)
-    const printOptions = options
+    const printOptions = JSON.parse(JSON.stringify(options)) // don't shallow copy
     delete printOptions.correctPolicyArtifact
-    delete printOptions.ganacheServer
     delete printOptions.ethersProvider
     delete printOptions.signer
     delete printOptions.chumpSigner
