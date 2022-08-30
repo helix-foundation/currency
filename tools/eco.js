@@ -133,7 +133,9 @@ async function initUsers() {
   let account
   if (!options.production) {
     ;[options.chumpAccount] = await options.ethersProvider.listAccounts()
-    options.chumpSigner = await options.ethersProvider.getSigner(options.chumpAccount)
+    options.chumpSigner = await options.ethersProvider.getSigner(
+      options.chumpAccount
+    )
     console.log(`chump account is ${options.chumpAccount}`)
   }
 
@@ -195,25 +197,26 @@ async function deployEco() {
   if (options.deployTokens) {
     options = await deployTokens(options)
     const printOptions = options
-    delete printOptions.correctPolicyABI
+    delete printOptions.correctPolicyArtifact
     delete printOptions.ganacheServer
     delete printOptions.ethersProvider
     delete printOptions.signer
+    delete printOptions.chumpSigner
     console.log(JSON.stringify(printOptions, null, 2))
   }
   if (options.deployGovernance) {
     options = await deployGovernance(options)
   }
-  console.log(`ECO token at ${options.eco.options.address}`)
-  console.log(`ECOx token at ${options.ecox.options.address}`)
-  console.log(`Policy at ${options.policyProxyAddress}`)
+  console.log(`ECO token at ${options.ecoAddress}`)
+  console.log(`ECOx token at ${options.ecoXAddress}`)
+  console.log(`Policy at ${options.policyAddress}`)
 }
 
 async function supervise() {
   if (options.supervise) {
     console.log('storing supervisor inputs')
     const content = `${options.webrpc ? options.webrpc : defaultRpc}\n${
-      options.policyProxyAddress
+      options.policyAddress
     }`
     fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
       if (e) {
