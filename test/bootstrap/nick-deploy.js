@@ -11,7 +11,6 @@ describe("Nick's method [@group=2]", async () => {
 
   it('deploys', async () => {
     const numPlaceholders = 20
-    const abiCoder = new ethers.utils.AbiCoder()
     const ecoBootstrap = await ethers.getContractFactory('EcoBootstrap')
     const nick = Nick.decorateTx(
       Nick.generateTx(
@@ -19,7 +18,7 @@ describe("Nick's method [@group=2]", async () => {
         `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
         5000000,
         100000000000,
-        abiCoder.encode(
+        ethers.utils.defaultAbiCoder.encode(
           ['address', 'uint8'],
           [await accounts[2].getAddress(), numPlaceholders]
         )
