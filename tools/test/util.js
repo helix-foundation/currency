@@ -27,8 +27,8 @@ exports.deployPolicy = async (
 
   const policyAd = options.policyAddress
   const ecoAd = options.ecoAddress
-  const inflationAd = options.inflationContractAddress
-  const vdfAd = options.vdfContractAddress
+  const inflationAd = options.randomInflationAddress
+  const vdfAd = options.vdfAddress
   const ecoxAd = options.ecoXAddress
   const rootHashProposalAd = options.rootHashProposalAddress
   const timedPoliciesAd = options.timedPoliciesAddress
