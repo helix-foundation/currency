@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const ethers = require('ethers')
+const { NonceManager } = require("@ethersproject/experimental");
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
@@ -140,6 +141,7 @@ async function initUsers() {
     console.log(`chump account is ${options.chumpAccount}`)
   }
 
+  // use options.from to try and create a signer object
   if (options.from) {
     if (ethers.utils.isAddress(options.from)) {
       account = options.from
@@ -148,6 +150,7 @@ async function initUsers() {
       if (ethers.utils.isHexString(options.from, 32)) {
         options.signer = new ethers.Wallet(options.from, options.ethersProvider)
       } else {
+        // a nonsensical input will fail here
         options.signer = ethers.Wallet.fromMnemonic(options.from)
       }
       account = await options.signer.getAddress()
@@ -156,6 +159,9 @@ async function initUsers() {
     account = options.chumpAccount
     options.signer = options.chumpSigner
   }
+
+  // wrap the signer in a nonce manager
+  options.signer = new NonceManager(options.signer)
 
   const balance = await options.ethersProvider.getBalance(account)
 
