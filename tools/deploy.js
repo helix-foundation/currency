@@ -14,7 +14,7 @@
  *
  * account: an account is required to be the interim owner of the contracts during the deploy
  *          and before they are initialized.
- * trustednodes: the list of addresses to be the initial trustees
+ * trustedNodes: the list of addresses to be the initial trustees
  * trusteeVoteReward: a stringified number for the amount of ECOx awarded to trustees on each vote
  * production: boolean flag for if the deploy is to chain or should include test contracts
  * verbose: boolean flag for logging, production overrides this and is always verbose
@@ -30,27 +30,26 @@ let BLOCK_GAS_LIMIT = 6000000
 
 // ### Contract ABIs and Bytecode
 /* eslint-disable import/no-unresolved, import/no-dynamic-require */
-const PolicyABI = require(`../artifacts/contracts/policy/Policy.sol/Policy.json`)
-const PolicyTestABI = require(`../artifacts/contracts/test/Backdoor.sol/PolicyTest.json`)
-const PolicyInitABI = require(`../artifacts/contracts/policy/PolicyInit.sol/PolicyInit.json`)
-const EcoBootstrapABI = require(`../artifacts/contracts/deploy/EcoBootstrap.sol/EcoBootstrap.json`)
-const EcoInitializableABI = require(`../artifacts/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`)
-const TimedPoliciesABI = require(`../artifacts/contracts/governance/TimedPolicies.sol/TimedPolicies.json`)
-const TrustedNodesABI = require(`../artifacts/contracts/governance/monetary/TrustedNodes.sol/TrustedNodes.json`)
-const rootHashProposalABI = require(`../artifacts/contracts/governance/monetary/InflationRootHashProposal.sol/InflationRootHashProposal.json`)
-const InflationContractABI = require(`../artifacts/contracts/governance/monetary/RandomInflation.sol/RandomInflation.json`)
-const CurrencyGovernanceABI = require(`../artifacts/contracts/governance/monetary/CurrencyGovernance.sol/CurrencyGovernance.json`)
-const CurrencyTimerContractABI = require(`../artifacts/contracts/governance/CurrencyTimer.sol/CurrencyTimer.json`)
-const LockupContractABI = require(`../artifacts/contracts/governance/monetary/Lockup.sol/Lockup.json`)
-const PolicyProposalContractABI = require(`../artifacts/contracts/governance/community/PolicyProposals.sol/PolicyProposals.json`)
-const PolicyVotesContractABI = require(`../artifacts/contracts/governance/community/PolicyVotes.sol/PolicyVotes.json`)
-const ECOxStakingContractABI = require(`../artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json`)
-const ECOABI = require(`../artifacts/contracts/currency/ECO.sol/ECO.json`)
-const EcoFaucetABI = require(`../artifacts/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`)
-const EcoTestCleanupABI = require(`../artifacts/contracts/deploy/EcoTestCleanup.sol/EcoTestCleanup.json`)
-const TokenInitABI = require(`../artifacts/contracts/currency/TokenInit.sol/TokenInit.json`)
-const VDFVerifierABI = require(`../artifacts/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
-const ECOxABI = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json`)
+const PolicyArtifact = require(`../artifacts/contracts/policy/Policy.sol/Policy.json`)
+const PolicyTestArtifact = require(`../artifacts/contracts/test/Backdoor.sol/PolicyTest.json`)
+const PolicyInitArtifact = require(`../artifacts/contracts/policy/PolicyInit.sol/PolicyInit.json`)
+const EcoBootstrapArtifact = require(`../artifacts/contracts/deploy/EcoBootstrap.sol/EcoBootstrap.json`)
+const EcoInitializableArtifact = require(`../artifacts/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`)
+const TimedPoliciesArtifact = require(`../artifacts/contracts/governance/TimedPolicies.sol/TimedPolicies.json`)
+const TrustedNodesArtifact = require(`../artifacts/contracts/governance/monetary/TrustedNodes.sol/TrustedNodes.json`)
+const RootHashProposalArtifact = require(`../artifacts/contracts/governance/monetary/InflationRootHashProposal.sol/InflationRootHashProposal.json`)
+const RandomInflationArtifact = require(`../artifacts/contracts/governance/monetary/RandomInflation.sol/RandomInflation.json`)
+const CurrencyGovernanceArtifact = require(`../artifacts/contracts/governance/monetary/CurrencyGovernance.sol/CurrencyGovernance.json`)
+const CurrencyTimerArtifact = require(`../artifacts/contracts/governance/CurrencyTimer.sol/CurrencyTimer.json`)
+const LockupArtifact = require(`../artifacts/contracts/governance/monetary/Lockup.sol/Lockup.json`)
+const PolicyProposalsArtifact = require(`../artifacts/contracts/governance/community/PolicyProposals.sol/PolicyProposals.json`)
+const PolicyVotesArtifact = require(`../artifacts/contracts/governance/community/PolicyVotes.sol/PolicyVotes.json`)
+const ECOxStakingArtifact = require(`../artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json`)
+const ECOArtifact = require(`../artifacts/contracts/currency/ECO.sol/ECO.json`)
+const FaucetArtifact = require(`../artifacts/contracts/deploy/EcoFaucet.sol/EcoFaucet.json`)
+const TokenInitArtifact = require(`../artifacts/contracts/currency/TokenInit.sol/TokenInit.json`)
+const VDFVerifierArtifact = require(`../artifacts/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
+const ECOxArtifact = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json`)
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
@@ -80,12 +79,12 @@ async function parseFlags(options) {
     console.log(`verbose deploy: ${options.verbose}`)
   }
   if (options.production) {
-    options.correctPolicyABI = PolicyABI
+    options.correctPolicyArtifact = PolicyArtifact
   } else {
     if (options.verbose) {
       console.log('This is a test, using the testing policy.')
     }
-    options.correctPolicyABI = PolicyTestABI
+    options.correctPolicyArtifact = PolicyTestArtifact
   }
 
   if (options.initialECO) {
@@ -170,7 +169,7 @@ async function deployStage1(options) {
   // ### Bootstrap Transaction Data
   const nicksTx = nick.decorateTx(
     nick.generateTx(
-      EcoBootstrapABI.bytecode,
+      EcoBootstrapArtifact.bytecode,
       '0x1234',
       bootstrapGas,
       options.gasPrice,
@@ -198,10 +197,11 @@ async function deployStage1(options) {
   const codeAtAddr = await options.ethersProvider.getCode(nicksTx.to)
 
   if (codeAtAddr === '0x' || codeAtAddr === '0x0') {
-    // Fund the deployment account
     if (options.verbose) {
       console.log('Running bootstrap transaction...')
     }
+
+    // Fund the deployment account
     await (
       await options.signer.sendTransaction({
         to: nicksTx.from,
@@ -225,7 +225,7 @@ async function deployStage1(options) {
   // Bootstrap Contract Interface
   const bootstrapInterface = new ethers.Contract(
     nicksTx.to,
-    EcoBootstrapABI.abi,
+    EcoBootstrapArtifact.abi,
     options.ethersProvider
   )
 
@@ -233,7 +233,7 @@ async function deployStage1(options) {
   for (let i = 0; i < options.numPlaceholders; i++) {
     /* eslint-disable no-await-in-loop */
     options.bootstrap.placeholders.push(
-      await bootstrapInterface.connect(options.signer).placeholders(i)
+      await bootstrapInterface.placeholders(i)
     )
   }
 
@@ -253,141 +253,119 @@ async function deployStage1(options) {
 // using the processed initialECO and initialECOx data processed in parseFlags.
 //
 async function deployStage2(options) {
+  const gasPrice = options.gasPrice
+
   if (options.verbose) {
     console.log(`Bootstrap contract address: ${options.bootstrap.address}`)
   }
 
-  // save these two proxies for later
-  options.policyProxyAddress = options.bootstrap.placeholders[0]
+  // name this proxy for later
+  const policyProxyAddress = (options.policyAddress =
+    options.bootstrap.placeholders[0])
 
-  const ecoProxyAddress = options.bootstrap.placeholders[1]
-  const ecoxProxyAddress = options.bootstrap.placeholders[2]
+  // proxies used in this stage
+  const ecoProxyAddress = (options.ecoAddress =
+    options.bootstrap.placeholders[1])
+  const ecoXProxyAddress = (options.ecoXAddress =
+    options.bootstrap.placeholders[2])
+
+  // contract factories used in this stage
+  const tokenInitFactory = new ethers.ContractFactory(
+    TokenInitArtifact.abi,
+    TokenInitArtifact.bytecode,
+    options.signer
+  )
+  const ecoFactory = new ethers.ContractFactory(
+    ECOArtifact.abi,
+    ECOArtifact.bytecode,
+    options.signer
+  )
+  const ecoXFactory = new ethers.ContractFactory(
+    ECOxArtifact.abi,
+    ECOxArtifact.bytecode,
+    options.signer
+  )
 
   // deploy the token initial distribution contracts
   if (options.verbose) {
     console.log('deploying the initial token distribution contract...')
   }
-  const tokenInit = await new web3.eth.Contract(TokenInitABI.abi)
-    .deploy({
-      data: TokenInitABI.bytecode,
-      arguments: [],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
+  const tokenInit = await tokenInitFactory.deploy({
+    gasPrice,
+  })
 
   // Deploy the token contracts
   if (options.verbose) {
     console.log('deploying the ECO implementation contract...')
   }
-  const ecoImpl = await new web3.eth.Contract(ECOABI.abi)
-    .deploy({
-      data: ECOABI.bytecode,
-      arguments: [
-        options.policyProxyAddress,
-        tokenInit.options.address,
-        options.initialECOSupply,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
+  const ecoImpl = await ecoFactory.deploy(
+    policyProxyAddress,
+    tokenInit.address,
+    options.initialECOSupply,
+    { gasPrice }
+  )
 
   if (options.verbose) {
     console.log('deploying the ECOx implementation contract...')
   }
-  const ecoxImpl = await new web3.eth.Contract(ECOxABI.abi)
-    .deploy({
-      data: ECOxABI.bytecode,
-      arguments: [
-        options.policyProxyAddress,
-        tokenInit.options.address,
-        options.initialECOxSupply,
-        ecoProxyAddress,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
+  const ecoXImpl = await ecoXFactory.deploy(
+    policyProxyAddress,
+    tokenInit.address,
+    options.initialECOxSupply,
+    ecoProxyAddress,
+    { gasPrice }
+  )
+
+  if (options.verbose) {
+    console.log('waiting for deploy transactions...')
+  }
+  await tokenInit.deployTransaction.wait()
+  await ecoImpl.deployTransaction.wait()
+  await ecoXImpl.deployTransaction.wait()
 
   // bind proxies
   if (options.verbose) {
     console.log(
       'binding proxy 1 to the ECO token contract...',
       ecoProxyAddress,
-      ecoImpl.options.address
+      ecoImpl.address
     )
   }
-  try {
-    await new web3.eth.Contract(
-      EcoInitializableABI.abi,
-      ecoProxyAddress
-    ).methods['fuseImplementation(address)'](ecoImpl.options.address).send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  } catch (error) {
-    console.log('proxy 1 already bound')
-  }
+  const ecoProxy = new ethers.Contract(
+    ecoProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
+  )
+  await ecoProxy.fuseImplementation(ecoImpl.address, { gasPrice })
 
   if (options.verbose) {
     console.log(
       'binding proxy 2 to the ECOx token contract...',
-      ecoxProxyAddress,
-      ecoxImpl.options.address
+      ecoXProxyAddress,
+      ecoXImpl.address
     )
   }
-  try {
-    await new web3.eth.Contract(
-      EcoInitializableABI.abi,
-      ecoxProxyAddress
-    ).methods['fuseImplementation(address)'](ecoxImpl.options.address).send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  } catch (error) {
-    console.log('proxy 2 already bound')
-  }
+  const ecoXProxy = new ethers.Contract(
+    ecoXProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
+  )
+  await ecoXProxy.fuseImplementation(ecoXImpl.address, { gasPrice })
 
   // distribute the initial tokens
   if (options.verbose) {
     console.log('distributing initial ECO...')
   }
-  await tokenInit.methods
-    .distributeTokens(ecoProxyAddress, options.initialECO)
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
+  await tokenInit.distributeTokens(ecoProxyAddress, options.initialECO, {
+    gasPrice,
+  })
 
   if (options.verbose) {
     console.log('distributing initial ECOx...')
   }
-  await tokenInit.methods
-    .distributeTokens(ecoxProxyAddress, options.initialECOx)
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-
-  // Pass along the deployed addresses
-  const ecoAddress = new web3.eth.Contract(ECOABI.abi, ecoProxyAddress).options
-    .address
-  const ecoxAddress = new web3.eth.Contract(ECOxABI.abi, ecoxProxyAddress)
-    .options.address
-
-  options.eco = { options: { address: ecoAddress }, _address: ecoAddress }
-  options.ecox = { options: { address: ecoxAddress }, _address: ecoxAddress }
+  await tokenInit.distributeTokens(ecoXProxyAddress, options.initialECOx, {
+    gasPrice,
+  })
 
   return options
 }
@@ -416,442 +394,383 @@ async function deployStage2(options) {
 //
 
 async function deployStage3(options) {
-  // Collect up the identifiers and addresses to be used in the policy structure
-  const setters = []
-  const identifiers = []
-  const addresses = []
+  const gasPrice = options.gasPrice
 
-  const ecoProxyAddress = options.bootstrap.placeholders[1]
-  const ecoxProxyAddress = options.bootstrap.placeholders[2]
-  const currencyTimerProxyAddress = options.bootstrap.placeholders[3]
+  // proxies that are already set
+  const ecoAddress = options.ecoAddress
+  const ecoXAddress = options.ecoXAddress
+
+  // new proxies set during this deploy
+  const policyProxyAddress = options.policyAddress
+  const currencyTimerProxyAddress = (options.currencyTimerAddress =
+    options.bootstrap.placeholders[3])
+  const timedPoliciesProxyAddress = (options.timedPoliciesAddress =
+    options.bootstrap.placeholders[4])
+  const trustedNodesProxyAddress = (options.trustedNodesAddress =
+    options.bootstrap.placeholders[5])
+
+  // identifier hashes
+  const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
+  const ecoXHash = ethers.utils.solidityKeccak256(['string'], ['ECOx'])
+  const ecoXStakingHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['ECOxStaking']
+  )
+  const currencyTimerHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['CurrencyTimer']
+  )
+  const timedPoliciesHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['TimedPolicies']
+  )
+  const policyProposalsHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['PolicyProposals']
+  )
+  const policyVotesHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['PolicyVotes']
+  )
+  const trustedNodesHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['TrustedNodes']
+  )
+  const faucetHash = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
+
+  // contract factories used in this stage (in order of appearance)
+  const ecoXStakingFactory = new ethers.ContractFactory(
+    ECOxStakingArtifact.abi,
+    ECOxStakingArtifact.bytecode,
+    options.signer
+  )
+  const rootHashFactory = new ethers.ContractFactory(
+    RootHashProposalArtifact.abi,
+    RootHashProposalArtifact.bytecode,
+    options.signer
+  )
+  const vdfFactory = new ethers.ContractFactory(
+    VDFVerifierArtifact.abi,
+    VDFVerifierArtifact.bytecode,
+    options.signer
+  )
+  const randomInflationFactory = new ethers.ContractFactory(
+    RandomInflationArtifact.abi,
+    RandomInflationArtifact.bytecode,
+    options.signer
+  )
+  const lockupFactory = new ethers.ContractFactory(
+    LockupArtifact.abi,
+    LockupArtifact.bytecode,
+    options.signer
+  )
+  const currencyGovernanceFactory = new ethers.ContractFactory(
+    CurrencyGovernanceArtifact.abi,
+    CurrencyGovernanceArtifact.bytecode,
+    options.signer
+  )
+  const policyVotesFactory = new ethers.ContractFactory(
+    PolicyVotesArtifact.abi,
+    PolicyVotesArtifact.bytecode,
+    options.signer
+  )
+  const policyProposalsFactory = new ethers.ContractFactory(
+    PolicyProposalsArtifact.abi,
+    PolicyProposalsArtifact.bytecode,
+    options.signer
+  )
+
+  const policyFactory = new ethers.ContractFactory(
+    options.correctPolicyArtifact.abi,
+    options.correctPolicyArtifact.bytecode,
+    options.signer
+  )
+  const policyInitFactory = new ethers.ContractFactory(
+    PolicyInitArtifact.abi,
+    PolicyInitArtifact.bytecode,
+    options.signer
+  )
+  const currencyTimerFactory = new ethers.ContractFactory(
+    CurrencyTimerArtifact.abi,
+    CurrencyTimerArtifact.bytecode,
+    options.signer
+  )
+  const timedPoliciesFactory = new ethers.ContractFactory(
+    TimedPoliciesArtifact.abi,
+    TimedPoliciesArtifact.bytecode,
+    options.signer
+  )
+  const trustedNodesFactory = new ethers.ContractFactory(
+    TrustedNodesArtifact.abi,
+    TrustedNodesArtifact.bytecode,
+    options.signer
+  )
+
+  const faucetFactory = new ethers.ContractFactory(
+    FaucetArtifact.abi,
+    FaucetArtifact.bytecode,
+    options.signer
+  )
+
+  // begin deployment
+
+  // first the secondary contracts are deployed to get their addresses
+  // Deploy the ECOxStaking contract for voting
+  if (options.verbose) {
+    console.log('deploying the ECOx staking contract...')
+  }
+  const ecoXStaking = await ecoXStakingFactory.deploy(
+    policyProxyAddress,
+    ecoXAddress,
+    { gasPrice }
+  )
+
+  // deploy the template contracts for cloning in the governance process
+  if (options.verbose) {
+    console.log('deploying governance template contracts...')
+  }
+  const rootHashProposalImpl = await rootHashFactory.deploy(
+    policyProxyAddress,
+    ecoAddress,
+    { gasPrice }
+  )
+
+  const vdfImpl = await vdfFactory.deploy(policyProxyAddress, { gasPrice })
+
+  const randomInflationImpl = await randomInflationFactory.deploy(
+    policyProxyAddress,
+    vdfImpl.address,
+    options.randomVDFDifficulty,
+    rootHashProposalImpl.address,
+    ecoAddress,
+    { gasPrice }
+  )
+
+  const lockupImpl = await lockupFactory.deploy(
+    policyProxyAddress,
+    ecoAddress,
+    currencyTimerProxyAddress,
+    { gasPrice }
+  )
+
+  const currencyGovernanceImpl = await currencyGovernanceFactory.deploy(
+    policyProxyAddress,
+    { gasPrice }
+  )
+
+  const policyVotesImpl = await policyVotesFactory.deploy(
+    policyProxyAddress,
+    ecoAddress,
+    { gasPrice }
+  )
+
+  const policyProposalsImpl = await policyProposalsFactory.deploy(
+    policyProxyAddress,
+    policyVotesImpl.address,
+    ecoAddress,
+    { gasPrice }
+  )
+
+  if (options.verbose) {
+    console.log('waiting for contract deployments to resolve...')
+  }
+  await ecoXStaking.deployTransaction.wait()
+  await rootHashProposalImpl.deployTransaction.wait()
+  await vdfImpl.deployTransaction.wait()
+  await randomInflationImpl.deployTransaction.wait()
+  await lockupImpl.deployTransaction.wait()
+  await currencyGovernanceImpl.deployTransaction.wait()
+  await policyVotesImpl.deployTransaction.wait()
+  await policyProposalsImpl.deployTransaction.wait()
+
+  // Deploy the core contracts that are proxy hosted
+  if (options.verbose) {
+    console.log('deploying the policy implementation contract...')
+  }
+  const policyImpl = await policyFactory.deploy({ gasPrice })
 
   if (options.verbose) {
     console.log('deploying policy initialization contract...')
   }
-  const policyInit = await new web3.eth.Contract(PolicyInitABI.abi)
-    .deploy({
-      data: PolicyInitABI.bytecode,
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
+  const policyInit = await policyInitFactory.deploy({ gasPrice })
 
+  if (options.verbose) {
+    console.log('deploying the currency timer implementation contract...')
+  }
+  const currencyTimerImpl = await currencyTimerFactory.deploy(
+    policyProxyAddress,
+    currencyGovernanceImpl.address,
+    randomInflationImpl.address,
+    lockupImpl.address,
+    ecoAddress,
+    { gasPrice }
+  )
+
+  if (options.verbose) {
+    console.log('deploying the timed actions implementation contract...')
+  }
+  const timedPoliciesImpl = await timedPoliciesFactory.deploy(
+    policyProxyAddress,
+    policyProposalsImpl.address,
+    [ecoHash, currencyTimerHash], // THE ORDER OF THESE IS VERY IMPORTANT
+    { gasPrice }
+  )
+
+  if (options.verbose) {
+    console.log('deploying the trustee implementation contract...')
+    console.log('trusted addresses:', options.trustedNodes)
+    console.log(
+      'ECOx voting reward for trusted addresses, in ECOx wei:',
+      options.trusteeVoteReward
+    )
+  }
+  const trustedNodesImpl = await trustedNodesFactory.deploy(
+    policyProxyAddress,
+    options.trustedNodes,
+    options.trusteeVoteReward,
+    { gasPrice }
+  )
+
+  // wait for deployment so initialize works
+  if (options.verbose) {
+    console.log(
+      'waiting for core contract implementation deployments to resolve...'
+    )
+  }
+  await policyImpl.deployTransaction.wait()
+  await policyInit.deployTransaction.wait()
+  await currencyTimerImpl.deployTransaction.wait()
+  await timedPoliciesImpl.deployTransaction.wait()
+  await trustedNodesImpl.deployTransaction.wait()
+
+  // Update the proxy targets to the implementation contract addresses
   if (options.verbose) {
     console.log(
       'binding proxy 0 to policy initialization contract...',
-      options.policyProxyAddress,
-      policyInit.options.address
+      policyProxyAddress,
+      policyInit.address
     )
   }
-
-  const ecoInitPolicyProxy = new web3.eth.Contract(
-    EcoInitializableABI.abi,
-    options.policyProxyAddress
+  const policyInitProxy = new ethers.Contract(
+    policyProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
   )
-  try {
-    await ecoInitPolicyProxy.methods['fuseImplementation(address)'](
-      policyInit.options.address
-    ).send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  } catch (error) {
-    console.log('proxy 0 already bound')
-  }
+  await policyInitProxy.fuseImplementation(policyInit.address, { gasPrice })
 
-  options.policyProxy = new web3.eth.Contract(
-    options.correctPolicyABI.abi,
-    options.policyProxyAddress
-  )
-
-  // Deploy the root hash
-  if (options.verbose) {
-    console.log('deploying Root Hash...')
-  }
-  const rootHashProposalImpl = await new web3.eth.Contract(
-    rootHashProposalABI.abi
-  )
-    .deploy({
-      data: rootHashProposalABI.bytecode,
-      arguments: [options.policyProxy.options.address, ecoProxyAddress],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.rootHashProposal = rootHashProposalImpl
-
-  // deploy the helper contracts for the policy
-  if (options.verbose) {
-    console.log('deploying policy helper contracts...')
-  }
-  const vdfContract = await new web3.eth.Contract(VDFVerifierABI.abi)
-    .deploy({
-      data: VDFVerifierABI.bytecode,
-      arguments: [options.policyProxy.options.address],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.vdfContract = vdfContract
-
-  const depositCertificatesContract = await new web3.eth.Contract(
-    LockupContractABI.abi
-  )
-    .deploy({
-      data: LockupContractABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        ecoProxyAddress,
-        currencyTimerProxyAddress,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.depositCertificatesContract = depositCertificatesContract
-  const inflationContract = await new web3.eth.Contract(
-    InflationContractABI.abi
-  )
-    .deploy({
-      data: InflationContractABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        options.vdfContract.options.address,
-        options.randomVDFDifficulty,
-        options.rootHashProposal.options.address,
-        ecoProxyAddress,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-
-  options.inflationContract = inflationContract
-
-  const governanceContract = await new web3.eth.Contract(
-    CurrencyGovernanceABI.abi
-  )
-    .deploy({
-      data: CurrencyGovernanceABI.bytecode,
-      arguments: [options.policyProxy.options.address],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.governanceContract = governanceContract
-
-  const policyVotesContract = await new web3.eth.Contract(
-    PolicyVotesContractABI.abi
-  )
-    .deploy({
-      data: PolicyVotesContractABI.bytecode,
-      arguments: [options.policyProxy.options.address, ecoProxyAddress],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.policyVotesContract = policyVotesContract
-
-  const policyProposalContract = await new web3.eth.Contract(
-    PolicyProposalContractABI.abi
-  )
-    .deploy({
-      data: PolicyProposalContractABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        options.policyVotesContract.options.address,
-        ecoProxyAddress,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.policyProposalContract = policyProposalContract
-
-  // Deploy the ECOxStaking contract for voting
-  const ecoXStakingContract = await new web3.eth.Contract(
-    ECOxStakingContractABI.abi
-  )
-    .deploy({
-      data: ECOxStakingContractABI.bytecode,
-      arguments: [options.policyProxy.options.address, ecoxProxyAddress],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.ecoXStakingContract = ecoXStakingContract
-  const ecoXStakingIdentifierHash = web3.utils.soliditySha3('ECOxStaking')
-  identifiers.push(ecoXStakingIdentifierHash)
-  addresses.push(ecoXStakingContract.options.address)
-
-  // Deploy the currency timer
-  if (options.verbose) {
-    console.log('deploying the currency timer contract...')
-  }
-  const currencyTimerHash = web3.utils.soliditySha3('CurrencyTimer')
-  const currencyTimerImpl = await new web3.eth.Contract(
-    CurrencyTimerContractABI.abi
-  )
-    .deploy({
-      data: CurrencyTimerContractABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        options.governanceContract.options.address,
-        options.inflationContract.options.address,
-        options.depositCertificatesContract.options.address,
-        ecoProxyAddress,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.currencyTimerImpl = currencyTimerImpl
-
-  // Update the proxy targets to the implementation contract addresses
   if (options.verbose) {
     console.log(
       'binding proxy 3 to the CurrencyTimer implementation contract...',
       currencyTimerProxyAddress,
-      options.currencyTimerImpl.options.address
+      currencyTimerImpl.address
     )
   }
-  try {
-    await new web3.eth.Contract(
-      EcoInitializableABI.abi,
-      currencyTimerProxyAddress
-    ).methods['fuseImplementation(address)'](
-      currencyTimerImpl.options.address
-    ).send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  } catch (error) {
-    console.log('proxy 3 already bound')
-  }
-  options.currencyTimer = new web3.eth.Contract(
-    CurrencyTimerContractABI.abi,
-    currencyTimerProxyAddress
+  const currencyTimerProxy = new ethers.Contract(
+    currencyTimerProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
   )
+  await currencyTimerProxy.fuseImplementation(currencyTimerImpl.address, {
+    gasPrice,
+  })
 
-  identifiers.push(currencyTimerHash)
-  setters.push(currencyTimerHash)
-  addresses.push(currencyTimerProxyAddress)
-
-  // Deploy the voting policy contract
-  if (options.verbose) {
-    console.log('deploying the timed actions contract...')
-  }
-  const ecoHash = web3.utils.soliditySha3('ECO')
-  const timedPoliciesImpl = await new web3.eth.Contract(TimedPoliciesABI.abi)
-    .deploy({
-      data: TimedPoliciesABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        options.policyProposalContract.options.address,
-        [ecoHash, currencyTimerHash],
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
   // Update the proxy targets to the implementation contract addresses
-  const timedPoliciesProxyAddress = options.bootstrap.placeholders[4]
   if (options.verbose) {
     console.log(
       'binding proxy 4 to the TimedPolicies implementation contract...',
-      currencyTimerProxyAddress,
-      options.currencyTimerImpl.options.address
+      timedPoliciesProxyAddress,
+      timedPoliciesImpl.address
     )
   }
-  const timedPoliciesIdentifierHash = web3.utils.soliditySha3('TimedPolicies')
-  const policyProposalsIdentifierHash =
-    web3.utils.soliditySha3('PolicyProposals')
-  const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes')
-  try {
-    await new web3.eth.Contract(
-      EcoInitializableABI.abi,
-      timedPoliciesProxyAddress
-    ).methods['fuseImplementation(address)'](
-      timedPoliciesImpl.options.address
-    ).send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  } catch (error) {
-    console.log('proxy 4 already bound')
-  }
-  options.timedPolicies = new web3.eth.Contract(
-    TimedPoliciesABI.abi,
-    timedPoliciesProxyAddress
+  const timedPoliciesProxy = new ethers.Contract(
+    timedPoliciesProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
   )
+  await timedPoliciesProxy.fuseImplementation(timedPoliciesImpl.address, {
+    gasPrice,
+  })
 
-  identifiers.push(timedPoliciesIdentifierHash)
-  setters.push(timedPoliciesIdentifierHash)
-  addresses.push(timedPoliciesProxyAddress)
-
-  // Deploy the policy implementation contract
-  if (options.verbose) {
-    console.log('deploying the policy implementation contract...')
-  }
-  const policyContract = await new web3.eth.Contract(
-    options.correctPolicyABI.abi
-  )
-    .deploy({
-      data: options.correctPolicyABI.bytecode,
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.policyContract = policyContract
-
-  if (options.verbose) {
-    console.log('deploying the TrustedNodes policy contract...')
-    console.log('trusted addresses:', options.trustednodes)
-    console.log(
-      'ecox voting reward for trusted addresses:',
-      options.trusteeVoteReward
-    )
-  }
-  const trustedNodesImpl = await new web3.eth.Contract(TrustedNodesABI.abi)
-    .deploy({
-      data: TrustedNodesABI.bytecode,
-      arguments: [
-        options.policyProxy.options.address,
-        options.trustednodes,
-        options.trusteeVoteReward,
-      ],
-    })
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  options.trustedNodesImpl = trustedNodesImpl
-  const trustedNodesProxyAddress = options.bootstrap.placeholders[5]
   if (options.verbose) {
     console.log(
       'binding proxy 5 to trusted nodes contract...',
       trustedNodesProxyAddress,
-      trustedNodesImpl.options.address
+      trustedNodesImpl.address
     )
   }
-  try {
-    await new web3.eth.Contract(
-      EcoInitializableABI.abi,
-      trustedNodesProxyAddress
-    ).methods['fuseImplementation(address)'](
-      trustedNodesImpl.options.address
-    ).send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
-  } catch (error) {
-    console.log('proxy 5 already bound')
-  }
-  options.trustedNodes = new web3.eth.Contract(
-    TrustedNodesABI.abi,
-    trustedNodesProxyAddress
+  const trustedNodesProxy = new ethers.Contract(
+    trustedNodesProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
   )
-  identifiers.push(web3.utils.soliditySha3('TrustedNodes'))
-  addresses.push(trustedNodesProxyAddress)
+  await trustedNodesProxy.fuseImplementation(trustedNodesImpl.address, {
+    gasPrice,
+  })
 
-  // If this is not going to production, deploy the cleanup contract and the faucet
+  // policy init inputs
+  const identifiers = [
+    ecoHash,
+    ecoXHash,
+    ecoXStakingHash,
+    currencyTimerHash,
+    timedPoliciesHash,
+    trustedNodesHash,
+  ]
+  const addresses = [
+    ecoAddress,
+    ecoXAddress,
+    ecoXStaking.address,
+    currencyTimerProxyAddress,
+    timedPoliciesProxyAddress,
+    trustedNodesProxyAddress,
+  ]
+
+  const setters = [
+    currencyTimerHash,
+    timedPoliciesHash,
+    policyProposalsHash,
+    policyVotesHash,
+  ]
+
+  // If this is not going to production, deploy the faucet
   if (!options.production) {
-    if (options.verbose) {
-      console.log('deploying the cleanup policy contract...')
-    }
-    const cleanupContract = await new web3.eth.Contract(EcoTestCleanupABI.abi)
-      .deploy({
-        data: EcoTestCleanupABI.bytecode,
-        arguments: [options.policyProxy.options.address],
-      })
-      .send({
-        from: options.account,
-        gas: BLOCK_GAS_LIMIT,
-        gasPrice: options.gasPrice,
-      })
-    identifiers.push(web3.utils.soliditySha3('Cleanup'))
-    setters.push(web3.utils.soliditySha3('Cleanup'))
-    addresses.push(cleanupContract.options.address)
-    options.cleanupContract = cleanupContract
-
     if (options.verbose) {
       console.log('deploying the faucet policy contract...')
     }
-    const faucetContract = await new web3.eth.Contract(EcoFaucetABI.abi)
-      .deploy({
-        data: EcoFaucetABI.bytecode,
-        arguments: [options.policyProxy.options.address],
-      })
-      .send({
-        from: options.account,
-        gas: BLOCK_GAS_LIMIT,
-        gasPrice: options.gasPrice,
-      })
-    identifiers.push(web3.utils.soliditySha3('Faucet'))
-    addresses.push(faucetContract.options.address)
-    options.faucetContract = faucetContract
+    const faucet = await faucetFactory.deploy(policyProxyAddress, { gasPrice })
+    identifiers.push(faucetHash)
+    addresses.push(faucet.address)
+    options.faucetAddress = faucet.address
   }
 
-  // Add token interfaces and balance store to the ERC1820 interfaces lists for
-  // our policy initialization action.
-  identifiers.push(web3.utils.soliditySha3('ECO'))
-  addresses.push(options.eco.options.address)
-
-  identifiers.push(web3.utils.soliditySha3('ECOx'))
-  addresses.push(options.ecox.options.address)
-
-  setters.push(policyProposalsIdentifierHash, policyVotesIdentifierHash)
   // Initialize the policy structure and prevent any further changes
   if (options.verbose) {
     console.log('fusing policy initializer...')
   }
-  const ecoInitPolicy = new web3.eth.Contract(
-    PolicyInitABI.abi,
-    options.policyProxy.options.address
+  const policyInitProxied = new ethers.Contract(
+    policyProxyAddress,
+    PolicyInitArtifact.abi,
+    options.signer
   )
 
-  await ecoInitPolicy.methods
-    .fusedInit(
-      policyContract.options.address,
-      setters,
-      identifiers,
-      addresses
-      // tokenResolvers,
-    )
-    .send({
-      from: options.account,
-      gas: BLOCK_GAS_LIMIT,
-      gasPrice: options.gasPrice,
-    })
+  await policyInitProxied.fusedInit(
+    policyImpl.address,
+    setters,
+    identifiers,
+    addresses,
+    { gasPrice, gasLimit: BLOCK_GAS_LIMIT }
+  )
+
+  // store relevant addresses in options for output
+  options.ecoXStakingAddress = ecoXStaking.address
+  options.rootHashProposalAddress = rootHashProposalImpl.address
+  options.vdfAddress = vdfImpl.address
+  options.randomInflationAddress = randomInflationImpl.address
+  options.lockupAddress = lockupImpl.address
+  options.currencyGovernanceAddress = currencyGovernanceImpl.address
+  options.policyVotesAddress = policyVotesImpl.address
+  options.policyProposalsAddress = policyProposalsImpl.address
+
   return options
 }
 
@@ -863,11 +782,14 @@ async function deployStage4(options) {
   if (options.verbose) {
     console.log('Incrementing initial generation')
   }
-  await options.timedPolicies.methods.incrementGeneration().send({
-    from: options.account,
-    gas: BLOCK_GAS_LIMIT,
-    gasPrice: options.gasPrice,
-  })
+  const timedPoliciesProxied = new ethers.Contract(
+    options.timedPoliciesAddress,
+    TimedPoliciesArtifact.abi,
+    options.signer
+  )
+
+  await timedPoliciesProxied.incrementGeneration({ gasPrice: options.gasPrice, gasLimit: BLOCK_GAS_LIMIT })
+
   return options
 }
 
