@@ -166,34 +166,27 @@ async function deployStage1(options) {
       )} gwei and limit of ${BLOCK_GAS_LIMIT}/${limit} gas`
     )
   }
-  console.log(ethers.utils.defaultAbiCoder.encode(
-    ['address', 'uint8'],
-    [options.account, options.numPlaceholders]
-  ))
   // ### Bootstrap Transaction Data
-  const stage1 = JSON.parse(
-    JSON.stringify(
-      nick.decorateTx(
-        nick.generateTx(
-          EcoBootstrapABI.bytecode,
-          '0x1234',
-          bootstrapGas,
-          options.gasPrice,
-          ethers.utils.defaultAbiCoder.encode(
-            ['address', 'uint8'],
-            [options.account, options.numPlaceholders]
-          )
+  const nicksTx = 
+    nick.decorateTx(
+      nick.generateTx(
+        EcoBootstrapABI.bytecode,
+        '0x1234',
+        bootstrapGas,
+        options.gasPrice,
+        ethers.utils.defaultAbiCoder.encode(
+          ['address', 'uint8'],
+          [options.account, options.numPlaceholders]
         )
       )
     )
-  )
-
+  
   if (options.verbose) {
     console.log('setting up ERC1820 Registry')
   }
   {
     /* eslint-disable global-require */
-    require('@openzeppelin/test-helpers/configure')({ web3 })
+    require('@openzeppelin/test-helpers/configure')()
     const { singletons } = require('@openzeppelin/test-helpers')
     await singletons.ERC1820Registry(options.chumpAccount)
   }
@@ -202,51 +195,44 @@ async function deployStage1(options) {
   if (options.verbose) {
     console.log('Checking for bootstrap transaction presence...')
   }
-  const codeAtAddr = await web3.eth.getCode(stage1.to)
+  const codeAtAddr = await options.ethersProvider.getCode(nicksTx.to)
 
   if (codeAtAddr === '0x' || codeAtAddr === '0x0') {
     // Fund the deployment account
     if (options.verbose) {
       console.log('Running bootstrap transaction...')
     }
-    await web3.eth.sendTransaction({
-      from: options.account,
-      to: stage1.from,
-      value: web3.utils
-        .toBN(stage1.tx.gasLimit)
-        .mul(web3.utils.toBN(stage1.tx.gasPrice)),
-      gas: BLOCK_GAS_LIMIT,
-    })
+    await (await options.signer.sendTransaction({
+      to: nicksTx.from,
+      value: options.gasPrice.mul(bootstrapGas),
+    })).wait()
+
     // Issue the pre-signed deployment transaction
-    await web3.eth.sendSignedTransaction(stage1.raw)
+    await (await options.ethersProvider.sendTransaction(nicksTx.raw)).wait()
+
+    console.log('Bootstrap success!')
   } else if (options.verbose) {
     console.log('Bootstrap stage already deployed')
   }
 
   // Index the Bootstrap data in a readable way
   options.bootstrap = {}
-  options.bootstrap.address = stage1.to
-  options.bootstrap.source = stage1.from
+  options.bootstrap.address = nicksTx.to
+  options.bootstrap.source = nicksTx.from
 
   // Bootstrap Contract Interface
-  const bootstrapInterface = new web3.eth.Contract(
+  const bootstrapInterface = new ethers.Contract(
+    nicksTx.to,
     EcoBootstrapABI.abi,
-    stage1.to,
-    options.numPlaceholders
+    options.ethersProvider,
   )
-
-  // Index bootstrap placeholders for future use
-  // options.bootstrap.NUM_PLACEHOLDERS = await bootstrapInterface.methods
-  //   .NUM_PLACEHOLDERS()
-  //   .call({ from: options.account });
 
   options.bootstrap.placeholders = []
   for (let i = 0; i < options.numPlaceholders; i++) {
     /* eslint-disable no-await-in-loop */
     options.bootstrap.placeholders.push(
-      await bootstrapInterface.methods
+      await bootstrapInterface.connect(options.signer)
         .placeholders(i)
-        .call({ from: options.account })
     )
   }
 
