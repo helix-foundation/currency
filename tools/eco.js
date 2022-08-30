@@ -119,7 +119,7 @@ async function initEthers() {
 
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`)
     })
-    options.ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc)
+    options.ethersProvider = new ethers.providers.JsonRpcProvider(`http://localhost:${serverPort}`)
   } else {
     options.ethersProvider = new ethers.providers.JsonRpcProvider(
       options.webrpc || defaultRpc
@@ -167,12 +167,12 @@ async function initUsers() {
       `funding account from ${options.chumpAccount} which has ${chumpBalance} ether`
     )
 
-    await options.chumpSigner.sendTransaction({
+    await (await options.chumpSigner.sendTransaction({
       to: account,
       value: ethers.utils.parseEther('1000'),
-    })
+    })).wait()
     const fundedBalance = ethers.utils.formatEther(
-      await web3.eth.getBalance(account)
+      await options.ethersProvider.getBalance(account)
     )
     console.log(
       `Deployment account ${account} now has balance ${fundedBalance}`
