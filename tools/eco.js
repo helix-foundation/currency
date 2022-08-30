@@ -132,10 +132,8 @@ async function initEthers() {
 async function initUsers() {
   let account
   if (!options.production) {
-    let chumpAccount
-    ;[chumpAccount] = await options.ethersProvider.listAccounts()
-    options.chumpAccount = chumpAccount
-    options.chumpSigner = await options.ethersProvider.getSigner(chumpAccount)
+    ;[options.chumpAccount] = await options.ethersProvider.listAccounts()
+    options.chumpSigner = await options.ethersProvider.getSigner(options.chumpAccount)
     console.log(`chump account is ${options.chumpAccount}`)
   }
 
