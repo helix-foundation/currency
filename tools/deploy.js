@@ -526,15 +526,20 @@ async function deployStage3(options) {
   if (options.verbose) {
     console.log('deploying governance template contracts...')
   }
+  process.stdout.write("Progress: [              ]\r");
   const rootHashProposalImpl = await rootHashFactory.deploy(
     policyProxyAddress,
     ecoAddress,
     { gasPrice }
   )
+  process.stdout.write("Progress: [x             ]\r");
   await rootHashProposalImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xx            ]\r");
 
   const vdfImpl = await vdfFactory.deploy(policyProxyAddress, { gasPrice })
+  process.stdout.write("Progress: [xxx           ]\r");
   await vdfImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xxxx          ]\r");
 
   const randomInflationImpl = await randomInflationFactory.deploy(
     policyProxyAddress,
@@ -544,7 +549,9 @@ async function deployStage3(options) {
     ecoAddress,
     { gasPrice }
   )
+  process.stdout.write("Progress: [xxxxx         ]\r");
   await randomInflationImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xxxxxx        ]\r");
 
   const lockupImpl = await lockupFactory.deploy(
     policyProxyAddress,
@@ -552,20 +559,26 @@ async function deployStage3(options) {
     currencyTimerProxyAddress,
     { gasPrice }
   )
+  process.stdout.write("Progress: [xxxxxxx       ]\r");
   await lockupImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xxxxxxxx      ]\r");
 
   const currencyGovernanceImpl = await currencyGovernanceFactory.deploy(
     policyProxyAddress,
     { gasPrice }
   )
+  process.stdout.write("Progress: [xxxxxxxxx     ]\r");
   await currencyGovernanceImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xxxxxxxxxx    ]\r");
 
   const policyVotesImpl = await policyVotesFactory.deploy(
     policyProxyAddress,
     ecoAddress,
     { gasPrice }
   )
+  process.stdout.write("Progress: [xxxxxxxxxxx   ]\r");
   await policyVotesImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xxxxxxxxxxxx  ]\r");
 
   const policyProposalsImpl = await policyProposalsFactory.deploy(
     policyProxyAddress,
@@ -573,7 +586,9 @@ async function deployStage3(options) {
     ecoAddress,
     { gasPrice }
   )
+  process.stdout.write("Progress: [xxxxxxxxxxxxx ]\r");
   await policyProposalsImpl.deployTransaction.wait()
+  process.stdout.write("Progress: [xxxxxxxxxxxxxx]\n");
 
   // Deploy the core contracts that are proxy hosted
   if (options.verbose) {
