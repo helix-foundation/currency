@@ -62,8 +62,9 @@ async function parseFlags(options) {
   }
 
   if (!options.gasPrice) {
-    options.gasPrice = (await options.signer.getGasPrice())
-      .mul(options.gasMultiplier)
+    options.gasPrice = (await options.signer.getGasPrice()).mul(
+      options.gasMultiplier
+    )
   } else {
     options.gasPrice = ethers.BigNumber.from(options.gasPrice)
   }
@@ -88,18 +89,18 @@ async function parseFlags(options) {
   }
 
   if (options.initialECO) {
-    options.initialECOSupply = options.initialECO.map(
-      (initial) => initial.balance
-    ).reduce((a, b) =>
-      ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
-    )
+    options.initialECOSupply = options.initialECO
+      .map((initial) => initial.balance)
+      .reduce((a, b) =>
+        ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
+      )
   }
   if (options.initialECOx) {
-    options.initialECOxSupply = options.initialECOx.map(
-      (initial) => initial.balance
-    ).reduce((a, b) =>
-      ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
-    )
+    options.initialECOxSupply = options.initialECOx
+      .map((initial) => initial.balance)
+      .reduce((a, b) =>
+        ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
+      )
   }
 
   // set CI parameters for automated tests
@@ -167,20 +168,19 @@ async function deployStage1(options) {
     )
   }
   // ### Bootstrap Transaction Data
-  const nicksTx = 
-    nick.decorateTx(
-      nick.generateTx(
-        EcoBootstrapABI.bytecode,
-        '0x1234',
-        bootstrapGas,
-        options.gasPrice,
-        ethers.utils.defaultAbiCoder.encode(
-          ['address', 'uint8'],
-          [options.account, options.numPlaceholders]
-        )
+  const nicksTx = nick.decorateTx(
+    nick.generateTx(
+      EcoBootstrapABI.bytecode,
+      '0x1234',
+      bootstrapGas,
+      options.gasPrice,
+      ethers.utils.defaultAbiCoder.encode(
+        ['address', 'uint8'],
+        [options.account, options.numPlaceholders]
       )
     )
-  
+  )
+
   if (options.verbose) {
     console.log('setting up ERC1820 Registry')
   }
@@ -202,10 +202,12 @@ async function deployStage1(options) {
     if (options.verbose) {
       console.log('Running bootstrap transaction...')
     }
-    await (await options.signer.sendTransaction({
-      to: nicksTx.from,
-      value: options.gasPrice.mul(bootstrapGas),
-    })).wait()
+    await (
+      await options.signer.sendTransaction({
+        to: nicksTx.from,
+        value: options.gasPrice.mul(bootstrapGas),
+      })
+    ).wait()
 
     // Issue the pre-signed deployment transaction
     await (await options.ethersProvider.sendTransaction(nicksTx.raw)).wait()
@@ -224,15 +226,14 @@ async function deployStage1(options) {
   const bootstrapInterface = new ethers.Contract(
     nicksTx.to,
     EcoBootstrapABI.abi,
-    options.ethersProvider,
+    options.ethersProvider
   )
 
   options.bootstrap.placeholders = []
   for (let i = 0; i < options.numPlaceholders; i++) {
     /* eslint-disable no-await-in-loop */
     options.bootstrap.placeholders.push(
-      await bootstrapInterface.connect(options.signer)
-        .placeholders(i)
+      await bootstrapInterface.connect(options.signer).placeholders(i)
     )
   }
 

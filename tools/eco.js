@@ -119,7 +119,9 @@ async function initEthers() {
 
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`)
     })
-    options.ethersProvider = new ethers.providers.JsonRpcProvider(`http://localhost:${serverPort}`)
+    options.ethersProvider = new ethers.providers.JsonRpcProvider(
+      `http://localhost:${serverPort}`
+    )
   } else {
     options.ethersProvider = new ethers.providers.JsonRpcProvider(
       options.webrpc || defaultRpc
@@ -167,10 +169,12 @@ async function initUsers() {
       `funding account from ${options.chumpAccount} which has ${chumpBalance} ether`
     )
 
-    await (await options.chumpSigner.sendTransaction({
-      to: account,
-      value: ethers.utils.parseEther('1000'),
-    })).wait()
+    await (
+      await options.chumpSigner.sendTransaction({
+        to: account,
+        value: ethers.utils.parseEther('1000'),
+      })
+    ).wait()
     const fundedBalance = ethers.utils.formatEther(
       await options.ethersProvider.getBalance(account)
     )
@@ -210,7 +214,9 @@ async function deployEco() {
 async function supervise() {
   if (options.supervise) {
     console.log('storing supervisor inputs')
-    const content = `${options.webrpc ? options.webrpc : defaultRpc}\n${options.policyProxyAddress}`
+    const content = `${options.webrpc ? options.webrpc : defaultRpc}\n${
+      options.policyProxyAddress
+    }`
     fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
       if (e) {
         console.log(e)
