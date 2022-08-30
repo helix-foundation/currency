@@ -58,7 +58,7 @@ describe('InflationRootHashProposal', () => {
 
   beforeEach('global setup', async () => {
     const [, bob, charlie, dave] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -72,7 +72,7 @@ describe('InflationRootHashProposal', () => {
       currencyTimer,
       rootHashProposal,
       inflation,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustedNodes))
   })
 
   async function verifyOnChain(tree, index, proposer) {

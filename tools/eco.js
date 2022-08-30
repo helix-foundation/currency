@@ -29,7 +29,7 @@ async function parseOptions() {
       type: String,
     },
     {
-      name: 'trustednodes',
+      name: 'trustedNodes',
       type: String,
       multiple: true,
     },

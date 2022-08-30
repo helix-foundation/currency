@@ -22,10 +22,10 @@ describe('ecoXStaking [@group=12]', () => {
     one = ethers.utils.parseEther('1')
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustednodes = [await bob.getAddress()]
+    const trustedNodes = [await bob.getAddress()]
 
     ;({ policy, eco, faucet, timedPolicies, ecox, ecoXStaking } =
-      await ecoFixture(trustednodes))
+      await ecoFixture(trustedNodes))
 
     await faucet.mint(await alice.getAddress(), one.mul(5000))
     await faucet.mint(await bob.getAddress(), one.mul(5000))

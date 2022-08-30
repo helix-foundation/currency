@@ -507,7 +507,7 @@
 //   }
 
 //   async processInflations() {
-//     const trustednodes = new web3.eth.Contract(
+//     const trustedNodes = new web3.eth.Contract(
 //       TrustedNodesABI.abi,
 //       await this.policy.methods.policyFor(ID_TRUSTED_NODES).call(),
 //       { from: this.account },
@@ -560,7 +560,7 @@
 
 //       logger.info(`CG@${address}: Checking isAlive(address): ${await isAlive(address)}`);
 //       if (await isAlive(address)) {
-//         const numTrustedNodes = await trustednodes.methods.numTrustees().call();
+//         const numTrustedNodes = await trustedNodes.methods.numTrustees().call();
 //         const numRevealedNodes = await governance.methods.totalRevealed.call();
 //         const revealedNodes = [];
 //         for (let i = 0; i < numRevealedNodes; i += 1) {
@@ -571,7 +571,7 @@
 
 //         for (let i = 0; i < numTrustedNodes; i += 1) {
 //           // Note that 'node' here could be 0x0 for deleted nodes, but 0x0 doesn't commit
-//           const node = await trustednodes.methods.trustedNodes(i).call(); // TODO: this is broken
+//           const node = await trustedNodes.methods.trustedNodes(i).call(); // TODO: this is broken
 //           // I don't even really know if any of this works right now
 //           const commitment = await governance.methods.commitments(node).call();
 //           if (commitment.encryptedVote !== null

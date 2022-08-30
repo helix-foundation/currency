@@ -20,14 +20,14 @@ describe('CurrencyTimer [@group=4]', () => {
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await alice.getAddress(),
       await bob.getAddress(),
       await charlie.getAddress(),
     ]
 
     ;({ policy, eco, timedPolicies, currencyTimer, faucet } = await ecoFixture(
-      trustednodes
+      trustedNodes
     ))
 
     borda = await ethers.getContractAt(

@@ -33,12 +33,12 @@ describe('Proxy Policy Change [@group=9]', () => {
   let bob
   let charlie
   let dave
-  let trustednodes
+  let trustedNodes
 
   before('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    trustednodes = [
+    trustedNodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -48,7 +48,7 @@ describe('Proxy Policy Change [@group=9]', () => {
       eco,
       faucet: initInflation,
       timedPolicies,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustedNodes))
   })
 
   it('Stakes accounts', async () => {
@@ -83,7 +83,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract has data', async () => {
     const numTrustees = await poodleCheck.numTrustees()
 
-    expect(numTrustees).to.equal(trustednodes.length)
+    expect(numTrustees).to.equal(trustedNodes.length)
   })
 
   it('Constructs the proposals', async () => {
@@ -171,11 +171,11 @@ describe('Proxy Policy Change [@group=9]', () => {
 
   it('Checks that the new trustee contract retains all old data', async () => {
     const poodleTrustees = await poodleCheck.numTrustees()
-    expect(poodleTrustees).to.equal(trustednodes.length)
+    expect(poodleTrustees).to.equal(trustedNodes.length)
 
-    for (let i = 0; i < trustednodes.length; i++) {
+    for (let i = 0; i < trustedNodes.length; i++) {
       /* eslint-disable no-await-in-loop */
-      expect(await poodleCheck.isTrusted(trustednodes[i])).to.be.true
+      expect(await poodleCheck.isTrusted(trustedNodes[i])).to.be.true
     }
   })
 })

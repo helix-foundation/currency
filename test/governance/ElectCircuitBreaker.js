@@ -33,7 +33,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   it('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -45,7 +45,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       ecox,
       faucet: initInflation,
       timedPolicies,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustedNodes))
   })
 
   it('Stakes accounts', async () => {

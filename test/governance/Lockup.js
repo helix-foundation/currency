@@ -27,14 +27,14 @@ describe('Lockup [@group=3]', () => {
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await alice.getAddress(),
       await bob.getAddress(),
       await charlie.getAddress(),
     ]
 
     ;({ policy, eco, faucet, timedPolicies, currencyTimer } = await ecoFixture(
-      trustednodes
+      trustedNodes
     ))
 
     borda = await ethers.getContractAt(
