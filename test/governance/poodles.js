@@ -10,7 +10,6 @@
  * (the number of poodles at the current generation).
  */
 
-
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')

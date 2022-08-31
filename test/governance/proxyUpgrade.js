@@ -10,7 +10,6 @@
  * This kind of proxy upgrade does not change the address stored in the policy.
  */
 
-
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')

@@ -2,7 +2,6 @@
 
 const bigintCryptoUtils = require('bigint-crypto-utils')
 
-
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { prove, bnHex } = require('../../tools/vdf')

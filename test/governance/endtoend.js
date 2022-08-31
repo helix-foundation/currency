@@ -15,7 +15,6 @@
  * the first proposal will pass the final vote.
  */
 
-
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')

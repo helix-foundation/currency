@@ -9,7 +9,6 @@
  * contract can replace the old one.
  */
 
-
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')

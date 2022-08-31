@@ -1,4 +1,3 @@
-
 const { expect } = require('chai')
 const { generateTx, decorateTx } = require('../../tools/nicks')
 

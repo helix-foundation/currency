@@ -1,8 +1,6 @@
 /* eslint-disable no-console, no-await-in-loop, no-restricted-syntax,  no-underscore-dangle */
 /* eslint-disable import/no-extraneous-dependencies, no-unused-vars */
 
-
-
 const Deploy = require('../deploy')
 
 exports.deployPolicy = async (
