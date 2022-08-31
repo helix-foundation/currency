@@ -910,10 +910,10 @@ describe('CurrencyGovernance [@group=4]', () => {
     let unallocatedRewards
 
     before(async () => {
-      const trustedNodes = [await dave.getAddress()]
+      const trustees = [await dave.getAddress()]
 
-      ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
-        await ecoFixture(trustedNodes))
+      ;({ policy, trustees, faucet, ecox, timedPolicies } =
+        await ecoFixture(trustees))
 
       davevote2 = [
         ethers.utils.randomBytes(32),
@@ -961,15 +961,15 @@ describe('CurrencyGovernance [@group=4]', () => {
 
   context('many trustees', () => {
     beforeEach(async () => {
-      const trustedNodes = [
+      const trustees = [
         await bob.getAddress(),
         await charlie.getAddress(),
         await dave.getAddress(),
         ...additionalTrustees.map(async (t) => t.getAddress()),
       ]
 
-      ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
-        await ecoFixture(trustedNodes))
+      ;({ policy, trustees, faucet, ecox, timedPolicies } =
+        await ecoFixture(trustees))
 
       const originalBorda = await deploy('CurrencyGovernance', policy.address)
       const bordaCloner = await deploy('Cloner', originalBorda.address)
