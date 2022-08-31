@@ -95,7 +95,6 @@
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@uniswap/snapshot-gas-cost": "^1.0.0",
-    "bip39": "^3.0.3",
     "bn.js": "^5.2.1",
     "command-line-args": "^5.1.1",
     "dotenv": "^16.0.1",
