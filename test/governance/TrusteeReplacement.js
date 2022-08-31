@@ -9,11 +9,11 @@
  * contract can replace the old one.
  */
 
-const { ethers } = require('hardhat')
+
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('Governance Trustee Change [@group=9]', () => {
   describe('add a trustee and replace one', async () => {
@@ -117,7 +117,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       )
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(policy, proposalsHash)
+        await policyFor(policy, proposalsHash)
       )
     })
 
@@ -145,7 +145,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       )
       policyVotes = await ethers.getContractAt(
         'PolicyVotes',
-        await util.policyFor(policy, policyVotesIdentifierHash)
+        await policyFor(policy, policyVotesIdentifierHash)
       )
     })
 
@@ -275,7 +275,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       )
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(policy, proposalsHash)
+        await policyFor(policy, proposalsHash)
       )
     })
 
@@ -303,7 +303,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       )
       policyVotes = await ethers.getContractAt(
         'PolicyVotes',
-        await util.policyFor(policy, policyVotesIdentifierHash)
+        await policyFor(policy, policyVotesIdentifierHash)
       )
     })
 

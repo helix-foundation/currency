@@ -1,10 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
+const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
-
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('CurrencyTimer [@group=4]', () => {
   let alice
@@ -32,7 +31,7 @@ describe('CurrencyTimer [@group=4]', () => {
 
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -97,7 +96,7 @@ describe('CurrencyTimer [@group=4]', () => {
         await expect(timedPolicies.incrementGeneration())
           .to.emit(currencyTimer, 'NewCurrencyGovernance')
           .withArgs(
-            await util.policyFor(
+            await policyFor(
               policy,
               ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
             ),
@@ -107,7 +106,7 @@ describe('CurrencyTimer [@group=4]', () => {
 
       it('changed borda', async () => {
         expect(
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )
@@ -161,7 +160,7 @@ describe('CurrencyTimer [@group=4]', () => {
         await expect(timedPolicies.incrementGeneration())
           .to.emit(currencyTimer, 'NewCurrencyGovernance')
           .withArgs(
-            await util.policyFor(
+            await policyFor(
               policy,
               ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
             ),
@@ -171,7 +170,7 @@ describe('CurrencyTimer [@group=4]', () => {
 
       it('changed borda', async () => {
         expect(
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )

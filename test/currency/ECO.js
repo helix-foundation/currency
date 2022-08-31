@@ -1,10 +1,10 @@
 /* eslint-disable no-console, no-underscore-dangle */
-
+const { expect } = require('chai')
 const { signTypedData } = require('@metamask/eth-sig-util')
 
-const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
 const time = require('../utils/time.ts')
-const util = require('../../tools/test/util')
+
 const {
   createPermitMessageData,
   permit,
@@ -38,7 +38,7 @@ describe('ECO [@group=1]', () => {
     // enact a random amount of linear inflation for all tests
     const borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )

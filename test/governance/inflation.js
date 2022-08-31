@@ -2,13 +2,13 @@
 
 const bigintCryptoUtils = require('bigint-crypto-utils')
 
-const { ethers } = require('hardhat')
+
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { prove, bnHex } = require('../../tools/vdf')
 const { getTree, answer } = require('../../tools/randomInflationUtils')
 
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('RandomInflation [@group=6]', () => {
   let policy
@@ -174,7 +174,7 @@ describe('RandomInflation [@group=6]', () => {
 
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -231,7 +231,7 @@ describe('RandomInflation [@group=6]', () => {
     beforeEach(async () => {
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(
+        await policyFor(
           policy,
           ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
         )
@@ -689,7 +689,7 @@ describe('RandomInflation [@group=6]', () => {
                 ['CurrencyGovernance']
               )
 
-              expect(await util.policyFor(policy, govhash)).to.not.equal(
+              expect(await policyFor(policy, govhash)).to.not.equal(
                 inflation.address
               )
             })

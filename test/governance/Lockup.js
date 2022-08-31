@@ -1,10 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
+const { expect } = require('chai')
 
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('Lockup [@group=3]', () => {
   let alice
@@ -39,7 +38,7 @@ describe('Lockup [@group=3]', () => {
 
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -244,7 +243,7 @@ describe('Lockup [@group=3]', () => {
       beforeEach(async () => {
         borda = await ethers.getContractAt(
           'CurrencyGovernance',
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )

@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop, no-nested-ternary */
 
-const { ethers } = require('hardhat')
+
+const { expect } = require('chai')
 const snapshotGasCost = require('@uniswap/snapshot-gas-cost').default
 const BN = require('bn.js')
 

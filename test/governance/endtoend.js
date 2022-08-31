@@ -15,11 +15,11 @@
  * the first proposal will pass the final vote.
  */
 
-const { ethers } = require('hardhat')
+
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('Production Policy Change [@group=4]', () => {
   let policy
@@ -71,7 +71,7 @@ describe('Production Policy Change [@group=4]', () => {
     //    await timedPolicies.incrementGeneration();
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -106,7 +106,7 @@ describe('Production Policy Change [@group=4]', () => {
     )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 
@@ -134,7 +134,7 @@ describe('Production Policy Change [@group=4]', () => {
       ['string'],
       ['Backdoor']
     )
-    expect(await util.policyFor(policy, backdoorHash)).to.be.zero
+    expect(await policyFor(policy, backdoorHash)).to.be.zero
   })
 
   it('Celebrates accounts[5]', async () => {

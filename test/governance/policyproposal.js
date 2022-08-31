@@ -1,5 +1,6 @@
-const time = require('../utils/time.ts')
+const { expect } = require('chai')
 
+const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 

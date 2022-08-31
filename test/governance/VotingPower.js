@@ -1,4 +1,5 @@
-const { ethers } = require('hardhat')
+
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')

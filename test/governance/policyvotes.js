@@ -1,7 +1,8 @@
+const { expect } = require('chai')
+
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
 
@@ -529,11 +530,11 @@ describe('PolicyVotes [@group=8]', () => {
         })
 
         it('does not enact the policies', async () => {
-          expect(await util.policyFor(policy, adoptedPolicyIdHash)).to.be.zero
+          expect(await policyFor(policy, adoptedPolicyIdHash)).to.be.zero
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
+          expect(await policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
 
@@ -549,13 +550,13 @@ describe('PolicyVotes [@group=8]', () => {
         it('adopts policy 0', async () => {
           const newPolicy = await ethers.getContractAt(
             'SampleHandler',
-            await util.policyFor(policy, adoptedPolicyIdHash)
+            await policyFor(policy, adoptedPolicyIdHash)
           )
           expect(await newPolicy.id()).to.be.zero
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
+          expect(await policyFor(policy, votesPolicyIdHash)).to.be.zero
         })
       })
     })

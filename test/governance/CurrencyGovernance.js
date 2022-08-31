@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle, no-console */
+const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
-
 const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 

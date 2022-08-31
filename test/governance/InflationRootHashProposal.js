@@ -3,6 +3,7 @@
 /* eslint no-empty: 0 */
 /* eslint no-bitwise: 0 */
 /* eslint no-return-await: 0 */
+const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
 const {
@@ -13,9 +14,7 @@ const {
   getRandomIntInclusiveOdd,
 } = require('../../tools/randomInflationUtils')
 
-const { ecoFixture } = require('../utils/fixtures')
-
-const util = require('../../tools/test/util')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('InflationRootHashProposal', () => {
   let rootHashProposal
@@ -156,7 +155,7 @@ describe('InflationRootHashProposal', () => {
 
     const governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )

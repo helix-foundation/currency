@@ -10,11 +10,11 @@
  * This kind of proxy upgrade does not change the address stored in the policy.
  */
 
-const { ethers } = require('hardhat')
+
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('Proxy Policy Change [@group=9]', () => {
   let policy
@@ -70,7 +70,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract is not poodles', async () => {
     poodleCheck = await ethers.getContractAt(
       'PoodleTrustedNodes',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['TrustedNodes'])
       )
@@ -105,7 +105,7 @@ describe('Proxy Policy Change [@group=9]', () => {
     )
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -133,7 +133,7 @@ describe('Proxy Policy Change [@group=9]', () => {
     )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 
@@ -160,7 +160,7 @@ describe('Proxy Policy Change [@group=9]', () => {
       ['string'],
       ['TrustedNodes']
     )
-    const retryPoodleCheckAddress = await util.policyFor(policy, trustNodesHash)
+    const retryPoodleCheckAddress = await policyFor(policy, trustNodesHash)
     expect(retryPoodleCheckAddress).to.equal(poodleCheck.address)
   })
 

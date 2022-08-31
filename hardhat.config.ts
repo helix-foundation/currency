@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv"
 
 import { HardhatUserConfig, task } from "hardhat/config"
-import "@nomiclabs/hardhat-truffle5"
 import "@nomicfoundation/hardhat-chai-matchers"
 import "@nomiclabs/hardhat-ethers"
 import "@typechain/hardhat"

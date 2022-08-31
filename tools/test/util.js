@@ -1,9 +1,7 @@
 /* eslint-disable no-console, no-await-in-loop, no-restricted-syntax,  no-underscore-dangle */
 /* eslint-disable import/no-extraneous-dependencies, no-unused-vars */
 
-const { ethers } = require('hardhat')
 
-const { singletons } = require('@openzeppelin/test-helpers')
 
 const Deploy = require('../deploy')
 
@@ -77,9 +75,4 @@ exports.deployPolicy = async (
     ecoXStaking,
     faucet,
   }
-}
-
-exports.policyFor = async (policy, hash) => {
-  const erc1820 = await singletons.ERC1820Registry()
-  return erc1820.getInterfaceImplementer(policy.address, hash)
 }

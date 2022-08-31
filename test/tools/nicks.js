@@ -1,5 +1,5 @@
+
 const { expect } = require('chai')
-const { ethers } = require('hardhat')
 const { generateTx, decorateTx } = require('../../tools/nicks')
 
 /* Sample bytecode for testing transaction generation.
