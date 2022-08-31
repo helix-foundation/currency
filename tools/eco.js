@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const ethers = require('ethers')
-const { NonceManager } = require("@ethersproject/experimental");
+const { NonceManager } = require('@ethersproject/experimental')
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
