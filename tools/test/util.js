@@ -9,7 +9,7 @@ const Deploy = require('../deploy')
 
 exports.deployPolicy = async (
   account,
-  { trustedNodes = [] } = { trustedNodes: [] },
+  { trustees = [] } = { trustees: [] },
   voteReward = '1000',
   production = false,
   verbose = false,
@@ -17,7 +17,7 @@ exports.deployPolicy = async (
 ) => {
   const options = await Deploy.deploy({
     account,
-    trustedNodes,
+    trustees,
     trusteeVoteReward: voteReward,
     production,
     verbose,

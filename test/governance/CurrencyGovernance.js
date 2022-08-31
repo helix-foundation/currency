@@ -15,7 +15,7 @@ describe('CurrencyGovernance [@group=4]', () => {
   let additionalTrustees = []
   let policy
   let borda
-  let trustedNodes = []
+  let trustedNodes
   let faucet
   let ecox
   let timedPolicies
@@ -37,7 +37,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
   context('5 trustees', () => {
     beforeEach(async () => {
-      const trustedNodes = [
+      const trustees = [
         await bob.getAddress(),
         await charlie.getAddress(),
         await dave.getAddress(),
@@ -46,7 +46,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       ]
 
       ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
-        await ecoFixture(trustedNodes, votingReward))
+        await ecoFixture(trustees, votingReward))
 
       const originalBorda = await deploy('CurrencyGovernance', policy.address)
       const bordaCloner = await deploy('Cloner', originalBorda.address)
