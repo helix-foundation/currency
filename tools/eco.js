@@ -154,14 +154,13 @@ async function initUsers() {
         options.signer = ethers.Wallet.fromMnemonic(options.from)
       }
       account = await options.signer.getAddress()
+      // wrap the signer in a nonce manager
+      options.signer = new NonceManager(options.signer)
     }
   } else {
     account = options.chumpAccount
     options.signer = options.chumpSigner
   }
-
-  // wrap the signer in a nonce manager
-  options.signer = new NonceManager(options.signer)
 
   const balance = await options.ethersProvider.getBalance(account)
 
