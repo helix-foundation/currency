@@ -912,7 +912,7 @@ describe('CurrencyGovernance [@group=4]', () => {
     before(async () => {
       const trustees = [await dave.getAddress()]
 
-      ;({ policy, trustees, faucet, ecox, timedPolicies } =
+      ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
         await ecoFixture(trustees))
 
       davevote2 = [
@@ -968,7 +968,7 @@ describe('CurrencyGovernance [@group=4]', () => {
         ...additionalTrustees.map(async (t) => t.getAddress()),
       ]
 
-      ;({ policy, trustees, faucet, ecox, timedPolicies } =
+      ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
         await ecoFixture(trustees))
 
       const originalBorda = await deploy('CurrencyGovernance', policy.address)
