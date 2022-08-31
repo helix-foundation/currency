@@ -337,7 +337,9 @@ async function deployStage2(options) {
     EcoInitializableArtifact.abi,
     options.signer
   )
-  const ecoProxyFuseTx = await ecoProxy.fuseImplementation(ecoImpl.address, { gasPrice })
+  const ecoProxyFuseTx = await ecoProxy.fuseImplementation(ecoImpl.address, {
+    gasPrice,
+  })
 
   if (options.verbose) {
     console.log(
@@ -351,25 +353,37 @@ async function deployStage2(options) {
     EcoInitializableArtifact.abi,
     options.signer
   )
-  const ecoXProxyFuseTx = await ecoXProxy.fuseImplementation(ecoXImpl.address, { gasPrice })
+  const ecoXProxyFuseTx = await ecoXProxy.fuseImplementation(ecoXImpl.address, {
+    gasPrice,
+  })
 
   // distribute the initial tokens
   if (options.verbose) {
     console.log('distributing initial ECO...')
   }
-  const ecoDistributeTx = await tokenInit.distributeTokens(ecoProxyAddress, options.initialECO, {
-    gasPrice,
-  })
+  const ecoDistributeTx = await tokenInit.distributeTokens(
+    ecoProxyAddress,
+    options.initialECO,
+    {
+      gasPrice,
+    }
+  )
 
   if (options.verbose) {
     console.log('distributing initial ECOx...')
   }
-  const ecoXDistributeTx = await tokenInit.distributeTokens(ecoXProxyAddress, options.initialECOx, {
-    gasPrice,
-  })
+  const ecoXDistributeTx = await tokenInit.distributeTokens(
+    ecoXProxyAddress,
+    options.initialECOx,
+    {
+      gasPrice,
+    }
+  )
 
   if (options.verbose) {
-    console.log('waiting for all transactions to be mined before moving to the next stage...')
+    console.log(
+      'waiting for all transactions to be mined before moving to the next stage...'
+    )
   }
   await ecoProxyFuseTx.wait()
   await ecoXProxyFuseTx.wait()
@@ -638,35 +652,37 @@ async function deployStage3(options) {
   )
 
   if (options.verbose) {
-    console.log('waiting for contracts to finish deploying before binding proxies...')
+    console.log(
+      'waiting for contracts to finish deploying before binding proxies...'
+    )
   }
-  process.stdout.write("Progress: [             ]\r");
+  process.stdout.write('Progress: [             ]\r')
   await ecoXStaking.deployTransaction.wait()
-  process.stdout.write("Progress: [x            ]\r");
+  process.stdout.write('Progress: [x            ]\r')
   await rootHashProposalImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xx           ]\r");
+  process.stdout.write('Progress: [xx           ]\r')
   await vdfImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxx          ]\r");
+  process.stdout.write('Progress: [xxx          ]\r')
   await randomInflationImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxx         ]\r");
+  process.stdout.write('Progress: [xxxx         ]\r')
   await lockupImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxx        ]\r");
+  process.stdout.write('Progress: [xxxxx        ]\r')
   await currencyGovernanceImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxx       ]\r");
+  process.stdout.write('Progress: [xxxxxx       ]\r')
   await policyVotesImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxx      ]\r");
+  process.stdout.write('Progress: [xxxxxxx      ]\r')
   await policyProposalsImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxxx     ]\r");
+  process.stdout.write('Progress: [xxxxxxxx     ]\r')
   await policyImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxxxx    ]\r");
+  process.stdout.write('Progress: [xxxxxxxxx    ]\r')
   await policyInit.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxxxxx   ]\r");
+  process.stdout.write('Progress: [xxxxxxxxxx   ]\r')
   await currencyTimerImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxxxxxx  ]\r");
+  process.stdout.write('Progress: [xxxxxxxxxxx  ]\r')
   await timedPoliciesImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxxxxxxx ]\r");
+  process.stdout.write('Progress: [xxxxxxxxxxxx ]\r')
   await trustedNodesImpl.deployTransaction.wait()
-  process.stdout.write("Progress: [xxxxxxxxxxxxx]\n");
+  process.stdout.write('Progress: [xxxxxxxxxxxxx]\n')
 
   // Update the proxy targets to the implementation contract addresses
   if (options.verbose) {
@@ -681,7 +697,10 @@ async function deployStage3(options) {
     EcoInitializableArtifact.abi,
     options.signer
   )
-  const policyInitFuseTx = await policyInitProxy.fuseImplementation(policyInit.address, { gasPrice })
+  const policyInitFuseTx = await policyInitProxy.fuseImplementation(
+    policyInit.address,
+    { gasPrice }
+  )
 
   if (options.verbose) {
     console.log(
@@ -695,9 +714,12 @@ async function deployStage3(options) {
     EcoInitializableArtifact.abi,
     options.signer
   )
-  const currencyTimerFuseTx = await currencyTimerProxy.fuseImplementation(currencyTimerImpl.address, {
-    gasPrice,
-  })
+  const currencyTimerFuseTx = await currencyTimerProxy.fuseImplementation(
+    currencyTimerImpl.address,
+    {
+      gasPrice,
+    }
+  )
 
   // Update the proxy targets to the implementation contract addresses
   if (options.verbose) {
@@ -712,9 +734,12 @@ async function deployStage3(options) {
     EcoInitializableArtifact.abi,
     options.signer
   )
-  const timedPoliciesFuseTx = await timedPoliciesProxy.fuseImplementation(timedPoliciesImpl.address, {
-    gasPrice,
-  })
+  const timedPoliciesFuseTx = await timedPoliciesProxy.fuseImplementation(
+    timedPoliciesImpl.address,
+    {
+      gasPrice,
+    }
+  )
 
   if (options.verbose) {
     console.log(
@@ -728,9 +753,12 @@ async function deployStage3(options) {
     EcoInitializableArtifact.abi,
     options.signer
   )
-  const trustedNodesFuseTx = await trustedNodesProxy.fuseImplementation(trustedNodesImpl.address, {
-    gasPrice,
-  })
+  const trustedNodesFuseTx = await trustedNodesProxy.fuseImplementation(
+    trustedNodesImpl.address,
+    {
+      gasPrice,
+    }
+  )
 
   // policy init inputs
   const identifiers = [
@@ -795,7 +823,9 @@ async function deployStage3(options) {
   options.policyProposalsAddress = policyProposalsImpl.address
 
   if (options.verbose) {
-    console.log('waiting for all transactions to be mined before moving to the next stage...')
+    console.log(
+      'waiting for all transactions to be mined before moving to the next stage...'
+    )
   }
   await currencyTimerFuseTx.wait()
   await timedPoliciesFuseTx.wait()
@@ -823,7 +853,12 @@ async function deployStage4(options) {
     options.signer
   )
 
-  await(await timedPoliciesProxied.incrementGeneration({ gasPrice: options.gasPrice, gasLimit: BLOCK_GAS_LIMIT })).wait()
+  await (
+    await timedPoliciesProxied.incrementGeneration({
+      gasPrice: options.gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
+    })
+  ).wait()
 
   return options
 }
