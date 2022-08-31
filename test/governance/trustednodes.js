@@ -1,6 +1,6 @@
 const { expect } = require('chai')
 
-const { time } = require('@openzeppelin/test-helpers')
+const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 
 describe('TrustedNodes [@group=7]', () => {
