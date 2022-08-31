@@ -46,8 +46,6 @@ module.exports = {
     BigInt: "readonly",
     web3: "readonly",
     artifacts: "readonly",
-    contract: "readonly",
-    expect: "readonly",
     ethers: "readonly"
   }
 }
