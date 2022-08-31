@@ -4,7 +4,7 @@ version: "3.7"
 services:
   main:
     build: .
-    command: --trustednode 0x1e1532f345bc62dc40242b0395479f38f4672946 # Eco Test Account
+    command: --trustedNodes 0x1e1532f345bc62dc40242b0395479f38f4672946 # Eco Test Account
     ports:
       - "8545:8545"
       - "8548:8548"
@@ -12,7 +12,7 @@ services:
       - "./tools:/currency/tools"
   debug:
     build: .
-    entrypoint: ["/usr/local/bin/npm", "run", "eco:dev", "--", "--supervise", "--ganache"]
+    entrypoint: ["/usr/local/bin/npm", "run", "deploy","--ganache"]
     command: --trustedNodes 0x1e1532f345bc62dc40242b0395479f38f4672946 # Eco Test Account
     ports:
       - "8545:8545"
