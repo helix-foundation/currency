@@ -37,12 +37,13 @@ describe('CurrencyGovernance [@group=4]', () => {
   before(async () => {
     const accounts = await ethers.getSigners();
     ;[alice, bob] = accounts;
+    // console.log(alice);
 
     ({ policy, timedPolicies } =
       await ecoFixture())
 
 
-    await testStartSupervisor(policy);
+    await testStartSupervisor(policy, alice);
 
   })
 
@@ -54,12 +55,21 @@ describe('CurrencyGovernance [@group=4]', () => {
     // let generationTime: number = (await timedPolicies.GENERATION_DURATION()).toNumber()
     let nextGenStart: number = (await timedPolicies.nextGenerationStart()).toNumber()
     let timeToNextGeneration: number = nextGenStart - Math.floor(Date.now() / 1000)
-    console.log(timeToNextGeneration);
-    console.log((await timedPolicies.generation()).toNumber())
-    await time.increase(timeToNextGeneration - 20);
-    console.log((await timedPolicies.generation()).toNumber())
-    await time.increase(21);
-    console.log((await timedPolicies.generation()).toNumber())
+    // console.log(timeToNextGeneration);
+    // console.log((await timedPolicies.generation()).toNumber())
+    // console.log(await time.latestBlockTimestamp())
+    // await time.increase(timeToNextGeneration - 20);
+    // console.log(await time.latestBlockTimestamp())
+    // console.log((await timedPolicies.generation()).toNumber())
+    for (let i = 0; i < 10; i++) {
+      await time.increase(10)
+      console.log('clonk')
+    }
+    // console.log(await time.latestBlockTimestamp())
+    // console.log((await timedPolicies.generation()).toNumber())
+    // await time.increase(timeToNextGeneration * 1000);
+    // console.log((await timedPolicies.generation()).toNumber())
+    // console.log(Math.floor(Date.now()/1000))
 
   })
 })

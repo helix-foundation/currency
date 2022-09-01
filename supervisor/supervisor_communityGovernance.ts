@@ -9,6 +9,7 @@ const ID_POLICY_VOTES = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes
 
 let policyProposals: PolicyProposals
 let policyVotes: PolicyVotes
+let generationStartBlock: number
 
 export class CommunityGovernor {
     policy: Policy
@@ -22,9 +23,17 @@ export class CommunityGovernor {
         this.timedPolicy = timedPolicy
     };
 
+    async startListeners() {
+        // timedP
+        // generationStartBlock = 
+        policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
+        policyVotes = PolicyVotes__factory.connect(await this.policy.policyFor(ID_POLICY_VOTES), this.wallet)
+    }
+
     async generationListener() {
         this.timedPolicy.on("NewGeneration", async () => {
-            policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
+            // policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
+            this.startListeners
         })
     }
 
