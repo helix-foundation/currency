@@ -35,7 +35,8 @@ export class TimeGovernor {
 
         this.provider.on("block" , async() => {
             let block = await this.provider.getBlock('latest')
-            console.log('pank')
+            console.log('hup')
+            console.log(`timestamp from supervisor is ${block.timestamp}`)
             if ((block).timestamp > this.nextGenStart) {
                 // this.genUpdate()
                 console.log('ponk')
