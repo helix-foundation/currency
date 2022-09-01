@@ -74,8 +74,10 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-promise": "6.0.1",
+    "ganache-cli": "^6.12.2",
     "hardhat": "2.10.2",
     "hardhat-gas-reporter": "1.0.8",
+    "mocha-chai-jest-snapshot": "^1.1.4",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "1.0.0-dev.23",
     "solhint": "3.3.7",
@@ -92,8 +94,6 @@
     "command-line-args": "^5.1.1",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.9",
-    "ganache-cli": "^6.12.2",
-    "mocha-chai-jest-snapshot": "^1.1.4",
     "web3": "^1.3.3"
   },
   "directories": {
