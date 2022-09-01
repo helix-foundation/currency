@@ -530,7 +530,9 @@ describe('PolicyVotes [@group=8]', () => {
         })
 
         it('does not enact the policies', async () => {
-          expect(await policyFor(policy, adoptedPolicyIdHash)).to.equal(ZERO_ADDR)
+          expect(await policyFor(policy, adoptedPolicyIdHash)).to.equal(
+            ZERO_ADDR
+          )
         })
 
         it('removes itself from the PolicyVotes role', async () => {
