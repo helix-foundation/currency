@@ -137,9 +137,7 @@ async function initUsers() {
   let chumpSigner
   if (!options.production) {
     ;[chumpAccount] = await options.ethersProvider.listAccounts()
-    chumpSigner = await options.ethersProvider.getSigner(
-      chumpAccount
-    )
+    chumpSigner = await options.ethersProvider.getSigner(chumpAccount)
     console.log(`chump account is ${chumpAccount}`)
   }
 

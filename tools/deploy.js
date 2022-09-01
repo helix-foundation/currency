@@ -27,10 +27,7 @@ const nick = require('./nicks')
 const ethers = require('ethers')
 
 let BLOCK_GAS_LIMIT = 6000000
-const {
-  ERC1820_REGISTRY,
-  REGISTRY_DEPLOY_TX,
-} = require('../tools/constants')
+const { ERC1820_REGISTRY, REGISTRY_DEPLOY_TX } = require('../tools/constants')
 
 // ### Contract ABIs and Bytecode
 /* eslint-disable import/no-unresolved */
@@ -184,17 +181,21 @@ async function deployStage1(options) {
     )
   )
 
-  if(!options.production) {
+  if (!options.production) {
     if (options.verbose) {
       console.log('setting up ERC1820 Registry')
     }
     // empty code is 0x
-    if((await options.ethersProvider.getCode(ERC1820_REGISTRY)).length >= 2) {
-      await (await options.signer.sendTransaction({
-        to: '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96',
-        value: ethers.utils.parseEther('0.08'),
-      })).wait()
-      await (await options.ethersProvider.sendTransaction(REGISTRY_DEPLOY_TX)).wait()
+    if ((await options.ethersProvider.getCode(ERC1820_REGISTRY)).length >= 2) {
+      await (
+        await options.signer.sendTransaction({
+          to: '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96',
+          value: ethers.utils.parseEther('0.08'),
+        })
+      ).wait()
+      await (
+        await options.ethersProvider.sendTransaction(REGISTRY_DEPLOY_TX)
+      ).wait()
     }
   }
 
