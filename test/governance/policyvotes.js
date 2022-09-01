@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
-const { ecoFixture, policyFor } = require('../utils/fixtures')
+const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
@@ -530,11 +530,11 @@ describe('PolicyVotes [@group=8]', () => {
         })
 
         it('does not enact the policies', async () => {
-          expect(await policyFor(policy, adoptedPolicyIdHash)).to.be.zero
+          expect(await policyFor(policy, adoptedPolicyIdHash)).to.equal(ZERO_ADDR)
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await policyFor(policy, votesPolicyIdHash)).to.be.zero
+          expect(await policyFor(policy, votesPolicyIdHash)).to.equal(ZERO_ADDR)
         })
       })
 
@@ -552,11 +552,11 @@ describe('PolicyVotes [@group=8]', () => {
             'SampleHandler',
             await policyFor(policy, adoptedPolicyIdHash)
           )
-          expect(await newPolicy.id()).to.be.zero
+          expect(await newPolicy.id()).to.equal(ZERO_ADDR)
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await policyFor(policy, votesPolicyIdHash)).to.be.zero
+          expect(await policyFor(policy, votesPolicyIdHash)).to.equal(ZERO_ADDR)
         })
       })
     })

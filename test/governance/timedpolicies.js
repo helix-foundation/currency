@@ -1,6 +1,6 @@
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture, policyFor } = require('../utils/fixtures')
+const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 describe('TimedPolicies [@group=12]', () => {
@@ -21,10 +21,9 @@ describe('TimedPolicies [@group=12]', () => {
       ['PolicyProposals']
     )
 
-    expect(await policyFor(policy, policyVotesIdentifierHash)).to.be.zero
+    expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(ZERO_ADDR)
 
-    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.not.be
-      .zero
+    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.not.equal(ZERO_ADDR)
 
     const policyProposals = await ethers.getContractAt(
       'PolicyProposals',
@@ -32,10 +31,10 @@ describe('TimedPolicies [@group=12]', () => {
     )
     await time.increase(3600 * 24 * 14)
 
-    expect(await policyFor(policy, policyVotesIdentifierHash)).to.be.zero
+    expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(ZERO_ADDR)
 
     await policyProposals.destruct()
-    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.be.zero
+    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.equal(ZERO_ADDR)
   })
 
   describe('initialize', () => {

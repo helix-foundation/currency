@@ -1,6 +1,7 @@
 const { expect } = require('chai')
 
 const { deploy } = require('../utils/contracts')
+const { ZERO_ADDR } = require('../utils/fixtures')
 
 describe('EcoBootstrap [@group=2]', () => {
   let bootstrap
@@ -19,7 +20,7 @@ describe('EcoBootstrap [@group=2]', () => {
   it('allocates 20 placeholder addresses', async () => {
     expect(await bootstrap.NUM_PLACEHOLDERS()).to.equal(numPlaceholders)
     const lastAddress = await bootstrap.placeholders(numPlaceholders.sub(1))
-    expect(lastAddress).to.not.be.zero
+    expect(lastAddress).to.not.equal(ZERO_ADDR)
   })
 
   it('preserves ownership in the placeholder contracts', async () => {

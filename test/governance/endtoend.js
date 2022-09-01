@@ -17,7 +17,7 @@
 
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture, policyFor } = require('../utils/fixtures')
+const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 describe('Production Policy Change [@group=4]', () => {
@@ -133,7 +133,7 @@ describe('Production Policy Change [@group=4]', () => {
       ['string'],
       ['Backdoor']
     )
-    expect(await policyFor(policy, backdoorHash)).to.be.zero
+    expect(await policyFor(policy, backdoorHash)).to.equal(ZERO_ADDR)
   })
 
   it('Celebrates accounts[5]', async () => {
