@@ -49,6 +49,7 @@
   },
   "homepage": "https://github.com/eco/currency#readme",
   "devDependencies": {
+    "@metamask/eth-sig-util": "^4.0.1",
     "@nomicfoundation/hardhat-chai-matchers": "1.0.3",
     "@nomicfoundation/hardhat-network-helpers": "1.0.4",
     "@nomiclabs/hardhat-ethers": "2.1.1",
@@ -57,6 +58,7 @@
     "@types/mocha": "9.1.1",
     "@typescript-eslint/eslint-plugin": "5.36.0",
     "@typescript-eslint/parser": "5.36.0",
+    "@uniswap/snapshot-gas-cost": "^1.0.0",
     "bigint-crypto-utils": "3.1.4",
     "chai": "4.3.6",
     "concurrently": "7.3.0",
@@ -85,10 +87,7 @@
   },
   "dependencies": {
     "@ethersproject/experimental": "^5.7.0",
-    "@metamask/eth-sig-util": "^4.0.1",
     "@openzeppelin/contracts": "^4.6.0",
-    "@openzeppelin/test-helpers": "^0.5.10",
-    "@uniswap/snapshot-gas-cost": "^1.0.0",
     "bn.js": "^5.2.1",
     "command-line-args": "^5.1.1",
     "dotenv": "^16.0.1",
