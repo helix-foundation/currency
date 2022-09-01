@@ -133,12 +133,14 @@ async function initEthers() {
 
 async function initUsers() {
   let account
+  let chumpAccount
+  let chumpSigner
   if (!options.production) {
-    ;[options.chumpAccount] = await options.ethersProvider.listAccounts()
-    options.chumpSigner = await options.ethersProvider.getSigner(
-      options.chumpAccount
+    ;[chumpAccount] = await options.ethersProvider.listAccounts()
+    chumpSigner = await options.ethersProvider.getSigner(
+      chumpAccount
     )
-    console.log(`chump account is ${options.chumpAccount}`)
+    console.log(`chump account is ${chumpAccount}`)
   }
 
   // use options.from to try and create a signer object
@@ -158,8 +160,8 @@ async function initUsers() {
       options.signer = new NonceManager(options.signer)
     }
   } else {
-    account = options.chumpAccount
-    options.signer = options.chumpSigner
+    account = chumpAccount
+    options.signer = chumpSigner
   }
 
   const balance = await options.ethersProvider.getBalance(account)
@@ -169,10 +171,10 @@ async function initUsers() {
       `Deployment account ${account} should have at least 1 Ether, has only ${balance}`
     )
     const chumpBalance = ethers.utils.formatEther(
-      await options.ethersProvider.getBalance(options.chumpAccount)
+      await options.ethersProvider.getBalance(chumpAccount)
     )
     console.log(
-      `funding account from ${options.chumpAccount} which has ${chumpBalance} ether`
+      `funding account from ${chumpAccount} which has ${chumpBalance} ether`
     )
 
     await (
