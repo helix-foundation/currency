@@ -178,7 +178,7 @@ async function initUsers() {
     )
 
     await (
-      await options.chumpSigner.sendTransaction({
+      await chumpSigner.sendTransaction({
         to: account,
         value: ethers.utils.parseEther('1000'),
       })
