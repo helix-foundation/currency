@@ -10,7 +10,6 @@
  * (the number of poodles at the current generation).
  */
 
-const { expect } = require('chai')
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
@@ -91,16 +90,6 @@ describe('Governance Policy Change [@group=9]', () => {
     )
     const name = await makePoodle.name()
     expect(name).to.equal('MakePoodle')
-  })
-
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
   })
 
   it('Kicks off a proposal round', async () => {

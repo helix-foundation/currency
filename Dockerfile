@@ -16,4 +16,4 @@ FROM node:erbium-buster
 COPY --from=build /currency /currency
 
 WORKDIR /currency
-ENTRYPOINT ["/usr/local/bin/npm", "run", "deploy:dev"]
+ENTRYPOINT ["/usr/local/bin/npm", "run", "deploy"]
