@@ -1,9 +1,7 @@
 
 import * as ethers from "ethers";
-// import { ethers } from "hardhat";
 
 import { Policy, TimedPolicies } from "../typechain-types"
-import { hardhatArguments } from "hardhat";
 
 export class TimeGovernor {
     provider: ethers.providers.BaseProvider
@@ -11,6 +9,7 @@ export class TimeGovernor {
     policy: Policy
     timedPolicy: TimedPolicies
     nextGenStart: number = 0
+    triedUpdate: Boolean = false
 
 
     constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies) {
@@ -30,16 +29,12 @@ export class TimeGovernor {
     // }
 
     async startTimer() {
-        console.log(`supervisor timedpolicy: ${this.timedPolicy.address}`)
         this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
 
-        this.provider.on("block" , async() => {
+        this.provider.on("block" , async () => {
             let block = await this.provider.getBlock('latest')
-            console.log('hup')
-            console.log(`timestamp from supervisor is ${block.timestamp}`)
-            if ((block).timestamp > this.nextGenStart) {
-                // this.genUpdate()
-                console.log('ponk')
+            if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
+                this.genUpdate()
             }
         })
     }
@@ -55,11 +50,13 @@ export class TimeGovernor {
 
     async genUpdate() {
         try {
+            this.triedUpdate = true;
             let tx = await this.timedPolicy.incrementGeneration()
             let rc = await tx.wait()
             if (rc.status === 1) {
-                // this.startTimer()
                 console.log('updated')
+                this.triedUpdate = false
+                this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
             } else {
                 throw tx
             }
@@ -68,8 +65,8 @@ export class TimeGovernor {
                 //generation has been updated
                 this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
             } else {
-                // setTimeout(this.genUpdate.bind(this), 1000)
-
+                // potential serious error
+                setTimeout(this.genUpdate.bind(this), 1000)
             }
         }
         

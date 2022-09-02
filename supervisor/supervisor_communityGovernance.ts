@@ -24,17 +24,29 @@ export class CommunityGovernor {
     };
 
     async startListeners() {
-        // timedP
-        // generationStartBlock = 
-        policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
-        policyVotes = PolicyVotes__factory.connect(await this.policy.policyFor(ID_POLICY_VOTES), this.wallet)
+        // policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
+        // policyProposals.on('SupportThresholdReached', async () => {
+        //     let tx = await policyProposals.deployProposalVoting()
+        //     let rc = await tx.wait()
+        //     if (rc.status === 1) {
+        //         // it worked
+        //     } else {
+        //         if (await policyProposals.proposalToConfigure() === ethers.constants.AddressZero) {
+        //             // already called by another entity
+        //         } else {
+
+        //             await policyProposals.deployProposalVoting()
+        //         }
+        //     }
+        // })
+        // policyVotes = PolicyVotes__factory.connect(await this.policy.policyFor(ID_POLICY_VOTES), this.wallet)
     }
 
     async generationListener() {
-        this.timedPolicy.on("NewGeneration", async () => {
-            // policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
-            this.startListeners
-        })
+        // this.timedPolicy.on("NewGeneration", async () => {
+        //     // policyProposals = PolicyProposals__factory.connect(await this.policy.policyFor(ID_POLICY_PROPOSALS), this.wallet)
+        //     this.startListeners
+        // })
     }
 
 

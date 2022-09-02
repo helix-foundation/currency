@@ -32,15 +32,8 @@ export async function startSupervisor (filepath: string) {
 }
 
 export async function testStartSupervisor(rootPolicy: Policy, account: SignerWithAddress) {
-    // provider = new ethers.providers.JsonRpcProvider('http://localhost:8545')
     provider = hre.ethers.provider
-    // console.log(provider);
-    // console.log(provider);
-    //is this right? 
-    // let newAlice: ethers.Signer = account;
-    // let supervisorWallet: ethers.Wallet = new ethers.Wallet('ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', provider);
     startModules(account, rootPolicy);
-
 }
 
 async function startModules(wallet: ethers.Signer, rootPolicy: Policy) {
@@ -48,9 +41,6 @@ async function startModules(wallet: ethers.Signer, rootPolicy: Policy) {
         await rootPolicy.policyFor(ID_TIMED_POLICIES),
         wallet
     );
-    // console.log(`supervisor timedPolicies is ${await timedPolicy.generation}`)
     let timeGovernor: TimeGovernor = new TimeGovernor(provider, wallet, rootPolicy, timedPolicy)
     timeGovernor.startTimer()
 }
-
-// startSupervisor()
