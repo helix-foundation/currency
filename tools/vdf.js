@@ -1,9 +1,6 @@
 /* eslint-disable no-bitwise */
 
 const commandLineArgs = require('command-line-args')
-// eslint-disable-next-line import/no-extraneous-dependencies
-const ethers = require('ethers')
-
 const BN = require('bn.js')
 
 // RSA-2048 Challenge
@@ -16,7 +13,8 @@ const defn = new BN(
 // Return a hexadecimal string representation of BN, such that it is
 // padded to padSize boundary with leading zeroes.
 // Needed for BigNumber.sol.
-function bnHex(bn, bytes = 0) {
+function bnHex(bnInput, bytes = 0) {
+  const bn = new BN(bnInput.toString())
   const bnBytes = bn.byteLength()
   if (bytes > 0) {
     return `0x${bn.toString('hex', bytes * 2)}`
@@ -35,7 +33,7 @@ function prove(x, tinput, n = defn) {
   const t = Number(tinput.toString())
   const two = new BN(2)
   const redctx = BN.mont(n)
-  const xmont = x.toRed(redctx)
+  const xmont = new BN(x.toString()).toRed(redctx)
   const ymont = xmont.redSqr().redPow(two.pow(two.pow(new BN(t))))
   const y = ymont.fromRed()
   const bytelen = n.byteLength()

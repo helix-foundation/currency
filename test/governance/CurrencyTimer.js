@@ -1,16 +1,12 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 
-const { expect } = require('chai')
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 
-const { BigNumber } = ethers
 const { ecoFixture } = require('../utils/fixtures')
 const util = require('../../tools/test/util')
 
-describe('CurrencyTimer [@group=6]', () => {
+describe('CurrencyTimer [@group=4]', () => {
   let alice
   let bob
   let charlie
@@ -24,14 +20,14 @@ describe('CurrencyTimer [@group=6]', () => {
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await alice.getAddress(),
       await bob.getAddress(),
       await charlie.getAddress(),
     ]
 
     ;({ policy, eco, timedPolicies, currencyTimer, faucet } = await ecoFixture(
-      trustednodes
+      trustedNodes
     ))
 
     borda = await ethers.getContractAt(
@@ -66,8 +62,8 @@ describe('CurrencyTimer [@group=6]', () => {
         [x[0], x[1], x[2]]
       )
 
-    const proposedInflationMult = BigNumber.from('1100000000000000000')
-    const aliceBal = BigNumber.from(1000000000)
+    const proposedInflationMult = ethers.BigNumber.from('1100000000000000000')
+    const aliceBal = ethers.BigNumber.from(1000000000)
 
     beforeEach(async () => {
       await faucet.mint(await alice.getAddress(), aliceBal)
@@ -150,7 +146,7 @@ describe('CurrencyTimer [@group=6]', () => {
         const newAliceBal = await eco.balanceOf(await alice.getAddress())
         const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER()
         expect(newAliceBal).to.equal(
-          BigNumber.from(aliceBal)
+          ethers.BigNumber.from(aliceBal)
             .mul(inflationDigits)
             .div(proposedInflationMult)
         )
@@ -214,7 +210,7 @@ describe('CurrencyTimer [@group=6]', () => {
         const newAliceBal = await eco.balanceOf(await alice.getAddress())
         const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER()
         expect(newAliceBal).to.equal(
-          BigNumber.from(aliceBal)
+          ethers.BigNumber.from(aliceBal)
             .mul(inflationDigits)
             .div(proposedInflationMult)
         )

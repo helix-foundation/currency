@@ -19,7 +19,7 @@ elif [[ "${1}" == "secondary" ]]; then
 #   npx coveralls < coverage-nyc/lcov.info
 elif [[ "${1}" == "docker" ]]; then
   docker build -t currency .
-  docker run -it --rm currency --selftest
+  docker run -it --rm currency
 else
   exit 1
 fi

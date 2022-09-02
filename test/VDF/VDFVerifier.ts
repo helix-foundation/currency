@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 
 import { ethers } from 'hardhat'
-import { expect, assert } from 'chai'
+import { expect } from 'chai'
 import { VDFVerifier } from '../../typechain-types'
 import { ContractTransaction } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
@@ -42,7 +42,7 @@ describe('VDFVerifier [@group=6]', () => {
           gasLimit: 6000000,
         })
       ).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned number'
+        'High-byte must be set for non-256bit-aligned numbers'
       )
     })
 
@@ -56,8 +56,7 @@ describe('VDFVerifier [@group=6]', () => {
 
   describe('testing VDF contract', () => {
     it('Matches N in contract and testing', async () => {
-      expect(n.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))).to.be
-        .true
+      expect(n).to.eq(new BN((await instanceVDFVerifier.N()).slice(2), 16))
     })
 
     it('Computed solutions match expectations', async () => {
@@ -71,7 +70,7 @@ describe('VDFVerifier [@group=6]', () => {
         s = s.mul(s)
       }
 
-      expect(s.eq(y)).to.be.true
+      expect(s).to.eq(y)
     })
 
     describe('When starting', () => {
@@ -202,7 +201,7 @@ describe('VDFVerifier [@group=6]', () => {
             const receipt = await tx.wait()
             const log = receipt.events ? receipt.events[0] : undefined
             expect(log?.event).to.equal('SuccessfulVerification')
-            expect(log?.args?.t).to.equal(t.toString())
+            expect(log?.args?.t).to.equal(t)
             expect(log?.args?.x).to.equal(bnHex(xbn))
             expect(log?.args?.y).to.equal(bnHex(ybn))
           })
@@ -264,11 +263,7 @@ describe('VDFVerifier [@group=6]', () => {
       expect(await instanceVDFVerifier.isVerified(bnHex(xbn), t, bnHex(ybn))).to
         .be.true
 
-      assert.equal(
-        seenShorterU,
-        true,
-        'Although not critical, we would like to see log2(u) < log(n), because we set u.bitlen = n.bitlen in the contract'
-      )
+      expect(seenShorterU).to.be.true
     })
   })
 })

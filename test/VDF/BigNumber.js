@@ -1,14 +1,10 @@
 /* eslint-disable no-await-in-loop, no-nested-ternary */
 
-const { assert, expect } = require('chai')
-
 const { ethers } = require('hardhat')
 const snapshotGasCost = require('@uniswap/snapshot-gas-cost').default
 const BN = require('bn.js')
 
 const { deploy } = require('../utils/contracts')
-
-const { BigNumber } = ethers
 
 describe('BigNumber [@group=3]', () => {
   let bignum
@@ -20,7 +16,7 @@ describe('BigNumber [@group=3]', () => {
   describe('Input', () => {
     it('Rejects malformed bigint bytes', async () => {
       await expect(bignum.fromBytes('0x0001')).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned number'
+        'High-byte must be set for non-256bit-aligned numbers'
       )
     })
 
@@ -32,15 +28,15 @@ describe('BigNumber [@group=3]', () => {
     })
 
     it('Matches 1', async () => {
-      assert.equal(await bignum.fromUint(1), '0x01')
+      expect(await bignum.fromUint(1)).to.equal('0x01')
     })
 
     it('Matches uint 0', async () => {
-      assert.equal(await bignum.fromUint(0), '0x')
+      expect(await bignum.fromUint(0)).to.equal('0x')
     })
 
     it('Matches byte 0', async () => {
-      assert.equal(await bignum.fromBytes('0x'), '0x')
+      expect(await bignum.fromBytes('0x')).to.equal('0x')
     })
 
     it('Matches byte 1', async () => {
@@ -116,8 +112,10 @@ describe('BigNumber [@group=3]', () => {
       ]
       list.forEach((a) => {
         list.forEach((b) => {
-          const bigA = a === '0x' ? BigNumber.from(0) : BigNumber.from(a)
-          const bigB = b === '0x' ? BigNumber.from(0) : BigNumber.from(b)
+          const bigA =
+            a === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(a)
+          const bigB =
+            b === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(b)
 
           it(`${a} + ${b}`, async () => {
             const r = await bignum.add(a, b)
@@ -175,9 +173,12 @@ describe('BigNumber [@group=3]', () => {
         list.forEach((b) => {
           modulos.forEach((c) => {
             it(`${a} * ${b} % ${c}`, async () => {
-              const bigA = a === '0x' ? BigNumber.from(0) : BigNumber.from(a)
-              const bigB = b === '0x' ? BigNumber.from(0) : BigNumber.from(b)
-              const bigC = c === '0x' ? BigNumber.from(0) : BigNumber.from(c)
+              const bigA =
+                a === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(a)
+              const bigB =
+                b === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(b)
+              const bigC =
+                c === '0x' ? ethers.BigNumber.from(0) : ethers.BigNumber.from(c)
               const r = await bignum.modmul(a, b, c)
               const e = bigA.mul(bigB).mod(bigC)
               if (e.eq(0)) {
@@ -198,7 +199,7 @@ describe('BigNumber [@group=3]', () => {
               if (e.eqn(0)) {
                 expect(r).to.equal('0x')
               } else {
-                expect(new BN(r.slice(2), 16).eq(e)).to.be.true
+                expect(new BN(r.slice(2), 16)).to.eq(e)
               }
             })
           })

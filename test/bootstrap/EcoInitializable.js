@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat')
-const { assert, expect } = require('chai')
+
 const { deploy, deployProxy } = require('../utils/contracts')
 
 describe('EcoInitializable [@group=5]', () => {
@@ -30,8 +30,7 @@ describe('EcoInitializable [@group=5]', () => {
       proxy.address
     )
 
-    assert.deepEqual(
-      await newTarget.value(),
+    expect(await newTarget.value()).to.deep.equal(
       await proxiedTargetContract.value()
     )
   })
@@ -50,7 +49,9 @@ describe('EcoInitializable [@group=5]', () => {
     })
 
     it('should copy the owner', async () => {
-      assert.equal(await owner.getAddress(), await initializableProxy.owner())
+      expect(await owner.getAddress()).to.equal(
+        await initializableProxy.owner()
+      )
     })
 
     it('should allow setting the implementation', async () => {
@@ -62,8 +63,7 @@ describe('EcoInitializable [@group=5]', () => {
         .connect(owner)
         .fuseImplementation(targetContract.address)
 
-      assert.equal(
-        await initializableProxy.implementation(),
+      expect(await initializableProxy.implementation()).to.equal(
         targetContract.address
       )
     })
