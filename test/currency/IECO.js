@@ -1,10 +1,7 @@
 const { expect } = require('chai')
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-
-const { BigNumber } = ethers
 const { ecoFixture } = require('../utils/fixtures')
+const { BigNumber } = ethers
 
 const MAX_ACCOUNT_BALANCE = BigNumber.from(
   '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as we use 18 digits to store inflation
@@ -29,8 +26,7 @@ describe('IECO [@group=5]', () => {
 
   describe('Decimals', () => {
     it('returns the right number', async () => {
-      // assert.equal(await eco.decimals(), 18, 'wrong number');
-      expect(await eco.decimals()).to.equal(18, 'no')
+      expect(await eco.decimals()).to.equal(18)
     })
   })
 
@@ -66,12 +62,12 @@ describe('IECO [@group=5]', () => {
     it('should start with 0 balance', async () => {
       const balance = await eco.balanceOf(await accounts[0].getAddress())
 
-      expect(balance).to.equal(BigNumber.from(0))
+      expect(balance).to.equal(0)
     })
 
     it('should start with 0 token supply', async () => {
       const totalSupply = await eco.totalSupply()
-      expect(totalSupply).to.equal(BigNumber.from(0))
+      expect(totalSupply).to.equal(0)
     })
 
     context('for the inflation policy', () => {
@@ -110,7 +106,7 @@ describe('IECO [@group=5]', () => {
       it('should revert when minting coins', async () => {
         await expect(
           eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)
-        ).to.be.revertedWith('not authorized')
+        ).to.be.revertedWith('Caller not authorized to mint tokens')
       })
 
       it('should not increase the balance when reverting minting coins', async () => {
@@ -166,7 +162,7 @@ describe('IECO [@group=5]', () => {
           eco
             .connect(accounts[2])
             .burn(await accounts[1].getAddress(), burnAmount)
-        ).to.be.revertedWith('not authorized')
+        ).to.be.revertedWith('Caller not authorized to burn tokens')
       })
     })
   })
@@ -175,7 +171,7 @@ describe('IECO [@group=5]', () => {
     context('when the store is not ready for a generation update', () => {
       it('does not allow incrementing generations', async () => {
         await expect(timedPolicies.incrementGeneration()).to.be.revertedWith(
-          'please try later'
+          'Cannot update the generation counter so soon'
         )
       })
     })
@@ -184,15 +180,14 @@ describe('IECO [@group=5]', () => {
       let originalGeneration
 
       beforeEach(async () => {
-        originalGeneration = (await eco.currentGeneration()).toNumber()
+        originalGeneration = await eco.currentGeneration()
         await time.increase(31557600 / 10)
       })
 
       it('allows incrementing generations', async () => {
         await timedPolicies.incrementGeneration()
-        assert.equal(
-          (await eco.currentGeneration()).toNumber(),
-          originalGeneration + 1
+        expect(await eco.currentGeneration()).to.equal(
+          originalGeneration.add(1)
         )
       })
     })
@@ -216,7 +211,7 @@ describe('IECO [@group=5]', () => {
         await faucet.mint(testAccount, BigNumber.from(1000))
         blockNumber = await time.latestBlock()
         await time.advanceBlock()
-        originalGeneration = (await eco.currentGeneration()).toNumber()
+        originalGeneration = await eco.currentGeneration()
         initialBalance = await eco.getPastVotes(
           await accounts[1].getAddress(),
           blockNumber

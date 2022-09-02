@@ -1,8 +1,6 @@
-const { assert } = require('chai')
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 
 const Nick = require('../../tools/nicks')
-const { isCoverage } = require('../../tools/test/coverage')
 
 describe("Nick's method [@group=2]", async () => {
   let accounts
@@ -13,23 +11,21 @@ describe("Nick's method [@group=2]", async () => {
 
   it('deploys', async () => {
     const numPlaceholders = 20
-    const gasFactor = (await isCoverage()) ? 1000 : 1
-    const abiCoder = new ethers.utils.AbiCoder()
     const ecoBootstrap = await ethers.getContractFactory('EcoBootstrap')
     const nick = Nick.decorateTx(
       Nick.generateTx(
         ecoBootstrap.bytecode,
         `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
-        5000000 * gasFactor,
-        100000000000 / gasFactor,
-        abiCoder.encode(
+        5000000,
+        100000000000,
+        ethers.utils.defaultAbiCoder.encode(
           ['address', 'uint8'],
           [await accounts[2].getAddress(), numPlaceholders]
         )
       )
     )
 
-    assert((await ethers.provider.getCode(nick.to)).length < 10)
+    expect(await ethers.provider.getCode(nick.to)).to.equal('0x')
 
     await accounts[0].sendTransaction({
       to: nick.from,
@@ -41,18 +37,14 @@ describe("Nick's method [@group=2]", async () => {
       await accounts[2].getAddress(),
       numPlaceholders
     )
-    assert.equal(
-      await ethers.provider.getCode(nick.to),
-      await ethers.provider.getCode(normalInstance.address)
+    expect(await ethers.provider.getCode(normalInstance.address)).to.equal(
+      await ethers.provider.getCode(nick.to)
     )
 
-    assert.equal(
-      (
-        await (
-          await ethers.getContractAt('EcoBootstrap', nick.to)
-        ).NUM_PLACEHOLDERS()
-      ).toString(),
-      numPlaceholders
-    )
+    expect(
+      await (
+        await ethers.getContractAt('EcoBootstrap', nick.to)
+      ).NUM_PLACEHOLDERS()
+    ).to.equal(numPlaceholders)
   })
 })

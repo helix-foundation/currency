@@ -1,8 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 
-const { ethers } = require('hardhat')
-const { BigNumber } = require('ethers')
 const { expect } = require('chai')
+const { BigNumber } = require('ethers')
+
 const { ecoFixture } = require('../utils/fixtures')
 const { permit } = require('../../tools/test/permit')
 

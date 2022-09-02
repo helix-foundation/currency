@@ -1,16 +1,12 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
-
 const { expect } = require('chai')
 
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { BigNumber } = ethers
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
 
-describe('CurrencyTimer [@group=6]', () => {
+describe('CurrencyTimer [@group=4]', () => {
   let alice
   let bob
   let charlie
@@ -24,19 +20,19 @@ describe('CurrencyTimer [@group=6]', () => {
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await alice.getAddress(),
       await bob.getAddress(),
       await charlie.getAddress(),
     ]
 
     ;({ policy, eco, timedPolicies, currencyTimer, faucet } = await ecoFixture(
-      trustednodes
+      trustedNodes
     ))
 
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -101,7 +97,7 @@ describe('CurrencyTimer [@group=6]', () => {
         await expect(timedPolicies.incrementGeneration())
           .to.emit(currencyTimer, 'NewCurrencyGovernance')
           .withArgs(
-            await util.policyFor(
+            await policyFor(
               policy,
               ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
             ),
@@ -111,7 +107,7 @@ describe('CurrencyTimer [@group=6]', () => {
 
       it('changed borda', async () => {
         expect(
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )
@@ -165,7 +161,7 @@ describe('CurrencyTimer [@group=6]', () => {
         await expect(timedPolicies.incrementGeneration())
           .to.emit(currencyTimer, 'NewCurrencyGovernance')
           .withArgs(
-            await util.policyFor(
+            await policyFor(
               policy,
               ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
             ),
@@ -175,7 +171,7 @@ describe('CurrencyTimer [@group=6]', () => {
 
       it('changed borda', async () => {
         expect(
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )

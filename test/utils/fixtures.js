@@ -1,5 +1,4 @@
 /* eslint-disable no-param-reassign, no-console, camelcase */
-const { ethers } = require('hardhat')
 const {
   ERC1820_REGISTRY,
   REGISTRY_DEPLOY_TX,
@@ -110,7 +109,7 @@ exports.deploySingletons = async (from) => {
 }
 
 exports.policyFor = async (policy, hash) => {
-  const erc1820 = ethers.getContractAt(
+  const erc1820 = await ethers.getContractAt(
     'IERC1820Registry',
     '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
   )
@@ -410,5 +409,3 @@ exports.singletonsFixture = async (signer) => {
     '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
   )
 }
-
-exports.ZERO_ADDR = '0x0000000000000000000000000000000000000000'

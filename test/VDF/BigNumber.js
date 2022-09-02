@@ -1,14 +1,11 @@
 /* eslint-disable no-await-in-loop, no-nested-ternary */
 
-const { assert, expect } = require('chai')
-
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const snapshotGasCost = require('@uniswap/snapshot-gas-cost').default
 const BN = require('bn.js')
+const { BigNumber } = ethers
 
 const { deploy } = require('../utils/contracts')
-
-const { BigNumber } = ethers
 
 describe('BigNumber [@group=3]', () => {
   let bignum
@@ -20,7 +17,7 @@ describe('BigNumber [@group=3]', () => {
   describe('Input', () => {
     it('Rejects malformed bigint bytes', async () => {
       await expect(bignum.fromBytes('0x0001')).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned number'
+        'High-byte must be set for non-256bit-aligned numbers'
       )
     })
 
@@ -32,15 +29,15 @@ describe('BigNumber [@group=3]', () => {
     })
 
     it('Matches 1', async () => {
-      assert.equal(await bignum.fromUint(1), '0x01')
+      expect(await bignum.fromUint(1)).to.equal('0x01')
     })
 
     it('Matches uint 0', async () => {
-      assert.equal(await bignum.fromUint(0), '0x')
+      expect(await bignum.fromUint(0)).to.equal('0x')
     })
 
     it('Matches byte 0', async () => {
-      assert.equal(await bignum.fromBytes('0x'), '0x')
+      expect(await bignum.fromBytes('0x')).to.equal('0x')
     })
 
     it('Matches byte 1', async () => {
@@ -198,7 +195,7 @@ describe('BigNumber [@group=3]', () => {
               if (e.eqn(0)) {
                 expect(r).to.equal('0x')
               } else {
-                expect(new BN(r.slice(2), 16).eq(e)).to.be.true
+                expect(new BN(r.slice(2), 16)).to.eq(e)
               }
             })
           })

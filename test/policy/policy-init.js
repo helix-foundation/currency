@@ -1,5 +1,5 @@
-const { ethers } = require('hardhat')
 const { expect } = require('chai')
+
 const { deploy } = require('../utils/contracts')
 const { singletonsFixture } = require('../utils/fixtures')
 

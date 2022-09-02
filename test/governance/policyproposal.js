@@ -1,11 +1,11 @@
 const { expect } = require('chai')
 
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-
-const { BigNumber } = ethers
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
+
+const one = ethers.utils.parseEther('1')
 
 describe('PolicyProposals [@group=7]', () => {
   let alice
@@ -103,7 +103,7 @@ describe('PolicyProposals [@group=7]', () => {
           await policyProposals.registerProposal(testProposal.address)
           const allProposalAddresses =
             await policyProposals.getPaginatedProposalAddresses(1, 1)
-          assert.deepEqual(allProposalAddresses, [testProposal.address])
+          expect(allProposalAddresses).to.deep.equal([testProposal.address])
         })
 
         it('starts with the correct supporting stake', async () => {
@@ -112,8 +112,7 @@ describe('PolicyProposals [@group=7]', () => {
           const stake = (
             await policyProposals.proposals(testProposal.address)
           )[2]
-
-          assert.equal(stake.toString(), '0')
+          expect(stake).to.equal(0)
         })
 
         it('emits the Register event', async () => {
@@ -141,7 +140,7 @@ describe('PolicyProposals [@group=7]', () => {
         it('cannot register a second time', async () => {
           await expect(
             policyProposals.registerProposal(testProposal.address)
-          ).to.be.revertedWith('proposal may only be registered once')
+          ).to.be.revertedWith('A proposal may only be registered once')
         })
       })
 
@@ -180,7 +179,9 @@ describe('PolicyProposals [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           policyProposals.registerProposal(testProposal.address)
-        ).to.be.revertedWith('no longer be registered')
+        ).to.be.revertedWith(
+          'Proposals may no longer be registered because the registration period has ended'
+        )
       })
     })
   })
@@ -228,8 +229,8 @@ describe('PolicyProposals [@group=7]', () => {
     })
 
     it('should return all proposals', async () => {
-      expect(allProposals.length).to.eq(totalProposals)
-      expect(allPropsData.length).to.eq(totalProposals)
+      expect(allProposals.length).to.equal(totalProposals)
+      expect(allPropsData.length).to.equal(totalProposals)
     })
 
     it('should return all proposals on overflow of end bound', async () => {
@@ -350,12 +351,7 @@ describe('PolicyProposals [@group=7]', () => {
           await policyProposals.proposals(testProposal.address)
         )[2]
 
-        expect(postSupportStake).to.equal(
-          BigNumber.from(10)
-            .pow(BigNumber.from(18))
-            .mul(50000)
-            .add(preSupportStake)
-        )
+        expect(postSupportStake).to.equal(one.mul(50000).add(preSupportStake))
       })
 
       it('has the correct data in allProposalData', async () => {
@@ -394,7 +390,9 @@ describe('PolicyProposals [@group=7]', () => {
         it('reverts', async () => {
           await expect(
             policyProposals.connect(dave).support(testProposal.address)
-          ).to.be.revertedWith('must stake a non-zero amount')
+          ).to.be.revertedWith(
+            'In order to support a proposal you must stake a non-zero amount of tokens'
+          )
         })
       })
 
@@ -402,7 +400,7 @@ describe('PolicyProposals [@group=7]', () => {
         it('reverts', async () => {
           await expect(
             policyProposals.support(ethers.constants.AddressZero)
-          ).to.be.revertedWith('proposal is not registered')
+          ).to.be.revertedWith('The supported proposal is not registered')
         })
       })
     })
@@ -415,7 +413,9 @@ describe('PolicyProposals [@group=7]', () => {
       it('does not allow staking', async () => {
         await expect(
           policyProposals.support(testProposal.address)
-        ).to.be.revertedWith('registration period has ended')
+        ).to.be.revertedWith(
+          'Proposals may no longer be supported because the registration period has ended'
+        )
       })
     })
   })
@@ -488,9 +488,7 @@ describe('PolicyProposals [@group=7]', () => {
         )
 
         expect(postUnsupportStake).to.equal(
-          preUnsupportStake.sub(
-            BigNumber.from(10).pow(BigNumber.from(18)).mul(50000)
-          )
+          preUnsupportStake.sub(one.mul(50000))
         )
       })
 
@@ -508,9 +506,7 @@ describe('PolicyProposals [@group=7]', () => {
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
-        expect(supportedStake).to.equal(
-          BigNumber.from(10).pow(BigNumber.from(18)).mul(50000)
-        )
+        expect(supportedStake).to.equal(one.mul(50000))
       })
     })
   })
@@ -658,7 +654,9 @@ describe('PolicyProposals [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           policyProposals.refund(testProposal.address)
-        ).to.be.revertedWith('may not be distributed until the period is over')
+        ).to.be.revertedWith(
+          'Refunds may not be distributed until the period is over'
+        )
       })
     })
 
@@ -726,11 +724,9 @@ describe('PolicyProposals [@group=7]', () => {
 
         await policyProposals.refund(testProposal.address)
 
-        assert(
-          BigNumber.from(await eco.balanceOf(await alice.getAddress()))
-            .sub(preRefundBalance)
-            .eq(refundAmount)
-        )
+        expect(
+          (await eco.balanceOf(await alice.getAddress())).sub(preRefundBalance)
+        ).to.equal(refundAmount)
       })
     })
   })
@@ -747,7 +743,7 @@ describe('PolicyProposals [@group=7]', () => {
 
       it('reverts', async () => {
         await expect(policyProposals.destruct()).to.be.revertedWith(
-          'can only be performed when the period is over'
+          'The destruct operation can only be performed when the period is over'
         )
       })
     })
@@ -776,22 +772,21 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.destruct()
         const balancePPAfter = await eco.balanceOf(policyProposals.address)
         const balancePolicyAfter = await eco.balanceOf(policy.address)
-        expect(
-          balancePolicyAfter.toString() ===
-            BigNumber.from(balancePolicyBefore + balancePPBefore).toString()
+        expect(balancePolicyAfter).to.equal(
+          balancePolicyBefore + balancePPBefore
         )
-        expect(balancePPAfter.toNumber() === 0)
+        expect(balancePPAfter).to.equal(0)
       })
 
       it('succeeds if proposal selected ahead of time', async () => {
+        const costRegister = await policyProposals.COST_REGISTER()
+        const refundAmount = await policyProposals.REFUND_IF_LOST()
         await eco.approve(
           policyProposals.address,
           await policyProposals.COST_REGISTER()
         )
 
         await policyProposals.registerProposal(testProposal2.address)
-
-        const charlieBalance = eco.balanceOf(await charlie.getAddress())
 
         await policyProposals.support(testProposal.address)
         await policyProposals.connect(charlie).support(testProposal2.address)
@@ -802,7 +797,9 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.destruct()
 
         const balancePPAfter = await eco.balanceOf(policyProposals.address)
-        expect(balancePPAfter.toNumber() === charlieBalance)
+        const balanceTreasury = await eco.balanceOf(policy.address)
+        expect(balancePPAfter).to.equal(0)
+        expect(balanceTreasury).to.equal(costRegister.mul(2).sub(refundAmount))
       })
     })
 
@@ -824,7 +821,7 @@ describe('PolicyProposals [@group=7]', () => {
 
       it('reverts', async () => {
         await expect(policyProposals.destruct()).to.be.revertedWith(
-          'refund all missed proposals'
+          'Must refund all missed proposals first'
         )
       })
     })

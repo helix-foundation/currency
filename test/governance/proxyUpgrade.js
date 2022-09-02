@@ -11,12 +11,9 @@
  */
 
 const { expect } = require('chai')
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('Proxy Policy Change [@group=9]', () => {
   let policy
@@ -35,12 +32,12 @@ describe('Proxy Policy Change [@group=9]', () => {
   let bob
   let charlie
   let dave
-  let trustednodes
+  let trustedNodes
 
   before('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    trustednodes = [
+    trustedNodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -50,7 +47,7 @@ describe('Proxy Policy Change [@group=9]', () => {
       eco,
       faucet: initInflation,
       timedPolicies,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustedNodes))
   })
 
   it('Stakes accounts', async () => {
@@ -72,7 +69,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract is not poodles', async () => {
     poodleCheck = await ethers.getContractAt(
       'PoodleTrustedNodes',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['TrustedNodes'])
       )
@@ -85,7 +82,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract has data', async () => {
     const numTrustees = await poodleCheck.numTrustees()
 
-    expect(numTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(numTrustees).to.equal(trustedNodes.length)
   })
 
   it('Constructs the proposals', async () => {
@@ -100,16 +97,6 @@ describe('Proxy Policy Change [@group=9]', () => {
     expect(name).to.equal('MakeTrustedPoodles')
   })
 
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
-  })
-
   it('Kicks off a proposal round', async () => {
     const proposalsHash = ethers.utils.solidityKeccak256(
       ['string'],
@@ -117,7 +104,7 @@ describe('Proxy Policy Change [@group=9]', () => {
     )
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -145,7 +132,7 @@ describe('Proxy Policy Change [@group=9]', () => {
     )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 
@@ -172,7 +159,7 @@ describe('Proxy Policy Change [@group=9]', () => {
       ['string'],
       ['TrustedNodes']
     )
-    const retryPoodleCheckAddress = await util.policyFor(policy, trustNodesHash)
+    const retryPoodleCheckAddress = await policyFor(policy, trustNodesHash)
     expect(retryPoodleCheckAddress).to.equal(poodleCheck.address)
   })
 
@@ -183,11 +170,11 @@ describe('Proxy Policy Change [@group=9]', () => {
 
   it('Checks that the new trustee contract retains all old data', async () => {
     const poodleTrustees = await poodleCheck.numTrustees()
-    expect(poodleTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(poodleTrustees).to.equal(trustedNodes.length)
 
-    for (let i = 0; i < trustednodes.length; i++) {
+    for (let i = 0; i < trustedNodes.length; i++) {
       /* eslint-disable no-await-in-loop */
-      expect(await poodleCheck.isTrusted(trustednodes[i])).to.be.true
+      expect(await poodleCheck.isTrusted(trustedNodes[i])).to.be.true
     }
   })
 })

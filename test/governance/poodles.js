@@ -11,11 +11,9 @@
  */
 
 const { expect } = require('chai')
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('Governance Policy Change [@group=9]', () => {
   let policy
@@ -69,7 +67,7 @@ describe('Governance Policy Change [@group=9]', () => {
   it('Checks that the current governance contract is not poodles', async () => {
     poodleBorda = await ethers.getContractAt(
       'PoodleCurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -93,16 +91,6 @@ describe('Governance Policy Change [@group=9]', () => {
     expect(name).to.equal('MakePoodle')
   })
 
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
-  })
-
   it('Kicks off a proposal round', async () => {
     const proposalsHash = ethers.utils.solidityKeccak256(
       ['string'],
@@ -110,7 +98,7 @@ describe('Governance Policy Change [@group=9]', () => {
     )
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -136,7 +124,7 @@ describe('Governance Policy Change [@group=9]', () => {
     )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 
@@ -161,7 +149,7 @@ describe('Governance Policy Change [@group=9]', () => {
   it('Checks that the new governance contract is poodles', async () => {
     poodleBorda = await ethers.getContractAt(
       'PoodleCurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )

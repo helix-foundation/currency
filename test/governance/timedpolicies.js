@@ -1,11 +1,7 @@
-const { assert } = require('chai')
-
 const { expect } = require('chai')
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('TimedPolicies [@group=12]', () => {
   let policy
@@ -15,7 +11,7 @@ describe('TimedPolicies [@group=12]', () => {
     ;({ policy, timedPolicies } = await ecoFixture([]))
   })
 
-  it('Should do a simple voting cycle', async () => {
+  it('Should do an empty voting cycle', async () => {
     const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
       ['string'],
       ['PolicyVotes']
@@ -25,23 +21,28 @@ describe('TimedPolicies [@group=12]', () => {
       ['PolicyProposals']
     )
 
-    assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0)
+    expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(
+      ethers.constants.AddressZero
+    )
 
-    assert.notEqual(
-      await util.policyFor(policy, policyProposalsIdentifierHash),
-      0
+    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.not.equal(
+      ethers.constants.AddressZero
     )
 
     const policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, policyProposalsIdentifierHash)
+      await policyFor(policy, policyProposalsIdentifierHash)
     )
-    await time.increase(3600 * 24 * 15)
+    await time.increase(3600 * 24 * 14)
 
-    assert.equal(await util.policyFor(policy, policyVotesIdentifierHash), 0)
+    expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(
+      ethers.constants.AddressZero
+    )
 
     await policyProposals.destruct()
-    assert.equal(await util.policyFor(policy, policyProposalsIdentifierHash), 0)
+    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.equal(
+      ethers.constants.AddressZero
+    )
   })
 
   describe('initialize', () => {
