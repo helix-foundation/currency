@@ -63,13 +63,14 @@ export class TimeGovernor {
         } catch (e) {
             if ((await this.timedPolicy.nextGenerationStart()).toNumber() > this.nextGenStart) {
                 //generation has been updated
+                this.triedUpdate = false
                 this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
             } else {
                 // potential serious error
                 setTimeout(this.genUpdate.bind(this), 1000)
             }
         }
-        
+
     }
 
 }
