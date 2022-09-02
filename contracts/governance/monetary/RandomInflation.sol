@@ -130,7 +130,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     function destruct() external {
         require(
             seed != 0 || getTime() > claimPeriodStarts + CLAIM_PERIOD,
-            "Entropy not set, wait until end of full claim period to abort."
+            "Entropy not set, wait until end of full claim period to abort"
         );
 
         if (seed != 0 || getTime() < claimPeriodStarts + CLAIM_PERIOD) {
@@ -300,7 +300,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         require(
             getTime() >
                 claimPeriodStarts + (_sequence * CLAIM_PERIOD) / numRecipients,
-            "A claim can only be made after enough time has passed - please wait longer"
+            "A claim can only be made after enough time has passed"
         );
         require(
             !claimed[_sequence],
@@ -330,11 +330,11 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
         require(
             claimable < ecoToken.getPastVotes(_who, blockNumber) + _sum,
-            "The provided address cannot claim this reward."
+            "The provided address cannot claim this reward"
         );
         require(
             claimable >= _sum,
-            "The provided address cannot claim this reward."
+            "The provided address cannot claim this reward"
         );
 
         require(ecoToken.transfer(_who, reward), "Transfer Failed");

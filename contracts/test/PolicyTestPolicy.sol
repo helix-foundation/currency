@@ -181,7 +181,7 @@ contract DummyPolicedUtils is PolicedUtils {
     modifier onlyInflation() {
         require(
             msg.sender == policyFor(ID_CURRENCY_GOVERNANCE),
-            "Only the inflation contract may call this function."
+            "Only the inflation contract may call this function"
         );
         _;
     }

@@ -9,8 +9,6 @@
  * contract can replace the old one.
  */
 
-const { expect } = require('chai')
-
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
@@ -35,7 +33,7 @@ describe('Governance Trustee Change [@group=9]', () => {
   it('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    const trustednodes = [
+    const trustees = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -47,7 +45,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       faucet: initInflation,
       timedPolicies,
       trustedNodes,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustees))
   })
 
   it('Stakes accounts', async () => {

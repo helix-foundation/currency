@@ -10,8 +10,6 @@
  * This kind of proxy upgrade does not change the address stored in the policy.
  */
 
-const { expect } = require('chai')
-
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
@@ -35,12 +33,12 @@ describe('Proxy Policy Change [@group=9]', () => {
   let bob
   let charlie
   let dave
-  let trustednodes
+  let trustedNodes
 
   before('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    trustednodes = [
+    trustedNodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -50,7 +48,7 @@ describe('Proxy Policy Change [@group=9]', () => {
       eco,
       faucet: initInflation,
       timedPolicies,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustedNodes))
   })
 
   it('Stakes accounts', async () => {
@@ -85,7 +83,7 @@ describe('Proxy Policy Change [@group=9]', () => {
   it('Checks that the current trusted nodes contract has data', async () => {
     const numTrustees = await poodleCheck.numTrustees()
 
-    expect(numTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(numTrustees).to.equal(trustedNodes.length)
   })
 
   it('Constructs the proposals', async () => {
@@ -98,16 +96,6 @@ describe('Proxy Policy Change [@group=9]', () => {
     )
     const name = await makeTrustedPoodles.name()
     expect(name).to.equal('MakeTrustedPoodles')
-  })
-
-  it('Checks that the 820 workaround for coverage is correct [ @skip-on-coverage ]', async () => {
-    /* When running in coverage mode, policyFor returns the tx object instead of
-     * return data
-     */
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    const pf = await policy.policyFor(ecoHash)
-    const erc = await util.policyFor(policy, ecoHash)
-    assert.equal(erc, pf)
   })
 
   it('Kicks off a proposal round', async () => {
@@ -183,11 +171,11 @@ describe('Proxy Policy Change [@group=9]', () => {
 
   it('Checks that the new trustee contract retains all old data', async () => {
     const poodleTrustees = await poodleCheck.numTrustees()
-    expect(poodleTrustees.toNumber()).to.equal(trustednodes.length)
+    expect(poodleTrustees).to.equal(trustedNodes.length)
 
-    for (let i = 0; i < trustednodes.length; i++) {
+    for (let i = 0; i < trustedNodes.length; i++) {
       /* eslint-disable no-await-in-loop */
-      expect(await poodleCheck.isTrusted(trustednodes[i])).to.be.true
+      expect(await poodleCheck.isTrusted(trustedNodes[i])).to.be.true
     }
   })
 })
