@@ -39,12 +39,27 @@ const CurrencyTimerABI = getABI('CurrencyTimer')
 const InflationABI = getABI('RandomInflation')
 const InflationRootHashProposalABI = getABI('InflationRootHashProposal')
 
-const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
-const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer'])
-const ID_CURRENCY_GOVERNANCE = ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['TimedPolicies']
+)
+const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['CurrencyTimer']
+)
+const ID_CURRENCY_GOVERNANCE = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['CurrencyGovernance']
+)
 const ID_ECO = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-const ID_POLICY_PROPOSALS = ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
-const ID_POLICY_VOTES = ethers.utils.solidityKeccak256(['string'], ['PolicyVotes'])
+const ID_POLICY_PROPOSALS = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['PolicyProposals']
+)
+const ID_POLICY_VOTES = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['PolicyVotes']
+)
 
 // useful time constants
 const HOUR = 3600 * 1000
