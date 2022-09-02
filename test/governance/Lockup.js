@@ -1,6 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 
+const { expect } = require('chai')
+
 const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
@@ -27,14 +29,14 @@ describe('Lockup [@group=3]', () => {
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustedNodes = [
+    const trustednodes = [
       await alice.getAddress(),
       await bob.getAddress(),
       await charlie.getAddress(),
     ]
 
     ;({ policy, eco, faucet, timedPolicies, currencyTimer } = await ecoFixture(
-      trustedNodes
+      trustednodes
     ))
 
     borda = await ethers.getContractAt(
@@ -246,7 +248,7 @@ describe('Lockup [@group=3]', () => {
           'CurrencyGovernance',
           await util.policyFor(
             policy,
-            ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+            web3.utils.soliditySha3('CurrencyGovernance')
           )
         )
 
@@ -255,13 +257,13 @@ describe('Lockup [@group=3]', () => {
         await time.increase(3600 * 24 * 10.1)
 
         const alicevote = [
-          ethers.utils.randomBytes(32),
+          web3.utils.randomHex(32),
           await alice.getAddress(),
           [await bob.getAddress()],
         ]
         await borda.connect(alice).commit(hash(alicevote))
         const bobvote = [
-          ethers.utils.randomBytes(32),
+          web3.utils.randomHex(32),
           await bob.getAddress(),
           [await bob.getAddress()],
         ]
@@ -312,7 +314,7 @@ describe('Lockup [@group=3]', () => {
         lockup.address,
         await time.latestBlock()
       )
-      expect(lockupPower).to.equal(0)
+      expect(lockupPower.eq(0)).to.be.true
     })
 
     it('users have correct voting power', async () => {
@@ -329,9 +331,9 @@ describe('Lockup [@group=3]', () => {
         await time.latestBlock()
       )
 
-      expect(alicePower).to.equal(5000000000)
-      expect(bobPower).to.equal(0)
-      expect(charliePower).to.equal(1000000000)
+      expect(alicePower.eq(5000000000)).to.be.true
+      expect(bobPower.eq(0)).to.be.true
+      expect(charliePower.eq(1000000000)).to.be.true
     })
 
     describe('bob redelegates', () => {
@@ -354,9 +356,9 @@ describe('Lockup [@group=3]', () => {
           await time.latestBlock()
         )
 
-        expect(alicePower).to.equal(3000000000)
-        expect(bobPower).to.equal(0)
-        expect(charliePower).to.equal(3000000000)
+        expect(alicePower.eq(3000000000)).to.be.true
+        expect(bobPower.eq(0)).to.be.true
+        expect(charliePower.eq(3000000000)).to.be.true
       })
 
       it('nonintuitive behavior fixes when bob withdraws', async () => {
@@ -376,9 +378,9 @@ describe('Lockup [@group=3]', () => {
           await time.latestBlock()
         )
 
-        expect(alicePower).to.equal(2000000000)
-        expect(bobPower).to.equal(0)
-        expect(charliePower).to.equal(4050000000)
+        expect(alicePower.eq(2000000000)).to.be.true
+        expect(bobPower.eq(0)).to.be.true
+        expect(charliePower.eq(4050000000)).to.be.true
       })
     })
   })

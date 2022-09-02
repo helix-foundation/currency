@@ -9,10 +9,14 @@
  * contract can replace the old one.
  */
 
+const { expect } = require('chai')
+const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const util = require('../../tools/test/util')
+
+const { BigNumber } = ethers
 
 describe('Governance Circuit Breaker Change [@group=9]', () => {
   let policy
@@ -33,7 +37,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   it('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    const trustedNodes = [
+    const trustednodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -45,7 +49,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       ecox,
       faucet: initInflation,
       timedPolicies,
-    } = await ecoFixture(trustedNodes))
+    } = await ecoFixture(trustednodes))
   })
 
   it('Stakes accounts', async () => {
@@ -123,10 +127,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   })
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
-      ['string'],
-      ['PolicyVotes']
-    )
+    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes')
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
       await util.policyFor(policy, policyVotesIdentifierHash)
@@ -202,34 +203,13 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       // propose
       await borda
         .connect(dave)
-        .propose(
-          10,
-          10,
-          10,
-          10,
-          ethers.BigNumber.from('1000000000000000000'),
-          ''
-        )
+        .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
       await borda
         .connect(charlie)
-        .propose(
-          20,
-          20,
-          20,
-          20,
-          ethers.BigNumber.from('1000000000000000000'),
-          ''
-        )
+        .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
       await borda
         .connect(bob)
-        .propose(
-          30,
-          30,
-          30,
-          30,
-          ethers.BigNumber.from('1000000000000000000'),
-          ''
-        )
+        .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
       await time.increase(3600 * 24 * 1)
       await borda.updateStage()
 
@@ -312,34 +292,13 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       // propose
       await borda
         .connect(dave)
-        .propose(
-          10,
-          10,
-          10,
-          10,
-          ethers.BigNumber.from('1000000000000000000'),
-          ''
-        )
+        .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
       await borda
         .connect(charlie)
-        .propose(
-          20,
-          20,
-          20,
-          20,
-          ethers.BigNumber.from('1000000000000000000'),
-          ''
-        )
+        .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
       await borda
         .connect(bob)
-        .propose(
-          30,
-          30,
-          30,
-          30,
-          ethers.BigNumber.from('1000000000000000000'),
-          ''
-        )
+        .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
       await time.increase(3600 * 24 * 10)
       await borda.updateStage()
 

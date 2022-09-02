@@ -1,4 +1,5 @@
 const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const { deploy } = require('../utils/contracts')
 
 describe('ForwardTarget [@group=2]', () => {
@@ -14,16 +15,14 @@ describe('ForwardTarget [@group=2]', () => {
     const proxied = await ethers.getContractAt('ForwardTarget', proxy.address)
 
     await expect(proxied.initialize(target.address)).to.be.revertedWith(
-      'Can only be called during initialization'
+      'only be called during initialization'
     )
   })
 
   it('initializes to the proper implementation address', async () => {
     const proxied = await ethers.getContractAt('ForwardTarget', proxy.address)
 
-    expect(await proxied.implementation()).to.equal(
-      await target.implementation()
-    )
+    assert.equal(await proxied.implementation(), await target.implementation())
   })
 
   it('does not allow updating to the same target address [ @skip-on-coverage ]', async () => {

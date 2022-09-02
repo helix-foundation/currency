@@ -25,6 +25,6 @@
       "balance": "300000000000000000000000000"
     }
   ],
-  "trustedNodes": ["address1", "address2"],
+  "trustednodes": ["address1", "address2"],
   "trusteeVoteReward": "1000000000000000000"
 }

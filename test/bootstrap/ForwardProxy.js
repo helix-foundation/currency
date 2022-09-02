@@ -1,5 +1,6 @@
 const { ethers } = require('hardhat')
-const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
+const { assert } = require('chai')
+const { loadFixture } = require('ethereum-waffle')
 
 describe('ForwardProxy [@group=2]', () => {
   const fixture = async () => {
@@ -56,7 +57,7 @@ describe('ForwardProxy [@group=2]', () => {
       if (verify) {
         const a = await verify(targetContract)
         const b = await verify(proxy)
-        expect(a).to.deep.equal(b)
+        assert.deepEqual(a, b)
       }
     })
   }

@@ -128,7 +128,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         updateStage();
         require(
             currentStage == _stage,
-            "This call is not allowed at this stage"
+            "This call is not allowed at this stage."
         );
         _;
     }
@@ -170,12 +170,12 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
     ) external onlyTrusted atStage(Stage.Propose) {
         require(
             _inflationMultiplier > 0,
-            "Inflation multiplier cannot be zero"
+            "Inflation multiplier cannot be zero."
         );
         require(
             // didn't choose this number for any particular reason
             uint256(bytes(_description).length) <= MAX_DATA,
-            "Description is too long"
+            "Description is too long."
         );
 
         GovernanceProposal storage p = proposals[msg.sender];

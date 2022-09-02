@@ -1,9 +1,17 @@
 /* eslint-disable no-console */
+
+const Web3 = require('web3')
 const ethers = require('ethers')
-const { NonceManager } = require('@ethersproject/experimental')
+
+global.web3 = new Web3()
+let ethersProvider
+
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 const path = require('path')
+const bip39 = require('bip39')
+const { hdkey } = require('ethereumjs-wallet')
+const express = require('express')
 const ganache = require('ganache-cli')
 const { deployTokens, deployGovernance } = require('./deploy')
 
@@ -19,6 +27,10 @@ function loadConfig(fileNamePath) {
   )
 }
 
+const ECOABI = require('../artifacts/contracts/currency/ECO.sol/ECO.json')
+const PolicyABI = require('../artifacts/contracts/policy/Policy.sol/Policy.json')
+const EcoFaucetABI = require('../artifacts/contracts/deploy/EcoFaucet.sol/EcoFaucet.json')
+
 let options
 
 // ## Init
@@ -30,7 +42,7 @@ async function parseOptions() {
       type: String,
     },
     {
-      name: 'trustedNodes',
+      name: 'trustednodes',
       type: String,
       multiple: true,
     },
@@ -41,6 +53,16 @@ async function parseOptions() {
     },
     {
       name: 'supervise',
+      type: Boolean,
+      defaultValue: false,
+    },
+    {
+      name: 'devmode',
+      type: Boolean,
+      defaultValue: false,
+    },
+    {
+      name: 'selftest',
       type: Boolean,
       defaultValue: false,
     },
@@ -64,6 +86,10 @@ async function parseOptions() {
     },
     {
       name: 'from',
+      type: String,
+    },
+    {
+      name: 'erc20',
       type: String,
     },
     {
@@ -93,27 +119,26 @@ async function parseOptions() {
   }
 }
 
-async function initEthers() {
+async function initWeb3() {
   if (options.ganache) {
     const serverAddr = '0.0.0.0'
     let serverPort
-    let ganacheServer
     if (options.deployTokens) {
       serverPort = 8545
-      ganacheServer = ganache.server({
+      options.ganacheServer = ganache.server({
         default_balance_ether: 1000000,
         blockTime: 0.1,
       })
     } else if (options.deployGovernance) {
       serverPort = 8546
-      ganacheServer = ganache.server({
+      options.ganacheServer = ganache.server({
         default_balance_ether: 1000000,
         blockTime: 0.1,
         fork: `${serverAddr}:${serverPort - 1}`,
       })
     }
     /* eslint-disable global-require, import/no-extraneous-dependencies */
-    ganacheServer.listen(serverPort, serverAddr, (err) => {
+    options.ganacheServer.listen(serverPort, serverAddr, (err) => {
       if (err) {
         console.log(err)
         return
@@ -121,68 +146,85 @@ async function initEthers() {
 
       console.log(`Ganache server listening on ${serverAddr}:${serverPort}`)
     })
-    options.ethersProvider = new ethers.providers.JsonRpcProvider(
-      `http://localhost:${serverPort}`
-    )
+    global.web3 = new Web3(options.ganacheServer.provider)
+    ethersProvider = new ethers.providers.JsonRpcProvider(defaultRpc)
   } else {
-    options.ethersProvider = new ethers.providers.JsonRpcProvider(
+    ethersProvider = new ethers.providers.JsonRpcProvider(
       options.webrpc || defaultRpc
+    )
+  }
+
+  const sync = await web3.eth.isSyncing()
+  if (sync !== false) {
+    throw Error(
+      `Node is still synchronizing ${sync.currentBlock}/${sync.highestBlock}`
     )
   }
 }
 
 async function initUsers() {
   let account
+  let chumpAccount
   if (!options.production) {
-    ;[options.chumpAccount] = await options.ethersProvider.listAccounts()
-    options.chumpSigner = await options.ethersProvider.getSigner(
-      options.chumpAccount
-    )
+    ;[chumpAccount] = await ethersProvider.listAccounts()
+    options.chumpAccount = chumpAccount
     console.log(`chump account is ${options.chumpAccount}`)
+
+    options.signer = await ethersProvider.getSigner()
   }
 
-  // use options.from to try and create a signer object
   if (options.from) {
-    if (ethers.utils.isAddress(options.from)) {
+    if (web3.utils.isAddress(options.from)) {
       account = options.from
-      options.signer = await options.ethersProvider.getSigner(account)
     } else {
-      if (ethers.utils.isHexString(options.from, 32)) {
-        options.signer = new ethers.Wallet(options.from, options.ethersProvider)
+      let priv
+      if (web3.utils.isHexStrict(options.from)) {
+        priv = options.from
       } else {
-        // a nonsensical input will fail here
-        options.signer = ethers.Wallet.fromMnemonic(options.from)
+        const seed = await bip39.mnemonicToSeed(options.from)
+        const hdwallet = hdkey.fromMasterSeed(seed)
+        const myWallet = hdwallet.derivePath("m/44'/60'/0'/0/0").getWallet()
+        priv = `0x${myWallet.getPrivateKey().toString('hex')}`
       }
-      account = await options.signer.getAddress()
-      // wrap the signer in a nonce manager
-      options.signer = new NonceManager(options.signer)
+      const a = web3.eth.accounts.privateKeyToAccount(priv)
+      web3.eth.accounts.wallet.add(a)
+      account = a.address
     }
   } else {
-    account = options.chumpAccount
-    options.signer = options.chumpSigner
+    account = chumpAccount
+  }
+  if (!account) {
+    // Use fallback account
+    const a = web3.eth.accounts.privateKeyToAccount(
+      '0x8981f8cbe9a797b9adac0730da85582b2164114e934e2b6aed5de5c785c0b4a6'
+    )
+    web3.eth.accounts.wallet.add(a)
+    account = a.address
   }
 
-  const balance = await options.ethersProvider.getBalance(account)
+  // const balance = web3.utils.fromWei(await web3.eth.getBalance(account), 'ether');
+  const balance = await ethersProvider.getBalance(account)
 
   if (balance < 1) {
     console.log(
       `Deployment account ${account} should have at least 1 Ether, has only ${balance}`
     )
-    const chumpBalance = ethers.utils.formatEther(
-      await options.ethersProvider.getBalance(options.chumpAccount)
+    const chumpBalance = web3.utils.fromWei(
+      await web3.eth.getBalance(chumpAccount),
+      'ether'
     )
     console.log(
-      `funding account from ${options.chumpAccount} which has ${chumpBalance} ether`
+      `funding account from ${chumpAccount} which has ${chumpBalance} ether`
     )
-
-    await (
-      await options.chumpSigner.sendTransaction({
-        to: account,
-        value: ethers.utils.parseEther('1000'),
-      })
-    ).wait()
-    const fundedBalance = ethers.utils.formatEther(
-      await options.ethersProvider.getBalance(account)
+    await web3.eth.sendTransaction({
+      from: chumpAccount,
+      to: account,
+      gas: 25000,
+      value: web3.utils.toWei('1000', 'ether'),
+    })
+    const fundedBalance = web3.utils.fromWei(
+      await web3.eth.getBalance(account),
+      'ether'
     )
     console.log(
       `Deployment account ${account} now has balance ${fundedBalance}`
@@ -190,54 +232,124 @@ async function initUsers() {
   }
 
   // Verify account works
-  await options.signer.sendTransaction({
+  await web3.eth.sendTransaction({
+    from: account,
     to: account,
-    value: ethers.utils.parseUnits('1', 'gwei'),
+    gas: 25000,
+    value: web3.utils.toWei('1', 'gwei'),
   })
 
+  console.log(`using account ${account} for deployment`)
   options.account = account
-  console.log(`using account ${options.account} for deployment`)
 }
 
 async function deployEco() {
+  if (options.devmode && options.trustednodes) {
+    const trustednodes = []
+    trustednodes.push(...options.trustednodes)
+    trustednodes.unshift(options.account)
+    await Promise.all(
+      trustednodes.map((a) =>
+        web3.eth.sendTransaction({
+          from: options.account,
+          to: a,
+          value: web3.utils.toWei('50', 'ether'),
+        })
+      )
+    )
+  }
   if (options.deployTokens) {
     options = await deployTokens(options)
-    const printOptions = JSON.parse(JSON.stringify(options)) // don't shallow copy
-    delete printOptions.correctPolicyArtifact
-    delete printOptions.ethersProvider
-    delete printOptions.signer
-    delete printOptions.chumpSigner
+    const printOptions = options
+    delete printOptions.correctPolicyABI
+    delete printOptions.ganacheServer
     console.log(JSON.stringify(printOptions, null, 2))
   }
   if (options.deployGovernance) {
     options = await deployGovernance(options)
+
+    if (options.devmode) {
+      const eco = new web3.eth.Contract(ECOABI.abi, options.eco)
+      const policy = new web3.eth.Contract(
+        PolicyABI.abi,
+        await eco.methods.policy().call()
+      )
+      const faucetaddr = await policy.methods
+        .policyFor(web3.utils.soliditySha3('Faucet'))
+        .call()
+      const faucet = new web3.eth.Contract(EcoFaucetABI.abi, faucetaddr)
+
+      const mintAmount = web3.utils.toWei('500000', 'ether')
+      await faucet.methods
+        .mint(options.account, mintAmount)
+        .send({ from: options.account, gas: 1000000 })
+    }
   }
-  console.log(`ECO token at ${options.ecoAddress}`)
-  console.log(`ECOx token at ${options.ecoXAddress}`)
-  console.log(`Policy at ${options.policyAddress}`)
+  console.log(`ECO token at ${options.eco.options.address}`)
+  console.log(`ECOx token at ${options.ecox.options.address}`)
+}
+
+async function findPolicy() {
+  if (options.eco && options.deployGovernance) {
+    const root = new web3.eth.Contract(ECOABI.abi, options.eco.options.address)
+    options.policy = await root.methods.policy().call()
+    console.log(`Policy at ${options.policy}`)
+  }
+}
+
+async function startExpress() {
+  if (options.devmode && options.policy) {
+    const app = express()
+    app.get('/', (req, res) => res.send(options.policy))
+    options.expressServer = app.listen(8548)
+  }
 }
 
 async function supervise() {
   if (options.supervise) {
-    console.log('storing supervisor inputs')
-    const content = `${options.webrpc ? options.webrpc : defaultRpc}\n${
-      options.policyAddress
-    }`
-    fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
-      if (e) {
-        console.log(e)
-      }
-    })
+    if (options.selftest) {
+      // const supervisor = new Supervisor(defaultRpc, options.policy);
+      // await supervisor.processAllBlocks();
+    } else {
+      console.log('storing supervisor inputs')
+      const content = `${defaultRpc}\n${options.policy}`
+      fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
+        if (e) {
+          console.log(e)
+        }
+      })
+      // await Supervisor.start(
+      //   defaultRpc,
+      //   options.policy,
+      // );
+    }
+  }
+}
+
+async function closeTest() {
+  if (options.selftest) {
+    if (web3.currentProvider.connection) {
+      await web3.currentProvider.connection.close()
+    }
+    if (options.expressServer) {
+      await options.expressServer.close()
+    }
+    if (options.ganacheServer) {
+      await options.ganacheServer.close()
+    }
   }
 }
 
 ;(async () => {
   try {
     await parseOptions()
-    await initEthers()
+    await initWeb3()
     await initUsers()
     await deployEco()
+    await findPolicy()
+    await startExpress()
     await supervise()
+    await closeTest()
   } catch (e) {
     console.log(e.toString(), e)
   }

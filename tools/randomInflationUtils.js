@@ -11,7 +11,7 @@ function arrayToTree(items, min, max) {
   let index
   let sum
   if (min === max) {
-    if (items[min][0] === ethers.constants.AddressZero) {
+    if (items[min][0] === 0) {
       index = 0
       sum = 0
     } else {
@@ -23,9 +23,23 @@ function arrayToTree(items, min, max) {
       balance: items[min][1],
       sum,
       index,
-      hash: ethers.utils.solidityKeccak256(
-        ['bytes20', 'uint256', 'uint256', 'uint256'],
-        [items[min][0], items[min][1], items[min][2], index]
+      hash: web3.utils.soliditySha3(
+        {
+          t: 'bytes20',
+          v: items[min][0].toString(),
+        },
+        {
+          t: 'uint256',
+          v: items[min][1],
+        },
+        {
+          t: 'uint256',
+          v: items[min][2],
+        },
+        {
+          t: 'uint256',
+          v: index,
+        }
       ),
     }
   }
@@ -33,12 +47,19 @@ function arrayToTree(items, min, max) {
   const a = arrayToTree(items, min, min + spread)
   const b = arrayToTree(items, max - spread, max)
   const params = [a.hash, b.hash]
+  // web3.utils.toBN(a.hash).lt(web3.utils.toBN(b.hash)) ? [a.hash, b.hash] : [b.hash, a.hash];
   return {
     left: a,
     right: b,
-    hash: ethers.utils.solidityKeccak256(
-      ['bytes32', 'bytes32'],
-      [params[0], params[1]]
+    hash: web3.utils.soliditySha3(
+      {
+        t: 'bytes32',
+        v: params[0],
+      },
+      {
+        t: 'bytes32',
+        v: params[1],
+      }
     ),
   }
 }
@@ -66,18 +87,18 @@ function getTree(map, wrongSum = [], swapIndex = []) {
 
   const wantitems = 2 ** Math.ceil(Math.log2(len))
   for (let i = len; i < wantitems; i += 1) {
-    items.push([ethers.constants.AddressZero, 0])
+    items.push([0, 0])
   }
-  let sum = ethers.BigNumber.from(0)
+  let sum = new web3.utils.BN(0)
   for (let i = 0; i < len; i += 1) {
     if (wrongSum.length > 0) {
       if (i === wrongSum[0]) {
-        sum = ethers.BigNumber.from(wrongSum[1])
+        sum = web3.utils.toBN(wrongSum[1])
       }
     }
 
     items[i].push(sum)
-    sum = sum.add(ethers.BigNumber.from(items[i][1]))
+    sum = sum.add(items[i][1])
   }
   for (let i = len; i < wantitems; i += 1) {
     items[i].push(0)

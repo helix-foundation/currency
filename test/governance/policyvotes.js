@@ -1,9 +1,10 @@
+const { expect } = require('chai')
+
+const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const util = require('../../tools/test/util')
-
-const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
 
 describe('PolicyVotes [@group=8]', () => {
   let policy
@@ -70,7 +71,7 @@ describe('PolicyVotes [@group=8]', () => {
             0
           )
 
-          expect(await proxiedPolicyVotes.voteEnds()).to.not.eq(0)
+          assert.notEqual((await proxiedPolicyVotes.voteEnds()).toString(), 0)
         })
       })
 
@@ -94,7 +95,7 @@ describe('PolicyVotes [@group=8]', () => {
               0,
               0
             )
-          ).to.be.revertedWith('This instance has already been configured')
+          ).to.be.revertedWith('has already been configured')
         })
       })
     })
@@ -137,9 +138,7 @@ describe('PolicyVotes [@group=8]', () => {
           it('reverts', async () => {
             await expect(
               proxiedPolicyVotes.connect(frank).vote(true)
-            ).to.be.revertedWith(
-              'Voters must have held tokens before this voting cycle'
-            )
+            ).to.be.revertedWith('must have held tokens')
           })
         })
 
@@ -155,9 +154,11 @@ describe('PolicyVotes [@group=8]', () => {
 
             await proxiedPolicyVotes.vote(true)
 
-            expect(
-              startStake.add(await eco.balanceOf(await alice.getAddress()))
-            ).to.equal(await proxiedPolicyVotes.totalStake())
+            assert(
+              startStake
+                .add(await eco.balanceOf(await alice.getAddress()))
+                .eq(await proxiedPolicyVotes.totalStake())
+            )
           })
 
           it('increases the yes stake on yes', async () => {
@@ -267,9 +268,7 @@ describe('PolicyVotes [@group=8]', () => {
           it('reverts', async () => {
             await expect(
               proxiedPolicyVotes.connect(frank).voteSplit(0, 0)
-            ).to.be.revertedWith(
-              'Voters must have held tokens before this voting cycle'
-            )
+            ).to.be.revertedWith('must have held tokens')
           })
         })
 
@@ -294,9 +293,11 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(2000), one.mul(3000))
 
-              expect(
-                startStake.add(await eco.balanceOf(await alice.getAddress()))
-              ).to.eq(await proxiedPolicyVotes.totalStake())
+              assert(
+                startStake
+                  .add(await eco.balanceOf(await alice.getAddress()))
+                  .eq(await proxiedPolicyVotes.totalStake())
+              )
             })
 
             it('when some of the balance is voted', async () => {
@@ -304,8 +305,10 @@ describe('PolicyVotes [@group=8]', () => {
 
               await proxiedPolicyVotes.voteSplit(one.mul(1500), one.mul(200))
 
-              expect(startStake.add(one.mul(1700))).to.eq(
-                await proxiedPolicyVotes.totalStake()
+              assert(
+                startStake
+                  .add(one.mul(1700))
+                  .eq(await proxiedPolicyVotes.totalStake())
               )
             })
           })
@@ -474,9 +477,7 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('called on a non-proxied instance', () => {
         it('reverts', async () => {
-          await expect(policyVotes.execute()).to.be.revertedWithPanic(
-            PANIC_CODES.DIVISION_BY_ZERO
-          )
+          await expect(policyVotes.execute()).to.be.revertedWith('revert')
         })
       })
 
@@ -529,11 +530,11 @@ describe('PolicyVotes [@group=8]', () => {
         })
 
         it('does not enact the policies', async () => {
-          expect(await util.policyFor(policy, adoptedPolicyIdHash)).to.be.zero
+          assert.equal(await util.policyFor(policy, adoptedPolicyIdHash), 0)
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
+          assert.equal(await util.policyFor(policy, votesPolicyIdHash), 0)
         })
       })
 
@@ -551,11 +552,11 @@ describe('PolicyVotes [@group=8]', () => {
             'SampleHandler',
             await util.policyFor(policy, adoptedPolicyIdHash)
           )
-          expect(await newPolicy.id()).to.be.zero
+          assert.equal((await newPolicy.id()).toString(), 0)
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await util.policyFor(policy, votesPolicyIdHash)).to.be.zero
+          assert.equal(await util.policyFor(policy, votesPolicyIdHash), 0)
         })
       })
     })

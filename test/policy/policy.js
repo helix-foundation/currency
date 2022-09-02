@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat')
-
-const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
+const { expect } = require('chai')
+const { loadFixture } = require('ethereum-waffle')
 const { deploy } = require('../utils/contracts')
 const { singletonsFixture } = require('../utils/fixtures')
 
@@ -120,7 +120,7 @@ describe('Policy [@group=11]', () => {
 
         await expect(
           commander.command(policed.address, revertingAction.address)
-        ).to.be.revertedWith('Command failed during delegatecall')
+        ).to.be.revertedWith('failed during delegatecall')
       })
     })
   })

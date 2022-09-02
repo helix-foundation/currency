@@ -25,7 +25,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
     modifier onlyPolicy() {
         require(
             msg.sender == address(policy),
-            "Only the policy contract may call this method"
+            "Only the policy contract may call this method."
         );
         _;
     }
@@ -52,7 +52,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
     {
         require(
             _addr == address(policy),
-            "This contract only implements interfaces for the policy contract"
+            "This contract only implements interfaces for the policy contract."
         );
         return ERC1820_ACCEPT_MAGIC;
     }

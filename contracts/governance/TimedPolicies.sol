@@ -86,7 +86,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         uint256 time = getTime();
         require(
             time > nextGenerationStart,
-            "Cannot update the generation counter so soon"
+            "Cannot update the generation counter so soon; please try later"
         );
 
         nextGenerationStart = time + GENERATION_DURATION;

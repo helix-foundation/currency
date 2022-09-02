@@ -1,8 +1,12 @@
+const { expect } = require('chai')
+
+const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
 
+const { BigNumber } = ethers
 const { ecoFixture } = require('../utils/fixtures')
 
-const MAX_ACCOUNT_BALANCE = ethers.BigNumber.from(
+const MAX_ACCOUNT_BALANCE = BigNumber.from(
   '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as we use 18 digits to store inflation
 )
 
@@ -25,7 +29,8 @@ describe('IECO [@group=5]', () => {
 
   describe('Decimals', () => {
     it('returns the right number', async () => {
-      expect(await eco.decimals()).to.equal(18)
+      // assert.equal(await eco.decimals(), 18, 'wrong number');
+      expect(await eco.decimals()).to.equal(18, 'no')
     })
   })
 
@@ -56,17 +61,17 @@ describe('IECO [@group=5]', () => {
   // });
 
   describe('Mintable', () => {
-    const mintAmount = ethers.BigNumber.from(1000)
+    const mintAmount = BigNumber.from(1000)
 
     it('should start with 0 balance', async () => {
       const balance = await eco.balanceOf(await accounts[0].getAddress())
 
-      expect(balance).to.equal(0)
+      expect(balance).to.equal(BigNumber.from(0))
     })
 
     it('should start with 0 token supply', async () => {
       const totalSupply = await eco.totalSupply()
-      expect(totalSupply).to.equal(0)
+      expect(totalSupply).to.equal(BigNumber.from(0))
     })
 
     context('for the inflation policy', () => {
@@ -91,9 +96,7 @@ describe('IECO [@group=5]', () => {
       })
 
       context('overflowing Weight', () => {
-        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(
-          ethers.BigNumber.from(500)
-        )
+        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(BigNumber.from(500))
 
         it('should throw when minting coins that would create an unsafe cast for checkpoints', async () => {
           await expect(
@@ -107,7 +110,7 @@ describe('IECO [@group=5]', () => {
       it('should revert when minting coins', async () => {
         await expect(
           eco.connect(accounts[1]).mint(await accounts[1].getAddress(), 1000)
-        ).to.be.revertedWith('Caller not authorized to mint tokens')
+        ).to.be.revertedWith('not authorized')
       })
 
       it('should not increase the balance when reverting minting coins', async () => {
@@ -133,7 +136,7 @@ describe('IECO [@group=5]', () => {
   })
 
   describe('Burnable', () => {
-    const burnAmount = ethers.BigNumber.from(1000)
+    const burnAmount = BigNumber.from(1000)
 
     context('for yourself', () => {
       it('should succeed with a balance', async () => {
@@ -163,7 +166,7 @@ describe('IECO [@group=5]', () => {
           eco
             .connect(accounts[2])
             .burn(await accounts[1].getAddress(), burnAmount)
-        ).to.be.revertedWith('Caller not authorized to burn tokens')
+        ).to.be.revertedWith('not authorized')
       })
     })
   })
@@ -172,7 +175,7 @@ describe('IECO [@group=5]', () => {
     context('when the store is not ready for a generation update', () => {
       it('does not allow incrementing generations', async () => {
         await expect(timedPolicies.incrementGeneration()).to.be.revertedWith(
-          'Cannot update the generation counter so soon'
+          'please try later'
         )
       })
     })
@@ -181,14 +184,15 @@ describe('IECO [@group=5]', () => {
       let originalGeneration
 
       beforeEach(async () => {
-        originalGeneration = await eco.currentGeneration()
+        originalGeneration = (await eco.currentGeneration()).toNumber()
         await time.increase(31557600 / 10)
       })
 
       it('allows incrementing generations', async () => {
         await timedPolicies.incrementGeneration()
-        expect(await eco.currentGeneration()).to.equal(
-          originalGeneration.add(1)
+        assert.equal(
+          (await eco.currentGeneration()).toNumber(),
+          originalGeneration + 1
         )
       })
     })
@@ -209,10 +213,10 @@ describe('IECO [@group=5]', () => {
 
       beforeEach(async () => {
         testAccount = await accounts[1].getAddress()
-        await faucet.mint(testAccount, ethers.BigNumber.from(1000))
+        await faucet.mint(testAccount, BigNumber.from(1000))
         blockNumber = await time.latestBlock()
         await time.advanceBlock()
-        originalGeneration = await eco.currentGeneration()
+        originalGeneration = (await eco.currentGeneration()).toNumber()
         initialBalance = await eco.getPastVotes(
           await accounts[1].getAddress(),
           blockNumber
@@ -250,7 +254,7 @@ describe('IECO [@group=5]', () => {
 
       beforeEach('set things up and let some time pass', async () => {
         testAccount = await accounts[1].getAddress()
-        await faucet.mint(testAccount, ethers.BigNumber.from(1000))
+        await faucet.mint(testAccount, BigNumber.from(1000))
         blockNumber = await time.latestBlock()
         await time.advanceBlock()
         initialBalance = await eco.getPastVotes(testAccount, blockNumber)
@@ -314,9 +318,9 @@ describe('IECO [@group=5]', () => {
         for (let i = 0; i < 3; i += 1) {
           /* eslint-disable no-await-in-loop */
           if (i !== 1) {
-            await faucet.mint(testAccount2, ethers.BigNumber.from(1000))
+            await faucet.mint(testAccount2, BigNumber.from(1000))
           }
-          await faucet.mint(testAccount1, ethers.BigNumber.from(1000))
+          await faucet.mint(testAccount1, BigNumber.from(1000))
           checkPoints.push(await time.latestBlock())
           await time.advanceBlock()
         }
