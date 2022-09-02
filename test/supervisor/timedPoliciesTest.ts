@@ -7,7 +7,7 @@ const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
 
-describe('CurrencyGovernance [@group=4]', () => {
+describe('timedPolicies_Supervisor [@group=4]', () => {
   let alice
   let policy: Policy
   let timedPolicies: TimedPolicies

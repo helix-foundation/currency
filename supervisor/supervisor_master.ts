@@ -8,14 +8,17 @@ const fs = require('fs');
 // const path = require('path');
 
 import { TimeGovernor } from "./supervisor_timedPolicies"
+import { CurrencyGovernor }from "./supervisor_currencyGovernance"
 // import { CurrencyGovernor } from "./supervisor_currencyGovernance"
 // import { CommunityGovernor } from "./supervisor_communityGovernance"
-import { Policy__factory, Policy, TimedPolicies__factory, TimedPolicies} from "../typechain-types"
+import { Policy__factory, Policy, TimedPolicies__factory, TimedPolicies, CurrencyGovernance__factory, CurrencyGovernance } from "../typechain-types"
+// import { CurrencyGovernance } from "../typechain-types/CurrencyGovernance";
 
 
 let pk = process.env.PRIVATE_KEY || "";
 
 const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
+const ID_CURRENCY_GOVERNANCE = ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
 
 let provider: ethers.providers.BaseProvider
 
@@ -41,6 +44,12 @@ async function startModules(wallet: ethers.Signer, rootPolicy: Policy) {
         await rootPolicy.policyFor(ID_TIMED_POLICIES),
         wallet
     );
+    let currencyGovernance: CurrencyGovernance = CurrencyGovernance__factory.connect(await rootPolicy.policyFor(ID_CURRENCY_GOVERNANCE), wallet)
+
     let timeGovernor: TimeGovernor = new TimeGovernor(provider, wallet, rootPolicy, timedPolicy)
-    timeGovernor.startTimer()
+    await timeGovernor.startTimer()
+
+    let currencyGovernor: CurrencyGovernor = new CurrencyGovernor(provider, wallet, rootPolicy, timedPolicy, currencyGovernance)
+    await currencyGovernor.setup()
+    await currencyGovernor.startTimer()
 }
