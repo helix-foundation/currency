@@ -1,7 +1,8 @@
 
+
 import * as ethers from "ethers";
 
-import { Policy, TimedPolicies, TimedPolicies__factory } from "./typechain-types"
+import { Policy, TimedPolicies } from "../typechain-types"
 
 const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
 
