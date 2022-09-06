@@ -13,13 +13,9 @@ if [[ "${1}" == "primary" ]]; then
 elif [[ "${1}" == "secondary" ]]; then
   npm run coverage:sol
   npx coveralls < coverage/lcov.info
-# elif [[ "${1}" == "tertiary" ]]; then
-#   npm run build
-#   npm run coverage:js
-#   npx coveralls < coverage-nyc/lcov.info
 elif [[ "${1}" == "docker" ]]; then
   docker build -t currency .
-  docker run -it --rm currency --selftest
+  docker run -it --rm currency
 else
   exit 1
 fi

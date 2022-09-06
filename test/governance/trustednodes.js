@@ -1,8 +1,6 @@
-const { ethers } = require('hardhat')
-
-const { BigNumber } = ethers
 const { expect } = require('chai')
-const { time } = require('@openzeppelin/test-helpers')
+
+const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 
 describe('TrustedNodes [@group=7]', () => {
@@ -12,7 +10,7 @@ describe('TrustedNodes [@group=7]', () => {
   let timedPolicies
   let alice
   let bob
-  const reward = 10000000
+  const reward = ethers.BigNumber.from(10000000)
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
@@ -30,7 +28,7 @@ describe('TrustedNodes [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           trustedNodes.trust(await alice.getAddress())
-        ).to.be.revertedWith('Only the policy contract')
+        ).to.be.revertedWith('Only the policy contract may call this method')
       })
     })
 
@@ -39,7 +37,7 @@ describe('TrustedNodes [@group=7]', () => {
         it('reverts', async () => {
           await expect(
             policy.testTrust(trustedNodes.address, await bob.getAddress())
-          ).to.be.revertedWith('already trusted')
+          ).to.be.revertedWith('Node is already trusted')
         })
       })
 
@@ -50,7 +48,7 @@ describe('TrustedNodes [@group=7]', () => {
               policy.testTrust(trustedNodes.address, await alice.getAddress())
             )
               .to.emit(trustedNodes, 'TrustedNodeAddition')
-              .withArgs(await alice.getAddress(), BigNumber.from(0))
+              .withArgs(await alice.getAddress(), 0)
           })
 
           it('adds the address to the set', async () => {
@@ -98,7 +96,7 @@ describe('TrustedNodes [@group=7]', () => {
       it('reverts', async () => {
         await expect(
           trustedNodes.distrust(await bob.getAddress())
-        ).to.be.revertedWith('Only the policy contract')
+        ).to.be.revertedWith('Only the policy contract may call this method')
       })
     })
 
@@ -109,7 +107,7 @@ describe('TrustedNodes [@group=7]', () => {
             policy.testDistrust(trustedNodes.address, await bob.getAddress())
           )
             .to.emit(trustedNodes, 'TrustedNodeRemoval')
-            .withArgs(await bob.getAddress(), BigNumber.from(0))
+            .withArgs(await bob.getAddress(), 0)
         })
 
         it('removes the address from the set', async () => {
@@ -198,13 +196,13 @@ describe('TrustedNodes [@group=7]', () => {
     describe('adding adding an address to the set', () => {
       describe('that is not already present', () => {
         it('increases the nodes length', async () => {
-          const preAddLength = BigNumber.from(await trustedNodes.numTrustees())
+          const preAddLength = await trustedNodes.numTrustees()
 
           await policy.testTrust(trustedNodes.address, await alice.getAddress())
 
-          expect(
-            BigNumber.from(await trustedNodes.numTrustees()).sub(preAddLength)
-          ).to.equal(1)
+          expect((await trustedNodes.numTrustees()).sub(preAddLength)).to.equal(
+            1
+          )
         })
       })
     })
@@ -212,16 +210,14 @@ describe('TrustedNodes [@group=7]', () => {
     describe('removing an address from the set', () => {
       it('decreases the nodes length', async () => {
         await policy.testTrust(trustedNodes.address, await alice.getAddress())
-        const preAddLength = BigNumber.from(await trustedNodes.numTrustees())
+        const preAddLength = await trustedNodes.numTrustees()
 
         await policy.testDistrust(
           trustedNodes.address,
           await alice.getAddress()
         )
 
-        expect(
-          preAddLength.sub(BigNumber.from(await trustedNodes.numTrustees()))
-        ).to.equal(1)
+        expect(preAddLength.sub(await trustedNodes.numTrustees())).to.equal(1)
       })
     })
   })
@@ -248,18 +244,12 @@ describe('TrustedNodes [@group=7]', () => {
       )
 
       await time.increase(3600 * 24 * 14 * 26)
-      await faucet.mintx(
-        trustedNodes.address,
-        BigNumber.from(1 * 26 * 2 * reward)
-      )
+      await faucet.mintx(trustedNodes.address, reward.mul(1 * 26 * 2))
       await trustedNodes.connect(alice).annualUpdate()
     })
 
     it('sets things appropriately', async () => {
-      await faucet.mintx(
-        trustedNodes.address,
-        BigNumber.from(1 * 26 * 2 * reward)
-      )
+      await faucet.mintx(trustedNodes.address, reward.mul(1 * 26 * 2))
       const initialGeneration = await trustedNodes.yearStartGen()
       await time.increase(3600 * 24 * 14 * 1)
       await timedPolicies.connect(alice).incrementGeneration()

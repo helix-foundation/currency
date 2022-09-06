@@ -10,12 +10,9 @@
  */
 
 const { expect } = require('chai')
-
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('Governance Trustee Change [@group=9]', () => {
   let policy
@@ -35,7 +32,7 @@ describe('Governance Trustee Change [@group=9]', () => {
   it('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    const trustednodes = [
+    const trustees = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -47,7 +44,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       faucet: initInflation,
       timedPolicies,
       trustedNodes,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustees))
   })
 
   it('Stakes accounts', async () => {
@@ -120,7 +117,7 @@ describe('Governance Trustee Change [@group=9]', () => {
     )
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -150,7 +147,7 @@ describe('Governance Trustee Change [@group=9]', () => {
     )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 

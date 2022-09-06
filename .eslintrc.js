@@ -44,9 +44,7 @@ module.exports = {
   },
   globals: {
     BigInt: "readonly",
-    web3: "readonly",
     artifacts: "readonly",
-    contract: "readonly",
-    assert: "readonly"
+    ethers: "readonly"
   }
 }

@@ -1,12 +1,9 @@
-const hre = require('hardhat')
-const { deployContract } = require('ethereum-waffle')
-
 /**
  * Deploy a contract with the given artifact name
- * Will be deployed by the given deployer address with the given params
+ * Will be deployed with the given params
  */
 exports.deploy = async (contractName, ...params) => {
-  const factory = await hre.ethers.getContractFactory(contractName)
+  const factory = await ethers.getContractFactory(contractName)
   if (params) {
     return factory.deploy(...params)
   }
@@ -14,19 +11,19 @@ exports.deploy = async (contractName, ...params) => {
 }
 
 /**
- * Deploy a contract with the given artifact name
+ * Deploy a contract with the given artifact name from a certain address
  * Will be deployed by the given deployer address with the given params
  */
 exports.deployFrom = async (from, contractName, ...params) => {
-  const artifact = await hre.artifacts.readArtifact(contractName)
+  const factory = await ethers.getContractFactory(contractName, from)
   if (params) {
-    return deployContract(from, artifact, params)
+    return factory.deploy(...params)
   }
-  return deployContract(from, artifact)
+  return factory.deploy()
 }
 
 exports.deployProxy = async (contractName, params) => {
   const base = await exports.deploy(contractName, params)
   const proxy = await exports.deploy('ForwardProxy', base.address)
-  return hre.ethers.getContractAt(contractName, proxy.address)
+  return ethers.getContractAt(contractName, proxy.address)
 }

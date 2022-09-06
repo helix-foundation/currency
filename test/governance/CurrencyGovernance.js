@@ -1,13 +1,10 @@
 /* eslint-disable no-underscore-dangle, no-console */
-
 const { expect } = require('chai')
 
-const { ethers } = require('hardhat')
 const time = require('../utils/time.ts')
-
-const { BigNumber } = ethers
-const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
 
 describe('CurrencyGovernance [@group=4]', () => {
   let alice
@@ -19,7 +16,7 @@ describe('CurrencyGovernance [@group=4]', () => {
   let additionalTrustees = []
   let policy
   let borda
-  let trustedNodes = []
+  let trustedNodes
   let faucet
   let ecox
   let timedPolicies
@@ -30,7 +27,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       [x[0], x[1], x[2]]
     )
 
-  const votingReward = '1000000000000000'
+  const votingReward = BigNumber.from(1000000000000000)
   // 76000000000000000
 
   before(async () => {
@@ -41,7 +38,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
   context('5 trustees', () => {
     beforeEach(async () => {
-      const trustednodes = [
+      const trustees = [
         await bob.getAddress(),
         await charlie.getAddress(),
         await dave.getAddress(),
@@ -50,7 +47,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       ]
 
       ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
-        await ecoFixture(trustednodes, votingReward))
+        await ecoFixture(trustees, votingReward))
 
       const originalBorda = await deploy('CurrencyGovernance', policy.address)
       const bordaCloner = await deploy('Cloner', originalBorda.address)
@@ -76,6 +73,12 @@ describe('CurrencyGovernance [@group=4]', () => {
         ).to.be.revertedWith('Only trusted nodes can call this method')
       })
 
+      it('reverts if proposed inflationMultiplier is zero', async () => {
+        await expect(
+          borda.connect(bob).propose(33, 34, 35, 36, 0, '')
+        ).to.be.revertedWith('Inflation multiplier cannot be zero')
+      })
+
       it('reverts if description is too long, doesnt if not', async () => {
         const a = 'a'
         const maxString = a.repeat(160)
@@ -90,7 +93,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               BigNumber.from('1000000000000000000'),
               `${maxString}!`
             )
-        ).to.be.revertedWith('Description is too long.')
+        ).to.be.revertedWith('Description is too long')
 
         await borda
           .connect(bob)
@@ -391,11 +394,11 @@ describe('CurrencyGovernance [@group=4]', () => {
           const tx = await borda.connect(bob).reveal(bobvote[0], bobvote[2])
           const receipt = await tx.wait()
           console.log(receipt.gasUsed)
-          expect(await borda.score(ZERO_ADDR)).to.equal(4)
+          expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
           expect(await borda.score(await bob.getAddress())).to.equal(3)
           expect(await borda.score(await charlie.getAddress())).to.equal(2)
           expect(await borda.score(await dave.getAddress())).to.equal(1)
-          expect(await borda.leader()).to.equal(ZERO_ADDR)
+          expect(await borda.leader()).to.equal(ethers.constants.AddressZero)
         })
 
         it('Updates state after bob and charlie reveals', async () => {
@@ -408,11 +411,11 @@ describe('CurrencyGovernance [@group=4]', () => {
             .reveal(charlievote[0], charlievote[2])
           const receipt2 = await tx2.wait()
           console.log(receipt2.gasUsed)
-          expect(await borda.score(ZERO_ADDR)).to.equal(3)
+          expect(await borda.score(ethers.constants.AddressZero)).to.equal(3)
           expect(await borda.score(await bob.getAddress())).to.equal(3)
           expect(await borda.score(await charlie.getAddress())).to.equal(3)
           expect(await borda.score(await dave.getAddress())).to.equal(1)
-          expect(await borda.leader()).to.equal(ZERO_ADDR)
+          expect(await borda.leader()).to.equal(ethers.constants.AddressZero)
         })
 
         it('Updates state after everyone reveals', async () => {
@@ -431,7 +434,7 @@ describe('CurrencyGovernance [@group=4]', () => {
           it('should set the leader as the proposal that hit the highest point total first', async () => {
             await borda.connect(niko).reveal(nikovote[0], nikovote[2])
             // should get {d: 4, bob: 3, charlie: 2, dave: 1, niko: 4, mila: 5}, mila is leader first with 5
-            expect(await borda.score(ZERO_ADDR)).to.equal(4)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
             expect(await borda.score(await mila.getAddress())).to.equal(5)
             expect(await borda.score(await bob.getAddress())).to.equal(1)
@@ -442,7 +445,7 @@ describe('CurrencyGovernance [@group=4]', () => {
             expect(await borda.score(await charlie.getAddress())).to.equal(3)
             await borda.connect(bob).reveal(bobvote[0], bobvote[2])
             // should get {d: 3, bob: 4, charlie: 5, dave: 2, niko: 4, mila: 5} // mila is now tied with charlie
-            expect(await borda.score(ZERO_ADDR)).to.equal(2)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(2)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
             expect(await borda.score(await mila.getAddress())).to.equal(5)
             expect(await borda.score(await bob.getAddress())).to.equal(4)
@@ -456,7 +459,7 @@ describe('CurrencyGovernance [@group=4]', () => {
           it('should set the leader as the proposal that was ahead before the final vote created a tie', async () => {
             await borda.connect(niko).reveal(nikovote[0], nikovote[2])
             // should get {d: 4, bob: 3, charlie: 2, dave: 1, niko: 4, mila: 5}, mila is leader first with 5
-            expect(await borda.score(ZERO_ADDR)).to.equal(4)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
             expect(await borda.score(await mila.getAddress())).to.equal(5)
             expect(await borda.score(await bob.getAddress())).to.equal(1)
@@ -465,7 +468,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
             await borda.connect(mila).reveal(milavote[0], milavote[2])
             // should get {d: 3, bob: 3, charlie: 2, dave: 1, niko: 6, mila: 6}, mila is leader first with 6, but niko is tied
-            expect(await borda.score(ZERO_ADDR)).to.equal(3)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(3)
             expect(await borda.score(await niko.getAddress())).to.equal(6)
             expect(await borda.score(await mila.getAddress())).to.equal(6)
             expect(await borda.score(await bob.getAddress())).to.equal(1)
@@ -522,15 +525,15 @@ describe('CurrencyGovernance [@group=4]', () => {
             // bob and dave do reveal
             expect(
               await trustedNodes.votingRecord(await bob.getAddress())
-            ).to.equal(BigNumber.from(1))
+            ).to.equal(1)
             expect(
               await trustedNodes.votingRecord(await dave.getAddress())
-            ).to.equal(BigNumber.from(1))
+            ).to.equal(1)
 
             // charlie didn't reveal
             expect(
               await trustedNodes.votingRecord(await charlie.getAddress())
-            ).to.equal(BigNumber.from(0))
+            ).to.equal(0)
           })
 
           describe('reward withdrawal', async () => {
@@ -553,7 +556,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               // rewards for the current year and the next year
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((2 * trustees * 26 * votingReward).toString())
+                votingReward.mul(2 * trustees * 26)
               )
               await time.increase(3600 * 24 * 14 * 26)
 
@@ -561,7 +564,7 @@ describe('CurrencyGovernance [@group=4]', () => {
                 .to.emit(trustedNodes, 'VotingRewardRedemption')
                 .withArgs(
                   await trustedNodes.connect(alice).hoard(),
-                  BigNumber.from((rewards * votingReward).toString())
+                  votingReward.mul(rewards)
                 )
 
               daveCurrentVotes = await trustedNodes
@@ -589,7 +592,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               expect(
                 await trustedNodes.lastYearVotingRecord(await dave.getAddress())
-              ).to.equal(BigNumber.from(0))
+              ).to.equal(0)
             })
 
             it('pays out trustee appropriately in complex case', async () => {
@@ -603,7 +606,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               // dave reveals once in year 1
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((2 * trustees * 26 * votingReward).toString())
+                votingReward.mul(2 * trustees * 26)
               )
               await time.increase(3600 * 24 * 14 * 26)
               const tx = await trustedNodes.connect(dave).annualUpdate()
@@ -718,7 +721,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
               await faucet.mintx(
                 trustedNodes.address,
-                BigNumber.from((trustees * 26 * votingReward).toString())
+                votingReward.mul(trustees * 26)
               )
               await trustedNodes.connect(dave).annualUpdate()
 
@@ -810,10 +813,10 @@ describe('CurrencyGovernance [@group=4]', () => {
     let unallocatedRewards
 
     before(async () => {
-      const trustednodes = [await dave.getAddress()]
+      const trustees = [await dave.getAddress()]
 
       ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
-        await ecoFixture(trustednodes))
+        await ecoFixture(trustees))
 
       davevote2 = [
         ethers.utils.randomBytes(32),
@@ -854,7 +857,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
   context('many trustees', () => {
     beforeEach(async () => {
-      const trustednodes = [
+      const trustees = [
         await bob.getAddress(),
         await charlie.getAddress(),
         await dave.getAddress(),
@@ -862,7 +865,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       ]
 
       ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
-        await ecoFixture(trustednodes))
+        await ecoFixture(trustees))
 
       const originalBorda = await deploy('CurrencyGovernance', policy.address)
       const bordaCloner = await deploy('Cloner', originalBorda.address)

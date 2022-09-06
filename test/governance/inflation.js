@@ -1,16 +1,13 @@
 /* eslint-disable no-underscore-dangle, no-await-in-loop, no-console */
 
 const bigintCryptoUtils = require('bigint-crypto-utils')
-const { expect, assert } = require('chai')
-const BN = require('bn.js')
 
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { prove, bnHex } = require('../../tools/vdf')
 const { getTree, answer } = require('../../tools/randomInflationUtils')
-
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
+const { BigNumber } = ethers
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('RandomInflation [@group=6]', () => {
   let policy
@@ -36,17 +33,17 @@ describe('RandomInflation [@group=6]', () => {
   const rewardVote = 20000
 
   const accountsBalances = [
-    new BN('10000000000000000000000000'),
-    new BN('50000000000000000000000000'),
-    new BN('50000000000000000000000000'),
+    BigNumber.from('10000000000000000000000000'),
+    BigNumber.from('50000000000000000000000000'),
+    BigNumber.from('50000000000000000000000000'),
   ]
   const accountsSums = [
-    new BN('0'),
-    new BN('10000000000000000000000000'),
-    new BN('60000000000000000000000000'),
+    BigNumber.from('0'),
+    BigNumber.from('10000000000000000000000000'),
+    BigNumber.from('60000000000000000000000000'),
   ]
 
-  const totalSum = new BN('110000000000000000000000000')
+  const totalSum = BigNumber.from('110000000000000000000000000')
   const amountOfAccounts = 3
   let map
   let timedPolicies
@@ -77,7 +74,7 @@ describe('RandomInflation [@group=6]', () => {
     )
     await rootHashProposal
       .connect(accounts[0])
-      .proposeRootHash(proposedRootHash, totalSum.toString(), amountOfAccounts)
+      .proposeRootHash(proposedRootHash, totalSum, amountOfAccounts)
     await time.increase(3600 * 25)
     await expect(
       rootHashProposal.checkRootHashStatus(await accounts[0].getAddress())
@@ -85,11 +82,11 @@ describe('RandomInflation [@group=6]', () => {
   }
 
   function getRecipient(claimNumber) {
-    if (new BN(claimNumber) === 0) {
+    if (BigNumber.from(claimNumber) === 0) {
       return [0, accounts[0]]
     }
     let index = accountsSums.findIndex((element) =>
-      element.gt(new BN(claimNumber))
+      element.gt(BigNumber.from(claimNumber))
     )
     index = index === -1 ? 2 : index - 1
     return [index, accounts[index]]
@@ -101,7 +98,7 @@ describe('RandomInflation [@group=6]', () => {
       [await inf.seed(), sequence]
     )
     const [index, recipient] = getRecipient(
-      new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum))
+      BigNumber.from(chosenClaimNumberHash).mod(BigNumber.from(totalSum))
     )
     return [answer(tree, index), index, recipient]
   }
@@ -111,20 +108,20 @@ describe('RandomInflation [@group=6]', () => {
    * @returns The prime from the current blockhash that a probable prime is
    */
   async function getPrimal(attempts = 0) {
-    const baseNum = new BN((await time.latestBlockHash()).slice(2), 16)
+    const baseNum = BigNumber.from(await time.latestBlockHash())
     for (let i = 1; i < 1000; i++) {
       if (
         await bigintCryptoUtils.isProbablyPrime(
-          BigInt(baseNum.addn(i).toString()),
+          BigInt(baseNum.add(i).toString()),
           30
         )
       ) {
         console.log(`primal i was ${i}, bhash was ${baseNum.toString()}`)
-        return baseNum.addn(i).toString()
+        return baseNum.add(i).toString()
       }
     }
     if (attempts > 2) {
-      assert.fail('Could not find a primal within bounds after 3 attempts')
+      expect.fail('Could not find a primal within bounds after 3 attempts')
     }
     return getPrimal(++attempts)
   }
@@ -159,22 +156,22 @@ describe('RandomInflation [@group=6]', () => {
 
     await initInflation.mint(
       await accounts[0].getAddress(),
-      accountsBalances[0].toString()
+      accountsBalances[0]
     )
     await initInflation.mint(
       await accounts[1].getAddress(),
-      accountsBalances[1].toString()
+      accountsBalances[1]
     )
     await initInflation.mint(
       await accounts[2].getAddress(),
-      accountsBalances[2].toString()
+      accountsBalances[2]
     )
 
     preInflationEcoSupply = await eco.totalSupply()
 
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -231,7 +228,7 @@ describe('RandomInflation [@group=6]', () => {
     beforeEach(async () => {
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(
+        await policyFor(
           policy,
           ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
         )
@@ -286,7 +283,7 @@ describe('RandomInflation [@group=6]', () => {
       await expect(
         await eco.getPastVotes(
           inflation.address,
-          (await inflation.blockNumber()).toNumber() + 1
+          (await inflation.blockNumber()).add(1)
         )
       ).to.not.equal(0)
     })
@@ -326,7 +323,7 @@ describe('RandomInflation [@group=6]', () => {
       await inflation.commitEntropyVDFSeed(primal)
 
       await expect(inflation.commitEntropyVDFSeed(primal)).to.be.revertedWith(
-        'seed has already been set'
+        'The VDF seed has already been set'
       )
     })
   })
@@ -334,7 +331,7 @@ describe('RandomInflation [@group=6]', () => {
   describe('submitEntropyVDF', () => {
     it('reverts when the seed has not been set', async () => {
       await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
-        'seed must be set'
+        'Initial seed must be set'
       )
     })
 
@@ -346,7 +343,7 @@ describe('RandomInflation [@group=6]', () => {
       await inflation.commitEntropyVDFSeed(primal)
 
       await expect(inflation.submitEntropyVDF(1)).to.be.revertedWith(
-        'output value must be verified'
+        'The VDF output value must be verified by the VDF verification contract'
       )
     })
 
@@ -360,9 +357,8 @@ describe('RandomInflation [@group=6]', () => {
         await time.advanceBlocks(1)
         await inflation.commitEntropyVDFSeed(primal)
         let u
-        const vdfseed = new BN(
-          (await inflation.entropyVDFSeed()).toHexString().slice(2),
-          16
+        const vdfseed = BigNumber.from(
+          (await inflation.entropyVDFSeed()).toHexString()
         )
         const t = await inflation.randomVDFDifficulty()
         ;[y, u] = prove(vdfseed, t)
@@ -384,7 +380,7 @@ describe('RandomInflation [@group=6]', () => {
         await inflation.submitEntropyVDF(bnHex(y))
 
         await expect(inflation.submitEntropyVDF(bnHex(y))).to.be.revertedWith(
-          'only submit once'
+          'Can only submit once'
         )
       })
     })
@@ -402,18 +398,15 @@ describe('RandomInflation [@group=6]', () => {
       it('rejects any claims', async () => {
         const a = answer(tree, 0)
         await expect(
-          inflation
-            .connect(accounts[0])
-            .claim(0, a[1].reverse(), a[0].sum.toString(), 0)
+          inflation.connect(accounts[0]).claim(0, a[1].reverse(), a[0].sum, 0)
         ).to.be.revertedWith('Must prove VDF before claims can be paid')
       })
     })
 
     context('after the VDF is complete', () => {
       beforeEach(async () => {
-        const vdfseed = new BN(
-          (await inflation.entropyVDFSeed()).toHexString().slice(2),
-          16
+        const vdfseed = BigNumber.from(
+          (await inflation.entropyVDFSeed()).toHexString()
         )
         const t = await inflation.randomVDFDifficulty()
         const [y, u] = prove(vdfseed, t)
@@ -431,20 +424,18 @@ describe('RandomInflation [@group=6]', () => {
         const beforeBalance = await eco.balanceOf(recipient.getAddress())
         const tx = await inflation
           .connect(recipient)
-          .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+          .claim(0, a[1].reverse(), a[0].sum, index)
         const receipt = await tx.wait()
         console.log(`gas used ${receipt.gasUsed}`)
         const afterBalance = await eco.balanceOf(recipient.getAddress())
-        expect(afterBalance.sub(beforeBalance).toNumber()).to.equal(rewardVote)
+        expect(afterBalance.sub(beforeBalance)).to.equal(rewardVote)
       })
 
       it('emits the Claim event', async () => {
         await time.increase(3600 * 24 * 10 + 1)
         const [a, index, recipient] = await getClaimParameters(inflation, 3)
         await expect(
-          inflation
-            .connect(recipient)
-            .claim(3, a[1].reverse(), a[0].sum.toString(), index)
+          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum, index)
         )
           .to.emit(inflation, 'Claim')
           .withArgs(await recipient.getAddress(), 3)
@@ -457,7 +448,7 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(numRecipients, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(numRecipients, a[1].reverse(), a[0].sum, index)
           ).to.be.revertedWith(
             'The provided sequence number must be within the set of recipients'
           )
@@ -468,7 +459,7 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(0, a[1].reverse(), (a[0].sum + 1000000).toString(), index)
+              .claim(0, a[1].reverse(), a[0].sum + 1000000, index)
           ).to.be.revertedWith(
             'A claim submission failed root hash verification'
           )
@@ -478,10 +469,10 @@ describe('RandomInflation [@group=6]', () => {
       it('reverts when called for the next period', async () => {
         const [a, index, recipient] = await getClaimParameters(inflation, 1000)
         await expect(
-          inflation
-            .connect(recipient)
-            .claim(3, a[1].reverse(), a[0].sum.toString(), index)
-        ).to.be.revertedWith('can only be made after enough time')
+          inflation.connect(recipient).claim(3, a[1].reverse(), a[0].sum, index)
+        ).to.be.revertedWith(
+          'A claim can only be made after enough time has passed'
+        )
       })
 
       context('when already called this period', () => {
@@ -489,7 +480,7 @@ describe('RandomInflation [@group=6]', () => {
           const [a, index, recipient] = await getClaimParameters(inflation, 0)
           await inflation
             .connect(recipient)
-            .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+            .claim(0, a[1].reverse(), a[0].sum, index)
         })
 
         it('reverts', async () => {
@@ -497,9 +488,9 @@ describe('RandomInflation [@group=6]', () => {
           await expect(
             inflation
               .connect(recipient)
-              .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(0, a[1].reverse(), a[0].sum, index)
           ).to.be.revertedWith(
-            'claim can only be made if it has not already been made'
+            'A claim can only be made if it has not already been made'
           )
         })
       })
@@ -510,22 +501,23 @@ describe('RandomInflation [@group=6]', () => {
           for (let i = 0; i < 3; i += 1) {
             updatedMap.set(
               await accounts[i].getAddress(),
-              new BN(
-                (await eco.balanceOf(await accounts[i].getAddress()))
-                  .toHexString()
-                  .slice(2),
-                16
+              BigNumber.from(
+                (
+                  await eco.balanceOf(await accounts[i].getAddress())
+                ).toHexString()
               )
             )
           }
           const [a, index, recipient] = await getClaimParameters(inflation, 0)
           updatedMap.set(
             await recipient.getAddress(),
-            updatedMap.get(await recipient.getAddress()).add(new BN(rewardVote))
+            updatedMap
+              .get(await recipient.getAddress())
+              .add(BigNumber.from(rewardVote))
           )
           await inflation
             .connect(recipient)
-            .claim(0, a[1].reverse(), a[0].sum.toString(), index)
+            .claim(0, a[1].reverse(), a[0].sum, index)
           await time.increase(3600 * 24 * 30)
         })
 
@@ -536,15 +528,13 @@ describe('RandomInflation [@group=6]', () => {
               await recipient.getAddress(),
               updatedMap
                 .get(await recipient.getAddress())
-                .add(new BN(rewardVote))
+                .add(BigNumber.from(rewardVote))
             )
             await inflation
               .connect(recipient)
-              .claim(i, a[1].reverse(), a[0].sum.toString(), index)
-            assert.equal(
-              (await eco.balanceOf(await recipient.getAddress())).toString(),
-              updatedMap.get(await recipient.getAddress()).toString(),
-              'Should get an inflation'
+              .claim(i, a[1].reverse(), a[0].sum, index)
+            expect(await eco.balanceOf(await recipient.getAddress())).to.equal(
+              updatedMap.get(await recipient.getAddress())
             )
           }
         })
@@ -559,7 +549,7 @@ describe('RandomInflation [@group=6]', () => {
     context('before seed reveal', () => {
       it('reverts', async () => {
         await expect(inflation.destruct()).to.be.revertedWith(
-          'Entropy not set, wait until end of full claim period to abort.'
+          'Entropy not set, wait until end of full claim period to abort'
         )
       })
 
@@ -579,9 +569,8 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with VDF, basic flow', () => {
         beforeEach(async () => {
-          const vdfseed = new BN(
-            (await inflation.entropyVDFSeed()).toHexString().slice(2),
-            16
+          const vdfseed = BigNumber.from(
+            (await inflation.entropyVDFSeed()).toHexString()
           )
           const t = await inflation.randomVDFDifficulty()
           const [y, u] = prove(vdfseed, t)
@@ -597,7 +586,7 @@ describe('RandomInflation [@group=6]', () => {
             const [a, index, recipient] = await getClaimParameters(inflation, i)
             await inflation
               .connect(recipient)
-              .claim(i, a[1].reverse(), a[0].sum.toString(), index)
+              .claim(i, a[1].reverse(), a[0].sum, index)
           }
         })
 
@@ -608,15 +597,14 @@ describe('RandomInflation [@group=6]', () => {
         it('burns the minted tokens', async () => {
           await inflation.destruct()
 
-          assert.equal((await eco.balanceOf(inflation.address)).toString(), 0)
+          expect(await eco.balanceOf(inflation.address)).to.equal(0)
         })
       })
 
       context('with a VDF solution', () => {
         beforeEach(async () => {
-          const vdfseed = new BN(
-            (await inflation.entropyVDFSeed()).toHexString().slice(2),
-            16
+          const vdfseed = BigNumber.from(
+            (await inflation.entropyVDFSeed()).toHexString()
           )
           const t = await inflation.randomVDFDifficulty()
           const [y, u] = prove(vdfseed, t)
@@ -632,7 +620,7 @@ describe('RandomInflation [@group=6]', () => {
         context('and claimNumbers have not been paid out', () => {
           it('reverts', async () => {
             await expect(inflation.destruct()).to.be.revertedWith(
-              'rewards must be claimed prior'
+              'All rewards must be claimed prior to destruct'
             )
           })
 
@@ -643,7 +631,7 @@ describe('RandomInflation [@group=6]', () => {
 
             it('still reverts', async () => {
               await expect(inflation.destruct()).to.be.revertedWith(
-                'rewards must be claimed prior'
+                'All rewards must be claimed prior to destruct'
               )
             })
           })
@@ -665,7 +653,7 @@ describe('RandomInflation [@group=6]', () => {
                     )
                     await inflation
                       .connect(recipient)
-                      .claim(i, a[1].reverse(), a[0].sum.toString(), index)
+                      .claim(i, a[1].reverse(), a[0].sum, index)
                   } catch (e) {
                     if (
                       !e.message.includes('provided address does not hold') &&
@@ -689,10 +677,7 @@ describe('RandomInflation [@group=6]', () => {
             })
 
             it('has no leftover tokens', async () => {
-              assert.equal(
-                (await eco.balanceOf(inflation.address)).toString(),
-                0
-              )
+              expect(await eco.balanceOf(inflation.address)).to.equal(0)
             })
 
             it('is no longer the inflation policy', async () => {
@@ -701,8 +686,7 @@ describe('RandomInflation [@group=6]', () => {
                 ['CurrencyGovernance']
               )
 
-              assert.notEqual(
-                await util.policyFor(policy, govhash),
+              expect(await policyFor(policy, govhash)).to.not.equal(
                 inflation.address
               )
             })
@@ -711,4 +695,4 @@ describe('RandomInflation [@group=6]', () => {
       })
     })
   })
-}).timeout(60000)
+})

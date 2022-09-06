@@ -1,8 +1,9 @@
-const { ethers } = require('hardhat')
 const { expect } = require('chai')
-const { loadFixture } = require('ethereum-waffle')
+
+const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const { singletonsFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
 
 describe('TokenInit [@group=11]', () => {
   const fixture = async () => {
@@ -62,7 +63,7 @@ describe('TokenInit [@group=11]', () => {
 
   describe('distributeTokens', () => {
     it('correctly funds the account with eco', async () => {
-      const mintAmount = '1000'
+      const mintAmount = BigNumber.from(1000)
       await tokenInit.distributeTokens(ecoProxied.address, [
         {
           holder: deadbeef,
@@ -70,12 +71,12 @@ describe('TokenInit [@group=11]', () => {
         },
       ])
 
-      const tokens = (await ecoProxied.balanceOf(deadbeef)).toString()
+      const tokens = await ecoProxied.balanceOf(deadbeef)
       expect(tokens).to.equal(mintAmount)
     })
 
     it('correctly funds the account with ecox', async () => {
-      const mintAmount = '10'
+      const mintAmount = BigNumber.from(10)
       await tokenInit.distributeTokens(ecoXProxied.address, [
         {
           holder: deadbeef,
@@ -83,7 +84,7 @@ describe('TokenInit [@group=11]', () => {
         },
       ])
 
-      const tokens = (await ecoXProxied.balanceOf(deadbeef)).toString()
+      const tokens = await ecoXProxied.balanceOf(deadbeef)
       expect(tokens).to.equal(mintAmount)
     })
   })

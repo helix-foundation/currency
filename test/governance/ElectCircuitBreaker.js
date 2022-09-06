@@ -8,14 +8,11 @@
  * how a full suite of trustees can be replaces, and how a new TrustedNodes
  * contract can replace the old one.
  */
-
 const { expect } = require('chai')
-const { ethers } = require('hardhat')
-const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
-const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
+const time = require('../utils/time.ts')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
+const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
 
 describe('Governance Circuit Breaker Change [@group=9]', () => {
@@ -37,7 +34,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   it('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave] = accounts
-    const trustednodes = [
+    const trustedNodes = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -49,7 +46,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       ecox,
       faucet: initInflation,
       timedPolicies,
-    } = await ecoFixture(trustednodes))
+    } = await ecoFixture(trustedNodes))
   })
 
   it('Stakes accounts', async () => {
@@ -65,7 +62,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
     await timedPolicies.incrementGeneration()
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -79,7 +76,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
     )
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -127,10 +124,13 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
   })
 
   it('Transitions from proposing to voting', async () => {
-    const policyVotesIdentifierHash = web3.utils.soliditySha3('PolicyVotes')
+    const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['PolicyVotes']
+    )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 
@@ -247,7 +247,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
       await timedPolicies.incrementGeneration()
       borda = await ethers.getContractAt(
         'CurrencyGovernance',
-        await util.policyFor(
+        await policyFor(
           policy,
           ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
         )
@@ -485,7 +485,7 @@ describe('Governance Circuit Breaker Change [@group=9]', () => {
         )
         policyProposals = await ethers.getContractAt(
           'PolicyProposals',
-          await util.policyFor(policy, proposalsHash)
+          await policyFor(policy, proposalsHash)
         )
       })
 
