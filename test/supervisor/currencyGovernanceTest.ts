@@ -77,20 +77,14 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
   })
   it('computes correctly', async () => {
     const stage = currencyGovernor.stage
-    console.log(currencyGovernor.currencyGovernance.address)
     expect(stage).to.equal(0)
     let currTime = await time.latestBlockTimestamp()
 
     const proposalEnds = currencyGovernor.proposalEnds
-    await time.increase(proposalEnds - currTime + 2)
+    await time.increase(proposalEnds - currTime + 1)
     let result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 8000)
     })
-    console.log(
-      `currtime is         ${Number(await time.latestBlockTimestamp())}`
-    )
-    console.log(`expected to be past ${proposalEnds}`)
-    console.log(currencyGovernor.currencyGovernance.address)
     expect(currencyGovernor.stage).to.equal(1)
 
     const votingEnds = currencyGovernor.revealEnds
@@ -99,9 +93,7 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 5000)
     })
-    // expect(currencyGovernor.stage).to.equal(2)
-    // console.log(`currtime is         ${Number(await time.latestBlockTimestamp())}`)
-    // console.log(`expected to be past ${revealEnds}`)
+
     expect(currencyGovernor.stage).to.be.greaterThan(2)
   })
   it('updates currencyGovernance properly upon generation increment', async () => {
