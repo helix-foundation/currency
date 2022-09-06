@@ -15,7 +15,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('Governance Policy Change [@group=9]', () => {
+describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
   let policy
   let eco
   let timedPolicies
@@ -60,7 +60,7 @@ describe('Governance Policy Change [@group=9]', () => {
   })
 
   it('Waits a generation', async () => {
-    await time.increase(3600 * 24 * 40)
+    await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
   })
 
@@ -76,7 +76,7 @@ describe('Governance Policy Change [@group=9]', () => {
     await expect(poodleBorda.provePoodles()).to.be.reverted
   })
 
-  it('Constructs the proposals', async () => {
+  it('Constructs the proposal', async () => {
     poodleCurrencyGovernance = await deploy(
       'PoodleCurrencyGovernance',
       policy.address
@@ -91,7 +91,7 @@ describe('Governance Policy Change [@group=9]', () => {
     expect(name).to.equal('MakePoodle')
   })
 
-  it('Kicks off a proposal round', async () => {
+  it('Find the policy proposals instance', async () => {
     const proposalsHash = ethers.utils.solidityKeccak256(
       ['string'],
       ['PolicyProposals']
@@ -107,17 +107,15 @@ describe('Governance Policy Change [@group=9]', () => {
       .connect(alice)
       .approve(policyProposals.address, await policyProposals.COST_REGISTER())
     await policyProposals.connect(alice).registerProposal(makePoodle.address)
-
-    await time.increase(3600 * 24 * 2)
   })
 
-  it('Adds stake to proposals to ensure they are in the top 10', async () => {
+  it('Adds stake to the proposal to ensure it goes to a vote', async () => {
     await policyProposals.connect(alice).support(makePoodle.address)
     await policyProposals.connect(bob).support(makePoodle.address)
     await policyProposals.connect(bob).deployProposalVoting()
   })
 
-  it('Transitions from proposing to voting', async () => {
+  it('Find the policy votes instance', async () => {
     const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
       ['string'],
       ['PolicyVotes']
@@ -133,8 +131,8 @@ describe('Governance Policy Change [@group=9]', () => {
     await policyVotes.connect(bob).vote(true)
   })
 
-  it('Waits another week (end of commit period)', async () => {
-    await time.increase(3600 * 24 * 7)
+  it('Waits until the end of the voting period', async () => {
+    await time.increase(3600 * 24 * 4)
   })
 
   it('Executes the outcome of the votes', async () => {
@@ -142,7 +140,7 @@ describe('Governance Policy Change [@group=9]', () => {
   })
 
   it('Moves to the next generation', async () => {
-    await time.increase(3600 * 24 * 7)
+    await time.increase(3600 * 24 * 10)
     await timedPolicies.incrementGeneration()
   })
 

@@ -38,10 +38,10 @@ describe('VotingPower [@group=2]', () => {
     const accounts = await ethers.getSigners()
     let deployer
     ;[deployer, alice, bob, charlie] = accounts
-    const trustedNodes = [await bob.getAddress()]
+    const trustees = [await bob.getAddress()]
 
     ;({ policy, eco, faucet, timedPolicies, ecox, ecoXStaking } =
-      await ecoFixture(trustedNodes))
+      await ecoFixture(trustees))
 
     await faucet.mint(await alice.getAddress(), one.mul(aliceBalance))
     await faucet.mint(await bob.getAddress(), one.mul(aliceBalance))
