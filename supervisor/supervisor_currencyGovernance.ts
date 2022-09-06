@@ -5,12 +5,6 @@ import { Policy, TimedPolicies, CurrencyGovernance__factory, CurrencyGovernance 
 
 const ID_CURRENCY_GOVERNANCE = ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
 
-
-let proposalEnds: number
-let votingEnds: number
-let revealEnds: number
-let stage: number
-
 export class CurrencyGovernor {
     provider: ethers.providers.BaseProvider
     wallet: ethers.Signer
@@ -19,6 +13,10 @@ export class CurrencyGovernor {
     currencyGovernance: CurrencyGovernance
     triedUpdateStage: boolean = false
     triedCompute: boolean = false
+    proposalEnds: number = 0
+    votingEnds: number = 0
+    revealEnds: number = 0
+    stage: number = 0
 
     constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies, currencyGovernance: CurrencyGovernance) {
         this.provider = provider
@@ -29,21 +27,21 @@ export class CurrencyGovernor {
     };
 
     async setup() {
-        proposalEnds = (await this.currencyGovernance.proposalEnds()).toNumber()
-        votingEnds = (await this.currencyGovernance.votingEnds()).toNumber()
-        revealEnds = (await this.currencyGovernance.revealEnds()).toNumber()
-        stage = await this.currencyGovernance.currentStage()
+        this.proposalEnds = (await this.currencyGovernance.proposalEnds()).toNumber()
+        this.votingEnds = (await this.currencyGovernance.votingEnds()).toNumber()
+        this.revealEnds = (await this.currencyGovernance.revealEnds()).toNumber()
+        this.stage = await this.currencyGovernance.currentStage()
     }
 
     async startTimer() {
         this.provider.on("block" , async () => {
             let timestamp: number = (await this.provider.getBlock('latest')).timestamp
-            if ((stage === 0 && timestamp > proposalEnds
-                || stage === 1 && timestamp > votingEnds
-                || stage === 2 && timestamp > revealEnds))
+            if ((this.stage === 0 && timestamp > this.proposalEnds
+                || this.stage === 1 && timestamp > this.votingEnds
+                || this.stage === 2 && timestamp > this.revealEnds))
                 {
                 await this.stageUpdate()
-            } else if (stage === 3) {
+            } else if (this.stage === 3) {
                 this.doCompute()
             }
         })
@@ -56,15 +54,16 @@ export class CurrencyGovernor {
             let rc = await tx.wait()
             if (rc.status === 1) {
                 this.triedUpdateStage = false
-                stage++
+                this.stage = await this.currencyGovernance.currentStage()
             } else {
+                console.log('ane')
                 throw tx
             }
         } catch (e) {
-            if (await this.currencyGovernance.currentStage() > stage) {
+            if (await this.currencyGovernance.currentStage() > this.stage) {
                 // stage has already been updated
                 this.triedUpdateStage = false
-                stage++
+                this.stage = await this.currencyGovernance.currentStage()
             } else {
                 // potential serious error
                 setTimeout(this.stageUpdate.bind(this), 1000)
@@ -79,15 +78,15 @@ export class CurrencyGovernor {
             let rc = await tx.wait()
             if (rc.status === 1) {
                 this.triedCompute = false
-                stage++
+                this.stage++
             } else {
                 throw tx
             }
         } catch (e) {
-            if (await this.currencyGovernance.currentStage() > stage) {
+            if (await this.currencyGovernance.currentStage() > this.stage) {
                 // stage has already been updated
                 this.triedUpdateStage = false
-                stage++
+                this.stage++
             } else {
                 // potential serious error
                 setTimeout(this.stageUpdate.bind(this), 1000)
