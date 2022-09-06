@@ -76,7 +76,7 @@
     "eslint-plugin-promise": "6.0.1",
     "ganache-cli": "6.12.2",
     "hardhat": "2.10.2",
-    "hardhat-gas-reporter": "1.0.8",
+    "hardhat-gas-reporter": "1.0.9",
     "mocha-chai-jest-snapshot": "1.1.4",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "1.0.0-dev.23",
