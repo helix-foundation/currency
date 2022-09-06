@@ -86,7 +86,9 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     let result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 8000)
     })
-    console.log(`currtime is         ${Number(await time.latestBlockTimestamp())}`)
+    console.log(
+      `currtime is         ${Number(await time.latestBlockTimestamp())}`
+    )
     console.log(`expected to be past ${proposalEnds}`)
     console.log(currencyGovernor.currencyGovernance.address)
     expect(currencyGovernor.stage).to.equal(1)
