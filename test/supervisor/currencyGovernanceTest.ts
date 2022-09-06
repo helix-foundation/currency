@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { ethers, expect } from 'hardhat'
+import { ethers } from 'hardhat'
 import {
   Policy,
   TimedPolicies,
@@ -11,6 +11,7 @@ import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance
 // import { TimedPolicies, TimedPolicies } from '../../typechain-types/TimedPolicies'
 
 const time = require('../utils/time.ts')
+const { expect } = require('chai')
 
 const { ecoFixture } = require('../utils/fixtures')
 
