@@ -54,7 +54,7 @@ export class TimeGovernor {
             let tx = await this.timedPolicy.incrementGeneration()
             let rc = await tx.wait()
             if (rc.status === 1) {
-                console.log('updated')
+                console.log('updated generation')
                 this.triedUpdate = false
                 this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
             } else {

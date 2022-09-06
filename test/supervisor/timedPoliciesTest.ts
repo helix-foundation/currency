@@ -1,23 +1,29 @@
 /* eslint-disable no-unused-vars */
 import { ethers, expect } from 'hardhat'
 import { Policy, TimedPolicies } from '../../typechain-types'
-import { testStartSupervisor } from '../../supervisor/supervisor_master'
+import { Supervisor } from '../../supervisor/supervisor_master'
 
 const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
 
+<<<<<<< HEAD
 describe('CurrencyGovernance [@group=13]', () => {
+=======
+describe('timedPolicies_Supervisor [@group=4]', () => {
+>>>>>>> ECO-508
   let alice
   let policy: Policy
   let timedPolicies: TimedPolicies
+  let supervisor: Supervisor
 
   before(async () => {
     const accounts = await ethers.getSigners()
     ;[alice] = accounts
     ;({ policy, timedPolicies } = await ecoFixture())
 
-    await testStartSupervisor(policy, alice)
+    supervisor = new Supervisor()
+    await supervisor.testStartSupervisor(policy, alice)
   })
 
   it('increments generation at appropriate times', async () => {
