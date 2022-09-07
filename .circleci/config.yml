@@ -21,6 +21,7 @@ workflows:
                 - '10'
                 - '11'
                 - '12'
+                - '13'
               suite:
                 - primary
                 - secondary
@@ -35,7 +36,7 @@ workflows:
                 - secondary
                 # - tertiary
               group:
-                - "(1|2|3|4|5|6|7|8|9|10|11|12)"
+                - "(1|2|3|4|5|6|7|8|9|10|11|12|13)"
               invert-group:
                 - true
           requires:
@@ -45,7 +46,7 @@ workflows:
           requires:
             - checkout-code
       - notify_job_status:
-          requires: [ test-1-secondary, test-2-secondary, test-3-secondary, test-4-secondary, test-5-secondary, test-6-secondary, test-7-secondary, test-8-secondary, test-9-secondary, test-10-secondary, test-11-secondary, test-12-secondary, test-(1|2|3|4|5|6|7|8|9|10|11|12)-true-secondary] # test-1-tertiary,test-2-tertiary, test-3-tertiary, test-4-tertiary, test-5-tertiary, test-6-tertiary, test-7-tertiary, test-8-tertiary, test-9-tertiary, test-10-tertiary, test-11-tertiary,  test-12-tertiary, test-(1|2|3|4|5|6|7|8|9|10|11|12)-true-tertiary
+          requires: [ test-1-secondary, test-2-secondary, test-3-secondary, test-4-secondary, test-5-secondary, test-6-secondary, test-7-secondary, test-8-secondary, test-9-secondary, test-10-secondary, test-11-secondary, test-12-secondary, test-13-secondary, test-(1|2|3|4|5|6|7|8|9|10|11|12|13)-true-secondary] # test-1-tertiary,test-2-tertiary, test-3-tertiary, test-4-tertiary, test-5-tertiary, test-6-tertiary, test-7-tertiary, test-8-tertiary, test-9-tertiary, test-10-tertiary, test-11-tertiary,  test-12-tertiary, test-13-tertiary, test-(1|2|3|4|5|6|7|8|9|10|11|12|13)-true-tertiary
 jobs:
   checkout-code:
     machine:
