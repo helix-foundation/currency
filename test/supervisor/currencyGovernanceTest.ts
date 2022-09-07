@@ -26,7 +26,7 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
 
   beforeEach(async () => {
     if (timeGovernor) {
-        await timeGovernor.killListeners()
+      await timeGovernor.killListeners()
     }
     // if (currencyGovernor) {
     //     await currencyGovernor.killListener()
@@ -104,21 +104,20 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     expect(currencyGovernor.stage).to.be.greaterThan(2)
   })
   it('updates currencyGovernance properly upon generation increment', async () => {
-    // timeGovernor = supervisor.timeGovernor
     let result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 5000)
+      setTimeout(() => resolve(), 5000)
     })
     const initialCurrGov = currencyGovernor.currencyGovernance.address
     const generationTime = (
       await timeGovernor.timedPolicy.GENERATION_DURATION()
     ).toNumber()
-    console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
+    // console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
 
     await time.increase(generationTime + 1)
     result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 8000)
     })
-    console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
+    // console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
     const newCurrGov = currencyGovernor.currencyGovernance.address
     expect(newCurrGov).to.not.equal(initialCurrGov)
   })
