@@ -55,6 +55,7 @@ export class CurrencyGovernor {
             if (rc.status === 1) {
                 this.triedUpdateStage = false
                 this.stage = await this.currencyGovernance.currentStage()
+                // console.log(this.stage)
             } else {
                 console.log('ane')
                 throw tx
@@ -77,6 +78,7 @@ export class CurrencyGovernor {
             let tx = await this.currencyGovernance.compute()
             let rc = await tx.wait()
             if (rc.status === 1) {
+                // console.log('computed')
                 this.triedCompute = false
                 this.stage++
             } else {
@@ -96,16 +98,13 @@ export class CurrencyGovernor {
 
     async generationListener() {
         this.timedPolicy.on("NewGeneration", async () => {
-            console.log('whenk')
+            console.log('updating currencyGovernance')
             this.currencyGovernance = CurrencyGovernance__factory.connect(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE), this.wallet)
             await this.setup()
         })
     }
 
     async killListener() {
-        this.timedPolicy.off("NewGeneration",async () => {
-            this.currencyGovernance = CurrencyGovernance__factory.connect(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE), this.wallet)
-            await this.setup()
-        })
+        this.timedPolicy.removeAllListeners("NewGeneration")
     }
 }

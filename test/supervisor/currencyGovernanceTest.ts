@@ -28,6 +28,9 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     if (timeGovernor) {
         await timeGovernor.killListeners()
     }
+    // if (currencyGovernor) {
+    //     await currencyGovernor.killListener()
+    // }
     const accounts = await ethers.getSigners()
     ;[alice] = accounts
     ;({ policy, timedPolicies, currencyGovernance } = await ecoFixture())
@@ -95,7 +98,7 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     currTime = await time.latestBlockTimestamp()
     await time.increase(votingEnds - currTime + 1)
     result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 6000)
+      setTimeout(() => resolve(), 5000)
     })
 
     expect(currencyGovernor.stage).to.be.greaterThan(2)
@@ -103,7 +106,7 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
   it('updates currencyGovernance properly upon generation increment', async () => {
     // timeGovernor = supervisor.timeGovernor
     let result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 8000)
+        setTimeout(() => resolve(), 5000)
     })
     const initialCurrGov = currencyGovernor.currencyGovernance.address
     const generationTime = (
@@ -116,9 +119,6 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
       setTimeout(() => resolve(), 8000)
     })
     console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
-    result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 5000)
-    })
     const newCurrGov = currencyGovernor.currencyGovernance.address
     expect(newCurrGov).to.not.equal(initialCurrGov)
   })
