@@ -54,7 +54,7 @@ describe('TimedPolicies [@group=12]', () => {
   describe('startPolicyProposal', () => {
     context("when it's time to start a new cycle", () => {
       it('emits a PolicyDecisionStart event', async () => {
-        await time.increase(3600 * 24 * 15)
+        await time.increase(3600 * 24 * 14)
         await expect(timedPolicies.incrementGeneration()).to.emit(
           timedPolicies,
           'PolicyDecisionStart'

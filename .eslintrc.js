@@ -44,7 +44,6 @@ module.exports = {
   },
   globals: {
     BigInt: "readonly",
-    artifacts: "readonly",
     ethers: "readonly"
   }
 }

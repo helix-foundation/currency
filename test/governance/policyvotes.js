@@ -36,7 +36,7 @@ describe('PolicyVotes [@group=8]', () => {
     await initInflation.mint(await bob.getAddress(), one.mul(8000))
     await initInflation.mint(await charlie.getAddress(), one.mul(5200))
     await initInflation.mint(await dave.getAddress(), one.mul(4800))
-    await time.increase(3600 * 24 * 40)
+    await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
 
     policyVotes = await deploy('PolicyVotes', policy.address, eco.address)
@@ -123,7 +123,7 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('after the commitment period', () => {
         beforeEach(async () => {
-          await time.increase(3600 * 24 * 22)
+          await time.increase(3600 * 24 * 14)
         })
 
         it('reverts', async () => {
@@ -253,7 +253,7 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('after the commitment period', () => {
         beforeEach(async () => {
-          await time.increase(3600 * 24 * 22)
+          await time.increase(3600 * 24 * 14)
         })
 
         it('reverts', async () => {

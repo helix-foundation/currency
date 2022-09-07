@@ -150,7 +150,7 @@ async function deployStage1(options) {
       )
     }
     // bootstrapGas = 4538418; // old estimate, included 20 proxies
-    bootstrapGas = 1526410
+    bootstrapGas = 2000000
   } else {
     BLOCK_GAS_LIMIT = limit
     bootstrapGas = 1700000
@@ -372,6 +372,7 @@ async function deployStage2(options) {
     options.initialECO,
     {
       gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
     }
   )
 
@@ -383,6 +384,7 @@ async function deployStage2(options) {
     options.initialECOx,
     {
       gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
     }
   )
 
