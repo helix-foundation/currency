@@ -8,7 +8,8 @@ const fs = require('fs');
 // const path = require('path');
 
 import { TimeGovernor } from "./supervisor_timedPolicies"
-import { CurrencyGovernor }from "./supervisor_currencyGovernance"
+import { CurrencyGovernor } from "./supervisor_currencyGovernance"
+import { InflationGovernor } from "./supervisor_randomInflation"
 // import { CurrencyGovernor } from "./supervisor_currencyGovernance"
 // import { CommunityGovernor } from "./supervisor_communityGovernance"
 import { Policy__factory, Policy, TimedPolicies__factory, TimedPolicies, CurrencyGovernance__factory, CurrencyGovernance } from "../typechain-types"
@@ -25,6 +26,7 @@ let provider: ethers.providers.BaseProvider
 export class Supervisor {
     timeGovernor!: TimeGovernor
     currencyGovernor!: CurrencyGovernor
+    inflationGovernor!: InflationGovernor
 
 
 
@@ -64,6 +66,9 @@ export class Supervisor {
         await this.currencyGovernor.setup()
         await this.currencyGovernor.startTimer()
         await this.currencyGovernor.generationListener()
+
+        this.inflationGovernor = new InflationGovernor(provider, wallet, rootPolicy, timedPolicy)
+        this.inflationGovernor.setup()
     }
 }
 
