@@ -2,8 +2,9 @@
 const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
-const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
 
 describe('CurrencyGovernance [@group=4]', () => {
   let alice
@@ -26,7 +27,7 @@ describe('CurrencyGovernance [@group=4]', () => {
       [x[0], x[1], x[2]]
     )
 
-  const votingReward = ethers.BigNumber.from(1000000000000000)
+  const votingReward = BigNumber.from(1000000000000000)
   // 76000000000000000
 
   before(async () => {
@@ -491,11 +492,11 @@ describe('CurrencyGovernance [@group=4]', () => {
           const tx = await borda.connect(bob).reveal(bobvote[0], bobvote[2])
           const receipt = await tx.wait()
           console.log(receipt.gasUsed)
-          expect(await borda.score(ZERO_ADDR)).to.equal(4)
+          expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
           expect(await borda.score(await bob.getAddress())).to.equal(3)
           expect(await borda.score(await charlie.getAddress())).to.equal(2)
           expect(await borda.score(await dave.getAddress())).to.equal(1)
-          expect(await borda.leader()).to.equal(ZERO_ADDR)
+          expect(await borda.leader()).to.equal(ethers.constants.AddressZero)
         })
 
         it('Updates state after bob and charlie reveals', async () => {
@@ -508,11 +509,11 @@ describe('CurrencyGovernance [@group=4]', () => {
             .reveal(charlievote[0], charlievote[2])
           const receipt2 = await tx2.wait()
           console.log(receipt2.gasUsed)
-          expect(await borda.score(ZERO_ADDR)).to.equal(3)
+          expect(await borda.score(ethers.constants.AddressZero)).to.equal(3)
           expect(await borda.score(await bob.getAddress())).to.equal(3)
           expect(await borda.score(await charlie.getAddress())).to.equal(3)
           expect(await borda.score(await dave.getAddress())).to.equal(1)
-          expect(await borda.leader()).to.equal(ZERO_ADDR)
+          expect(await borda.leader()).to.equal(ethers.constants.AddressZero)
         })
 
         it('Updates state after everyone reveals', async () => {
@@ -531,7 +532,7 @@ describe('CurrencyGovernance [@group=4]', () => {
           it('should set the leader as the proposal that hit the highest point total first', async () => {
             await borda.connect(niko).reveal(nikovote[0], nikovote[2])
             // should get {d: 4, bob: 3, charlie: 2, dave: 1, niko: 4, mila: 5}, mila is leader first with 5
-            expect(await borda.score(ZERO_ADDR)).to.equal(4)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
             expect(await borda.score(await mila.getAddress())).to.equal(5)
             expect(await borda.score(await bob.getAddress())).to.equal(1)
@@ -542,7 +543,7 @@ describe('CurrencyGovernance [@group=4]', () => {
             expect(await borda.score(await charlie.getAddress())).to.equal(3)
             await borda.connect(bob).reveal(bobvote[0], bobvote[2])
             // should get {d: 3, bob: 4, charlie: 5, dave: 2, niko: 4, mila: 5} // mila is now tied with charlie
-            expect(await borda.score(ZERO_ADDR)).to.equal(2)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(2)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
             expect(await borda.score(await mila.getAddress())).to.equal(5)
             expect(await borda.score(await bob.getAddress())).to.equal(4)
@@ -556,7 +557,7 @@ describe('CurrencyGovernance [@group=4]', () => {
           it('should set the leader as the proposal that was ahead before the final vote created a tie', async () => {
             await borda.connect(niko).reveal(nikovote[0], nikovote[2])
             // should get {d: 4, bob: 3, charlie: 2, dave: 1, niko: 4, mila: 5}, mila is leader first with 5
-            expect(await borda.score(ZERO_ADDR)).to.equal(4)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
             expect(await borda.score(await mila.getAddress())).to.equal(5)
             expect(await borda.score(await bob.getAddress())).to.equal(1)
@@ -565,7 +566,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
             await borda.connect(mila).reveal(milavote[0], milavote[2])
             // should get {d: 3, bob: 3, charlie: 2, dave: 1, niko: 6, mila: 6}, mila is leader first with 6, but niko is tied
-            expect(await borda.score(ZERO_ADDR)).to.equal(3)
+            expect(await borda.score(ethers.constants.AddressZero)).to.equal(3)
             expect(await borda.score(await niko.getAddress())).to.equal(6)
             expect(await borda.score(await mila.getAddress())).to.equal(6)
             expect(await borda.score(await bob.getAddress())).to.equal(1)

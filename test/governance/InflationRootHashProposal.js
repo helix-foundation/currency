@@ -6,6 +6,7 @@
 const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
+const { BigNumber } = ethers
 const {
   getTree,
   answer,
@@ -57,7 +58,7 @@ describe('InflationRootHashProposal', () => {
 
   beforeEach('global setup', async () => {
     const [, bob, charlie, dave] = accounts
-    const trustedNodes = [
+    const trustees = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -71,7 +72,7 @@ describe('InflationRootHashProposal', () => {
       currencyTimer,
       rootHashProposal,
       inflation,
-    } = await ecoFixture(trustedNodes))
+    } = await ecoFixture(trustees))
   })
 
   async function verifyOnChain(tree, index, proposer) {
@@ -224,15 +225,15 @@ describe('InflationRootHashProposal', () => {
       map = new Map([
         [
           await accounts[0].getAddress(),
-          ethers.BigNumber.from('50000000000000000000000000'),
+          BigNumber.from('50000000000000000000000000'),
         ],
         [
           await accounts[1].getAddress(),
-          ethers.BigNumber.from('100000000000000000000000000'),
+          BigNumber.from('100000000000000000000000000'),
         ],
         [
           await accounts[2].getAddress(),
-          ethers.BigNumber.from('150000000000000000000000000'),
+          BigNumber.from('150000000000000000000000000'),
         ],
       ])
       await initInflation.mint(
@@ -367,9 +368,7 @@ describe('InflationRootHashProposal', () => {
 
       it('catches balance cheats', async () => {
         const cheat = new Map(map)
-        const cheatBalance = ethers.BigNumber.from(
-          '200000000000000000000000000'
-        )
+        const cheatBalance = BigNumber.from('200000000000000000000000000')
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -390,7 +389,7 @@ describe('InflationRootHashProposal', () => {
 
       it('catches filler accounts', async () => {
         const cheat = new Map(map)
-        const cheatBalance = ethers.BigNumber.from('0')
+        const cheatBalance = BigNumber.from('0')
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -611,9 +610,7 @@ describe('InflationRootHashProposal', () => {
               await accounts[1].getAddress(),
               a[1].reverse(),
               a[0].account,
-              a[0].balance.add(
-                ethers.BigNumber.from('150000000000000000000000000')
-              ),
+              a[0].balance.add(BigNumber.from('150000000000000000000000000')),
               a[0].sum,
               requestedIndex
             )
@@ -1304,7 +1301,7 @@ describe('InflationRootHashProposal', () => {
           await rootHashProposal
             .connect(accounts[1])
             .proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash).add(1).toHexString(),
+              BigNumber.from(proposedRootHash).add(1).toHexString(),
               totalSum,
               amountOfAccounts
             )
@@ -1383,7 +1380,7 @@ describe('InflationRootHashProposal', () => {
           await rootHashProposal
             .connect(accounts[1])
             .proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash).add(1).toHexString(),
+              BigNumber.from(proposedRootHash).add(1).toHexString(),
               totalSum,
               10
             )
@@ -1431,7 +1428,7 @@ describe('InflationRootHashProposal', () => {
       const amountOfAccounts = 10
       let tmp = ethers.BigNumber.from('0')
       for (let i = 1; i <= amountOfAccounts; i += 1) {
-        tmp = ethers.BigNumber.from('10000000000000000000000000').mul(i)
+        tmp = BigNumber.from('10000000000000000000000000').mul(i)
         list.push([await accounts[i - 1].getAddress(), tmp])
         await initInflation.mint(await accounts[i - 1].getAddress(), tmp)
         totalSum = totalSum.add(tmp)
@@ -1451,11 +1448,11 @@ describe('InflationRootHashProposal', () => {
       const cheatMap = new Map(bigMap)
       cheatMap.set(
         await accounts[4].getAddress(),
-        ethers.BigNumber.from('100000000000000000000000000')
+        BigNumber.from('100000000000000000000000000')
       )
       cheatMap.set(
         await accounts[5].getAddress(),
-        ethers.BigNumber.from('10000000000000000000000000')
+        BigNumber.from('10000000000000000000000000')
       )
 
       const bigt = getTree(bigMap)

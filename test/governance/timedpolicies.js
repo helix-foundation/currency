@@ -1,6 +1,6 @@
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 describe('TimedPolicies [@group=12]', () => {
@@ -22,11 +22,11 @@ describe('TimedPolicies [@group=12]', () => {
     )
 
     expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(
-      ZERO_ADDR
+      ethers.constants.AddressZero
     )
 
     expect(await policyFor(policy, policyProposalsIdentifierHash)).to.not.equal(
-      ZERO_ADDR
+      ethers.constants.AddressZero
     )
 
     const policyProposals = await ethers.getContractAt(
@@ -36,12 +36,12 @@ describe('TimedPolicies [@group=12]', () => {
     await time.increase(3600 * 24 * 14)
 
     expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(
-      ZERO_ADDR
+      ethers.constants.AddressZero
     )
 
     await policyProposals.destruct()
     expect(await policyFor(policy, policyProposalsIdentifierHash)).to.equal(
-      ZERO_ADDR
+      ethers.constants.AddressZero
     )
   })
 
@@ -54,7 +54,7 @@ describe('TimedPolicies [@group=12]', () => {
   describe('startPolicyProposal', () => {
     context("when it's time to start a new cycle", () => {
       it('emits a PolicyDecisionStart event', async () => {
-        await time.increase(3600 * 24 * 15)
+        await time.increase(3600 * 24 * 14)
         await expect(timedPolicies.incrementGeneration()).to.emit(
           timedPolicies,
           'PolicyDecisionStart'

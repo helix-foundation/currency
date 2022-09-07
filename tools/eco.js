@@ -206,7 +206,6 @@ async function deployEco() {
     delete printOptions.correctPolicyArtifact
     delete printOptions.ethersProvider
     delete printOptions.signer
-    delete printOptions.chumpSigner
     console.log(JSON.stringify(printOptions, null, 2))
   }
   if (options.deployGovernance) {

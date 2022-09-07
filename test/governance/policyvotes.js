@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
-const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
@@ -36,7 +36,7 @@ describe('PolicyVotes [@group=8]', () => {
     await initInflation.mint(await bob.getAddress(), one.mul(8000))
     await initInflation.mint(await charlie.getAddress(), one.mul(5200))
     await initInflation.mint(await dave.getAddress(), one.mul(4800))
-    await time.increase(3600 * 24 * 40)
+    await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
 
     policyVotes = await deploy('PolicyVotes', policy.address, eco.address)
@@ -123,7 +123,7 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('after the commitment period', () => {
         beforeEach(async () => {
-          await time.increase(3600 * 24 * 22)
+          await time.increase(3600 * 24 * 14)
         })
 
         it('reverts', async () => {
@@ -253,7 +253,7 @@ describe('PolicyVotes [@group=8]', () => {
 
       context('after the commitment period', () => {
         beforeEach(async () => {
-          await time.increase(3600 * 24 * 22)
+          await time.increase(3600 * 24 * 14)
         })
 
         it('reverts', async () => {
@@ -531,12 +531,14 @@ describe('PolicyVotes [@group=8]', () => {
 
         it('does not enact the policies', async () => {
           expect(await policyFor(policy, adoptedPolicyIdHash)).to.equal(
-            ZERO_ADDR
+            ethers.constants.AddressZero
           )
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await policyFor(policy, votesPolicyIdHash)).to.equal(ZERO_ADDR)
+          expect(await policyFor(policy, votesPolicyIdHash)).to.equal(
+            ethers.constants.AddressZero
+          )
         })
       })
 
@@ -554,11 +556,13 @@ describe('PolicyVotes [@group=8]', () => {
             'SampleHandler',
             await policyFor(policy, adoptedPolicyIdHash)
           )
-          expect(await newPolicy.id()).to.equal(ZERO_ADDR)
+          expect(await newPolicy.id()).to.equal(ethers.constants.AddressZero)
         })
 
         it('removes itself from the PolicyVotes role', async () => {
-          expect(await policyFor(policy, votesPolicyIdHash)).to.equal(ZERO_ADDR)
+          expect(await policyFor(policy, votesPolicyIdHash)).to.equal(
+            ethers.constants.AddressZero
+          )
         })
       })
     })

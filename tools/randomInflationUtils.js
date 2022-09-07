@@ -3,6 +3,8 @@
 /* eslint no-await-in-loop: 0 */
 /* eslint prefer-destructuring: 0 */
 
+const { BigNumber } = ethers
+
 /*
  * Takes an array of sorted items and recursively builds an merkle tree
  */
@@ -68,16 +70,16 @@ function getTree(map, wrongSum = [], swapIndex = []) {
   for (let i = len; i < wantitems; i += 1) {
     items.push([ethers.constants.AddressZero, 0])
   }
-  let sum = ethers.BigNumber.from(0)
+  let sum = BigNumber.from(0)
   for (let i = 0; i < len; i += 1) {
     if (wrongSum.length > 0) {
       if (i === wrongSum[0]) {
-        sum = ethers.BigNumber.from(wrongSum[1])
+        sum = BigNumber.from(wrongSum[1])
       }
     }
 
     items[i].push(sum)
-    sum = sum.add(ethers.BigNumber.from(items[i][1]))
+    sum = sum.add(BigNumber.from(items[i][1]))
   }
   for (let i = len; i < wantitems; i += 1) {
     items[i].push(0)

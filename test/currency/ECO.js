@@ -2,8 +2,9 @@
 const { expect } = require('chai')
 const { signTypedData } = require('@metamask/eth-sig-util')
 
-const { ecoFixture, policyFor, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const time = require('../utils/time.ts')
+const { BigNumber } = ethers
 
 const {
   createPermitMessageData,
@@ -31,9 +32,9 @@ describe('ECO [@group=1]', () => {
     const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000
     const digits10to19 = Math.floor(Math.random() * 10000000000)
     proposedInflationMult = `${digits10to19}${digits1to9}`
-    const trustedNodes = [await bob.getAddress()]
+    const trustees = [await bob.getAddress()]
 
-    ;({ policy, eco, faucet, timedPolicies } = await ecoFixture(trustedNodes))
+    ;({ policy, eco, faucet, timedPolicies } = await ecoFixture(trustees))
 
     // enact a random amount of linear inflation for all tests
     const borda = await ethers.getContractAt(
@@ -1461,7 +1462,7 @@ describe('ECO [@group=1]', () => {
       it('does not allow delegator to be the zero address', async () => {
         const zeroAccount = {
           getAddress: () => {
-            return ZERO_ADDR
+            return ethers.constants.AddressZero
           },
           privateKey:
             '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',

@@ -3,6 +3,9 @@ const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
+
+const one = ethers.utils.parseEther('1')
 
 const one = ethers.utils.parseEther('1')
 
@@ -38,7 +41,7 @@ describe('PolicyProposals [@group=7]', () => {
       await charlie.getAddress(),
       ethers.utils.parseEther('100000')
     )
-    await time.increase(3600 * 24 * 40)
+    await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
   })
 

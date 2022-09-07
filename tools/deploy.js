@@ -25,6 +25,7 @@
 // ## Dependencies
 const nick = require('./nicks')
 const ethers = require('ethers')
+const { BigNumber } = ethers
 
 let BLOCK_GAS_LIMIT = 6000000
 const { ERC1820_REGISTRY, REGISTRY_DEPLOY_TX } = require('../tools/constants')
@@ -66,7 +67,7 @@ async function parseFlags(options) {
       options.gasMultiplier
     )
   } else {
-    options.gasPrice = ethers.BigNumber.from(options.gasPrice)
+    options.gasPrice = BigNumber.from(options.gasPrice)
   }
 
   if (!options.randomVDFDifficulty) {
@@ -91,16 +92,12 @@ async function parseFlags(options) {
   if (options.initialECO) {
     options.initialECOSupply = options.initialECO
       .map((initial) => initial.balance)
-      .reduce((a, b) =>
-        ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
-      )
+      .reduce((a, b) => BigNumber.from(a).add(BigNumber.from(b)).toString())
   }
   if (options.initialECOx) {
     options.initialECOxSupply = options.initialECOx
       .map((initial) => initial.balance)
-      .reduce((a, b) =>
-        ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
-      )
+      .reduce((a, b) => BigNumber.from(a).add(BigNumber.from(b)).toString())
   }
 
   // set CI parameters for automated tests
@@ -153,7 +150,7 @@ async function deployStage1(options) {
       )
     }
     // bootstrapGas = 4538418; // old estimate, included 20 proxies
-    bootstrapGas = 1526410
+    bootstrapGas = 2000000
   } else {
     BLOCK_GAS_LIMIT = limit
     bootstrapGas = 1700000
@@ -375,6 +372,7 @@ async function deployStage2(options) {
     options.initialECO,
     {
       gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
     }
   )
 
@@ -386,6 +384,7 @@ async function deployStage2(options) {
     options.initialECOx,
     {
       gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
     }
   )
 
