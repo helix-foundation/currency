@@ -73,4 +73,15 @@ export class TimeGovernor {
         
     }
 
+    async killListeners() {
+        console.log('kill')
+        // this.provider.off("block", async () => {
+        //     let block = await this.provider.getBlock('latest')
+        //     if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
+        //         this.genUpdate()
+        //     }
+        // })
+        this.provider.removeAllListeners("block")
+    }
+
 }

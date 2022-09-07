@@ -96,6 +96,14 @@ export class CurrencyGovernor {
 
     async generationListener() {
         this.timedPolicy.on("NewGeneration", async () => {
+            console.log('whenk')
+            this.currencyGovernance = CurrencyGovernance__factory.connect(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE), this.wallet)
+            await this.setup()
+        })
+    }
+
+    async killListener() {
+        this.timedPolicy.off("NewGeneration",async () => {
             this.currencyGovernance = CurrencyGovernance__factory.connect(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE), this.wallet)
             await this.setup()
         })

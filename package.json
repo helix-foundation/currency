@@ -50,7 +50,7 @@
   "homepage": "https://github.com/eco/currency#readme",
   "devDependencies": {
     "@metamask/eth-sig-util": "4.0.1",
-    "@nomicfoundation/hardhat-chai-matchers": "1.0.3",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
     "@nomicfoundation/hardhat-network-helpers": "1.0.5",
     "@nomiclabs/hardhat-ethers": "2.1.1",
     "@typechain/ethers-v5": "10.1.0",

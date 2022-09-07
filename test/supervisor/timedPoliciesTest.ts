@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
-import { ethers, expect } from 'hardhat'
+import { ethers } from 'hardhat'
 import { Policy, TimedPolicies } from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor_master'
+import { expect } from 'chai'
 
 const time = require('../utils/time.ts')
 
