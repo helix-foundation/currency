@@ -23,10 +23,10 @@ export class TimeGovernor {
     async startTimer() {
         this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
 
-        // this.provider.on("block" , async () => {
-        //     this.callUpdateOnBlock()
-        // })
-        this.provider.on("block" , this.callUpdateOnBlock)
+        this.provider.on("block" , async () => {
+            this.callUpdateOnBlock()
+        })
+        // this.provider.on("block" , this.callUpdateOnBlock)
     }
 
     async callUpdateOnBlock() {
@@ -62,8 +62,8 @@ export class TimeGovernor {
     }
 
     async killListener() {
-        this.provider.off("block", this.callUpdateOnBlock)
-        // this.provider.removeAllListeners("block")
+        // this.provider.off("block", this.callUpdateOnBlock)
+        this.provider.removeAllListeners("block")
     }
 
 }

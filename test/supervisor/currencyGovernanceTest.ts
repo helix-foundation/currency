@@ -26,7 +26,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
 
   beforeEach(async () => {
     if (timeGovernor) {
-      // await timeGovernor.killListener()
+      await timeGovernor.killListener()
     }
     // if (currencyGovernor) {
     //     await currencyGovernor.killListener()

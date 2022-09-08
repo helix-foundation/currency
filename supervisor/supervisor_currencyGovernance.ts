@@ -34,7 +34,7 @@ export class CurrencyGovernor {
     }
 
     async startListeners() {
-        // this.provider.on("block", await this.stageUpdateListener)
+        // this.provider.on("block" , this.stageUpdateListener)
         this.provider.on("block", async () => {
             await this.stageUpdateListener()
         })
@@ -106,14 +106,14 @@ export class CurrencyGovernor {
 
     async stageUpdateListener() {
         let timestamp: number = (await this.provider.getBlock('latest')).timestamp
-            if ((this.stage === 0 && timestamp > this.proposalEnds
-                || this.stage === 1 && timestamp > this.votingEnds
-                || this.stage === 2 && timestamp > this.revealEnds))
-                {
-                await this.stageUpdate()
-            } else if (this.stage === 3) {
-                this.doCompute()
-            }
+        if ((this.stage === 0 && timestamp > this.proposalEnds
+            || this.stage === 1 && timestamp > this.votingEnds
+            || this.stage === 2 && timestamp > this.revealEnds))
+            {
+            await this.stageUpdate()
+        } else if (this.stage === 3) {
+            this.doCompute()
+        }
     }
 
     async newCurrencyGovernanceListener() {
