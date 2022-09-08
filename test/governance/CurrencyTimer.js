@@ -1,10 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
+const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
-
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
+const { BigNumber } = ethers
 
 describe('CurrencyTimer [@group=4]', () => {
   let alice
@@ -20,19 +20,19 @@ describe('CurrencyTimer [@group=4]', () => {
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustedNodes = [
+    const trustees = [
       await alice.getAddress(),
       await bob.getAddress(),
       await charlie.getAddress(),
     ]
 
     ;({ policy, eco, timedPolicies, currencyTimer, faucet } = await ecoFixture(
-      trustedNodes
+      trustees
     ))
 
     borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -62,8 +62,8 @@ describe('CurrencyTimer [@group=4]', () => {
         [x[0], x[1], x[2]]
       )
 
-    const proposedInflationMult = ethers.BigNumber.from('1100000000000000000')
-    const aliceBal = ethers.BigNumber.from(1000000000)
+    const proposedInflationMult = BigNumber.from('1100000000000000000')
+    const aliceBal = BigNumber.from(1000000000)
 
     beforeEach(async () => {
       await faucet.mint(await alice.getAddress(), aliceBal)
@@ -97,7 +97,7 @@ describe('CurrencyTimer [@group=4]', () => {
         await expect(timedPolicies.incrementGeneration())
           .to.emit(currencyTimer, 'NewCurrencyGovernance')
           .withArgs(
-            await util.policyFor(
+            await policyFor(
               policy,
               ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
             ),
@@ -107,7 +107,7 @@ describe('CurrencyTimer [@group=4]', () => {
 
       it('changed borda', async () => {
         expect(
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )
@@ -146,7 +146,7 @@ describe('CurrencyTimer [@group=4]', () => {
         const newAliceBal = await eco.balanceOf(await alice.getAddress())
         const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER()
         expect(newAliceBal).to.equal(
-          ethers.BigNumber.from(aliceBal)
+          BigNumber.from(aliceBal)
             .mul(inflationDigits)
             .div(proposedInflationMult)
         )
@@ -161,7 +161,7 @@ describe('CurrencyTimer [@group=4]', () => {
         await expect(timedPolicies.incrementGeneration())
           .to.emit(currencyTimer, 'NewCurrencyGovernance')
           .withArgs(
-            await util.policyFor(
+            await policyFor(
               policy,
               ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
             ),
@@ -171,7 +171,7 @@ describe('CurrencyTimer [@group=4]', () => {
 
       it('changed borda', async () => {
         expect(
-          await util.policyFor(
+          await policyFor(
             policy,
             ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
           )
@@ -210,7 +210,7 @@ describe('CurrencyTimer [@group=4]', () => {
         const newAliceBal = await eco.balanceOf(await alice.getAddress())
         const inflationDigits = await eco.INITIAL_INFLATION_MULTIPLIER()
         expect(newAliceBal).to.equal(
-          ethers.BigNumber.from(aliceBal)
+          BigNumber.from(aliceBal)
             .mul(inflationDigits)
             .div(proposedInflationMult)
         )

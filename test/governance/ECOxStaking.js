@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
@@ -22,10 +22,10 @@ describe('ecoXStaking [@group=12]', () => {
     one = ethers.utils.parseEther('1')
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
-    const trustedNodes = [await bob.getAddress()]
+    const trustees = [await bob.getAddress()]
 
     ;({ policy, eco, faucet, timedPolicies, ecox, ecoXStaking } =
-      await ecoFixture(trustedNodes))
+      await ecoFixture(trustees))
 
     await faucet.mint(await alice.getAddress(), one.mul(5000))
     await faucet.mint(await bob.getAddress(), one.mul(5000))

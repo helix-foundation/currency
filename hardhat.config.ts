@@ -1,8 +1,6 @@
 import * as dotenv from "dotenv"
 
 import { HardhatUserConfig, task } from "hardhat/config"
-import "@nomiclabs/hardhat-truffle5"
-import "@nomiclabs/hardhat-etherscan"
 import "@nomicfoundation/hardhat-chai-matchers"
 import "@nomiclabs/hardhat-ethers"
 import "@typechain/hardhat"
@@ -48,10 +46,6 @@ function createTestnetConfig(networkID: NetworkID) {
   }
 }
 const config: HardhatUserConfig = {
-
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
   defaultNetwork: "hardhat",
   gasReporter: {
     currency: "USD",

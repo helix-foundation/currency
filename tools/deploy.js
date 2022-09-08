@@ -25,11 +25,13 @@
 // ## Dependencies
 const nick = require('./nicks')
 const ethers = require('ethers')
+const { BigNumber } = ethers
 
 let BLOCK_GAS_LIMIT = 6000000
+const { ERC1820_REGISTRY, REGISTRY_DEPLOY_TX } = require('../tools/constants')
 
 // ### Contract ABIs and Bytecode
-/* eslint-disable import/no-unresolved, import/no-dynamic-require */
+/* eslint-disable import/no-unresolved */
 const PolicyArtifact = require(`../artifacts/contracts/policy/Policy.sol/Policy.json`)
 const PolicyTestArtifact = require(`../artifacts/contracts/test/Backdoor.sol/PolicyTest.json`)
 const PolicyInitArtifact = require(`../artifacts/contracts/policy/PolicyInit.sol/PolicyInit.json`)
@@ -65,7 +67,7 @@ async function parseFlags(options) {
       options.gasMultiplier
     )
   } else {
-    options.gasPrice = ethers.BigNumber.from(options.gasPrice)
+    options.gasPrice = BigNumber.from(options.gasPrice)
   }
 
   if (!options.randomVDFDifficulty) {
@@ -90,16 +92,12 @@ async function parseFlags(options) {
   if (options.initialECO) {
     options.initialECOSupply = options.initialECO
       .map((initial) => initial.balance)
-      .reduce((a, b) =>
-        ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
-      )
+      .reduce((a, b) => BigNumber.from(a).add(BigNumber.from(b)).toString())
   }
   if (options.initialECOx) {
     options.initialECOxSupply = options.initialECOx
       .map((initial) => initial.balance)
-      .reduce((a, b) =>
-        ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)).toString()
-      )
+      .reduce((a, b) => BigNumber.from(a).add(BigNumber.from(b)).toString())
   }
 
   // set CI parameters for automated tests
@@ -152,7 +150,7 @@ async function deployStage1(options) {
       )
     }
     // bootstrapGas = 4538418; // old estimate, included 20 proxies
-    bootstrapGas = 1526410
+    bootstrapGas = 2000000
   } else {
     BLOCK_GAS_LIMIT = limit
     bootstrapGas = 1700000
@@ -180,14 +178,22 @@ async function deployStage1(options) {
     )
   )
 
-  if (options.verbose) {
-    console.log('setting up ERC1820 Registry')
-  }
-  {
-    /* eslint-disable global-require */
-    require('@openzeppelin/test-helpers/configure')()
-    const { singletons } = require('@openzeppelin/test-helpers')
-    await singletons.ERC1820Registry(options.chumpAccount)
+  if (!options.production) {
+    if (options.verbose) {
+      console.log('setting up ERC1820 Registry')
+    }
+    // empty code is 0x
+    if ((await options.ethersProvider.getCode(ERC1820_REGISTRY)).length >= 2) {
+      await (
+        await options.signer.sendTransaction({
+          to: '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96',
+          value: ethers.utils.parseEther('0.08'),
+        })
+      ).wait()
+      await (
+        await options.ethersProvider.sendTransaction(REGISTRY_DEPLOY_TX)
+      ).wait()
+    }
   }
 
   // Verify that the bootstrap deployment hasn't already been done
@@ -366,6 +372,7 @@ async function deployStage2(options) {
     options.initialECO,
     {
       gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
     }
   )
 
@@ -377,6 +384,7 @@ async function deployStage2(options) {
     options.initialECOx,
     {
       gasPrice,
+      gasLimit: BLOCK_GAS_LIMIT,
     }
   )
 

@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const { deploy } = require('../utils/contracts')
 
 describe('ForwardTarget [@group=2]', () => {

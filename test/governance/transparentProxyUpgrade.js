@@ -1,21 +1,9 @@
-/*
- * This is an end-to-end demo of policy votes to add functionality to
- * a governance contract.
- *
- * Note that this 'test' shares states between the it() functions, and
- * it() is used mostly to break up the logical steps.
- *
- * The purpose of this demo is to propose a policy change that alters
- * trustee voting to add an additional, functionless parameter
- * (the number of poodles at the current generation).
- */
-
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
+describe('E2E Policy External Transparent Upgradable Proxy Change [@group=9]', () => {
   let policy
   let eco
   let timedPolicies
@@ -23,10 +11,10 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
   let policyVotes
   let initInflation
 
-  let makePoodle
-  let poodleCurrencyGovernance
-  let poodleCurrencyTimer
-  let poodleBorda
+  let proposal
+  let wrapper
+  let wrapperProxy
+  let poodleWrapper
 
   let alice
   let bob
@@ -35,6 +23,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
 
   it('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
+
     ;[alice, bob, charlie, dave] = accounts
     ;({
       policy,
@@ -46,6 +35,25 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
       await charlie.getAddress(),
       await dave.getAddress(),
     ]))
+  })
+
+  it('Deploys the wrapper and its proxy', async () => {
+    wrapper = await deploy('Wrapper')
+
+    wrapperProxy = await deploy('OZProxy', wrapper.address, policy.address)
+    const whoiamunsafe = await wrapperProxy.connect(alice).whoAmINonAdmin()
+    expect(whoiamunsafe).to.equal(4)
+  })
+
+  it('checks that the proxy works correctly', async () => {
+    const proxiedWrapper = await ethers.getContractAt(
+      'Wrapper',
+      wrapperProxy.address
+    )
+
+    await expect(proxiedWrapper.connect(alice).whoAmI())
+      .to.emit(proxiedWrapper, 'HereIAm')
+      .withArgs(1)
   })
 
   it('Stakes accounts', async () => {
@@ -64,31 +72,20 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
     await timedPolicies.incrementGeneration()
   })
 
-  it('Checks that the current governance contract is not poodles', async () => {
-    poodleBorda = await ethers.getContractAt(
-      'PoodleCurrencyGovernance',
-      await policyFor(
-        policy,
-        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-      )
-    )
-    // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
-    await expect(poodleBorda.provePoodles()).to.be.reverted
-  })
-
   it('Constructs the proposal', async () => {
-    poodleCurrencyGovernance = await deploy(
-      'PoodleCurrencyGovernance',
-      policy.address
+    poodleWrapper = await deploy('UpgradedWrapper')
+
+    proposal = await deploy(
+      'WrapperUpgradeProposal',
+      poodleWrapper.address,
+      wrapperProxy.address
     )
-    poodleCurrencyTimer = await deploy('PoodleCurrencyTimer')
-    makePoodle = await deploy(
-      'MakePoodle',
-      poodleCurrencyGovernance.address,
-      poodleCurrencyTimer.address
-    )
-    const name = await makePoodle.name()
-    expect(name).to.equal('MakePoodle')
+    const name = await proposal.name()
+    expect(name).to.equal('I am the wrapper upgrade proposal')
+    const description = await proposal.description()
+    expect(description).to.equal('I upgrade the wrapper to say it is poodled')
+    const url = await proposal.url()
+    expect(url).to.equal('www.wrapper-upgrayedd.com')
   })
 
   it('Find the policy proposals instance', async () => {
@@ -106,12 +103,12 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
     await eco
       .connect(alice)
       .approve(policyProposals.address, await policyProposals.COST_REGISTER())
-    await policyProposals.connect(alice).registerProposal(makePoodle.address)
+    await policyProposals.connect(alice).registerProposal(proposal.address)
   })
 
-  it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-    await policyProposals.connect(alice).support(makePoodle.address)
-    await policyProposals.connect(bob).support(makePoodle.address)
+  it('Adds stake to proposals', async () => {
+    await policyProposals.connect(alice).support(proposal.address)
+    await policyProposals.connect(bob).support(proposal.address)
     await policyProposals.connect(bob).deployProposalVoting()
   })
 
@@ -131,7 +128,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
     await policyVotes.connect(bob).vote(true)
   })
 
-  it('Waits until the end of the voting period', async () => {
+  it('Waits 4 day (end of voting + delay period)', async () => {
     await time.increase(3600 * 24 * 4)
   })
 
@@ -139,20 +136,14 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
     await policyVotes.execute()
   })
 
-  it('Moves to the next generation', async () => {
-    await time.increase(3600 * 24 * 10)
-    await timedPolicies.incrementGeneration()
-  })
-
-  it('Checks that the new governance contract is poodles', async () => {
-    poodleBorda = await ethers.getContractAt(
-      'PoodleCurrencyGovernance',
-      await policyFor(
-        policy,
-        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-      )
+  it('Checks that the new wrapper is poodles', async () => {
+    const proxiedWrapper = await ethers.getContractAt(
+      'UpgradedWrapper',
+      wrapperProxy.address
     )
-    const poodles = await poodleBorda.provePoodles()
-    expect(poodles).to.be.true
+
+    await expect(proxiedWrapper.connect(alice).whoAmI())
+      .to.emit(proxiedWrapper, 'HereIAm')
+      .withArgs(2)
   })
 })

@@ -1,7 +1,9 @@
-const time = require('../utils/time.ts')
+const { expect } = require('chai')
 
+const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
 
 const one = ethers.utils.parseEther('1')
 
@@ -37,7 +39,7 @@ describe('PolicyProposals [@group=7]', () => {
       await charlie.getAddress(),
       ethers.utils.parseEther('100000')
     )
-    await time.increase(3600 * 24 * 40)
+    await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
   })
 
@@ -475,13 +477,13 @@ describe('PolicyProposals [@group=7]', () => {
       })
 
       it('subtracts the correct stake amount', async () => {
-        const preUnsupportStake = ethers.BigNumber.from(
+        const preUnsupportStake = BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
         await policyProposals.unsupport(testProposal.address)
 
-        const postUnsupportStake = ethers.BigNumber.from(
+        const postUnsupportStake = BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
@@ -500,7 +502,7 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.unsupport(testProposal.address)
         await policyProposals.support(testProposal.address)
 
-        const supportedStake = ethers.BigNumber.from(
+        const supportedStake = BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
@@ -713,10 +715,10 @@ describe('PolicyProposals [@group=7]', () => {
       // });
 
       it('transfers the refund tokens', async () => {
-        const refundAmount = ethers.BigNumber.from(
+        const refundAmount = BigNumber.from(
           await policyProposals.REFUND_IF_LOST()
         )
-        const preRefundBalance = ethers.BigNumber.from(
+        const preRefundBalance = BigNumber.from(
           await eco.balanceOf(await alice.getAddress())
         )
 

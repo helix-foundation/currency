@@ -2,13 +2,12 @@
 
 const bigintCryptoUtils = require('bigint-crypto-utils')
 
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { prove, bnHex } = require('../../tools/vdf')
 const { getTree, answer } = require('../../tools/randomInflationUtils')
-
-const { ecoFixture } = require('../utils/fixtures')
-const util = require('../../tools/test/util')
+const { BigNumber } = ethers
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('RandomInflation [@group=6]', () => {
   let policy
@@ -34,17 +33,17 @@ describe('RandomInflation [@group=6]', () => {
   const rewardVote = 20000
 
   const accountsBalances = [
-    ethers.BigNumber.from('10000000000000000000000000'),
-    ethers.BigNumber.from('50000000000000000000000000'),
-    ethers.BigNumber.from('50000000000000000000000000'),
+    BigNumber.from('10000000000000000000000000'),
+    BigNumber.from('50000000000000000000000000'),
+    BigNumber.from('50000000000000000000000000'),
   ]
   const accountsSums = [
-    ethers.BigNumber.from('0'),
-    ethers.BigNumber.from('10000000000000000000000000'),
-    ethers.BigNumber.from('60000000000000000000000000'),
+    BigNumber.from('0'),
+    BigNumber.from('10000000000000000000000000'),
+    BigNumber.from('60000000000000000000000000'),
   ]
 
-  const totalSum = ethers.BigNumber.from('110000000000000000000000000')
+  const totalSum = BigNumber.from('110000000000000000000000000')
   const amountOfAccounts = 3
   let map
   let timedPolicies
@@ -83,11 +82,11 @@ describe('RandomInflation [@group=6]', () => {
   }
 
   function getRecipient(claimNumber) {
-    if (ethers.BigNumber.from(claimNumber) === 0) {
+    if (BigNumber.from(claimNumber) === 0) {
       return [0, accounts[0]]
     }
     let index = accountsSums.findIndex((element) =>
-      element.gt(ethers.BigNumber.from(claimNumber))
+      element.gt(BigNumber.from(claimNumber))
     )
     index = index === -1 ? 2 : index - 1
     return [index, accounts[index]]
@@ -99,9 +98,7 @@ describe('RandomInflation [@group=6]', () => {
       [await inf.seed(), sequence]
     )
     const [index, recipient] = getRecipient(
-      ethers.BigNumber.from(chosenClaimNumberHash).mod(
-        ethers.BigNumber.from(totalSum)
-      )
+      BigNumber.from(chosenClaimNumberHash).mod(BigNumber.from(totalSum))
     )
     return [answer(tree, index), index, recipient]
   }
@@ -111,7 +108,7 @@ describe('RandomInflation [@group=6]', () => {
    * @returns The prime from the current blockhash that a probable prime is
    */
   async function getPrimal(attempts = 0) {
-    const baseNum = ethers.BigNumber.from(await time.latestBlockHash())
+    const baseNum = BigNumber.from(await time.latestBlockHash())
     for (let i = 1; i < 1000; i++) {
       if (
         await bigintCryptoUtils.isProbablyPrime(
@@ -174,7 +171,7 @@ describe('RandomInflation [@group=6]', () => {
 
     governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -231,7 +228,7 @@ describe('RandomInflation [@group=6]', () => {
     beforeEach(async () => {
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(
+        await policyFor(
           policy,
           ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
         )
@@ -360,7 +357,7 @@ describe('RandomInflation [@group=6]', () => {
         await time.advanceBlocks(1)
         await inflation.commitEntropyVDFSeed(primal)
         let u
-        const vdfseed = ethers.BigNumber.from(
+        const vdfseed = BigNumber.from(
           (await inflation.entropyVDFSeed()).toHexString()
         )
         const t = await inflation.randomVDFDifficulty()
@@ -408,7 +405,7 @@ describe('RandomInflation [@group=6]', () => {
 
     context('after the VDF is complete', () => {
       beforeEach(async () => {
-        const vdfseed = ethers.BigNumber.from(
+        const vdfseed = BigNumber.from(
           (await inflation.entropyVDFSeed()).toHexString()
         )
         const t = await inflation.randomVDFDifficulty()
@@ -504,7 +501,7 @@ describe('RandomInflation [@group=6]', () => {
           for (let i = 0; i < 3; i += 1) {
             updatedMap.set(
               await accounts[i].getAddress(),
-              ethers.BigNumber.from(
+              BigNumber.from(
                 (
                   await eco.balanceOf(await accounts[i].getAddress())
                 ).toHexString()
@@ -516,7 +513,7 @@ describe('RandomInflation [@group=6]', () => {
             await recipient.getAddress(),
             updatedMap
               .get(await recipient.getAddress())
-              .add(ethers.BigNumber.from(rewardVote))
+              .add(BigNumber.from(rewardVote))
           )
           await inflation
             .connect(recipient)
@@ -531,7 +528,7 @@ describe('RandomInflation [@group=6]', () => {
               await recipient.getAddress(),
               updatedMap
                 .get(await recipient.getAddress())
-                .add(ethers.BigNumber.from(rewardVote))
+                .add(BigNumber.from(rewardVote))
             )
             await inflation
               .connect(recipient)
@@ -572,7 +569,7 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with VDF, basic flow', () => {
         beforeEach(async () => {
-          const vdfseed = ethers.BigNumber.from(
+          const vdfseed = BigNumber.from(
             (await inflation.entropyVDFSeed()).toHexString()
           )
           const t = await inflation.randomVDFDifficulty()
@@ -606,7 +603,7 @@ describe('RandomInflation [@group=6]', () => {
 
       context('with a VDF solution', () => {
         beforeEach(async () => {
-          const vdfseed = ethers.BigNumber.from(
+          const vdfseed = BigNumber.from(
             (await inflation.entropyVDFSeed()).toHexString()
           )
           const t = await inflation.randomVDFDifficulty()
@@ -689,7 +686,7 @@ describe('RandomInflation [@group=6]', () => {
                 ['CurrencyGovernance']
               )
 
-              expect(await util.policyFor(policy, govhash)).to.not.equal(
+              expect(await policyFor(policy, govhash)).to.not.equal(
                 inflation.address
               )
             })

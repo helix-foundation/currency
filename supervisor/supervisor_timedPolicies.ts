@@ -20,33 +20,21 @@ export class TimeGovernor {
         
     };
 
-    // async startTimer() {
-    //     console.log(`supervisor timedpolicy: ${this.timedPolicy.address}`)
-    //     this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
-    //     let timeUntil: number = this.nextGenStart * 1000 - Date.now()
-    //     //this use of setTimeout doesn't use the same time that the chain does, 
-    //     setTimeout(this.genUpdate.bind(this), Math.max(timeUntil, 1))
-    // }
-
     async startTimer() {
         this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
 
         this.provider.on("block" , async () => {
-            let block = await this.provider.getBlock('latest')
-            if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
-                this.genUpdate()
-            }
+            this.callUpdateOnBlock()
         })
+        // this.provider.on("block" , this.callUpdateOnBlock)
     }
 
-    // async intervalUpdater() {
-        
-    //     // for some reason cannot read field here
-    //     // console.log(this.timedPolicy);
-    //     let interval: number = (await this.timedPolicy.GENERATION_DURATION()).toNumber()
-    //     setInterval(this.genUpdate.bind(this), interval*1000)
-    //     // make some way to stop this if necessary
-    // }
+    async callUpdateOnBlock() {
+        let block = await this.provider.getBlock('latest')
+        if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
+            this.genUpdate()
+        }
+    }
 
     async genUpdate() {
         try {
@@ -71,6 +59,11 @@ export class TimeGovernor {
             }
         }
 
+    }
+
+    async killListener() {
+        // this.provider.off("block", this.callUpdateOnBlock)
+        this.provider.removeAllListeners("block")
     }
 
 }

@@ -1,7 +1,7 @@
 {
   "production": true,
   "verbose": true,
-  "webrpc": "https://kovan.infura.io/v3/da99ebc8c0964bb8bb757b6f8cc40f1f",
+  "webrpc": "https://goerli.infura.io/v3/da99ebc8c0964bb8bb757b6f8cc40f1f",
   "from": "PUT PRIVATE KEY HERE",
   "deployTokens": true,
   "deployGovernance": true,

@@ -1,8 +1,9 @@
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const { singletonsFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
+const { BigNumber } = ethers
 
 describe('TokenInit [@group=11]', () => {
   const fixture = async () => {
@@ -62,7 +63,7 @@ describe('TokenInit [@group=11]', () => {
 
   describe('distributeTokens', () => {
     it('correctly funds the account with eco', async () => {
-      const mintAmount = ethers.BigNumber.from(1000)
+      const mintAmount = BigNumber.from(1000)
       await tokenInit.distributeTokens(ecoProxied.address, [
         {
           holder: deadbeef,
@@ -75,7 +76,7 @@ describe('TokenInit [@group=11]', () => {
     })
 
     it('correctly funds the account with ecox', async () => {
-      const mintAmount = ethers.BigNumber.from(10)
+      const mintAmount = BigNumber.from(10)
       await tokenInit.distributeTokens(ecoXProxied.address, [
         {
           holder: deadbeef,

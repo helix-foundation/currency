@@ -37,7 +37,7 @@ The bootstrap is deployable to an Ethereum network using the Nick's Method utili
 npm run build
 ```
 
-### Generate a transaction file (eg `bootstrap-truffle.json`):
+### Generate a transaction file (eg `bootstrap.json`):
 ```bash
 node ../../tools/nicks.js -s 0x0abababababababababababababababababababababababababababababababa -g 200000 -d "0x6bAB1BD10Aa94431FF5d5bad537C93fCC2A78843" -o bootstrap.json ../../build/contracts/EcoBootstrap.json
 ```

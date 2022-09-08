@@ -1,10 +1,11 @@
 /* eslint-disable no-console, no-underscore-dangle */
-
+const { expect } = require('chai')
 const { signTypedData } = require('@metamask/eth-sig-util')
 
-const { ecoFixture, ZERO_ADDR } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const time = require('../utils/time.ts')
-const util = require('../../tools/test/util')
+const { BigNumber } = ethers
+
 const {
   createPermitMessageData,
   permit,
@@ -31,14 +32,14 @@ describe('ECO [@group=1]', () => {
     const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000
     const digits10to19 = Math.floor(Math.random() * 10000000000)
     proposedInflationMult = `${digits10to19}${digits1to9}`
-    const trustedNodes = [await bob.getAddress()]
+    const trustees = [await bob.getAddress()]
 
-    ;({ policy, eco, faucet, timedPolicies } = await ecoFixture(trustedNodes))
+    ;({ policy, eco, faucet, timedPolicies } = await ecoFixture(trustees))
 
     // enact a random amount of linear inflation for all tests
     const borda = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -1087,7 +1088,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('enableDelegationTo', () => {
@@ -1409,7 +1410,7 @@ describe('ECO [@group=1]', () => {
         .connect(otherDelegatee)
         .enableDelegationTo({ gasLimit: 1000000 })
 
-      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateBySig', () => {
@@ -1461,7 +1462,7 @@ describe('ECO [@group=1]', () => {
       it('does not allow delegator to be the zero address', async () => {
         const zeroAccount = {
           getAddress: () => {
-            return ZERO_ADDR
+            return ethers.constants.AddressZero
           },
           privateKey:
             '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -1664,7 +1665,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateAmount', () => {

@@ -3,8 +3,10 @@
 /* eslint no-empty: 0 */
 /* eslint no-bitwise: 0 */
 /* eslint no-return-await: 0 */
+const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
+const { BigNumber } = ethers
 const {
   getTree,
   answer,
@@ -13,9 +15,7 @@ const {
   getRandomIntInclusiveOdd,
 } = require('../../tools/randomInflationUtils')
 
-const { ecoFixture } = require('../utils/fixtures')
-
-const util = require('../../tools/test/util')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('InflationRootHashProposal', () => {
   let rootHashProposal
@@ -58,7 +58,7 @@ describe('InflationRootHashProposal', () => {
 
   beforeEach('global setup', async () => {
     const [, bob, charlie, dave] = accounts
-    const trustedNodes = [
+    const trustees = [
       await bob.getAddress(),
       await charlie.getAddress(),
       await dave.getAddress(),
@@ -72,7 +72,7 @@ describe('InflationRootHashProposal', () => {
       currencyTimer,
       rootHashProposal,
       inflation,
-    } = await ecoFixture(trustedNodes))
+    } = await ecoFixture(trustees))
   })
 
   async function verifyOnChain(tree, index, proposer) {
@@ -156,7 +156,7 @@ describe('InflationRootHashProposal', () => {
 
     const governance = await ethers.getContractAt(
       'CurrencyGovernance',
-      await util.policyFor(
+      await policyFor(
         policy,
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
@@ -205,7 +205,7 @@ describe('InflationRootHashProposal', () => {
         .approve(
           addressRootHashProposal,
           (await eco.balanceOf(await accounts[i].getAddress())).mul(
-            ethers.BigNumber.from(100)
+            BigNumber.from(100)
           )
         )
     }
@@ -216,7 +216,7 @@ describe('InflationRootHashProposal', () => {
   }
 
   context('manual tests', () => {
-    const totalSum = ethers.BigNumber.from('300000000000000000000000000')
+    const totalSum = BigNumber.from('300000000000000000000000000')
     const amountOfAccounts = 3
     let tree
     let proposedRootHash
@@ -225,15 +225,15 @@ describe('InflationRootHashProposal', () => {
       map = new Map([
         [
           await accounts[0].getAddress(),
-          ethers.BigNumber.from('50000000000000000000000000'),
+          BigNumber.from('50000000000000000000000000'),
         ],
         [
           await accounts[1].getAddress(),
-          ethers.BigNumber.from('100000000000000000000000000'),
+          BigNumber.from('100000000000000000000000000'),
         ],
         [
           await accounts[2].getAddress(),
-          ethers.BigNumber.from('150000000000000000000000000'),
+          BigNumber.from('150000000000000000000000000'),
         ],
       ])
       await initInflation.mint(
@@ -368,9 +368,7 @@ describe('InflationRootHashProposal', () => {
 
       it('catches balance cheats', async () => {
         const cheat = new Map(map)
-        const cheatBalance = ethers.BigNumber.from(
-          '200000000000000000000000000'
-        )
+        const cheatBalance = BigNumber.from('200000000000000000000000000')
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -391,7 +389,7 @@ describe('InflationRootHashProposal', () => {
 
       it('catches filler accounts', async () => {
         const cheat = new Map(map)
-        const cheatBalance = ethers.BigNumber.from('0')
+        const cheatBalance = BigNumber.from('0')
         cheat.set(await accounts[3].getAddress(), cheatBalance)
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
@@ -428,7 +426,7 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[2])
             .proposeRootHash(
               proposedRootHash,
-              ethers.BigNumber.from('200000000000000000000000000'),
+              BigNumber.from('200000000000000000000000000'),
               0
             )
         ).to.be.revertedWith('Hash must consist of at least 1 account')
@@ -437,7 +435,7 @@ describe('InflationRootHashProposal', () => {
           .connect(accounts[2])
           .proposeRootHash(
             proposedRootHash,
-            ethers.BigNumber.from('200000000000000000000000000'),
+            BigNumber.from('200000000000000000000000000'),
             2
           )
 
@@ -446,7 +444,7 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[2])
             .proposeRootHash(
               proposedRootHash,
-              ethers.BigNumber.from('200000000000000000000000000'),
+              BigNumber.from('200000000000000000000000000'),
               2
             )
         ).to.be.revertedWith('Root hash already proposed')
@@ -612,9 +610,7 @@ describe('InflationRootHashProposal', () => {
               await accounts[1].getAddress(),
               a[1].reverse(),
               a[0].account,
-              a[0].balance.add(
-                ethers.BigNumber.from('150000000000000000000000000')
-              ),
+              a[0].balance.add(BigNumber.from('150000000000000000000000000')),
               a[0].sum,
               requestedIndex
             )
@@ -1305,7 +1301,7 @@ describe('InflationRootHashProposal', () => {
           await rootHashProposal
             .connect(accounts[1])
             .proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash).add(1).toHexString(),
+              BigNumber.from(proposedRootHash).add(1).toHexString(),
               totalSum,
               amountOfAccounts
             )
@@ -1351,8 +1347,8 @@ describe('InflationRootHashProposal', () => {
 
           for (let i = 0; i < 4; i += 1) {
             await rootHashProposal.connect(accounts[i + 1]).proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash)
-                .add(ethers.BigNumber.from(1 + i))
+              BigNumber.from(proposedRootHash)
+                .add(BigNumber.from(1 + i))
                 .toHexString(),
               totalSum,
               amountOfRequests[i]
@@ -1384,7 +1380,7 @@ describe('InflationRootHashProposal', () => {
           await rootHashProposal
             .connect(accounts[1])
             .proposeRootHash(
-              ethers.BigNumber.from(proposedRootHash).add(1).toHexString(),
+              BigNumber.from(proposedRootHash).add(1).toHexString(),
               totalSum,
               10
             )
@@ -1428,11 +1424,11 @@ describe('InflationRootHashProposal', () => {
   context('random tests', () => {
     it('is complex', async () => {
       const list = []
-      let totalSum = ethers.BigNumber.from('0')
+      let totalSum = BigNumber.from('0')
       const amountOfAccounts = 10
-      let tmp = ethers.BigNumber.from('0')
+      let tmp = BigNumber.from('0')
       for (let i = 1; i <= amountOfAccounts; i += 1) {
-        tmp = ethers.BigNumber.from('10000000000000000000000000').mul(i)
+        tmp = BigNumber.from('10000000000000000000000000').mul(i)
         list.push([await accounts[i - 1].getAddress(), tmp])
         await initInflation.mint(await accounts[i - 1].getAddress(), tmp)
         totalSum = totalSum.add(tmp)
@@ -1452,11 +1448,11 @@ describe('InflationRootHashProposal', () => {
       const cheatMap = new Map(bigMap)
       cheatMap.set(
         await accounts[4].getAddress(),
-        ethers.BigNumber.from('100000000000000000000000000')
+        BigNumber.from('100000000000000000000000000')
       )
       cheatMap.set(
         await accounts[5].getAddress(),
-        ethers.BigNumber.from('10000000000000000000000000')
+        BigNumber.from('10000000000000000000000000')
       )
 
       const bigt = getTree(bigMap)
@@ -1480,10 +1476,10 @@ describe('InflationRootHashProposal', () => {
       let tmp
       it(`random test ${k}, action ${action}`, async () => {
         let amountOfAccounts = getRandomIntInclusive(4, 10)
-        let totalSum = ethers.BigNumber.from('0')
+        let totalSum = BigNumber.from('0')
         const list = []
         for (let i = 0; i < amountOfAccounts; i += 1) {
-          tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
+          tmp = BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
           list.push([await accounts[2 * i].getAddress(), tmp])
@@ -1506,7 +1502,7 @@ describe('InflationRootHashProposal', () => {
         if (action === 0) {
           /* Add something */
           amountOfAccounts += 1
-          tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
+          tmp = BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
           totalSum = totalSum.add(tmp)
@@ -1529,7 +1525,7 @@ describe('InflationRootHashProposal', () => {
           /* Change a balance */
           const acc =
             accounts[getRandomIntInclusiveEven(0, 2 * amountOfAccounts - 1)]
-          tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
+          tmp = BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
           totalSum = totalSum.add(tmp)

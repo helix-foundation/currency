@@ -1,8 +1,7 @@
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
 describe('TimedPolicies [@group=12]', () => {
   let policy
@@ -22,22 +21,28 @@ describe('TimedPolicies [@group=12]', () => {
       ['PolicyProposals']
     )
 
-    expect(await util.policyFor(policy, policyVotesIdentifierHash)).to.be.zero
+    expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(
+      ethers.constants.AddressZero
+    )
 
-    expect(await util.policyFor(policy, policyProposalsIdentifierHash)).to.not
-      .be.zero
+    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.not.equal(
+      ethers.constants.AddressZero
+    )
 
     const policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, policyProposalsIdentifierHash)
+      await policyFor(policy, policyProposalsIdentifierHash)
     )
     await time.increase(3600 * 24 * 14)
 
-    expect(await util.policyFor(policy, policyVotesIdentifierHash)).to.be.zero
+    expect(await policyFor(policy, policyVotesIdentifierHash)).to.equal(
+      ethers.constants.AddressZero
+    )
 
     await policyProposals.destruct()
-    expect(await util.policyFor(policy, policyProposalsIdentifierHash)).to.be
-      .zero
+    expect(await policyFor(policy, policyProposalsIdentifierHash)).to.equal(
+      ethers.constants.AddressZero
+    )
   })
 
   describe('initialize', () => {
@@ -49,7 +54,7 @@ describe('TimedPolicies [@group=12]', () => {
   describe('startPolicyProposal', () => {
     context("when it's time to start a new cycle", () => {
       it('emits a PolicyDecisionStart event', async () => {
-        await time.increase(3600 * 24 * 15)
+        await time.increase(3600 * 24 * 14)
         await expect(timedPolicies.incrementGeneration()).to.emit(
           timedPolicies,
           'PolicyDecisionStart'

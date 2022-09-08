@@ -39,6 +39,7 @@ export class Supervisor {
     async startSupervisor (filepath?: string, policy?: Policy, signer?: ethers.Signer) {
         if (filepath) {
             // prod
+            console
             let args = fs.readFileSync(filepath);
             args = args.toString().split('\n');
             let rpc: string = args[0];
@@ -55,7 +56,7 @@ export class Supervisor {
             }
         }
     
-        this.startModules(this.provider, this.wallet, this.rootPolicy);
+        return this.startModules(this.provider, this.wallet, this.rootPolicy);
     
     }
     
@@ -67,14 +68,14 @@ export class Supervisor {
         let currencyGovernance: CurrencyGovernance = CurrencyGovernance__factory.connect(await rootPolicy.policyFor(ID_CURRENCY_GOVERNANCE), wallet)
     
         this.timeGovernor = new TimeGovernor(provider, wallet, rootPolicy, timedPolicy)
-        this.timeGovernor.startTimer()
+        await this.timeGovernor.startTimer()
     
         this.currencyGovernor = new CurrencyGovernor(provider, wallet, rootPolicy, timedPolicy, currencyGovernance)
         await this.currencyGovernor.setup()
-        await this.currencyGovernor.startTimer()
-        await this.currencyGovernor.generationListener()
+        await this.currencyGovernor.startListeners()
 
         this.inflationGovernor = new InflationGovernor(provider, wallet, rootPolicy, timedPolicy)
         this.inflationGovernor.setup()
+
     }
 }

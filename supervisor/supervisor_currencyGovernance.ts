@@ -33,28 +33,27 @@ export class CurrencyGovernor {
         this.stage = await this.currencyGovernance.currentStage()
     }
 
-    async startTimer() {
-        this.provider.on("block" , async () => {
-            let timestamp: number = (await this.provider.getBlock('latest')).timestamp
-            if ((this.stage === 0 && timestamp > this.proposalEnds
-                || this.stage === 1 && timestamp > this.votingEnds
-                || this.stage === 2 && timestamp > this.revealEnds))
-                {
-                await this.stageUpdate()
-            } else if (this.stage === 3) {
-                this.doCompute()
-            }
+    async startListeners() {
+        // this.provider.on("block" , this.stageUpdateListener)
+        this.provider.on("block", async () => {
+            await this.stageUpdateListener()
+        })
+        // this.timedPolicy.on("NewGeneration", this.newCurrencyGovernanceListener)
+        this.timedPolicy.on("NewGeneration", async () => {
+            await this.newCurrencyGovernanceListener()
         })
     }
 
     async stageUpdate() {
         try {
+            // console.log(`updating from stage ${this.stage}`)
             this.triedUpdateStage = true
             let tx = await this.currencyGovernance.updateStage()
             let rc = await tx.wait()
             if (rc.status === 1) {
                 this.triedUpdateStage = false
                 this.stage = await this.currencyGovernance.currentStage()
+                // console.log(this.stage)
             } else {
                 console.log('ane')
                 throw tx
@@ -77,8 +76,9 @@ export class CurrencyGovernor {
             let tx = await this.currencyGovernance.compute()
             let rc = await tx.wait()
             if (rc.status === 1) {
+                // console.log('computed')
                 this.triedCompute = false
-                this.stage++
+                this.stage = await this.currencyGovernance.currentStage()
             } else {
                 throw tx
             }
@@ -86,7 +86,7 @@ export class CurrencyGovernor {
             if (await this.currencyGovernance.currentStage() > this.stage) {
                 // stage has already been updated
                 this.triedUpdateStage = false
-                this.stage++
+                this.stage = await this.currencyGovernance.currentStage()
             } else {
                 // potential serious error
                 setTimeout(this.stageUpdate.bind(this), 1000)
@@ -94,10 +94,31 @@ export class CurrencyGovernor {
         }
     }
 
-    async generationListener() {
-        this.timedPolicy.on("NewGeneration", async () => {
-            this.currencyGovernance = CurrencyGovernance__factory.connect(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE), this.wallet)
-            await this.setup()
-        })
+    async killListener(eventName:String) {
+        if (eventName === "NewGeneration") {
+            this.timedPolicy.off("NewGeneration", this.newCurrencyGovernanceListener)
+        } else if (eventName === "block") {
+            this.timedPolicy.off("block", this.stageUpdateListener)
+        }
+    }
+
+    // listeners
+
+    async stageUpdateListener() {
+        let timestamp: number = (await this.provider.getBlock('latest')).timestamp
+        if ((this.stage === 0 && timestamp > this.proposalEnds
+            || this.stage === 1 && timestamp > this.votingEnds
+            || this.stage === 2 && timestamp > this.revealEnds))
+            {
+            await this.stageUpdate()
+        } else if (this.stage === 3) {
+            this.doCompute()
+        }
+    }
+
+    async newCurrencyGovernanceListener() {
+        console.log('updating currencyGovernance')
+        this.currencyGovernance = CurrencyGovernance__factory.connect(await this.policy.policyFor(ID_CURRENCY_GOVERNANCE), this.wallet)
+        await this.setup()
     }
 }

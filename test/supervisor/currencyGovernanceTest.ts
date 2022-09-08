@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { ethers, expect } from 'hardhat'
+import { ethers } from 'hardhat'
 import {
   Policy,
   TimedPolicies,
@@ -8,13 +8,13 @@ import {
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
-// import { TimedPolicies, TimedPolicies } from '../../typechain-types/TimedPolicies'
+import { expect } from 'chai'
 
 const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
 
-describe('currencyGovernance_supervisor [@group=4]', () => {
+describe('currencyGovernance_supervisor [@group=13]', () => {
   let alice
   let policy: Policy
   let timedPolicies: TimedPolicies
@@ -25,14 +25,22 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
   let timeGovernor: TimeGovernor
 
   beforeEach(async () => {
+    if (timeGovernor) {
+      await timeGovernor.killListener()
+    }
+    // if (currencyGovernor) {
+    //     await currencyGovernor.killListener()
+    // }
     const accounts = await ethers.getSigners()
     ;[alice] = accounts
     ;({ policy, timedPolicies, currencyGovernance } = await ecoFixture())
 
     supervisor = new Supervisor()
-    await supervisor.testStartSupervisor(policy, alice)
+    await supervisor.startSupervisor("", policy, alice)
 
     currencyGovernor = supervisor.currencyGovernor
+    timeGovernor = supervisor.timeGovernor
+    console.log(ethers.provider.listenerCount('block'))
   })
   it('updates stages correctly happy path', async () => {
     const stage = currencyGovernor.stage
@@ -71,7 +79,7 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     currTime = await time.latestBlockTimestamp()
     await time.increase(votingEnds - currTime + 1)
     const result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 5000)
+      setTimeout(() => resolve(), 6000)
     })
     expect(currencyGovernor.stage).to.equal(2)
   })
@@ -97,7 +105,9 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     expect(currencyGovernor.stage).to.be.greaterThan(2)
   })
   it('updates currencyGovernance properly upon generation increment', async () => {
-    timeGovernor = supervisor.timeGovernor
+    let result = await new Promise<void>((resolve, reject) => {
+      setTimeout(() => resolve(), 5000)
+    })
     const initialCurrGov = currencyGovernor.currencyGovernance.address
     const generationTime = (
       await timeGovernor.timedPolicy.GENERATION_DURATION()
@@ -105,14 +115,9 @@ describe('currencyGovernance_supervisor [@group=4]', () => {
     // console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
 
     await time.increase(generationTime + 1)
-    let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 5000)
-    })
-    await time.advanceBlock()
     result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 5000)
+      setTimeout(() => resolve(), 8000)
     })
-
     // console.log(await (await timeGovernor.timedPolicy.generation()).toNumber())
     const newCurrGov = currencyGovernor.currencyGovernance.address
     expect(newCurrGov).to.not.equal(initialCurrGov)

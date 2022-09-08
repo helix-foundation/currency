@@ -15,13 +15,12 @@
  * the first proposal will pass the final vote.
  */
 
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
-describe('Production Policy Change [@group=4]', () => {
+describe('E2E Funding an Account with a Proposal [@group=4]', () => {
   let policy
   let eco
   let timedPolicies
@@ -54,7 +53,7 @@ describe('Production Policy Change [@group=4]', () => {
   })
 
   it('Waits a generation', async () => {
-    await time.increase(3600 * 24 * 14 + 1)
+    await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
   })
 
@@ -63,7 +62,7 @@ describe('Production Policy Change [@group=4]', () => {
     backdoor = await deploy('MakeBackdoor', await accounts[2].getAddress())
   })
 
-  it('Kicks off a proposal round', async () => {
+  it('Find the policy proposals instance', async () => {
     const proposalsHash = ethers.utils.solidityKeccak256(
       ['string'],
       ['PolicyProposals']
@@ -71,7 +70,7 @@ describe('Production Policy Change [@group=4]', () => {
     //    await timedPolicies.incrementGeneration();
     policyProposals = await ethers.getContractAt(
       'PolicyProposals',
-      await util.policyFor(policy, proposalsHash)
+      await policyFor(policy, proposalsHash)
     )
   })
 
@@ -91,7 +90,7 @@ describe('Production Policy Change [@group=4]', () => {
       .registerProposal(backdoor.address)
   })
 
-  it('Adds stake to proposals to ensure they are in the top 10', async () => {
+  it('Adds stake to the proposal to ensure it goes to a vote', async () => {
     await policyProposals.connect(accounts[1]).support(makerich.address)
 
     await policyProposals.connect(accounts[2]).support(backdoor.address)
@@ -99,14 +98,14 @@ describe('Production Policy Change [@group=4]', () => {
     await policyProposals.connect(accounts[1]).deployProposalVoting()
   })
 
-  it('Transitions from proposing to voting', async () => {
+  it('Find the policy votes instance', async () => {
     const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
       ['string'],
       ['PolicyVotes']
     )
     policyVotes = await ethers.getContractAt(
       'PolicyVotes',
-      await util.policyFor(policy, policyVotesIdentifierHash)
+      await policyFor(policy, policyVotesIdentifierHash)
     )
   })
 
@@ -134,7 +133,9 @@ describe('Production Policy Change [@group=4]', () => {
       ['string'],
       ['Backdoor']
     )
-    expect(await util.policyFor(policy, backdoorHash)).to.be.zero
+    expect(await policyFor(policy, backdoorHash)).to.equal(
+      ethers.constants.AddressZero
+    )
   })
 
   it('Celebrates accounts[5]', async () => {

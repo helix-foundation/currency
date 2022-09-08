@@ -1,5 +1,4 @@
 const hre = require('hardhat')
-
 const { ethers } = hre
 
 export async function setNextBlockTimestamp(timestamp: number) {

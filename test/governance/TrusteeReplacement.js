@@ -9,14 +9,13 @@
  * contract can replace the old one.
  */
 
-const { ethers } = require('hardhat')
+const { expect } = require('chai')
 const time = require('../utils/time.ts')
-const { ecoFixture } = require('../utils/fixtures')
+const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-const util = require('../../tools/test/util')
 
-describe('Governance Trustee Change [@group=9]', () => {
-  describe('add a trustee and replace one', async () => {
+describe('E2E Proposal Trustee Cohort Change [@group=9]', () => {
+  describe('new cohort adds 2 trustees, keeps one, removes one', async () => {
     let policy
     let eco
     let timedPolicies
@@ -55,11 +54,11 @@ describe('Governance Trustee Change [@group=9]', () => {
     })
 
     it('Waits a generation', async () => {
-      await time.increase(3600 * 24 * 40)
+      await time.increase(3600 * 24 * 14)
       await timedPolicies.incrementGeneration()
     })
 
-    it('Constructs the proposals', async () => {
+    it('Constructs the proposal', async () => {
       trusteeReplacement = await deploy('TrusteeReplacement', [
         await alice.getAddress(),
         await charlie.getAddress(),
@@ -110,14 +109,14 @@ describe('Governance Trustee Change [@group=9]', () => {
       expect(daveBool).to.be.false
     })
 
-    it('Kicks off a proposal round', async () => {
+    it('Find the policy proposals instance', async () => {
       const proposalsHash = ethers.utils.solidityKeccak256(
         ['string'],
         ['PolicyProposals']
       )
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(policy, proposalsHash)
+        await policyFor(policy, proposalsHash)
       )
     })
 
@@ -132,20 +131,20 @@ describe('Governance Trustee Change [@group=9]', () => {
       await time.increase(3600 * 24 * 2)
     })
 
-    it('Adds stake to proposals to ensure thati it goes to a vote', async () => {
+    it('Adds stake to the proposal to ensure it goes to a vote', async () => {
       await policyProposals.connect(alice).support(trusteeReplacement.address)
       await policyProposals.connect(bob).support(trusteeReplacement.address)
       await policyProposals.connect(bob).deployProposalVoting()
     })
 
-    it('Transitions from proposing to voting', async () => {
+    it('Find the policy votes instance', async () => {
       const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
         ['string'],
         ['PolicyVotes']
       )
       policyVotes = await ethers.getContractAt(
         'PolicyVotes',
-        await util.policyFor(policy, policyVotesIdentifierHash)
+        await policyFor(policy, policyVotesIdentifierHash)
       )
     })
 
@@ -154,7 +153,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       await policyVotes.connect(bob).vote(true)
     })
 
-    it('Waits another week (end of commit period)', async () => {
+    it('Waits until the end of the voting period', async () => {
       await time.increase(3600 * 24 * 7)
     })
 
@@ -190,7 +189,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       expect(daveBool).to.be.true
     })
   })
-  describe('remove a trustee', async () => {
+  describe('replace with less trustees', async () => {
     let policy
     let eco
     let timedPolicies
@@ -229,11 +228,11 @@ describe('Governance Trustee Change [@group=9]', () => {
     })
 
     it('Waits a generation', async () => {
-      await time.increase(3600 * 24 * 40)
+      await time.increase(3600 * 24 * 14)
       await timedPolicies.incrementGeneration()
     })
 
-    it('Constructs the proposals', async () => {
+    it('Constructs the proposal', async () => {
       trusteeReplacement = await deploy('TrusteeReplacement', [
         await dave.getAddress(),
       ])
@@ -268,14 +267,14 @@ describe('Governance Trustee Change [@group=9]', () => {
       expect(daveBool).to.be.false
     })
 
-    it('Kicks off a proposal round', async () => {
+    it('Find the policy proposals instance', async () => {
       const proposalsHash = ethers.utils.solidityKeccak256(
         ['string'],
         ['PolicyProposals']
       )
       policyProposals = await ethers.getContractAt(
         'PolicyProposals',
-        await util.policyFor(policy, proposalsHash)
+        await policyFor(policy, proposalsHash)
       )
     })
 
@@ -290,20 +289,20 @@ describe('Governance Trustee Change [@group=9]', () => {
       await time.increase(3600 * 24 * 2)
     })
 
-    it('Adds stake to proposals to ensure thati it goes to a vote', async () => {
+    it('Adds stake to the proposal to ensure it goes to a vote', async () => {
       await policyProposals.connect(alice).support(trusteeReplacement.address)
       await policyProposals.connect(bob).support(trusteeReplacement.address)
       await policyProposals.connect(bob).deployProposalVoting()
     })
 
-    it('Transitions from proposing to voting', async () => {
+    it('Find the policy votes instance', async () => {
       const policyVotesIdentifierHash = ethers.utils.solidityKeccak256(
         ['string'],
         ['PolicyVotes']
       )
       policyVotes = await ethers.getContractAt(
         'PolicyVotes',
-        await util.policyFor(policy, policyVotesIdentifierHash)
+        await policyFor(policy, policyVotesIdentifierHash)
       )
     })
 
@@ -312,7 +311,7 @@ describe('Governance Trustee Change [@group=9]', () => {
       await policyVotes.connect(bob).vote(true)
     })
 
-    it('Waits another week (end of commit period)', async () => {
+    it('Waits until the end of the voting period', async () => {
       await time.increase(3600 * 24 * 7)
     })
 
