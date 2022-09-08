@@ -232,12 +232,12 @@ export class InflationGovernor {
             // console.log(entry[1]);
             // orderedBalanceSums.push(totalSum)
             const bal: ethers.BigNumber = bMap[a]
+            // console.log(bal)
             totalSum = await totalSum.add(bal)
             processed.push([a, bal])
-            // console.log(bMap[a])
+            // console.log(totalSum)
         }
-        console.log(processed)
-        // return [processed, totalSum]
+        return [processed, totalSum]
     }
 
     async respondToChallenge(challenger: string, index: number) {
