@@ -201,10 +201,24 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
       // propose
       await borda
         .connect(dave)
-        .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+        .propose(
+          10,
+          10,
+          10,
+          10,
+          ethers.BigNumber.from('1000000000000000000'),
+          ''
+        )
       await borda
         .connect(charlie)
-        .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        .propose(
+          20,
+          20,
+          20,
+          20,
+          ethers.BigNumber.from('1000000000000000000'),
+          ''
+        )
       await borda
         .connect(bob)
         .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
@@ -290,13 +304,34 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
       // propose
       await borda
         .connect(dave)
-        .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+        .propose(
+          10,
+          10,
+          10,
+          10,
+          ethers.BigNumber.from('1000000000000000000'),
+          ''
+        )
       await borda
         .connect(charlie)
-        .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        .propose(
+          20,
+          20,
+          20,
+          20,
+          ethers.BigNumber.from('1000000000000000000'),
+          ''
+        )
       await borda
         .connect(bob)
-        .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+        .propose(
+          30,
+          30,
+          30,
+          30,
+          ethers.BigNumber.from('1000000000000000000'),
+          ''
+        )
       await time.increase(3600 * 24 * 10)
       await borda.updateStage()
 

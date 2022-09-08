@@ -205,7 +205,7 @@ describe('InflationRootHashProposal', () => {
         .approve(
           addressRootHashProposal,
           (await eco.balanceOf(await accounts[i].getAddress())).mul(
-            BigNumber.from(100)
+            ethers.BigNumber.from(100)
           )
         )
     }
@@ -216,7 +216,7 @@ describe('InflationRootHashProposal', () => {
   }
 
   context('manual tests', () => {
-    const totalSum = BigNumber.from('300000000000000000000000000')
+    const totalSum = ethers.BigNumber.from('300000000000000000000000000')
     const amountOfAccounts = 3
     let tree
     let proposedRootHash
@@ -426,7 +426,7 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[2])
             .proposeRootHash(
               proposedRootHash,
-              BigNumber.from('200000000000000000000000000'),
+              ethers.BigNumber.from('200000000000000000000000000'),
               0
             )
         ).to.be.revertedWith('Hash must consist of at least 1 account')
@@ -435,7 +435,7 @@ describe('InflationRootHashProposal', () => {
           .connect(accounts[2])
           .proposeRootHash(
             proposedRootHash,
-            BigNumber.from('200000000000000000000000000'),
+            ethers.BigNumber.from('200000000000000000000000000'),
             2
           )
 
@@ -444,7 +444,7 @@ describe('InflationRootHashProposal', () => {
             .connect(accounts[2])
             .proposeRootHash(
               proposedRootHash,
-              BigNumber.from('200000000000000000000000000'),
+              ethers.BigNumber.from('200000000000000000000000000'),
               2
             )
         ).to.be.revertedWith('Root hash already proposed')
@@ -1347,8 +1347,8 @@ describe('InflationRootHashProposal', () => {
 
           for (let i = 0; i < 4; i += 1) {
             await rootHashProposal.connect(accounts[i + 1]).proposeRootHash(
-              BigNumber.from(proposedRootHash)
-                .add(BigNumber.from(1 + i))
+              ethers.BigNumber.from(proposedRootHash)
+                .add(ethers.BigNumber.from(1 + i))
                 .toHexString(),
               totalSum,
               amountOfRequests[i]
@@ -1424,9 +1424,9 @@ describe('InflationRootHashProposal', () => {
   context('random tests', () => {
     it('is complex', async () => {
       const list = []
-      let totalSum = BigNumber.from('0')
+      let totalSum = ethers.BigNumber.from('0')
       const amountOfAccounts = 10
-      let tmp = BigNumber.from('0')
+      let tmp = ethers.BigNumber.from('0')
       for (let i = 1; i <= amountOfAccounts; i += 1) {
         tmp = BigNumber.from('10000000000000000000000000').mul(i)
         list.push([await accounts[i - 1].getAddress(), tmp])
@@ -1476,10 +1476,10 @@ describe('InflationRootHashProposal', () => {
       let tmp
       it(`random test ${k}, action ${action}`, async () => {
         let amountOfAccounts = getRandomIntInclusive(4, 10)
-        let totalSum = BigNumber.from('0')
+        let totalSum = ethers.BigNumber.from('0')
         const list = []
         for (let i = 0; i < amountOfAccounts; i += 1) {
-          tmp = BigNumber.from('10000000000000000000000000').mul(
+          tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
           list.push([await accounts[2 * i].getAddress(), tmp])
@@ -1502,7 +1502,7 @@ describe('InflationRootHashProposal', () => {
         if (action === 0) {
           /* Add something */
           amountOfAccounts += 1
-          tmp = BigNumber.from('10000000000000000000000000').mul(
+          tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
           totalSum = totalSum.add(tmp)
@@ -1525,7 +1525,7 @@ describe('InflationRootHashProposal', () => {
           /* Change a balance */
           const acc =
             accounts[getRandomIntInclusiveEven(0, 2 * amountOfAccounts - 1)]
-          tmp = BigNumber.from('10000000000000000000000000').mul(
+          tmp = ethers.BigNumber.from('10000000000000000000000000').mul(
             getRandomIntInclusive(1, 10000)
           )
           totalSum = totalSum.add(tmp)

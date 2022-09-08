@@ -7,6 +7,8 @@ const { BigNumber } = ethers
 
 const one = ethers.utils.parseEther('1')
 
+const one = ethers.utils.parseEther('1')
+
 describe('PolicyProposals [@group=7]', () => {
   let alice
   let bob
@@ -477,13 +479,13 @@ describe('PolicyProposals [@group=7]', () => {
       })
 
       it('subtracts the correct stake amount', async () => {
-        const preUnsupportStake = BigNumber.from(
+        const preUnsupportStake = ethers.BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
         await policyProposals.unsupport(testProposal.address)
 
-        const postUnsupportStake = BigNumber.from(
+        const postUnsupportStake = ethers.BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
@@ -502,7 +504,7 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.unsupport(testProposal.address)
         await policyProposals.support(testProposal.address)
 
-        const supportedStake = BigNumber.from(
+        const supportedStake = ethers.BigNumber.from(
           (await policyProposals.proposals(testProposal.address))[2]
         )
 
@@ -715,10 +717,10 @@ describe('PolicyProposals [@group=7]', () => {
       // });
 
       it('transfers the refund tokens', async () => {
-        const refundAmount = BigNumber.from(
+        const refundAmount = ethers.BigNumber.from(
           await policyProposals.REFUND_IF_LOST()
         )
-        const preRefundBalance = BigNumber.from(
+        const preRefundBalance = ethers.BigNumber.from(
           await eco.balanceOf(await alice.getAddress())
         )
 
