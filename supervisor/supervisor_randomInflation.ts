@@ -1,10 +1,9 @@
-
-
-import { Address } from "ethereumjs-util";
 import * as ethers from "ethers";
-
+import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory } from "../typechain-types"
-
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
+import { EcoSnapshotQueryResult } from './ECO_SNAPSHOT'
+import { string } from "hardhat/internal/core/params/argumentTypes";
 const {
     getPrimal,
     getTree,
@@ -14,6 +13,7 @@ const {
 const { prove, bnHex } = require('../tools/vdf')
 
 const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer'])
+const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from("1000000000000000000");
 
 let tx
 let rc
@@ -124,23 +124,120 @@ export class InflationGovernor {
         }
     }
 
-    async proposeRootHash() {
-        let balances
-        let totalSum!: number
-        let numAccts!: number
-        // get these from subgraphs
-        // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
-        let AddressesToBalancesSorted
-        const tree = await getTree(AddressesToBalancesSorted)
-        tx = await this.inflationRootHashProposal.proposeRootHash(tree.hash, totalSum, numAccts)
-        rc = await tx.wait()
-        if (rc.status) {
-            // successfully proposed
-        } else {
-            // failed to propose
-            // try again
-            setTimeout(this.proposeRootHash.bind(this), 1000)
+    // async proposeRootHash() {
+    //     let balancesMap = this.fetchBalances((await (await this.randomInflation.blockNumber()).toNumber()))
+    //     let [sortedBalances: [[string, ethers.BigNumber]], totalSum] = await this.processBalances(balancesMap)
+    //     // let orderedAddresses = Object.keys(balancesMap).sort()
+    //     // for (const a of orderedAddresses) {
+    //     //     // console.log(entry[1]);
+    //     //     orderedBalanceSums.push(totalSum)
+    //     //     const bal = balancesMap[a]
+    //     //     totalSum = await totalSum.add(bal)
+    //     //     arrayOfMap.push([a, bal])
+    //     // }
+    //     // let totalSum!: number
+    //     let numAccts: number = sortedBalances.length
+    //     // get these from subgraphs
+    //     // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
+
+    //     const tree = await getTree(sortedBalances)
+    //     tx = await this.inflationRootHashProposal.proposeRootHash(tree.hash, totalSum, numAccts)
+    //     rc = await tx.wait()
+    //     if (rc.status) {
+    //         // successfully proposed
+    //     } else {
+    //         // failed to propose
+    //         // try again
+    //         setTimeout(this.proposeRootHash.bind(this), 1000)
+    //     }
+    // }
+
+    async fetchBalances(block: number, subgraphUri: string) {
+        const client = new ApolloClient({
+            link: new HttpLink({uri: subgraphUri, fetch}),
+            cache: new InMemoryCache(),
+          });
+        const ECO_SNAPSHOT = gql`
+          query EcoSnapshot($blockNumber: BigInt!) {
+            accounts {
+              address: id
+              ECOBalances: historicalECOBalances(
+                where: { blockNumber_lte: $blockNumber }
+                orderBy: blockNumber
+                orderDirection: desc
+                first: 1
+              ) {
+                value
+                blockNumber
+              }
+              ECOVotingPowers: historicalVotingPowers(
+                where: { token: "eco", blockNumber_lte: $blockNumber }
+                orderBy: blockNumber
+                orderDirection: desc
+                first: 1
+              ) {
+                value
+                blockNumber
+              }
+            }
+            inflationMultipliers(
+              where: { blockNumber_lte: $blockNumber }
+              orderBy: blockNumber
+              orderDirection: desc
+              first: 1
+            ) {
+              value
+            }
+          }
+        `;
+        const { data: accountsSnapshotQuery } = await client.query<EcoSnapshotQueryResult>({query: ECO_SNAPSHOT, variables: {blockNumber: block}});
+        return this.balanceInflationAdjustment(accountsSnapshotQuery)
+
+    }
+
+    balanceInflationAdjustment(accountsSnapshotQuery: EcoSnapshotQueryResult) {
+        
+        if (accountsSnapshotQuery) {
+            const inflationMultiplier = accountsSnapshotQuery.inflationMultipliers
+            .length
+            ? ethers.BigNumber.from(accountsSnapshotQuery.inflationMultipliers[0].value)
+            : DEFAULT_INFLATION_MULTIPLIER;
+
+            let balances: [string, ethers.BigNumber][] = accountsSnapshotQuery.accounts
+            .map((account) => {
+                const result: [string, ethers.BigNumber] = ["", ethers.BigNumber.from(0)];
+                if (account.ECOBalances.length) {
+                result[0] = account.address;
+                result[1] = ethers.BigNumber.from(account.ECOBalances[0].value).div(
+                    inflationMultiplier
+                );
+                }
+                return result;
+            })
+            .filter((account) => !!account[0] && account[1].gt(0));
+            return balances;
         }
+    }
+    
+    async processBalances(balances:[string, ethers.BigNumber][]) {
+        const bMap: { [key: string]: ethers.BigNumber } = {};
+        for (const item of balances) {
+            bMap[item[0]] = item[1]
+        }
+        let totalSum: ethers.BigNumber = ethers.BigNumber.from(0)
+        let processed = []
+        let orderedAddresses: string[] = Object.keys(bMap).sort()
+        // console.log(orderedAddresses)
+        for (let a of orderedAddresses) {
+            // console.log(entry[1]);
+            // orderedBalanceSums.push(totalSum)
+            const bal: ethers.BigNumber = bMap[a]
+            totalSum = await totalSum.add(bal)
+            processed.push([a, bal])
+            // console.log(bMap[a])
+        }
+        console.log(processed)
+        // return [processed, totalSum]
     }
 
     async respondToChallenge(challenger: string, index: number) {
