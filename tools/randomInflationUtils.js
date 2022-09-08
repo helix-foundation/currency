@@ -2,14 +2,9 @@
 /* eslint no-param-reassign: 0 */
 /* eslint no-await-in-loop: 0 */
 /* eslint prefer-destructuring: 0 */
-/* eslint no-unused-vars: 0 */
-/* eslint new-cap: 0 */
 
-const bigintCryptoUtils = require('bigint-crypto-utils')
-const BN = require('bn.js')
-const web3 = require('web3')
-const { ethers } = require('ethers')
-// const time = require('../test/utils/time.ts');
+const { BigNumber } = ethers
+
 /*
  * Takes an array of sorted items and recursively builds an merkle tree
  */
@@ -18,7 +13,7 @@ function arrayToTree(items, min, max) {
   let index
   let sum
   if (min === max) {
-    if (items[min][0] === 0) {
+    if (items[min][0] === ethers.constants.AddressZero) {
       index = 0
       sum = 0
     } else {
@@ -30,23 +25,9 @@ function arrayToTree(items, min, max) {
       balance: items[min][1],
       sum,
       index,
-      hash: web3.utils.soliditySha3(
-        {
-          t: 'bytes20',
-          v: items[min][0].toString(),
-        },
-        {
-          t: 'uint256',
-          v: items[min][1],
-        },
-        {
-          t: 'uint256',
-          v: items[min][2],
-        },
-        {
-          t: 'uint256',
-          v: index,
-        }
+      hash: ethers.utils.solidityKeccak256(
+        ['bytes20', 'uint256', 'uint256', 'uint256'],
+        [items[min][0], items[min][1], items[min][2], index]
       ),
     }
   }
@@ -54,19 +35,12 @@ function arrayToTree(items, min, max) {
   const a = arrayToTree(items, min, min + spread)
   const b = arrayToTree(items, max - spread, max)
   const params = [a.hash, b.hash]
-  // web3.utils.toBN(a.hash).lt(web3.utils.toBN(b.hash)) ? [a.hash, b.hash] : [b.hash, a.hash];
   return {
     left: a,
     right: b,
-    hash: web3.utils.soliditySha3(
-      {
-        t: 'bytes32',
-        v: params[0],
-      },
-      {
-        t: 'bytes32',
-        v: params[1],
-      }
+    hash: ethers.utils.solidityKeccak256(
+      ['bytes32', 'bytes32'],
+      [params[0], params[1]]
     ),
   }
 }
@@ -94,18 +68,18 @@ function getTree(map, wrongSum = [], swapIndex = []) {
 
   const wantitems = 2 ** Math.ceil(Math.log2(len))
   for (let i = len; i < wantitems; i += 1) {
-    items.push([0, 0])
+    items.push([ethers.constants.AddressZero, 0])
   }
-  let sum = new web3.utils.BN(0)
+  let sum = BigNumber.from(0)
   for (let i = 0; i < len; i += 1) {
     if (wrongSum.length > 0) {
       if (i === wrongSum[0]) {
-        sum = web3.utils.toBN(wrongSum[1])
+        sum = BigNumber.from(wrongSum[1])
       }
     }
 
     items[i].push(sum)
-    sum = sum.add(items[i][1])
+    sum = sum.add(BigNumber.from(items[i][1]))
   }
   for (let i = len; i < wantitems; i += 1) {
     items[i].push(0)
@@ -165,7 +139,7 @@ function getRandomIntInclusiveOdd(min, max) {
 }
 
 async function getPrimal(blockHash, attempts = 0) {
-  const baseNum = new BN(blockHash.slice(2), 16)
+  const baseNum = BigNumber.from(blockHash.slice(2), 16)
   for (let i = 0; i < 1000; i++) {
     if (
       await bigintCryptoUtils.isProbablyPrime(
@@ -182,46 +156,11 @@ async function getPrimal(blockHash, attempts = 0) {
   return getPrimal(blockHash, ++attempts)
 }
 
-function getRecipient(orderedBalanceSums, orderedAddresses, claimNumber) {
-  console.log('getrecipient')
-  if (new BN(claimNumber) === 0) {
-    return [0, 0x0]
-  }
-  let index = orderedBalanceSums.findIndex((element) =>
-    element.gt(new BN(claimNumber))
-  )
-  index = index === -1 ? 2 : index - 1
-  return [index, orderedAddresses[index]]
-}
-
-async function getClaimParameters(
-  seed,
-  tree,
-  sequence,
-  totalSum,
-  orderedBalanceSums,
-  orderedAddresses
-) {
-  console.log('getclaimparameters')
-  const chosenClaimNumberHash = ethers.utils.solidityKeccak256(
-    ['bytes32', 'uint256'],
-    [seed, sequence]
-  )
-  console.log(chosenClaimNumberHash)
-  const [index, recipient] = await getRecipient(
-    orderedBalanceSums,
-    orderedAddresses,
-    new BN(chosenClaimNumberHash.slice(2), 16).mod(new BN(totalSum))
-  )
-  return [await answer(tree, index), index, recipient]
-}
-
 module.exports = {
-  getClaimParameters,
   getTree,
-  getPrimal,
   answer,
   getRandomIntInclusive,
   getRandomIntInclusiveEven,
   getRandomIntInclusiveOdd,
+  getPrimal,
 }
