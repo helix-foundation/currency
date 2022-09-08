@@ -26,7 +26,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
 
   beforeEach(async () => {
     if (timeGovernor) {
-      await timeGovernor.killListeners()
+      // await timeGovernor.killListener()
     }
     // if (currencyGovernor) {
     //     await currencyGovernor.killListener()
@@ -40,6 +40,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
 
     currencyGovernor = supervisor.currencyGovernor
     timeGovernor = supervisor.timeGovernor
+    console.log(ethers.provider.listenerCount('block'))
   })
   it('updates stages correctly happy path', async () => {
     const stage = currencyGovernor.stage

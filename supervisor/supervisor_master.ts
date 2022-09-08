@@ -58,11 +58,10 @@ export class Supervisor {
         let currencyGovernance: CurrencyGovernance = CurrencyGovernance__factory.connect(await rootPolicy.policyFor(ID_CURRENCY_GOVERNANCE), wallet)
     
         this.timeGovernor = new TimeGovernor(provider, wallet, rootPolicy, timedPolicy)
-        this.timeGovernor.startTimer()
+        await this.timeGovernor.startTimer()
     
         this.currencyGovernor = new CurrencyGovernor(provider, wallet, rootPolicy, timedPolicy, currencyGovernance)
         await this.currencyGovernor.setup()
-        await this.currencyGovernor.startTimer()
-        await this.currencyGovernor.generationListener()
+        await this.currencyGovernor.startListeners()
     }
 }
