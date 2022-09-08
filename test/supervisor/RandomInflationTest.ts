@@ -42,19 +42,20 @@ describe('RandomInflation [@group=13]', () => {
     let balances: [string, BigNumber][] | undefined = await inflationGovernor.fetchBalances(7471818, 'https://api.thegraph.com/subgraphs/name/paged1/policy')
     if(balances) {
       let [proc, total] = await inflationGovernor.processBalances(balances)
-      if (typeof(total) == BigNumber)
       let prev = '0x0000000000000000000000000000000000000000'
+      let makeTot:BigNumber = ethers.BigNumber.from(0)
       for (const item in proc) {
         expect(item[0]).to.be.greaterThan(prev)
         prev = item[0]
-        total.sub()
+        makeTot.add(item[1])
       }
-      const keys = Object.keys(proc)
-      const sortedKeys = keys.sort()
-      console.log(keys)
-      console.log(sortedKeys)
-      expect(sortedKeys[0]).to.equal(keys[0])
-      expect(sortedKeys[keys.length - 1]).to.equal(keys[keys.length - 1])
+      expect(total).to.equal(makeTot)
+      // const keys = Object.keys(proc)
+      // const sortedKeys = keys.sort()
+      // console.log(keys)
+      // console.log(sortedKeys)
+      // expect(sortedKeys[0]).to.equal(keys[0])
+      // expect(sortedKeys[keys.length - 1]).to.equal(keys[keys.length - 1])
     }
   })
 })
