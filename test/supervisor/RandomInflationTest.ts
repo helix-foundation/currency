@@ -106,4 +106,30 @@ describe('RandomInflation [@group=13]', () => {
     })
     expect(inflationGovernor.randomInflation).to.not.be.undefined
   })
+
+  it('gets primal and commits vdfSeed', async () => {
+    expect(inflationGovernor.vdfSeed).to.be.undefined
+    await time.increase(3600 * 24 * 1)
+    let result = await new Promise<void>((resolve, reject) => {
+      setTimeout(() => resolve(), 20000)
+    })
+    expect(inflationGovernor.vdfSeed).to.be.undefined
+  })
+
+  it('proves vdfSeed', async () => {
+    expect(inflationGovernor.vdfOutput).to.be.undefined
+    await time.increase(3600 * 24 * 1)
+    let result = await new Promise<void>((resolve, reject) => {
+      setTimeout(() => resolve(), 20000)
+    })
+    expect(inflationGovernor.vdfOutput).to.not.be.undefined
+  })
+
+  it('submits vdfSeed', async () => {
+    await time.increase(3600 * 24 * 1)
+    let result = await new Promise<void>((resolve, reject) => {
+      setTimeout(() => resolve(), 20000)
+    })
+    expect(await inflationGovernor.randomInflation.seed()).to.not.equal(0)
+  })
 })

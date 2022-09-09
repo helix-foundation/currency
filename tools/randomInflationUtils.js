@@ -140,7 +140,6 @@ function getRandomIntInclusiveOdd(min, max) {
 }
 
 async function getPrimal(blockHash, attempts = 0) {
-  console.log('margaloot')
   const baseNum = BigNumber.from(blockHash)
   for (let i = 0; i < 1000; i++) {
     if (

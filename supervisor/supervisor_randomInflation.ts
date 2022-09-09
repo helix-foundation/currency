@@ -139,6 +139,7 @@ export class InflationGovernor {
         if (rc.status) {
             // done
             // emits EntropySeedReveal
+            console.log('submitted vdf')
         } else {
             // error
         }
