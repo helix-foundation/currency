@@ -140,15 +140,16 @@ function getRandomIntInclusiveOdd(min, max) {
 }
 
 async function getPrimal(blockHash, attempts = 0) {
-  const baseNum = BigNumber.from(blockHash.slice(2), 16)
+  console.log('margaloot')
+  const baseNum = BigNumber.from(blockHash)
   for (let i = 0; i < 1000; i++) {
     if (
       await bigintCryptoUtils.isProbablyPrime(
-        BigInt(baseNum.addn(i).toString()),
+        BigInt(baseNum.add(i).toString()),
         30
       )
     ) {
-      return baseNum.addn(i).toString()
+      return baseNum.add(i).toString()
     }
   }
   if (attempts > 2) {

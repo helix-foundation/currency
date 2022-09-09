@@ -95,11 +95,11 @@ export class CurrencyGovernor {
     }
 
     async killListener(eventName:String) {
-        if (eventName === "NewGeneration") {
-            this.timedPolicy.off("NewGeneration", this.newCurrencyGovernanceListener)
-        } else if (eventName === "block") {
-            this.timedPolicy.off("block", this.stageUpdateListener)
-        }
+        // if (eventName === "NewGeneration") {
+        //     this.timedPolicy.off("NewGeneration", this.newCurrencyGovernanceListener)
+        // } else if (eventName === "block") {
+        //     this.timedPolicy.off("block", this.stageUpdateListener)
+        // }
     }
 
     // listeners

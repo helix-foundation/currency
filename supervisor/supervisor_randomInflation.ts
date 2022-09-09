@@ -3,6 +3,7 @@ import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory } from "../typechain-types"
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
+import time from "../test/utils/time";
 
 const {
     getPrimal,
@@ -42,19 +43,21 @@ export class InflationGovernor {
 
     async setup() {
         this.currencyTimer = CurrencyTimer__factory.connect(await this.policy.policyFor(ID_CURRENCY_TIMER), this.wallet)
+        await this.inflationListener()
     }
 
     async inflationListener() {
         // make this better after you figure out how to do listeners
+        console.log('listening for new RI')
         this.currencyTimer.on("NewInflation", async (inflationAddr, _) => {
+            console.log('new RI')
             this.randomInflation = await RandomInflation__factory.connect(inflationAddr, this.wallet)
             this.inflationRootHashProposal = InflationRootHashProposal__factory.connect(await this.randomInflation.inflationRootHashProposal(), this.wallet)
             this.vdfVerifier = VDFVerifier__factory.connect((await this.randomInflation.vdfVerifier()), this.wallet)
             await this.spawnListeners()
-            await this.commitVdfSeed()
-            await this.proposeRootHash()
+            this.commitVdfSeed()
+            // this.proposeRootHash()
 
-            // just started a generation with randomInflation, now what?
         })
     }
 
@@ -76,7 +79,17 @@ export class InflationGovernor {
     }
 
     async commitVdfSeed() {
-        const primalNumber: number = await getPrimal((await this.provider.getBlock("latest")).hash)
+        console.log('trying to commit vdf seed')
+        const bHash = (await this.provider.getBlock("latest")).hash
+        let primalNumber: number = 0
+        console.log(bHash)
+        console.log(await time.latestBlockHash())
+        try {
+            primalNumber = await getPrimal((await this.provider.getBlock("latest")).hash)
+        } catch (e) {
+            console.log(e)
+        }
+        console.log(primalNumber)
         tx = await this.randomInflation.setPrimal(primalNumber)
         rc = await tx.wait()
         if (rc.status) {
@@ -85,7 +98,9 @@ export class InflationGovernor {
             if (rc.status) {
                 // done
                 this.vdfSeed = (await this.randomInflation.entropyVDFSeed()).toString()
+                console.log("committed vdf seed")
             } else {
+                console.log('failed to commit seed')
                 // failed to commit seed
             }
         } else {
@@ -95,6 +110,7 @@ export class InflationGovernor {
     }
 
     async proveVDF() {
+        console.log('trying to prove vdf')
         // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
         const difficulty: number = (await this.randomInflation.randomVDFDifficulty()).toNumber()
         const [y, Usqrt] = await prove(this.vdfSeed, difficulty)
@@ -117,6 +133,7 @@ export class InflationGovernor {
     }
 
     async submitVDF() {
+        console.log('trying to submit vdf')
         tx = await this.randomInflation.submitEntropyVDF(bnHex(this.vdfOutput))
         rc = await tx.wait()
         if (rc.status) {
@@ -128,6 +145,7 @@ export class InflationGovernor {
     }
 
     async proposeRootHash() {
+        console.log('trying to propose roothash')
         let sortedBalances:[string, ethers.BigNumber][] = await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL)
 
         let numAccts: number = sortedBalances.length
@@ -151,6 +169,7 @@ export class InflationGovernor {
     }
 
     async respondToChallenge(challenger: string, index: number) {
+        console.log(`trying to respond to RPH challenge by ${challenger} at index ${index}` )
         if(!this.tree) {
             this.tree = await getTree(await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL))
         }
@@ -174,6 +193,7 @@ export class InflationGovernor {
     }
 
     async fetchBalances(block: number, subgraphUri: string) {
+        console.log('fetching balances')
         const client = new ApolloClient({
             link: new HttpLink({uri: subgraphUri, fetch}),
             cache: new InMemoryCache(),

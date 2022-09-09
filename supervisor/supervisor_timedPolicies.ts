@@ -31,6 +31,7 @@ export class TimeGovernor {
 
     async callUpdateOnBlock() {
         let block = await this.provider.getBlock('latest')
+        // console.log(block.number)
         if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
             this.genUpdate()
         }
