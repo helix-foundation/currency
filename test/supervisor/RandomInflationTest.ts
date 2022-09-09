@@ -111,25 +111,26 @@ describe('RandomInflation [@group=13]', () => {
     expect(inflationGovernor.vdfSeed).to.be.undefined
     await time.increase(3600 * 24 * 1)
     let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
+      setTimeout(() => resolve(), 10000)
     })
-    expect(inflationGovernor.vdfSeed).to.be.undefined
+    await time.advanceBlock()
+    result = await new Promise<void>((resolve, reject) => {
+      setTimeout(() => resolve(), 10000)
+    })
+    expect(inflationGovernor.vdfSeed).to.not.be.undefined
   })
 
-  it('proves vdfSeed', async () => {
+  it.only('proves and submits vdfSeed', async () => {
     expect(inflationGovernor.vdfOutput).to.be.undefined
     await time.increase(3600 * 24 * 1)
     let result = await new Promise<void>((resolve, reject) => {
+      setTimeout(() => resolve(), 10000)
+    })
+    let unsetSeed:string = await inflationGovernor.randomInflation.seed()
+    await time.advanceBlock()
+    result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 20000)
     })
-    expect(inflationGovernor.vdfOutput).to.not.be.undefined
-  })
-
-  it('submits vdfSeed', async () => {
-    await time.increase(3600 * 24 * 1)
-    let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
-    })
-    expect(await inflationGovernor.randomInflation.seed()).to.not.equal(0)
+    expect(await inflationGovernor.randomInflation.seed()).to.not.equal(unsetSeed)
   })
 })

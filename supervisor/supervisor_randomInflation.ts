@@ -3,7 +3,6 @@ import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory } from "../typechain-types"
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
-import time from "../test/utils/time";
 
 const {
     getPrimal,
@@ -29,7 +28,7 @@ export class InflationGovernor {
     randomInflation!: RandomInflation
     inflationRootHashProposal!: InflationRootHashProposal
     vdfVerifier!: VDFVerifier
-    vdfSeed: string = ''
+    vdfSeed!: ethers.BigNumber
     vdfOutput!: ethers.Bytes
     tree: any
 
@@ -66,8 +65,8 @@ export class InflationGovernor {
         this.randomInflation.once("EntropyVDFSeedCommit", async () => {
             await this.proveVDF()
         })
-        this.vdfVerifier.once("SuccessfulVerification", async () => {
-            await this.submitVDF()
+        this.vdfVerifier.once("SuccessfulVerification", async (_, __, output) => {
+            await this.submitVDF(output)
         })
         // this.randomInflation.once("EntropySeedReveal", async () => {
         //     // submit inflationRootHashProposal
@@ -80,31 +79,30 @@ export class InflationGovernor {
 
     async commitVdfSeed() {
         console.log('trying to commit vdf seed')
-        const bHash = (await this.provider.getBlock("latest")).hash
         let primalNumber: number = 0
-        console.log(bHash)
-        console.log(await time.latestBlockHash())
         try {
             primalNumber = await getPrimal((await this.provider.getBlock("latest")).hash)
+            console.log('got primal')
         } catch (e) {
             console.log(e)
         }
-        console.log(primalNumber)
         tx = await this.randomInflation.setPrimal(primalNumber)
         rc = await tx.wait()
         if (rc.status) {
+            console.log('primal set')
             tx = await this.randomInflation.commitEntropyVDFSeed(primalNumber)
             rc = await tx.wait()
             if (rc.status) {
                 // done
-                this.vdfSeed = (await this.randomInflation.entropyVDFSeed()).toString()
-                console.log("committed vdf seed")
+                this.vdfSeed = (await this.randomInflation.entropyVDFSeed())
+                console.log(`committed vdf seed: ${this.vdfSeed}`)
             } else {
                 console.log('failed to commit seed')
                 // failed to commit seed
             }
         } else {
             // failed setPrimal, try again
+            console.log('gligged on setPrimal')
             setTimeout(this.commitVdfSeed.bind(this), 1000)
         }
     }
@@ -113,35 +111,45 @@ export class InflationGovernor {
         console.log('trying to prove vdf')
         // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
         const difficulty: number = (await this.randomInflation.randomVDFDifficulty()).toNumber()
+        console.log(difficulty)
         const [y, Usqrt] = await prove(this.vdfSeed, difficulty)
         tx = await this.vdfVerifier.start(bnHex(this.vdfSeed), difficulty, bnHex(y))
         rc = await tx.wait()
         if (rc.status) {
             // successfully started
             try {
-                for (let i = 0; i < difficulty; i++) {
+                for (let i = 0; i < difficulty - 1; i++) {
                     const u = Usqrt[i]
                     tx = await this.vdfVerifier.update(bnHex(u))
                     rc = await tx.wait()
                     // emits SuccessfulVerification if successful
                 }
-                this.vdfOutput = y
+                this.vdfOutput = y;
             } catch (e) {
                 // VDF failed verification
+                console.log('got schleeged on the vdf verification, brother')
+                console.log(e)
+                // console.log('failed vdf verification')
             }
+
+            console.log('whelk')
         }
     }
 
-    async submitVDF() {
+    async submitVDF(output:ethers.BigNumber) {
         console.log('trying to submit vdf')
-        tx = await this.randomInflation.submitEntropyVDF(bnHex(this.vdfOutput))
+        console.log(`vdf output is ${this.vdfOutput}`)
+        console.log(`eventOutput is ${output}`)
+
+        tx = await this.randomInflation.submitEntropyVDF(bnHex(output))
         rc = await tx.wait()
         if (rc.status) {
             // done
             // emits EntropySeedReveal
             console.log('submitted vdf')
         } else {
-            // error
+            console.log('whonk')
+            throw tx
         }
     }
 
