@@ -124,7 +124,7 @@ export class InflationGovernor {
                     rc = await tx.wait()
                     // emits SuccessfulVerification if successful
                 }
-                this.vdfOutput = y;
+                this.vdfOutput = bnHex(y);
             } catch (e) {
                 // VDF failed verification
                 console.log('got schleeged on the vdf verification, brother')
@@ -141,7 +141,7 @@ export class InflationGovernor {
         console.log(`vdf output is ${this.vdfOutput}`)
         console.log(`eventOutput is ${output}`)
 
-        tx = await this.randomInflation.submitEntropyVDF(bnHex(output))
+        tx = await this.randomInflation.submitEntropyVDF(this.vdfOutput)
         rc = await tx.wait()
         if (rc.status) {
             // done
