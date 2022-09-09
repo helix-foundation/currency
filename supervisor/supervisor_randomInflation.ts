@@ -2,8 +2,8 @@ import * as ethers from "ethers";
 import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory } from "../typechain-types"
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
-import { EcoSnapshotQueryResult } from './ECO_SNAPSHOT'
-import { string } from "hardhat/internal/core/params/argumentTypes";
+import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
+import { BigNum } from "../typechain-types/BigNum";
 const {
     getPrimal,
     getTree,
@@ -29,6 +29,7 @@ export class InflationGovernor {
     vdfVerifier!: VDFVerifier
     vdfSeed: string = ''
     vdfOutput!: ethers.Bytes
+    tree = null
 
 
     constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies) {
@@ -124,79 +125,60 @@ export class InflationGovernor {
         }
     }
 
-    // async proposeRootHash() {
-    //     let balancesMap = this.fetchBalances((await (await this.randomInflation.blockNumber()).toNumber()))
-    //     let [sortedBalances: [[string, ethers.BigNumber]], totalSum] = await this.processBalances(balancesMap)
-    //     // let orderedAddresses = Object.keys(balancesMap).sort()
-    //     // for (const a of orderedAddresses) {
-    //     //     // console.log(entry[1]);
-    //     //     orderedBalanceSums.push(totalSum)
-    //     //     const bal = balancesMap[a]
-    //     //     totalSum = await totalSum.add(bal)
-    //     //     arrayOfMap.push([a, bal])
-    //     // }
-    //     // let totalSum!: number
-    //     let numAccts: number = sortedBalances.length
-    //     // get these from subgraphs
-    //     // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
+    async proposeRootHash() {
+        let sortedBalances:[string, ethers.BigNumber][] = await this.fetchBalances((await (await this.randomInflation.blockNumber()).toNumber()),'https://api.thegraph.com/subgraphs/name/paged1/policy')
 
-    //     const tree = await getTree(sortedBalances)
-    //     tx = await this.inflationRootHashProposal.proposeRootHash(tree.hash, totalSum, numAccts)
-    //     rc = await tx.wait()
-    //     if (rc.status) {
-    //         // successfully proposed
-    //     } else {
-    //         // failed to propose
-    //         // try again
-    //         setTimeout(this.proposeRootHash.bind(this), 1000)
-    //     }
-    // }
+        let numAccts: number = sortedBalances.length
+        let totalSum = ethers.BigNumber.from(0)
+        for (const i of sortedBalances) {
+            totalSum = totalSum.add(i[1])
+        }
+        // get these from subgraphs
+        // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
+
+        this.tree = await getTree(sortedBalances)
+        tx = await this.inflationRootHashProposal.proposeRootHash(tree.hash, totalSum, numAccts)
+        rc = await tx.wait()
+        if (rc.status) {
+            // successfully proposed
+        } else {
+            // failed to propose
+            // try again
+            setTimeout(this.proposeRootHash.bind(this), 1000)
+        }
+    }
+
+    async respondToChallenge(challenger: string, index: number) {
+        const [node, pathToNode] = answer(this.tree, index)
+        tx = await this.inflationRootHashProposal.respondToChallenge(
+            challenger,
+            pathToNode.reverse(),
+            node.account,
+            node.balance,
+            node.sum,
+            index
+        )
+        rc = await tx.wait()
+        if (rc.status) {
+            // successfully responded
+        } else {
+            // failed to respond
+            // try again
+            setTimeout(this.respondToChallenge.bind(this), 1000)
+        }
+    }
 
     async fetchBalances(block: number, subgraphUri: string) {
         const client = new ApolloClient({
             link: new HttpLink({uri: subgraphUri, fetch}),
             cache: new InMemoryCache(),
           });
-        const ECO_SNAPSHOT = gql`
-          query EcoSnapshot($blockNumber: BigInt!) {
-            accounts {
-              address: id
-              ECOBalances: historicalECOBalances(
-                where: { blockNumber_lte: $blockNumber }
-                orderBy: blockNumber
-                orderDirection: desc
-                first: 1
-              ) {
-                value
-                blockNumber
-              }
-              ECOVotingPowers: historicalVotingPowers(
-                where: { token: "eco", blockNumber_lte: $blockNumber }
-                orderBy: blockNumber
-                orderDirection: desc
-                first: 1
-              ) {
-                value
-                blockNumber
-              }
-            }
-            inflationMultipliers(
-              where: { blockNumber_lte: $blockNumber }
-              orderBy: blockNumber
-              orderDirection: desc
-              first: 1
-            ) {
-              value
-            }
-          }
-        `;
         const { data: accountsSnapshotQuery } = await client.query<EcoSnapshotQueryResult>({query: ECO_SNAPSHOT, variables: {blockNumber: block}});
-        return this.balanceInflationAdjustment(accountsSnapshotQuery)
+        return this.balanceInflationAdjustment(accountsSnapshotQuery) as [string, ethers.BigNumber][]
 
     }
 
     balanceInflationAdjustment(accountsSnapshotQuery: EcoSnapshotQueryResult) {
-        
         if (accountsSnapshotQuery) {
             const inflationMultiplier = accountsSnapshotQuery.inflationMultipliers
             .length
@@ -215,34 +197,9 @@ export class InflationGovernor {
                 return result;
             })
             .filter((account) => !!account[0] && account[1].gt(0));
-            return balances;
+            return balances.sort((a, b) => { 
+                return (a[0].toLowerCase()).localeCompare(b[0].toLowerCase(), 'en')
+            })
         }
     }
-    
-    async processBalances(balances:[string, ethers.BigNumber][]) {
-        const bMap: { [key: string]: ethers.BigNumber } = {};
-        for (const item of balances) {
-            bMap[item[0]] = item[1]
-        }
-        let totalSum: ethers.BigNumber = ethers.BigNumber.from(0)
-        let processed = []
-        let orderedAddresses: string[] = Object.keys(bMap).sort()
-        // console.log(orderedAddresses)
-        for (let a of orderedAddresses) {
-            // console.log(entry[1]);
-            // orderedBalanceSums.push(totalSum)
-            const bal: ethers.BigNumber = bMap[a]
-            // console.log(bal)
-            totalSum = await totalSum.add(bal)
-            processed.push([a, bal])
-            // console.log(totalSum)
-        }
-        return [processed, totalSum]
-    }
-
-    async respondToChallenge(challenger: string, index: number) {
-
-    }
-
-
 } 

@@ -4,6 +4,7 @@
 /* eslint prefer-destructuring: 0 */
 
 const { BigNumber } = ethers
+const bigintCryptoUtils = require('bigint-crypto-utils')
 
 /*
  * Takes an array of sorted items and recursively builds an merkle tree
