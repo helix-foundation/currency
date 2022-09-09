@@ -29,7 +29,5 @@ describe('RandomInflation [@group=13]', () => {
     inflationGovernor = supervisor.inflationGovernor
   })
 
-  it('fetches new randomInflation stuff on newInflation', async () => {
-
-  })
+  it('fetches new randomInflation stuff on newInflation', async () => {})
 })
