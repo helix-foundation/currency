@@ -18,7 +18,7 @@
  * trusteeVoteReward: a stringified number for the amount of ECOx awarded to trustees on each vote
  * production: boolean flag for if the deploy is to chain or should include test contracts
  * verbose: boolean flag for logging, production overrides this and is always verbose
- * initialECO: an array of { address; amount } objects for initial ECO distribution
+ * initialECO: an array of { holder; balance } objects for initial ECO distribution
  * initialECOx: same as initialECO but for ECOx
  */
 
@@ -28,6 +28,8 @@ const ethers = require('ethers')
 const { BigNumber } = ethers
 
 let BLOCK_GAS_LIMIT = 6000000
+const implSlot =
+  '0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4'
 const { ERC1820_REGISTRY, REGISTRY_DEPLOY_TX } = require('../tools/constants')
 
 // ### Contract ABIs and Bytecode
@@ -104,15 +106,47 @@ async function parseFlags(options) {
   if (options.test) {
     options.randomVDFDifficulty = 3
     options.initialECOSupply = '0'
-    options.initialECOAddr = []
-    options.initialECOAmount = []
     options.initialECOxSupply = '1000000000000000000000'
-    options.initialECOxAddr = [options.account]
-    options.initialECOxAmount = [options.initialECOxSupply]
+    options.initialECOx = [
+      { holder: options.account, balance: '1000000000000000000000' },
+    ]
     options.trusteeVoteReward = options.trusteeVoteReward || '1000'
   }
 
   return options
+}
+
+// helper function that's used to figure out
+async function checkIsProxyBound(proxyAddress, provider, verbose) {
+  if (verbose) {
+    console.log(`Checking status of proxy ${proxyAddress}`)
+  }
+  const proxyImpl = await provider.getStorageAt(proxyAddress, implSlot)
+  // this allows us to know the EcoInitializable address
+  if (verbose) {
+    console.log(`found implementation ${proxyImpl}`)
+  }
+  // guess that the implementation is an EcoInitializable
+  // aka that the proxy is uninitialized
+  const proxy = new ethers.Contract(
+    proxyAddress,
+    EcoInitializableArtifact.abi,
+    provider
+  )
+  try {
+    const initializableOwner = await proxy.owner()
+    if (verbose) {
+      console.log(`found owner: ${initializableOwner}`)
+    }
+    return { owner: initializableOwner, impl: proxyImpl }
+  } catch {
+    if (verbose) {
+      console.log(
+        `EcoInitializable not present at ${proxyAddress}, proxy likely already bound`
+      )
+    }
+    return { initialized: true }
+  }
 }
 
 // ## Deployment Stages
@@ -168,7 +202,7 @@ async function deployStage1(options) {
   const nicksTx = nick.decorateTx(
     nick.generateTx(
       EcoBootstrapArtifact.bytecode,
-      '0x1234',
+      '0xec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0ec0',
       bootstrapGas,
       options.gasPrice,
       ethers.utils.defaultAbiCoder.encode(
@@ -218,9 +252,13 @@ async function deployStage1(options) {
     // Issue the pre-signed deployment transaction
     await (await options.ethersProvider.sendTransaction(nicksTx.raw)).wait()
 
-    console.log('Bootstrap success!')
+    if (options.verbose) {
+      console.log('Bootstrap success!')
+    }
   } else if (options.verbose) {
-    console.log('Bootstrap stage already deployed')
+    if (options.verbose) {
+      console.log('Bootstrap stage already deployed')
+    }
   }
 
   // Index the Bootstrap data in a readable way
@@ -292,111 +330,334 @@ async function deployStage2(options) {
     options.signer
   )
 
-  // deploy the token initial distribution contracts
-  if (options.verbose) {
-    console.log('deploying the initial token distribution contract...')
+  const ecoProxyStatus = await checkIsProxyBound(
+    ecoProxyAddress,
+    options.ethersProvider,
+    options.verbose
+  )
+  const deployEco =
+    !ecoProxyStatus.initialized && ecoProxyStatus.owner === options.account
+  if (deployEco) {
+    options.ecoInitializable = ecoProxyStatus.impl
   }
-  const tokenInit = await tokenInitFactory.deploy({
-    gasPrice,
-  })
+
+  const ecoXProxyStatus = await checkIsProxyBound(
+    ecoXProxyAddress,
+    options.ethersProvider,
+    options.verbose
+  )
+  const deployEcoX =
+    !ecoXProxyStatus.initialized && ecoXProxyStatus.owner === options.account
+  if (deployEcoX) {
+    options.ecoInitializable = ecoXProxyStatus.impl
+  }
+
+  // deploy the token initial distribution contracts
+  let tokenInit
+  // no need to repeat if tokens have all been minted
+  const deployTokenInit = deployEco || deployEcoX
+  if (deployTokenInit) {
+    if (options.verbose) {
+      console.log('deploying the initial token distribution contract...')
+    }
+    tokenInit = await tokenInitFactory.deploy({
+      gasPrice,
+    })
+  } else {
+    if (options.verbose) {
+      console.log(
+        'skipping token init deployment as ECO and ECOx are already deployed'
+      )
+    }
+  }
 
   // Deploy the token contracts
-  if (options.verbose) {
-    console.log('deploying the ECO implementation contract...')
-  }
-  const ecoImpl = await ecoFactory.deploy(
-    policyProxyAddress,
-    tokenInit.address,
-    options.initialECOSupply,
-    { gasPrice }
-  )
-
-  if (options.verbose) {
-    console.log('deploying the ECOx implementation contract...')
-  }
-  const ecoXImpl = await ecoXFactory.deploy(
-    policyProxyAddress,
-    tokenInit.address,
-    options.initialECOxSupply,
-    ecoProxyAddress,
-    { gasPrice }
-  )
-
-  if (options.verbose) {
-    console.log('waiting for deploy transactions before binding...')
+  let ecoImpl
+  if (deployEco) {
+    if (options.verbose) {
+      console.log('deploying the ECO implementation contract...')
+    }
+    ecoImpl = await ecoFactory.deploy(
+      policyProxyAddress,
+      tokenInit.address,
+      options.initialECOSupply,
+      { gasPrice }
+    )
+  } else {
+    if (options.verbose) {
+      console.log('skipping ECO impl deployment')
+    }
+    ecoImpl = ecoProxyStatus.impl
   }
 
-  await tokenInit.deployTransaction.wait()
-  await ecoImpl.deployTransaction.wait()
-  await ecoXImpl.deployTransaction.wait()
+  let ecoXImpl
+  if (deployEcoX) {
+    if (options.verbose) {
+      console.log('deploying the ECOx implementation contract...')
+    }
+    ecoXImpl = await ecoXFactory.deploy(
+      policyProxyAddress,
+      tokenInit.address,
+      options.initialECOxSupply,
+      ecoProxyAddress,
+      { gasPrice }
+    )
+  } else {
+    if (options.verbose) {
+      console.log('skipping ECOx impl deployment')
+    }
+    ecoXImpl = ecoXProxyStatus.impl
+  }
+
+  if (options.verbose) {
+    console.log('waiting for deploy transactions to be mined before binding...')
+  }
+
+  if (deployTokenInit) {
+    await tokenInit.deployTransaction.wait()
+  }
+  if (deployEco) {
+    await ecoImpl.deployTransaction.wait()
+  }
+  if (deployEcoX) {
+    await ecoXImpl.deployTransaction.wait()
+  }
 
   // bind proxies
-  if (options.verbose) {
-    console.log(
-      'binding proxy 1 to the ECO token contract...',
+  let ecoProxyFuseTx
+  if (deployEco) {
+    if (options.verbose) {
+      console.log(
+        'binding proxy 1 to the ECO token contract...',
+        ecoProxyAddress,
+        ecoImpl.address
+      )
+    }
+    const ecoProxy = new ethers.Contract(
       ecoProxyAddress,
-      ecoImpl.address
+      EcoInitializableArtifact.abi,
+      options.signer
     )
+
+    ecoProxyFuseTx = await ecoProxy.fuseImplementation(ecoImpl.address, {
+      gasPrice,
+    })
+  } else {
+    if (options.verbose) {
+      console.log('ECO proxy already fused')
+    }
   }
-  const ecoProxy = new ethers.Contract(
-    ecoProxyAddress,
-    EcoInitializableArtifact.abi,
-    options.signer
-  )
-  const ecoProxyFuseTx = await ecoProxy.fuseImplementation(ecoImpl.address, {
-    gasPrice,
-  })
+
+  let ecoXProxyFuseTx
+  if (deployEcoX) {
+    if (options.verbose) {
+      console.log(
+        'binding proxy 2 to the ECOx token contract...',
+        ecoXProxyAddress,
+        ecoXImpl.address
+      )
+    }
+    const ecoXProxy = new ethers.Contract(
+      ecoXProxyAddress,
+      EcoInitializableArtifact.abi,
+      options.signer
+    )
+
+    ecoXProxyFuseTx = await ecoXProxy.fuseImplementation(ecoXImpl.address, {
+      gasPrice,
+    })
+  } else {
+    if (options.verbose) {
+      console.log('ECOx proxy already fused')
+    }
+  }
 
   if (options.verbose) {
-    console.log(
-      'binding proxy 2 to the ECOx token contract...',
-      ecoXProxyAddress,
-      ecoXImpl.address
-    )
+    console.log('waiting for proxy binding transactions to be mined...')
   }
-  const ecoXProxy = new ethers.Contract(
-    ecoXProxyAddress,
-    EcoInitializableArtifact.abi,
-    options.signer
-  )
-  const ecoXProxyFuseTx = await ecoXProxy.fuseImplementation(ecoXImpl.address, {
-    gasPrice,
-  })
+  if (deployEco) {
+    await ecoProxyFuseTx.wait()
+  }
+  if (deployEcoX) {
+    await ecoXProxyFuseTx.wait()
+  }
+
+  let distributeEco = true
+  if (!deployEco) {
+    const ecoProxied = new ethers.Contract(
+      ecoProxyAddress,
+      ECOArtifact.abi,
+      options.ethersProvider
+    )
+    const initAddress = await ecoProxied.distributor()
+    const initEcoBalance = await ecoProxied.balanceOf(initAddress)
+    if (initEcoBalance.eq(0)) {
+      if (options.verbose) {
+        console.log(
+          'Init contract has 0 ECO balance, tokens either unminted or already distributed'
+        )
+      }
+      distributeEco = false
+    } else if (!initEcoBalance.eq(options.initialECOSupply)) {
+      console.log(
+        `${initAddress} only found to have a balance of ${initEcoBalance} weico, but asked to distribute ${options.initialECOSupply}`
+      )
+      console.log(
+        'please review what ECO has already been distributed and adjust the input parameters.'
+      )
+      console.log('exiting...')
+      throw new Error('ECO distribution mismatch', {
+        initEcoBalance,
+        initialECOSupply: options.initialECOSupply,
+      })
+    } else {
+      if (options.verbose) {
+        console.log('Init contract has the expected ECO, will distribute')
+        options.initAddress = initAddress
+      }
+    }
+  }
+
+  let distributeEcoX = true
+  if (!deployEcoX) {
+    const ecoXProxied = new ethers.Contract(
+      ecoXProxyAddress,
+      ECOxArtifact.abi,
+      options.ethersProvider
+    )
+    const initAddress = await ecoXProxied.distributor()
+    const initEcoXBalance = await ecoXProxied.balanceOf(initAddress)
+    if (initEcoXBalance.eq(0)) {
+      if (options.verbose) {
+        console.log(
+          'Init contract has 0 ECOx balance, tokens either unminted or already distributed'
+        )
+      }
+      distributeEcoX = false
+    } else if (!initEcoXBalance.eq(options.initialECOxSupply)) {
+      console.log(
+        `${initAddress} only found to have a balance of ${initEcoXBalance} weico, but asked to distribute ${options.initialECOxSupply}`
+      )
+      console.log(
+        'please review what ECOx has already been distributed and adjust the input parameters.'
+      )
+      console.log('exiting...')
+      throw new Error('ECOx distribution mismatch', {
+        initEcoXBalance,
+        initialECOxSupply: options.initialECOxSupply,
+      })
+    } else {
+      if (options.verbose) {
+        console.log('Init contract has the expected ECOx, will distribute')
+        options.initAddress = initAddress
+      }
+    }
+  }
 
   // distribute the initial tokens
-  if (options.verbose) {
-    console.log('distributing initial ECO...')
-  }
-  const ecoDistributeTx = await tokenInit.distributeTokens(
-    ecoProxyAddress,
-    options.initialECO,
-    {
-      gasPrice,
-      gasLimit: BLOCK_GAS_LIMIT,
+  let ecoDistributeTx
+  if (distributeEco) {
+    if (options.verbose) {
+      console.log('distributing initial ECO...')
     }
-  )
+    let tokenInitInstance
+    if (!deployTokenInit) {
+      if (options.verbose) {
+        console.log('token init deploy was skipped, recreating object')
+      }
+      if (!options.initAddress) {
+        console.log(
+          'initAddress not collected in previous step, cannot distribute.'
+        )
+        console.log('exiting...')
+        throw new Error('missing initAddress', {
+          initAddress: options.initAddress,
+          tokenInitPresence: !!tokenInit,
+        })
+      } else {
+        tokenInitInstance = new ethers.Contract(
+          options.initAddress,
+          TokenInitArtifact.abi,
+          options.signer
+        )
+      }
+    } else {
+      tokenInitInstance = tokenInit
+    }
+    ecoDistributeTx = await tokenInitInstance.distributeTokens(
+      ecoProxyAddress,
+      options.initialECO,
+      {
+        gasPrice,
+        gasLimit: BLOCK_GAS_LIMIT,
+      }
+    )
+  } else {
+    if (options.verbose) {
+      console.log('skipping ECO distribution, already distributed')
+    }
+  }
 
-  if (options.verbose) {
-    console.log('distributing initial ECOx...')
-  }
-  const ecoXDistributeTx = await tokenInit.distributeTokens(
-    ecoXProxyAddress,
-    options.initialECOx,
-    {
-      gasPrice,
-      gasLimit: BLOCK_GAS_LIMIT,
+  let ecoXDistributeTx
+  if (distributeEcoX) {
+    if (options.verbose) {
+      console.log('distributing initial ECOx...')
     }
-  )
+    let tokenInitInstance
+    if (!deployTokenInit) {
+      if (options.verbose) {
+        console.log('token init deploy was skipped, recreating object')
+      }
+      if (!options.initAddress) {
+        console.log(
+          'initAddress not collected in previous step, cannot distribute.'
+        )
+        console.log('exiting...')
+        throw new Error('missing initAddress', {
+          initAddress: options.initAddress,
+          tokenInitPresence: !!tokenInit,
+        })
+      } else {
+        tokenInitInstance = new ethers.Contract(
+          options.initAddress,
+          TokenInitArtifact.abi,
+          options.signer
+        )
+      }
+    } else {
+      tokenInitInstance = tokenInit
+    }
+    ecoXDistributeTx = await tokenInitInstance.distributeTokens(
+      ecoXProxyAddress,
+      options.initialECOx,
+      {
+        gasPrice,
+        gasLimit: BLOCK_GAS_LIMIT,
+      }
+    )
+  } else {
+    if (options.verbose) {
+      console.log('skipping ECOx distribution, already distributed')
+    }
+  }
 
   if (options.verbose) {
     console.log(
-      'waiting for all transactions to be mined before moving to the next stage...'
+      'waiting for distribution transactions to be mined before moving to the next stage...'
     )
   }
-  await ecoProxyFuseTx.wait()
-  await ecoXProxyFuseTx.wait()
-  await ecoDistributeTx.wait()
-  await ecoXDistributeTx.wait()
+  if (deployEco) {
+    await ecoProxyFuseTx.wait()
+  }
+  if (deployEcoX) {
+    await ecoXProxyFuseTx.wait()
+  }
+  if (distributeEco) {
+    await ecoDistributeTx.wait()
+  }
+  if (distributeEcoX) {
+    await ecoXDistributeTx.wait()
+  }
 
   return options
 }
