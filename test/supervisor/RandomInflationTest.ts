@@ -19,7 +19,7 @@ describe('RandomInflation [@group=13]', () => {
   let supervisor: Supervisor
   let inflationGovernor!: InflationGovernor
 
-  before(async () => {
+  beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
     ;({ policy, timedPolicies } = await ecoFixture())
@@ -29,5 +29,7 @@ describe('RandomInflation [@group=13]', () => {
     inflationGovernor = supervisor.inflationGovernor
   })
 
-  it('fetches new randomInflation stuff on newInflation', async () => {})
+  it('fetches new randomInflation stuff on newInflation', async () => {
+
+  })
 })

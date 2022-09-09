@@ -3,7 +3,7 @@ import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory } from "../typechain-types"
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
-import { BigNum } from "../typechain-types/BigNum";
+
 const {
     getPrimal,
     getTree,
@@ -12,6 +12,7 @@ const {
 
 const { prove, bnHex } = require('../tools/vdf')
 
+const SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
 const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer'])
 const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from("1000000000000000000");
 
@@ -29,7 +30,7 @@ export class InflationGovernor {
     vdfVerifier!: VDFVerifier
     vdfSeed: string = ''
     vdfOutput!: ethers.Bytes
-    tree = null
+    tree: any
 
 
     constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies) {
@@ -126,7 +127,7 @@ export class InflationGovernor {
     }
 
     async proposeRootHash() {
-        let sortedBalances:[string, ethers.BigNumber][] = await this.fetchBalances((await (await this.randomInflation.blockNumber()).toNumber()),'https://api.thegraph.com/subgraphs/name/paged1/policy')
+        let sortedBalances:[string, ethers.BigNumber][] = await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL)
 
         let numAccts: number = sortedBalances.length
         let totalSum = ethers.BigNumber.from(0)
@@ -137,7 +138,7 @@ export class InflationGovernor {
         // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
 
         this.tree = await getTree(sortedBalances)
-        tx = await this.inflationRootHashProposal.proposeRootHash(tree.hash, totalSum, numAccts)
+        tx = await this.inflationRootHashProposal.proposeRootHash(this.tree.hash, totalSum, numAccts)
         rc = await tx.wait()
         if (rc.status) {
             // successfully proposed
@@ -145,10 +146,13 @@ export class InflationGovernor {
             // failed to propose
             // try again
             setTimeout(this.proposeRootHash.bind(this), 1000)
-        }
+        } 
     }
 
     async respondToChallenge(challenger: string, index: number) {
+        if(!this.tree) {
+            this.tree = await getTree(await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL))
+        }
         const [node, pathToNode] = answer(this.tree, index)
         tx = await this.inflationRootHashProposal.respondToChallenge(
             challenger,
