@@ -30,7 +30,7 @@ export async function latestBlockHash() {
 }
 
 export async function increase(seconds: number) {
-  await hre.network.provider.send('evm_increaseTime', [seconds])
+  await hre.network.provider.send('evm_increaseTime', [Math.round(seconds)])
   await hre.network.provider.send('evm_mine')
 }
 
