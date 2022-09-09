@@ -3,7 +3,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { BigNumber } = ethers
 
-const MAX_ACCOUNT_BALANCE = ethers.BigNumber.from(
+const MAX_ACCOUNT_BALANCE = BigNumber.from(
   '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as we use 18 digits to store inflation
 )
 
@@ -57,7 +57,7 @@ describe('IECO [@group=5]', () => {
   // });
 
   describe('Mintable', () => {
-    const mintAmount = ethers.BigNumber.from(1000)
+    const mintAmount = BigNumber.from(1000)
 
     it('should start with 0 balance', async () => {
       const balance = await eco.balanceOf(await accounts[0].getAddress())
@@ -92,9 +92,7 @@ describe('IECO [@group=5]', () => {
       })
 
       context('overflowing Weight', () => {
-        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(
-          ethers.BigNumber.from(500)
-        )
+        const nearMaxUint256 = MAX_ACCOUNT_BALANCE.sub(BigNumber.from(500))
 
         it('should throw when minting coins that would create an unsafe cast for checkpoints', async () => {
           await expect(
@@ -134,7 +132,7 @@ describe('IECO [@group=5]', () => {
   })
 
   describe('Burnable', () => {
-    const burnAmount = ethers.BigNumber.from(1000)
+    const burnAmount = BigNumber.from(1000)
 
     context('for yourself', () => {
       it('should succeed with a balance', async () => {
@@ -210,7 +208,7 @@ describe('IECO [@group=5]', () => {
 
       beforeEach(async () => {
         testAccount = await accounts[1].getAddress()
-        await faucet.mint(testAccount, ethers.BigNumber.from(1000))
+        await faucet.mint(testAccount, BigNumber.from(1000))
         blockNumber = await time.latestBlock()
         await time.advanceBlock()
         originalGeneration = await eco.currentGeneration()
@@ -251,7 +249,7 @@ describe('IECO [@group=5]', () => {
 
       beforeEach('set things up and let some time pass', async () => {
         testAccount = await accounts[1].getAddress()
-        await faucet.mint(testAccount, ethers.BigNumber.from(1000))
+        await faucet.mint(testAccount, BigNumber.from(1000))
         blockNumber = await time.latestBlock()
         await time.advanceBlock()
         initialBalance = await eco.getPastVotes(testAccount, blockNumber)
@@ -315,9 +313,9 @@ describe('IECO [@group=5]', () => {
         for (let i = 0; i < 3; i += 1) {
           /* eslint-disable no-await-in-loop */
           if (i !== 1) {
-            await faucet.mint(testAccount2, ethers.BigNumber.from(1000))
+            await faucet.mint(testAccount2, BigNumber.from(1000))
           }
-          await faucet.mint(testAccount1, ethers.BigNumber.from(1000))
+          await faucet.mint(testAccount1, BigNumber.from(1000))
           checkPoints.push(await time.latestBlock())
           await time.advanceBlock()
         }
