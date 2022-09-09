@@ -52,6 +52,7 @@ export class InflationGovernor {
             this.vdfVerifier = VDFVerifier__factory.connect((await this.randomInflation.vdfVerifier()), this.wallet)
             await this.spawnListeners()
             await this.commitVdfSeed()
+            await this.proposeRootHash()
 
             // just started a generation with randomInflation, now what?
         })
@@ -65,9 +66,9 @@ export class InflationGovernor {
         this.vdfVerifier.once("SuccessfulVerification", async () => {
             await this.submitVDF()
         })
-        this.randomInflation.once("EntropySeedReveal", async () => {
-            // submit inflationRootHashProposal
-        })
+        // this.randomInflation.once("EntropySeedReveal", async () => {
+        //     // submit inflationRootHashProposal
+        // })
         let filter = this.inflationRootHashProposal.filters.RootHashChallengeIndexRequest(await this.wallet.getAddress())
         this.inflationRootHashProposal.on(filter, async (proposer, challenger, index) => {
             await this.respondToChallenge(challenger, index.toNumber())
