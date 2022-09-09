@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 
 const { deploy } = require('../utils/contracts')
-const { ZERO_ADDR } = require('../utils/fixtures')
+// const { ZERO_ADDR } = require('../utils/fixtures')
 
 describe('EcoBootstrap [@group=2]', () => {
   let bootstrap
