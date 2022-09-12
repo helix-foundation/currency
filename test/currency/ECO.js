@@ -1088,7 +1088,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('enableDelegationTo', () => {
@@ -1410,7 +1410,7 @@ describe('ECO [@group=1]', () => {
         .connect(otherDelegatee)
         .enableDelegationTo({ gasLimit: 1000000 })
 
-      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateBySig', () => {
@@ -1665,7 +1665,7 @@ describe('ECO [@group=1]', () => {
       await eco.connect(accounts[3]).enableDelegationTo()
       await eco.connect(accounts[4]).enableDelegationTo()
 
-      voteAmount = ethers.BigNumber.from(proposedInflationMult).mul(amount)
+      voteAmount = BigNumber.from(proposedInflationMult).mul(amount)
     })
 
     context('delegateAmount', () => {
