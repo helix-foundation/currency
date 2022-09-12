@@ -111,7 +111,6 @@ export class InflationGovernor {
         console.log('trying to prove vdf')
         // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
         const difficulty: number = (await this.randomInflation.randomVDFDifficulty()).toNumber()
-        console.log(difficulty)
         const [y, Usqrt] = await prove(this.vdfSeed, difficulty)
         tx = await this.vdfVerifier.start(bnHex(this.vdfSeed), difficulty, bnHex(y))
         rc = await tx.wait()
@@ -131,24 +130,21 @@ export class InflationGovernor {
                 console.log(e)
                 // console.log('failed vdf verification')
             }
-
-            console.log('whelk')
         }
     }
 
-    async submitVDF(output:ethers.BigNumber) {
+    async submitVDF(output:ethers.ethers.utils.Bytes) {
         console.log('trying to submit vdf')
-        console.log(`vdf output is ${this.vdfOutput}`)
-        console.log(`eventOutput is ${output}`)
-
-        tx = await this.randomInflation.submitEntropyVDF(this.vdfOutput)
+        // console.log(`vdf output is  ${this.vdfOutput}`)
+        tx = await this.randomInflation.submitEntropyVDF(output)
         rc = await tx.wait()
         if (rc.status) {
             // done
             // emits EntropySeedReveal
             console.log('submitted vdf')
         } else {
-            console.log('whonk')
+            console.log('failed to submit vdf')
+            // no reason why this would happen
             throw tx
         }
     }

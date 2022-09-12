@@ -6,6 +6,7 @@ import { Supervisor } from '../../supervisor/supervisor_master'
 import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
 import { Signer } from 'ethers'
+import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
 
 const time = require('../utils/time.ts')
 
@@ -24,6 +25,7 @@ describe('RandomInflation [@group=13]', () => {
   let policy: Policy
   let timedPolicies: TimedPolicies
   let supervisor: Supervisor
+  let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
 
@@ -53,9 +55,15 @@ describe('RandomInflation [@group=13]', () => {
       rootHashProposal,
       inflation,
     } = await ecoFixture(trustees))
+    
+    if (timeGovernor) {
+      console.log('kill listeners')
+      await timeGovernor.killListener()
+    }
 
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
+    timeGovernor = supervisor.timeGovernor
     currencyGovernor = supervisor.currencyGovernor
     inflationGovernor = supervisor.inflationGovernor
 
@@ -120,7 +128,7 @@ describe('RandomInflation [@group=13]', () => {
     expect(inflationGovernor.vdfSeed).to.not.be.undefined
   })
 
-  it.only('proves and submits vdfSeed', async () => {
+  it('proves and submits vdfSeed', async () => {
     expect(inflationGovernor.vdfOutput).to.be.undefined
     await time.increase(3600 * 24 * 1)
     let result = await new Promise<void>((resolve, reject) => {
