@@ -86,25 +86,31 @@ export class InflationGovernor {
         } catch (e) {
             console.log(e)
         }
-        tx = await this.randomInflation.setPrimal(primalNumber)
-        rc = await tx.wait()
-        if (rc.status) {
-            console.log('primal set')
-            tx = await this.randomInflation.commitEntropyVDFSeed(primalNumber)
+        try {
+            tx = await this.randomInflation.setPrimal(primalNumber)
             rc = await tx.wait()
             if (rc.status) {
-                // done
-                this.vdfSeed = (await this.randomInflation.entropyVDFSeed())
-                console.log(`committed vdf seed: ${this.vdfSeed}`)
+                console.log('primal set')
+                tx = await this.randomInflation.commitEntropyVDFSeed(primalNumber)
+                rc = await tx.wait()
+                if (rc.status) {
+                    // done
+                    this.vdfSeed = (await this.randomInflation.entropyVDFSeed())
+                    console.log(`committed vdf seed: ${this.vdfSeed}`)
+                } else {
+                    console.log('failed to commit seed')
+                    // failed to commit seed
+                }
             } else {
-                console.log('failed to commit seed')
-                // failed to commit seed
+                // failed setPrimal, try again
+                console.log('gligged on setPrimal')
+                setTimeout(this.commitVdfSeed.bind(this), 1000)
             }
-        } else {
-            // failed setPrimal, try again
-            console.log('gligged on setPrimal')
+        } catch (e) {
+            console.log(e)
+            console.log('slenched on setPrimal')
             setTimeout(this.commitVdfSeed.bind(this), 1000)
-        }
+        }        
     }
 
     async proveVDF() {
