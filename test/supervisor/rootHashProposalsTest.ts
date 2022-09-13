@@ -5,6 +5,7 @@ import {
   Policy,
   TimedPolicies,
   CurrencyGovernance,
+  ECO,
 } from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
@@ -21,7 +22,7 @@ describe('RandomInflation [@group=13]', () => {
   let bob: Signer
   let charlie: Signer
   let dave: Signer
-  let eco
+  let eco: ECO
   let initInflation
   let currencyTimer
   let rootHashProposal
@@ -32,7 +33,7 @@ describe('RandomInflation [@group=13]', () => {
   let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
-  let map;
+  let map: [string, BigNumber][]
   let tree: any
 
   const hash = (x: any) =>
@@ -71,7 +72,7 @@ describe('RandomInflation [@group=13]', () => {
       await inflationGovernor.killListeners()
     }
 
-    let map = new Map([
+    map = [
         [
           await accounts[0].getAddress(),
           BigNumber.from('50000000000000000000000000'),
@@ -84,7 +85,22 @@ describe('RandomInflation [@group=13]', () => {
           await accounts[2].getAddress(),
           BigNumber.from('150000000000000000000000000'),
         ],
-    ])
+    ]
+
+    // let map = new Map([
+    //     [
+    //       await accounts[0].getAddress(),
+    //       BigNumber.from('50000000000000000000000000'),
+    //     ],
+    //     [
+    //       await accounts[1].getAddress(),
+    //       BigNumber.from('100000000000000000000000000'),
+    //     ],
+    //     [
+    //       await accounts[2].getAddress(),
+    //       BigNumber.from('150000000000000000000000000'),
+    //     ],
+    // ])
 
     await initInflation.mint(
         await accounts[0].getAddress(),
@@ -165,8 +181,19 @@ describe('RandomInflation [@group=13]', () => {
     let result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 15000)
     })
-    result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 10000)
+    expect(
+        (await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+            await alice.getAddress()
+            )
+        ).initialized
+    ).to.be.true
+  })
+
+  it.only('responds to challenges', async () => {
+    await time.increase(3600 * 24 * 1)
+    console.log(map)
+    let result = await new Promise<void>((resolve, reject) => {
+        setTimeout(() => resolve(), 15000)
     })
     expect(
         (await inflationGovernor.inflationRootHashProposal.rootHashProposals(
@@ -174,5 +201,24 @@ describe('RandomInflation [@group=13]', () => {
             )
         ).initialized
     ).to.be.true
+
+    await eco.connect(bob).approve(
+        inflationGovernor.inflationRootHashProposal.address,
+        await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+    )
+    console.log('approved')
+    await inflationGovernor.inflationRootHashProposal.connect(bob).challengeRootHashRequestAccount(await alice.getAddress(), 0)
+    console.log(await (
+        await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+            await alice.getAddress()
+            )
+        ).amountPendingChallenges
+    )
+    await time.advanceBlock()
+    result = await new Promise<void>((resolve, reject) => {
+        setTimeout(() => resolve(), 10000)
+    })
+
+    // await inflationGovernor.inflationRootHashProposal.connect(bob).challengeRootHashRequestAccount(await alice.getAddress(), 1)
   })
 })

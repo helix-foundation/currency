@@ -3,6 +3,7 @@ import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory, ECO__factory, ECO } from "../typechain-types"
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
+import * as hre from "hardhat"
 
 const {
     getPrimal,
@@ -21,6 +22,21 @@ const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from("1000000000000000000"
 
 let tx
 let rc
+
+let testMap: [string, ethers.BigNumber][] = [
+    [
+      '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      ethers.BigNumber.from('50000000000000000000000000'),
+    ],
+    [
+      '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+      ethers.BigNumber.from('100000000000000000000000000'),
+    ],
+    [
+      '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+      ethers.BigNumber.from('150000000000000000000000000'),
+    ],
+]
 
 export class InflationGovernor {
     provider: ethers.providers.BaseProvider
@@ -65,7 +81,15 @@ export class InflationGovernor {
             this.commitVdfSeed()
             if (!this.production) {
                 console.log('test')
-                this.proposeRootHash(await this.fetchBalances(TEST_BLOCK, TEST_SUBGRAPHS_URL))
+                // console.log((await hre.ethers.provider.listAccounts()))
+                testMap = testMap.sort((a, b) => { 
+                    return (a[0].toLowerCase()).localeCompare(b[0].toLowerCase(), 'en')
+                })
+                console.log(testMap)
+                // this.proposeRootHash(await this.fetchBalances(TEST_BLOCK, TEST_SUBGRAPHS_URL))
+                this.proposeRootHash(testMap)
+
+
             } else {
                 this.proposeRootHash(await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL))
             }
@@ -185,8 +209,8 @@ export class InflationGovernor {
         // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
 
         this.tree = await getTree(sortedBalances)
-        // console.log(this.tree)
-        
+        console.log(this.tree)
+
         await this.eco.approve(this.inflationRootHashProposal.address, await this.inflationRootHashProposal.PROPOSER_FEE())
         
         try {
@@ -211,23 +235,28 @@ export class InflationGovernor {
             this.tree = await getTree(await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL))
         }
         const [node, pathToNode] = answer(this.tree, index)
-        tx = await this.inflationRootHashProposal.respondToChallenge(
-            challenger,
-            pathToNode.reverse(),
-            node.account,
-            node.balance,
-            node.sum,
-            index
-        )
-        rc = await tx.wait()
-        if (rc.status) {
-            // successfully responded
-        } else {
-            // failed to respond
-            // try again
-            setTimeout(this.respondToChallenge.bind(this), 1000)
+        try {
+            tx = await this.inflationRootHashProposal.respondToChallenge(
+                challenger,
+                pathToNode.reverse(),
+                node.account,
+                node.balance,
+                node.sum,
+                index
+            )
+            rc = await tx.wait()
+            if (rc.status) {
+                console.log('responded!')
+            } else {
+                console.log('failed to respond to challenge')
+                // setTimeout(this.respondToChallenge.bind(this), 1000)
+            }
+        } catch (e) {
+            console.log(e)
         }
+
     }
+
     async fetchBalances(block: number, subgraphUri: string) {
         console.log('fetching balances')
         const client = new ApolloClient({
