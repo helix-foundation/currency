@@ -3,7 +3,6 @@ import fetch from 'cross-fetch';
 import { Policy, TimedPolicies, CurrencyTimer, CurrencyTimer__factory, RandomInflation, RandomInflation__factory, InflationRootHashProposal, InflationRootHashProposal__factory, VDFVerifier, VDFVerifier__factory, ECO__factory, ECO } from "../typechain-types"
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
-import * as hre from "hardhat"
 
 const {
     getPrimal,
@@ -14,8 +13,6 @@ const {
 const { prove, bnHex } = require('../tools/vdf')
 
 const SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
-const TEST_SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
-const TEST_BLOCK = 7471818
 const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer'])
 const ID_ECO = ethers.utils.solidityKeccak256(['string'], ['ECO'])
 const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from("1000000000000000000");
@@ -80,12 +77,11 @@ export class InflationGovernor {
             await this.spawnListeners()
             this.commitVdfSeed()
             if (!this.production) {
+                // this is the same minting as exists in the test suite, so can defend root hash proposals
                 testMap = testMap.sort((a, b) => { 
                     return (a[0].toLowerCase()).localeCompare(b[0].toLowerCase(), 'en')
                 })
-                // this.proposeRootHash(await this.fetchBalances(TEST_BLOCK, TEST_SUBGRAPHS_URL))
                 this.proposeRootHash(testMap)
-
 
             } else {
                 this.proposeRootHash(await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL))
@@ -102,9 +98,6 @@ export class InflationGovernor {
         this.vdfVerifier.once("SuccessfulVerification", async (_, __, output) => {
             await this.submitVDF(output)
         })
-        // this.randomInflation.once("EntropySeedReveal", async () => {
-        //     // submit inflationRootHashProposal
-        // })
         let filter = this.inflationRootHashProposal.filters.RootHashChallengeIndexRequest(await this.wallet.getAddress())
         this.inflationRootHashProposal.on(filter, async (proposer, challenger, index) => {
             await this.respondToChallenge(challenger, index.toNumber())
@@ -120,12 +113,8 @@ export class InflationGovernor {
     async commitVdfSeed() {
         console.log('trying to commit vdf seed')
         let primalNumber: number = 0
-        try {
-            primalNumber = await getPrimal((await this.provider.getBlock("latest")).hash)
+        primalNumber = await getPrimal((await this.provider.getBlock("latest")).hash)
             console.log('got primal')
-        } catch (e) {
-            console.log(e)
-        }
         try {
             tx = await this.randomInflation.setPrimal(primalNumber)
             rc = await tx.wait()
@@ -138,15 +127,17 @@ export class InflationGovernor {
                     this.vdfSeed = (await this.randomInflation.entropyVDFSeed())
                     console.log(`committed vdf seed: ${this.vdfSeed}`)
                 } else {
+                    // shouldnt happen
                     console.log('failed to commit seed')
-                    // failed to commit seed
                 }
             } else {
                 // failed setPrimal
             }
         } catch (e) {
             console.log(e)
-            console.log('slenched on setPrimal')
+            // error logging
+            //this gets hit a lot due to setPrimal being kind of finnicky
+            console.log('failed setPrimal, trying again')
             setTimeout(this.commitVdfSeed.bind(this), 1000)
         }        
     }
@@ -169,17 +160,17 @@ export class InflationGovernor {
                 }
                 this.vdfOutput = bnHex(y);
             } catch (e) {
-                // VDF failed verification
-                console.log('got schleeged on the vdf verification, brother')
                 console.log(e)
-                // console.log('failed vdf verification')
+                // error logging
+                console.log('failed vdfVerification')
+                // have to start again from setPrimal
+                
             }
         }
     }
 
     async submitVDF(output:ethers.ethers.utils.Bytes) {
         console.log('trying to submit vdf')
-        // console.log(`vdf output is  ${this.vdfOutput}`)
         tx = await this.randomInflation.submitEntropyVDF(output)
         rc = await tx.wait()
         if (rc.status) {
@@ -195,18 +186,13 @@ export class InflationGovernor {
 
     async proposeRootHash(sortedBalances: [string, ethers.BigNumber][]) {
         console.log('trying to propose roothash')
-        // let sortedBalances: [string, ethers.BigNumber][]
-        // console.log(sortedBalances)
         let numAccts: number = sortedBalances.length
         let totalSum = ethers.BigNumber.from(0)
         for (const i of sortedBalances) {
             totalSum = totalSum.add(i[1])
         }
-        // get these from subgraphs
-        // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
 
         this.tree = await getTree(sortedBalances)
-        // console.log(this.tree)
 
         await this.eco.approve(this.inflationRootHashProposal.address, await this.inflationRootHashProposal.PROPOSER_FEE())
         
@@ -217,12 +203,13 @@ export class InflationGovernor {
                 // successfully proposed
                 console.log("proposed roothash")
             } else {
-                // failed to propose
-                // try again
-                setTimeout(this.proposeRootHash.bind(this), 1000)
+                // shouldn't happen
+                console.log('failed to propose')
             } 
         } catch (e) {
+            // error logging
             console.log(e)
+            setTimeout(this.proposeRootHash.bind(this), 1000)
         }
     }
 
@@ -245,11 +232,14 @@ export class InflationGovernor {
             if (rc.status) {
                 console.log('responded!')
             } else {
+                // shouldnt happen
                 console.log('failed to respond to challenge')
-                // setTimeout(this.respondToChallenge.bind(this), 1000)
             }
         } catch (e) {
+            // error logging
             console.log(e)
+            // this one gets hit (in hh) when multiple challenges come in during the same block
+            setTimeout(this.respondToChallenge.bind(this, challenger, index), 1000)
         }
 
     }
