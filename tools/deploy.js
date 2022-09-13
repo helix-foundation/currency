@@ -72,6 +72,8 @@ async function parseFlags(options) {
     options.gasPrice = BigNumber.from(options.gasPrice)
   }
 
+  options.gasUsed = ethers.BigNumber.from(0)
+
   if (!options.randomVDFDifficulty) {
     options.randomVDFDifficulty = 3
   }
@@ -251,6 +253,7 @@ async function deployStage1(options) {
 
     // Issue the pre-signed deployment transaction
     await (await options.ethersProvider.sendTransaction(nicksTx.raw)).wait()
+    options.gasUsed = options.gasUsed.add(bootstrapGas)
 
     if (options.verbose) {
       console.log('Bootstrap success!')
@@ -414,13 +417,16 @@ async function deployStage2(options) {
   }
 
   if (deployTokenInit) {
-    await tokenInit.deployTransaction.wait()
+    const receipt = await tokenInit.deployTransaction.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
   if (deployEco) {
-    await ecoImpl.deployTransaction.wait()
+    const receipt = await ecoImpl.deployTransaction.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
   if (deployEcoX) {
-    await ecoXImpl.deployTransaction.wait()
+    const receipt = await ecoXImpl.deployTransaction.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
 
   // bind proxies
@@ -476,10 +482,12 @@ async function deployStage2(options) {
     console.log('waiting for proxy binding transactions to be mined...')
   }
   if (deployEco) {
-    await ecoProxyFuseTx.wait()
+    const receipt = await ecoProxyFuseTx.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
   if (deployEcoX) {
-    await ecoXProxyFuseTx.wait()
+    const receipt = await ecoXProxyFuseTx.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
 
   let distributeEco = true
@@ -646,17 +654,13 @@ async function deployStage2(options) {
       'waiting for distribution transactions to be mined before moving to the next stage...'
     )
   }
-  if (deployEco) {
-    await ecoProxyFuseTx.wait()
-  }
-  if (deployEcoX) {
-    await ecoXProxyFuseTx.wait()
-  }
   if (distributeEco) {
-    await ecoDistributeTx.wait()
+    const receipt = await ecoDistributeTx.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
   if (distributeEcoX) {
-    await ecoXDistributeTx.wait()
+    const receipt = await ecoXDistributeTx.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
 
   return options
@@ -926,31 +930,44 @@ async function deployStage3(options) {
     )
   }
   process.stdout.write('Progress: [             ]\r')
-  await ecoXStaking.deployTransaction.wait()
+  let receipt = await ecoXStaking.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [x            ]\r')
-  await rootHashProposalImpl.deployTransaction.wait()
+  receipt = await rootHashProposalImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xx           ]\r')
-  await vdfImpl.deployTransaction.wait()
+  receipt = await vdfImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxx          ]\r')
-  await randomInflationImpl.deployTransaction.wait()
+  receipt = await randomInflationImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxx         ]\r')
-  await lockupImpl.deployTransaction.wait()
+  receipt = await lockupImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxx        ]\r')
-  await currencyGovernanceImpl.deployTransaction.wait()
+  receipt = await currencyGovernanceImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxx       ]\r')
-  await policyVotesImpl.deployTransaction.wait()
+  receipt = await policyVotesImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxx      ]\r')
-  await policyProposalsImpl.deployTransaction.wait()
+  receipt = await policyProposalsImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxxx     ]\r')
-  await policyImpl.deployTransaction.wait()
+  receipt = await policyImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxxxx    ]\r')
-  await policyInit.deployTransaction.wait()
+  receipt = await policyInit.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxxxxx   ]\r')
-  await currencyTimerImpl.deployTransaction.wait()
+  receipt = await currencyTimerImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxxxxxx  ]\r')
-  await timedPoliciesImpl.deployTransaction.wait()
+  receipt = await timedPoliciesImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxxxxxxx ]\r')
-  await trustedNodesImpl.deployTransaction.wait()
+  receipt = await trustedNodesImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [xxxxxxxxxxxxx]\n')
 
   // Update the proxy targets to the implementation contract addresses
@@ -1065,7 +1082,8 @@ async function deployStage3(options) {
     console.log('fusing policy initializer...')
   }
   // policy init must have fused to proxy already
-  await policyInitFuseTx.wait()
+  receipt = await policyInitFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
 
   const policyInitProxied = new ethers.Contract(
     policyProxyAddress,
@@ -1096,13 +1114,18 @@ async function deployStage3(options) {
       'waiting for all transactions to be mined before moving to the next stage...'
     )
   }
-  await currencyTimerFuseTx.wait()
-  await timedPoliciesFuseTx.wait()
-  await trustedNodesFuseTx.wait()
-  await policyFuseTx.wait()
+  receipt = await currencyTimerFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  receipt = await timedPoliciesFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  receipt = await trustedNodesFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  receipt = await policyFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
 
   if (!options.production) {
-    await faucet.deployTransaction.wait()
+    receipt = await faucet.deployTransaction.wait()
+    options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   }
 
   return options
@@ -1122,17 +1145,18 @@ async function deployStage4(options) {
     options.signer
   )
 
-  await (
+  const receipt = await (
     await timedPoliciesProxied.incrementGeneration({
       gasPrice: options.gasPrice,
       gasLimit: BLOCK_GAS_LIMIT,
     })
   ).wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
 
   return options
 }
 
-function deploy(deploymentOptions) {
+async function deploy(deploymentOptions) {
   return parseFlags(deploymentOptions)
     .then(deployStage1)
     .then(deployStage2)
@@ -1140,15 +1164,36 @@ function deploy(deploymentOptions) {
     .then(deployStage4)
 }
 
-function deployTokens(tokenOptions) {
-  return parseFlags(tokenOptions).then(deployStage1).then(deployStage2)
+async function deployTokens(tokenOptions) {
+  const options = await parseFlags(tokenOptions)
+    .then(deployStage1)
+    .then(deployStage2)
+  if (options.verbose) {
+    console.log(`Gas used for token deploy: ${options.gasUsed.toString()}`)
+    console.log(
+      `Ether used in gas: ${ethers.utils.formatEther(
+        options.gasUsed.mul(options.gasPrice).toString()
+      )}`
+    )
+  }
+  return options
 }
 
-function deployGovernance(carryoverOptions) {
-  return parseFlags(carryoverOptions).then(deployStage3).then(deployStage4)
+async function deployGovernance(carryoverOptions) {
+  const options = await parseFlags(carryoverOptions)
+    .then(deployStage3)
+    .then(deployStage4)
+  if (options.verbose) {
+    console.log(`Gas used for governance deploy: ${options.gasUsed.toString()}`)
+    console.log(
+      `Ether used in gas: ${ethers.utils.formatEther(
+        options.gasUsed.mul(options.gasPrice).toString()
+      )}`
+    )
+  }
+  return options
 }
 
-// ok, lets go with a pre-deploy and secondary deploy function.
 module.exports = {
   deploy,
   deployTokens,
