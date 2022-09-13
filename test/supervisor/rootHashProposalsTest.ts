@@ -168,7 +168,11 @@ describe('RandomInflation [@group=13]', () => {
     result = await new Promise<void>((resolve, reject) => {
         setTimeout(() => resolve(), 10000)
     })
-      console.log(await inflationGovernor.inflationRootHashProposal.rootHashProposals(await alice.getAddress()))
-      
+    expect(
+        (await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+            await alice.getAddress()
+            )
+        ).initialized
+    ).to.be.true
   })
 })
