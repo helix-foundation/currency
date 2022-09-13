@@ -10,6 +10,7 @@ export class TimeGovernor {
     timedPolicy: TimedPolicies
     nextGenStart: number = 0
     triedUpdate: Boolean = false
+    generation: number = 0
 
 
     constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies) {
@@ -22,7 +23,7 @@ export class TimeGovernor {
 
     async startTimer() {
         this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
-
+        this.generation = (await this.timedPolicy.generation()).toNumber()
         this.provider.on("block" , async () => {
             this.callUpdateOnBlock()
         })
@@ -43,9 +44,10 @@ export class TimeGovernor {
             let tx = await this.timedPolicy.incrementGeneration()
             let rc = await tx.wait()
             if (rc.status === 1) {
-                console.log('updated generation')
                 this.triedUpdate = false
                 this.nextGenStart = (await this.timedPolicy.nextGenerationStart()).toNumber()
+                this.generation += 1
+                console.log(`generation incremented to ${this.generation}`)
             } else {
                 throw tx
             }

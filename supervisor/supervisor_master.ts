@@ -10,7 +10,6 @@ const fs = require('fs');
 import { TimeGovernor } from "./supervisor_timedPolicies"
 import { CurrencyGovernor } from "./supervisor_currencyGovernance"
 import { InflationGovernor } from "./supervisor_randomInflation"
-// import { CurrencyGovernor } from "./supervisor_currencyGovernance"
 // import { CommunityGovernor } from "./supervisor_communityGovernance"
 import { Policy__factory, Policy, TimedPolicies__factory, TimedPolicies, CurrencyGovernance__factory, CurrencyGovernance } from "../typechain-types"
 // import { CurrencyGovernance } from "../typechain-types/CurrencyGovernance";
@@ -28,6 +27,7 @@ export class Supervisor {
     provider!: ethers.providers.BaseProvider
     rootPolicy!: Policy
     wallet!: ethers.Signer
+    production: boolean = false
 
 
 
@@ -47,6 +47,7 @@ export class Supervisor {
             this.provider = new ethers.providers.JsonRpcProvider(rpc);
             this.wallet = new ethers.Wallet(pk, this.provider);
             this.rootPolicy = Policy__factory.connect(root, this.wallet);
+            this.production = true
         } else {
             // test
             if(signer && policy) {
@@ -74,7 +75,7 @@ export class Supervisor {
         await this.currencyGovernor.setup()
         await this.currencyGovernor.startListeners()
 
-        this.inflationGovernor = new InflationGovernor(provider, wallet, rootPolicy, timedPolicy)
+        this.inflationGovernor = new InflationGovernor(provider, wallet, rootPolicy, timedPolicy, this.production)
         this.inflationGovernor.setup()
 
     }

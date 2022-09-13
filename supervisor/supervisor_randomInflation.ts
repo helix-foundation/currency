@@ -12,7 +12,8 @@ const {
 
 const { prove, bnHex } = require('../tools/vdf')
 
-const SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
+const TEST_SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
+const TEST_someBlockWhereBalancesExist = 7471818
 const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(['string'], ['CurrencyTimer'])
 const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from("1000000000000000000");
 
@@ -30,14 +31,17 @@ export class InflationGovernor {
     vdfVerifier!: VDFVerifier
     vdfSeed!: ethers.BigNumber
     vdfOutput!: ethers.Bytes
+    production: boolean 
+
     tree: any
 
 
-    constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies) {
+    constructor(provider: ethers.providers.BaseProvider, supervisorWallet: ethers.Signer, rootPolicy: Policy, timedPolicy: TimedPolicies, production: boolean) {
         this.provider = provider
         this.wallet = supervisorWallet
         this.policy = rootPolicy
         this.timedPolicy = timedPolicy
+        this.production = production
     };
 
     async setup() {
@@ -55,7 +59,7 @@ export class InflationGovernor {
             this.vdfVerifier = VDFVerifier__factory.connect((await this.randomInflation.vdfVerifier()), this.wallet)
             await this.spawnListeners()
             this.commitVdfSeed()
-            // this.proposeRootHash()
+            this.proposeRootHash()
 
         })
     }
@@ -75,6 +79,12 @@ export class InflationGovernor {
         this.inflationRootHashProposal.on(filter, async (proposer, challenger, index) => {
             await this.respondToChallenge(challenger, index.toNumber())
         })
+    }
+
+    async killListeners() {
+        this.randomInflation.removeAllListeners("EntropyVDFSeedCommit")
+        this.vdfVerifier.removeAllListeners("SuccessfulVerification")
+        this.currencyTimer.removeAllListeners("NewInflation")
     }
 
     async commitVdfSeed() {
@@ -102,9 +112,7 @@ export class InflationGovernor {
                     // failed to commit seed
                 }
             } else {
-                // failed setPrimal, try again
-                console.log('gligged on setPrimal')
-                setTimeout(this.commitVdfSeed.bind(this), 1000)
+                // failed setPrimal
             }
         } catch (e) {
             console.log(e)
@@ -155,10 +163,20 @@ export class InflationGovernor {
         }
     }
 
-    async proposeRootHash() {
+    async proposeRootHash(balancesMap?: [string, ethers.BigNumber][]) {
         console.log('trying to propose roothash')
-        let sortedBalances:[string, ethers.BigNumber][] = await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL)
-
+        // let sortedBalances: [string, ethers.BigNumber][]
+        let sortedBalances: [string, ethers.BigNumber][]
+        if (!this.production) {
+            if (balancesMap) {
+                sortedBalances = balancesMap
+            } else {
+               sortedBalances = await this.fetchBalances(TEST_someBlockWhereBalancesExist, TEST_SUBGRAPHS_URL) 
+            }
+        } else  {
+            sortedBalances = await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL)
+        }
+        console.log(sortedBalances)
         let numAccts: number = sortedBalances.length
         let totalSum = ethers.BigNumber.from(0)
         for (const i of sortedBalances) {
@@ -168,19 +186,25 @@ export class InflationGovernor {
         // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
 
         this.tree = await getTree(sortedBalances)
-        tx = await this.inflationRootHashProposal.proposeRootHash(this.tree.hash, totalSum, numAccts)
-        rc = await tx.wait()
-        if (rc.status) {
-            // successfully proposed
-        } else {
-            // failed to propose
-            // try again
-            setTimeout(this.proposeRootHash.bind(this), 1000)
-        } 
+        console.log(this.tree)
+        try {
+            tx = await this.inflationRootHashProposal.proposeRootHash(this.tree.hash, totalSum, numAccts)
+            rc = await tx.wait()
+            if (rc.status) {
+                // successfully proposed
+                console.log("proposed roothash")
+            } else {
+                // failed to propose
+                // try again
+                setTimeout(this.proposeRootHash.bind(this), 1000)
+            } 
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     async respondToChallenge(challenger: string, index: number) {
-        console.log(`trying to respond to RPH challenge by ${challenger} at index ${index}` )
+        console.log(`trying to respond to RHP challenge by ${challenger} at index ${index}` )
         if(!this.tree) {
             this.tree = await getTree(await this.fetchBalances((await this.randomInflation.blockNumber()).toNumber(), SUBGRAPHS_URL))
         }
@@ -202,7 +226,6 @@ export class InflationGovernor {
             setTimeout(this.respondToChallenge.bind(this), 1000)
         }
     }
-
     async fetchBalances(block: number, subgraphUri: string) {
         console.log('fetching balances')
         const client = new ApolloClient({

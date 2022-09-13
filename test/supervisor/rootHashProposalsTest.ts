@@ -9,12 +9,12 @@ import {
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
-
 const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
+const { getTree } = require('../../tools/randomInflationUtils.js')
 
 describe('RandomInflation [@group=13]', () => {
   let alice: Signer
@@ -32,6 +32,8 @@ describe('RandomInflation [@group=13]', () => {
   let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
+  let map;
+  let tree: any
 
   const hash = (x: any) =>
     ethers.utils.solidityKeccak256(
@@ -69,11 +71,53 @@ describe('RandomInflation [@group=13]', () => {
       await inflationGovernor.killListeners()
     }
 
+    let map = new Map([
+        [
+          await accounts[0].getAddress(),
+          BigNumber.from('50000000000000000000000000'),
+        ],
+        [
+          await accounts[1].getAddress(),
+          BigNumber.from('100000000000000000000000000'),
+        ],
+        [
+          await accounts[2].getAddress(),
+          BigNumber.from('150000000000000000000000000'),
+        ],
+    ])
+
+    await initInflation.mint(
+        await accounts[0].getAddress(),
+        '50000000000000000000000000'
+    )
+    await initInflation.mint(
+        await accounts[1].getAddress(),
+        '100000000000000000000000000'
+    )
+    await initInflation.mint(
+        await accounts[2].getAddress(),
+        '150000000000000000000000000'
+    )
+
+    try {
+        tree = getTree(map)
+    } catch(e) {
+        console.log(e)
+    }
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
     timeGovernor = supervisor.timeGovernor
     currencyGovernor = supervisor.currencyGovernor
     inflationGovernor = supervisor.inflationGovernor
+
+    await time.advanceBlock()
+    let result = await new Promise<void>((resolve, reject) => {
+        setTimeout(() => resolve(), 10000)
+      })
+    await time.increase(3600 * 24 * 14.1)
+    result = await new Promise<void>((resolve, reject) => {
+        setTimeout(() => resolve(), 10000)
+      })
 
     const governance: CurrencyGovernance = await ethers.getContractAt(
       'CurrencyGovernance',
@@ -106,7 +150,7 @@ describe('RandomInflation [@group=13]', () => {
     ]
     await governance.connect(dave).commit(hash(davevote))
     await time.increase(3600 * 24 * 3)
-    const result = await new Promise<void>((resolve, reject) => {
+    result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 10000)
     })
     await governance.connect(bob).reveal(bobvote[0], bobvote[2])
@@ -114,41 +158,17 @@ describe('RandomInflation [@group=13]', () => {
     await governance.connect(dave).reveal(davevote[0], davevote[2])
   })
 
-  it('fetches new randomInflation stuff on newInflation', async () => {
-    expect(inflationGovernor.randomInflation).to.be.undefined
+  it('submits a root hash proposal', async () => {
     await time.increase(3600 * 24 * 1)
-    const result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
-    expect(inflationGovernor.randomInflation).to.not.be.undefined
-  })
-
-  it.only('gets primal and commits vdfSeed', async () => {
-    expect(inflationGovernor.vdfSeed).to.be.undefined
-    await time.increase(3600 * 24 * 1)
+    // console.log(await inflationGovernor.inflationRootHashProposal.rootHashProposals(await alice.getAddress()))
+    // expect(inflationGovernor.inflationRootHashProposal.)
     let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
+      setTimeout(() => resolve(), 15000)
     })
-    await time.advanceBlock()
     result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
+        setTimeout(() => resolve(), 10000)
     })
-    expect(inflationGovernor.vdfSeed).to.not.be.undefined
-  })
-
-  it('proves and submits vdfSeed', async () => {
-    expect(inflationGovernor.vdfOutput).to.be.undefined
-    await time.increase(3600 * 24 * 1)
-    let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
-    const unsetSeed: string = await inflationGovernor.randomInflation.seed()
-    await time.advanceBlock()
-    result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
-    })
-    expect(await inflationGovernor.randomInflation.seed()).to.not.equal(
-      unsetSeed
-    )
+      console.log(await inflationGovernor.inflationRootHashProposal.rootHashProposals(await alice.getAddress()))
+      
   })
 })
