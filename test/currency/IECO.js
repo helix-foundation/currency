@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
-// const { BigNumber } = ethers
+const { BigNumber } = ethers
 
 const MAX_ACCOUNT_BALANCE = BigNumber.from(
   '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as we use 18 digits to store inflation

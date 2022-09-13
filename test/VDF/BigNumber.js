@@ -3,7 +3,7 @@
 const { expect } = require('chai')
 const snapshotGasCost = require('@uniswap/snapshot-gas-cost').default
 const BN = require('bn.js')
-// const { BigNumber } = ethers
+const { BigNumber } = ethers
 
 const { deploy } = require('../utils/contracts')
 

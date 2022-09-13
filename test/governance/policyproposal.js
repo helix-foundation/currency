@@ -3,7 +3,9 @@ const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
-// const { BigNumber } = ethers
+const { BigNumber } = ethers
+
+const one = ethers.utils.parseEther('1')
 
 describe('PolicyProposals [@group=7]', () => {
   let alice

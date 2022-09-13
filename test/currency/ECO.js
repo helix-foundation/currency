@@ -4,7 +4,7 @@ const { signTypedData } = require('@metamask/eth-sig-util')
 
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const time = require('../utils/time.ts')
-// const { BigNumber } = ethers
+const { BigNumber } = ethers
 
 const {
   createPermitMessageData,

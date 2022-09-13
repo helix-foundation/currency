@@ -4,7 +4,7 @@ const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
-// const { BigNumber } = ethers
+const { BigNumber } = ethers
 
 describe('CurrencyTimer [@group=4]', () => {
   let alice
