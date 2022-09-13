@@ -268,7 +268,7 @@ describe('RandomInflation [@group=13]', () => {
       .challengeRootHashRequestAccount(await alice.getAddress(), 2)
 
     result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 15000)
+      setTimeout(() => resolve(), 20000)
     })
 
     // check that challenges have been responded to
