@@ -80,12 +80,9 @@ export class InflationGovernor {
             await this.spawnListeners()
             this.commitVdfSeed()
             if (!this.production) {
-                console.log('test')
-                // console.log((await hre.ethers.provider.listAccounts()))
                 testMap = testMap.sort((a, b) => { 
                     return (a[0].toLowerCase()).localeCompare(b[0].toLowerCase(), 'en')
                 })
-                console.log(testMap)
                 // this.proposeRootHash(await this.fetchBalances(TEST_BLOCK, TEST_SUBGRAPHS_URL))
                 this.proposeRootHash(testMap)
 
@@ -209,7 +206,7 @@ export class InflationGovernor {
         // get addresses and balances into an array of elements [address, balance], sorted alphabetically by address, not case sensitive
 
         this.tree = await getTree(sortedBalances)
-        console.log(this.tree)
+        // console.log(this.tree)
 
         await this.eco.approve(this.inflationRootHashProposal.address, await this.inflationRootHashProposal.PROPOSER_FEE())
         

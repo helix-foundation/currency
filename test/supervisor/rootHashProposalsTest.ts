@@ -87,39 +87,19 @@ describe('RandomInflation [@group=13]', () => {
         ],
     ]
 
-    // let map = new Map([
-    //     [
-    //       await accounts[0].getAddress(),
-    //       BigNumber.from('50000000000000000000000000'),
-    //     ],
-    //     [
-    //       await accounts[1].getAddress(),
-    //       BigNumber.from('100000000000000000000000000'),
-    //     ],
-    //     [
-    //       await accounts[2].getAddress(),
-    //       BigNumber.from('150000000000000000000000000'),
-    //     ],
-    // ])
-
     await initInflation.mint(
-        await accounts[0].getAddress(),
-        '50000000000000000000000000'
+      await accounts[0].getAddress(),
+      '50000000000000000000000000'
     )
     await initInflation.mint(
-        await accounts[1].getAddress(),
-        '100000000000000000000000000'
+      await accounts[1].getAddress(),
+      '100000000000000000000000000'
     )
     await initInflation.mint(
-        await accounts[2].getAddress(),
-        '150000000000000000000000000'
+      await accounts[2].getAddress(),
+      '150000000000000000000000000'
     )
 
-    try {
-        tree = getTree(map)
-    } catch(e) {
-        console.log(e)
-    }
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
     timeGovernor = supervisor.timeGovernor
@@ -128,12 +108,12 @@ describe('RandomInflation [@group=13]', () => {
 
     await time.advanceBlock()
     let result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 10000)
-      })
+      setTimeout(() => resolve(), 10000)
+    })
     await time.increase(3600 * 24 * 14.1)
     result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 10000)
-      })
+      setTimeout(() => resolve(), 10000)
+    })
 
     const governance: CurrencyGovernance = await ethers.getContractAt(
       'CurrencyGovernance',
@@ -178,47 +158,145 @@ describe('RandomInflation [@group=13]', () => {
     await time.increase(3600 * 24 * 1)
     // console.log(await inflationGovernor.inflationRootHashProposal.rootHashProposals(await alice.getAddress()))
     // expect(inflationGovernor.inflationRootHashProposal.)
-    let result = await new Promise<void>((resolve, reject) => {
+    const result = await new Promise<void>((resolve, reject) => {
       setTimeout(() => resolve(), 15000)
     })
     expect(
-        (await inflationGovernor.inflationRootHashProposal.rootHashProposals(
-            await alice.getAddress()
-            )
-        ).initialized
+      (
+        await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+          await alice.getAddress()
+        )
+      ).initialized
     ).to.be.true
   })
 
   it.only('responds to challenges', async () => {
     await time.increase(3600 * 24 * 1)
+    // why is this map returning sums also?
     console.log(map)
     let result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 15000)
+      setTimeout(() => resolve(), 15000)
     })
+   
+    // check that rhp is proposed
     expect(
-        (await inflationGovernor.inflationRootHashProposal.rootHashProposals(
-            await alice.getAddress()
-            )
-        ).initialized
+      (
+        await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+          await alice.getAddress()
+        )
+      ).initialized
     ).to.be.true
 
-    await eco.connect(bob).approve(
+    await eco
+      .connect(bob)
+      .approve(
         inflationGovernor.inflationRootHashProposal.address,
         await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
-    )
-    console.log('approved')
-    await inflationGovernor.inflationRootHashProposal.connect(bob).challengeRootHashRequestAccount(await alice.getAddress(), 0)
-    console.log(await (
-        await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+      )
+
+    await inflationGovernor.inflationRootHashProposal
+      .connect(bob)
+      .challengeRootHashRequestAccount(await alice.getAddress(), 1)
+    
+    // check that challenge is lodged
+    expect(
+      (
+        await (
+          await inflationGovernor.inflationRootHashProposal.rootHashProposals(
             await alice.getAddress()
-            )
+          )
         ).amountPendingChallenges
-    )
+      ).toNumber()
+    ).to.eq(1)
+
     await time.advanceBlock()
+    
     result = await new Promise<void>((resolve, reject) => {
-        setTimeout(() => resolve(), 10000)
+      setTimeout(() => resolve(), 10000)
     })
+
+    // check that challenge has been responded to
+    expect(
+      (
+        await (
+          await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+            await alice.getAddress()
+          )
+        ).amountPendingChallenges
+      ).toNumber()
+    ).to.eq(0)
 
     // await inflationGovernor.inflationRootHashProposal.connect(bob).challengeRootHashRequestAccount(await alice.getAddress(), 1)
   })
+
+//   it('responds to multiple challenges', async () => {
+//     await time.increase(3600 * 24 * 1)
+//     // why is this map returning sums also?
+//     console.log(map)
+//     let result = await new Promise<void>((resolve, reject) => {
+//       setTimeout(() => resolve(), 15000)
+//     })
+   
+//     // check that rhp is proposed
+//     expect(
+//       (
+//         await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+//           await alice.getAddress()
+//         )
+//       ).initialized
+//     ).to.be.true
+
+//     await eco
+//       .connect(bob)
+//       .approve(
+//         inflationGovernor.inflationRootHashProposal.address,
+//         await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+//       )
+
+//     await inflationGovernor.inflationRootHashProposal
+//       .connect(bob)
+//       .challengeRootHashRequestAccount(await alice.getAddress(), 1)
+    
+
+//     await eco
+//       .connect(bob)
+//       .approve(
+//         inflationGovernor.inflationRootHashProposal.address,
+//         await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+//       )
+
+//     await inflationGovernor.inflationRootHashProposal
+//       .connect(bob)
+//       .challengeRootHashRequestAccount(await alice.getAddress(), 2)
+    
+//     // check that challenge is lodged
+//     expect(
+//       (
+//         await (
+//           await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+//             await alice.getAddress()
+//           )
+//         ).amountPendingChallenges
+//       ).toNumber()
+//     ).to.eq(2)
+
+//     await time.advanceBlock()
+    
+//     result = await new Promise<void>((resolve, reject) => {
+//       setTimeout(() => resolve(), 10000)
+//     })
+
+//     // check that challenges have been responded to
+//     expect(
+//       (
+//         await (
+//           await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+//             await alice.getAddress()
+//           )
+//         ).amountPendingChallenges
+//       ).toNumber()
+//     ).to.eq(0)
+
+//     // await inflationGovernor.inflationRootHashProposal.connect(bob).challengeRootHashRequestAccount(await alice.getAddress(), 1)
+//   })
 })
