@@ -60,6 +60,11 @@ describe('RandomInflation [@group=13]', () => {
       inflation,
     } = await ecoFixture(trustees))
 
+    await initInflation.mint(
+      await accounts[0].getAddress(),
+      '50000000000000000000000000'
+    )
+
     if (timeGovernor) {
       console.log('kill time listener')
       await timeGovernor.killListener()
@@ -123,7 +128,7 @@ describe('RandomInflation [@group=13]', () => {
     expect(inflationGovernor.randomInflation).to.not.be.undefined
   })
 
-  it.only('gets primal and commits vdfSeed', async () => {
+  it('gets primal and commits vdfSeed', async () => {
     expect(inflationGovernor.vdfSeed).to.be.undefined
     await time.increase(3600 * 24 * 1)
     let result = await new Promise<void>((resolve, reject) => {
