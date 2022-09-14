@@ -24,7 +24,7 @@ export class TimeGovernor {
 
   async startTimer() {
     this.nextGenStart = (
-      await this.timedPolicy.nextGenerationStart()
+      await this.timedPolicy.nextGenerationWindowOpen()
     ).toNumber()
 
     this.provider.on('block', async () => {
@@ -44,18 +44,18 @@ export class TimeGovernor {
         console.log('updated')
         this.triedUpdate = false
         this.nextGenStart = (
-          await this.timedPolicy.nextGenerationStart()
+          await this.timedPolicy.nextGenerationWindowOpen()
         ).toNumber()
       }
     } catch (e) {
       if (
-        (await this.timedPolicy.nextGenerationStart()).toNumber() >
+        (await this.timedPolicy.nextGenerationWindowOpen()).toNumber() >
         this.nextGenStart
       ) {
         // generation has been updated
         this.triedUpdate = false
         this.nextGenStart = (
-          await this.timedPolicy.nextGenerationStart()
+          await this.timedPolicy.nextGenerationWindowOpen()
         ).toNumber()
       } else {
         // error logging
