@@ -48,7 +48,6 @@ export class TimeGovernor {
         ).toNumber()
       }
     } catch (e) {
-      console.log(e)
       if (
         (await this.timedPolicy.nextGenerationStart()).toNumber() >
         this.nextGenStart
@@ -59,8 +58,8 @@ export class TimeGovernor {
           await this.timedPolicy.nextGenerationStart()
         ).toNumber()
       } else {
-        // potential serious error
-        setTimeout(this.genUpdate.bind(this), 1000)
+        // error logging
+        console.log(e)
         this.triedUpdate = false
       }
     }
