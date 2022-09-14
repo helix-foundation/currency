@@ -1,5 +1,6 @@
 const hre = require('hardhat')
 const { ethers } = hre
+const blockDelay = 10000 // in miliseconds
 
 export async function setNextBlockTimestamp(timestamp: number) {
   await ethers.provider.send('evm_setNextBlockTimestamp', [timestamp])
@@ -54,6 +55,18 @@ export async function secondsFromNow(secondsFromNow: number) {
   return timestamp + secondsFromNow
 }
 
+export async function waitBlockTime(delayInMilliseconds?: number) {
+  let delay: number
+  if (delayInMilliseconds) {
+    delay = delayInMilliseconds
+  } else {
+    delay = blockDelay
+  }
+  await new Promise<void>((resolve, reject) => {
+    setTimeout(() => resolve(), delay)
+  })
+}
+
 export default {
   setNextBlockTimestamp,
   latestBlock,
@@ -63,4 +76,5 @@ export default {
   advanceBlock,
   advanceBlocks,
   secondsFromNow,
+  waitBlockTime,
 }

@@ -9,7 +9,7 @@
   "scripts": {
     "format": "concurrently 'npm:format:*'",
     "format:prettier": "prettier --write 'contracts/**/*.sol'",
-    "format:eslint": "eslint --fix 'tools/**/**.js' 'test/**/**.js' 'test/**/**.ts'",
+    "format:eslint": "eslint --fix 'tools/**/**.js' 'test/**/**.js' 'test/**/**.ts' 'supervisor/**.ts'",
     "lint": "concurrently 'npm:lint:*'",
     "lint:depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,prettier-plugin-solidity,solhint-plugin-eco,concurrently,@types/mocha",
     "lint:solhint": "solhint 'contracts/**/*.sol'",
