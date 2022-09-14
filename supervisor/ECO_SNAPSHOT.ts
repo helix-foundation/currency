@@ -1,20 +1,20 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client'
 
 type SubgraphBalance = {
-  value: string;
-  blockNumber: string;
-};
+  value: string
+  blockNumber: string
+}
 
 type SubgraphAccount = {
-  address: string;
-  ECOBalances: SubgraphBalance[];
-  ECOVotingPowers: SubgraphBalance[];
-};
+  address: string
+  ECOBalances: SubgraphBalance[]
+  ECOVotingPowers: SubgraphBalance[]
+}
 
 export type EcoSnapshotQueryResult = {
-  accounts: SubgraphAccount[];
-  inflationMultipliers: { value: string }[];
-};
+  accounts: SubgraphAccount[]
+  inflationMultipliers: { value: string }[]
+}
 
 export const ECO_SNAPSHOT = gql`
   query EcoSnapshot($blockNumber: BigInt!) {
@@ -48,4 +48,4 @@ export const ECO_SNAPSHOT = gql`
       value
     }
   }
-`;
+`

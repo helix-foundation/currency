@@ -158,7 +158,7 @@ describe('RandomInflation [@group=13]', () => {
     // console.log(await inflationGovernor.inflationRootHashProposal.rootHashProposals(await alice.getAddress()))
     // expect(inflationGovernor.inflationRootHashProposal.)
     const result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 15000)
+      setTimeout(() => resolve(), 20000)
     })
     expect(
       (
@@ -169,12 +169,12 @@ describe('RandomInflation [@group=13]', () => {
     ).to.be.true
   })
 
-  it('responds to challenges', async () => {
+  it('responds to a challenge', async () => {
     await time.increase(3600 * 24 * 1)
     // why is this map returning sums also?
     console.log(map)
     let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 15000)
+      setTimeout(() => resolve(), 20000)
     })
 
     // check that rhp is proposed
