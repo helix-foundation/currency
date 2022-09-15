@@ -37,7 +37,7 @@ export class TimeGovernor {
       this.wallet
     )
     this.nextGenStart = (
-      await this.timedPolicy.nextGenerationStart()
+      await this.timedPolicy.nextGenerationWindowOpen()
     ).toNumber()
     this.generation = (await this.timedPolicy.generation()).toNumber()
   }
@@ -61,18 +61,18 @@ export class TimeGovernor {
           console.log(`generation incremented to ${this.generation}`)
           this.triedUpdate = false
           this.nextGenStart = (
-            await this.timedPolicy.nextGenerationStart()
+            await this.timedPolicy.nextGenerationWindowOpen()
           ).toNumber()
         }
       } catch (e) {
         if (
-          (await this.timedPolicy.nextGenerationStart()).toNumber() >
+          (await this.timedPolicy.nextGenerationWindowOpen()).toNumber() >
           this.nextGenStart
         ) {
           // generation has been updated
           this.triedUpdate = false
           this.nextGenStart = (
-            await this.timedPolicy.nextGenerationStart()
+            await this.timedPolicy.nextGenerationWindowOpen
           ).toNumber()
         } else {
           // error logging

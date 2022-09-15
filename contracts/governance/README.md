@@ -56,7 +56,7 @@ Arguments: none
 Increments the `generation` variable and sets the time at which the new generation will end. It calculates the amount of ECO that will be minted during the process. Then it goes through the list of `notificationHashes` and calls `notifyGenerationIncrease` on each of them. Finally calls `startPolicyProposal`.
 
 ##### Security Notes
-  - This method can only be invoked at most once every 14 days, marked by the constant `GENERATION_DURATION`.
+  - This method can only be invoked at most once every 14 days, marked by the constant `MIN_GENERATION_DURATION`.
   - It can be invoked by anyone who wishes to begin a the next generation and will likely be maintained by off-chain automation.
 
 #### startPolicyProposal

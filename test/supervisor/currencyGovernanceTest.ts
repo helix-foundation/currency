@@ -71,7 +71,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
 
     const initialCurrGov = currencyGovernor.currencyGovernance.address
     const timeToNextGeneration: number =
-      (await timeGovernor.timedPolicy.nextGenerationStart()).toNumber() -
+      (await timeGovernor.timedPolicy.nextGenerationWindowOpen()).toNumber() -
       (await time.latestBlockTimestamp())
 
     await time.increase(timeToNextGeneration + 1)
