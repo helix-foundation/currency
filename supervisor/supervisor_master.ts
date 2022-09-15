@@ -1,13 +1,10 @@
 /* eslint-disable camelcase */
-/* eslint-disable no-useless-constructor */
 import * as hre from 'hardhat'
 import * as ethers from 'ethers'
-// const path = require('path');
 
 import { TimeGovernor } from './supervisor_timedPolicies'
 import { CurrencyGovernor } from './supervisor_currencyGovernance'
 import { InflationGovernor } from './supervisor_randomInflation'
-// import { CommunityGovernor } from "./supervisor_communityGovernance"
 import {
   Policy__factory,
   Policy,
@@ -17,9 +14,7 @@ import {
   CurrencyGovernance,
 } from '../typechain-types'
 require('dotenv').config({ path: '../.env' })
-// import { ethers } from "hardhat"
 const fs = require('fs')
-// import { CurrencyGovernance } from "../typechain-types/CurrencyGovernance";
 
 const pk = process.env.PRIVATE_KEY || ''
 
@@ -36,12 +31,10 @@ export class Supervisor {
   timeGovernor!: TimeGovernor
   currencyGovernor!: CurrencyGovernor
   inflationGovernor!: InflationGovernor
-  provider!: ethers.providers.BaseProvider
-  rootPolicy!: Policy
-  wallet!: ethers.Signer
+  provider?: ethers.providers.BaseProvider
+  rootPolicy?: Policy
+  wallet?: ethers.Signer
   production: boolean = false
-
-  constructor() {}
 
   async startSupervisor(
     filepath?: string,
@@ -50,66 +43,66 @@ export class Supervisor {
   ) {
     if (filepath) {
       // prod
-      let args = fs.readFileSync(filepath)
-      args = args.toString().split('\n')
-      const rpc: string = args[0]
-      const root: string = args[1]
-      this.provider = new ethers.providers.JsonRpcProvider(rpc)
-      this.wallet = new ethers.Wallet(pk, this.provider)
-      this.rootPolicy = Policy__factory.connect(root, this.wallet)
-      this.production = true
-    } else {
-      // test
-      if (signer && policy) {
-        this.provider = hre.ethers.provider
-        this.wallet = signer
-        this.rootPolicy = policy
+      try {
+        let args = fs.readFileSync(filepath)
+        args = args.toString().split('\n')
+        const rpc: string = args[0]
+        const root: string = args[1]
+        this.provider = new ethers.providers.JsonRpcProvider(rpc)
+        this.wallet = new ethers.Wallet(pk, this.provider)
+        this.rootPolicy = Policy__factory.connect(root, this.wallet)
+      } catch (e) {
+        throw new Error('bad filepath, rpcURL, pk or rootPolicy address')
       }
+    } else if (signer && policy) {
+      // test
+      this.provider = hre.ethers.provider
+      this.wallet = signer
+      this.rootPolicy = policy
+    } else {
+      throw new Error('bad inputs')
     }
 
-    return this.startModules(this.provider, this.wallet, this.rootPolicy)
+    await this.startModules()
   }
 
-  async startModules(
-    provider: ethers.providers.BaseProvider,
-    wallet: ethers.Signer,
-    rootPolicy: Policy
-  ) {
-    const timedPolicy: TimedPolicies = TimedPolicies__factory.connect(
-      await rootPolicy.policyFor(ID_TIMED_POLICIES),
-      wallet
-    )
-    const currencyGovernance: CurrencyGovernance =
-      CurrencyGovernance__factory.connect(
-        await rootPolicy.policyFor(ID_CURRENCY_GOVERNANCE),
-        wallet
+  async startModules() {
+    if (this.rootPolicy && this.wallet && this.provider) {
+      const timedPolicy: TimedPolicies = TimedPolicies__factory.connect(
+        await this.rootPolicy.policyFor(ID_TIMED_POLICIES),
+        this.wallet
       )
+      const currencyGovernance: CurrencyGovernance =
+        CurrencyGovernance__factory.connect(
+          await this.rootPolicy.policyFor(ID_CURRENCY_GOVERNANCE),
+          this.wallet
+        )
+      this.timeGovernor = new TimeGovernor(
+        this.provider,
+        this.wallet,
+        this.rootPolicy,
+        timedPolicy
+      )
+      this.timeGovernor.startTimer()
 
-    this.timeGovernor = new TimeGovernor(
-      provider,
-      wallet,
-      rootPolicy,
-      timedPolicy
-    )
-    await this.timeGovernor.startTimer()
+      this.currencyGovernor = new CurrencyGovernor(
+        this.provider,
+        this.wallet,
+        this.rootPolicy,
+        timedPolicy,
+        currencyGovernance
+      )
+      await this.currencyGovernor.setup()
+      await this.currencyGovernor.startListeners()
 
-    this.currencyGovernor = new CurrencyGovernor(
-      provider,
-      wallet,
-      rootPolicy,
-      timedPolicy,
-      currencyGovernance
-    )
-    await this.currencyGovernor.setup()
-    await this.currencyGovernor.startListeners()
-
-    this.inflationGovernor = new InflationGovernor(
-      provider,
-      wallet,
-      rootPolicy,
-      timedPolicy,
-      this.production
-    )
-    this.inflationGovernor.setup()
+      this.inflationGovernor = new InflationGovernor(
+        this.provider,
+        this.wallet,
+        this.rootPolicy,
+        timedPolicy,
+        this.production
+      )
+      this.inflationGovernor.setup()
+    }
   }
 }

@@ -25,20 +25,16 @@ export class TimeGovernor {
 
   async startTimer() {
     this.nextGenStart = (
-      await this.timedPolicy.nextGenerationStart()
+      await this.timedPolicy.nextGenerationWindowOpen()
     ).toNumber()
     this.generation = (await this.timedPolicy.generation()).toNumber()
-    this.provider.on('block', async () => {
-      this.callUpdateOnBlock()
-    })
-  }
 
-  async callUpdateOnBlock() {
-    const block = await this.provider.getBlock('latest')
-    // console.log(block.number)
-    if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
-      this.genUpdate()
-    }
+    this.provider.on('block', async () => {
+      const block = await this.provider.getBlock('latest')
+      if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
+        this.genUpdate()
+      }
+    })
   }
 
   async genUpdate() {
@@ -47,28 +43,27 @@ export class TimeGovernor {
       const tx = await this.timedPolicy.incrementGeneration()
       const rc = await tx.wait()
       if (rc.status === 1) {
-        this.triedUpdate = false
-        this.nextGenStart = (
-          await this.timedPolicy.nextGenerationStart()
-        ).toNumber()
         this.generation += 1
         console.log(`generation incremented to ${this.generation}`)
-      } else {
-        throw tx
+        this.triedUpdate = false
+        this.nextGenStart = (
+          await this.timedPolicy.nextGenerationWindowOpen()
+        ).toNumber()
       }
     } catch (e) {
       if (
-        (await this.timedPolicy.nextGenerationStart()).toNumber() >
+        (await this.timedPolicy.nextGenerationWindowOpen()).toNumber() >
         this.nextGenStart
       ) {
         // generation has been updated
         this.triedUpdate = false
         this.nextGenStart = (
-          await this.timedPolicy.nextGenerationStart()
+          await this.timedPolicy.nextGenerationWindowOpen()
         ).toNumber()
       } else {
-        // potential serious error
-        setTimeout(this.genUpdate.bind(this), 1000)
+        // error logging
+        console.log(e)
+        this.triedUpdate = false
       }
     }
   }

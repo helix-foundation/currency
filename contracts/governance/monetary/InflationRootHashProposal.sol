@@ -267,7 +267,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         _;
     }
 
-    constructor(Policy _policy, address _ecoAddr) PolicedUtils(_policy) {
+    constructor(Policy _policy, IECO _ecoAddr) PolicedUtils(_policy) {
         require(
             address(_ecoAddr) != address(0),
             "do not set the _ecoAddr as the zero address"
@@ -310,13 +310,16 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _totalSum,
         uint256 _amountOfAccounts
     ) external hashIsNotAcceptedYet {
-        RootHashProposal storage proposal = rootHashProposals[msg.sender];
-
-        require(!proposal.initialized, "Root hash already proposed");
+        require(_proposedRootHash != bytes32(0), "Root hash cannot be zero");
+        require(_totalSum > 0, "Total sum cannot be zero");
         require(
             _amountOfAccounts > 0,
             "Hash must consist of at least 1 account"
         );
+
+        RootHashProposal storage proposal = rootHashProposals[msg.sender];
+
+        require(!proposal.initialized, "Root hash already proposed");
 
         proposal.initialized = true;
         proposal.rootHash = _proposedRootHash;
@@ -410,6 +413,8 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             );
         }
 
+        challenge.amountOfRequests += 1;
+
         emit ChallengeMissingAccountSuccess(
             _proposer,
             msg.sender,
@@ -439,6 +444,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(
             _claimedBalance > 0,
             "Accounts with zero balance not allowed in Merkle tree"
+        );
+        require(
+            _account != address(0),
+            "The zero address not allowed in Merkle tree"
         );
 
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
@@ -488,7 +497,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         } else {
             ChallengeResponse storage leftNeighborChallenge = proposal
                 .challengeResponses[_index - 1];
-            if (leftNeighborChallenge.account != address(0)) {
+            if (leftNeighborChallenge.balance != 0) {
                 // Is left neighbor queried, and is it valid?
                 require(
                     leftNeighborChallenge.sum + leftNeighborChallenge.balance ==
@@ -508,23 +517,20 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
                 proposal.totalSum == _sum + _claimedBalance,
                 "cumulative sum does not match total sum"
             );
-        }
-
-        ChallengeResponse storage rightNeighborChallenge = proposal
-            .challengeResponses[_index + 1];
-        // Is right neighbor queried, and is it valid?
-        if (
-            _index != proposal.amountOfAccounts - 1 &&
-            rightNeighborChallenge.account != address(0)
-        ) {
-            require(
-                _sum + _claimedBalance == rightNeighborChallenge.sum,
-                "Right neighbor sum verification failed"
-            );
-            require(
-                _account < rightNeighborChallenge.account,
-                "Right neighbor order verification failed"
-            );
+        } else {
+            ChallengeResponse storage rightNeighborChallenge = proposal
+                .challengeResponses[_index + 1];
+            // Is right neighbor queried, and is it valid?
+            if (rightNeighborChallenge.balance != 0) {
+                require(
+                    _sum + _claimedBalance == rightNeighborChallenge.sum,
+                    "Right neighbor sum verification failed"
+                );
+                require(
+                    _account < rightNeighborChallenge.account,
+                    "Right neighbor order verification failed"
+                );
+            }
         }
 
         emit ChallengeSuccessResponse(
@@ -712,8 +718,8 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         // ensure that the proof conforms to the minimum possible tree height
         // and also that the number of accounts is small enough to fit in the claimed tree
         if (
-            2**(_proof.length - 1) > _numAccounts ||
-            2**(_proof.length) < _numAccounts
+            1 << (_proof.length - 1) >= _numAccounts ||
+            1 << (_proof.length) < _numAccounts
         ) {
             return false;
         }
@@ -736,13 +742,18 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             }
         }
 
+        if (computedHash != _root) {
+            return false;
+        }
+
+        // xor to separate matching and non-matching elements of the bitmaps
+        uint256 branchBitMap = _index ^ (_numAccounts - 1);
+
         // verifies that unused tree nodes are reperesnted by bytes32(0)
         for (uint256 i = _proof.length; i > 0; i--) {
             // check if we're traversing the right edge of the filled tree
             // _numAccounts indexes from 1 but _index does so from zero
-            if (
-                (_index >> (i - 1)) & 1 == ((_numAccounts - 1) >> (i - 1)) & 1
-            ) {
+            if ((branchBitMap >> (i - 1)) & 1 == 0) {
                 // see if we are in a left branch requiring a zero valued right branch
                 if ((_index >> (i - 1)) & 1 == 0) {
                     if (_proof[i - 1] != ALLOWED_ZERO_DATA[i - 1]) {
@@ -756,7 +767,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         }
 
         // Check if the computed hash (_root) is equal to the provided _root
-        return computedHash == _root;
+        return true;
     }
 
     /** @notice increment counter we use to track amount of open challenges etc
@@ -764,13 +775,15 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     function updateCounters(address _proposer, address _challenger) internal {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
+        uint256 challengeEnds = challenge.challengeEnds;
 
         proposal.totalChallenges += 1;
         proposal.amountPendingChallenges += 1;
         challenge.amountOfRequests += 1;
-        challenge.challengeEnds += CONTESTING_TIME;
 
-        uint256 challengeEnds = challenge.challengeEnds;
+        challenge.challengeEnds = challengeEnds + CONTESTING_TIME;
+        challengeEnds += CONTESTING_TIME;
+
         if (proposal.lastLiveChallenge < challengeEnds) {
             proposal.lastLiveChallenge = challengeEnds;
         }
@@ -821,11 +834,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
               condition  -- x < 2 * log( N ) + 2
                             2 ^ x < 2 ^ (2 * log( N ) + 2)
                             2 ^ (x - 2) < (2 ^ log( N )) ^ 2
-                            2 ^ ((x - 2)/2) < N
+                            2 ^ (x - 2) < N ^ 2
             */
 
             require(
-                2**(requestsByChallenger - 2) < (proposal.amountOfAccounts)**2,
+                1 << (requestsByChallenger - 2) <=
+                    (proposal.amountOfAccounts)**2,
                 "Challenger reached maximum amount of allowed challenges"
             );
         }

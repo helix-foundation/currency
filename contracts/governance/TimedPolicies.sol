@@ -16,13 +16,13 @@ import "../currency/ECOx.sol";
  */
 contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     // The minimum time of a generation.
-    uint256 public constant GENERATION_DURATION = 14 days;
+    uint256 public constant MIN_GENERATION_DURATION = 14 days;
     // The initial generation
     uint256 private constant GENERATION_START = 1000;
     // Stores the current generation
     uint256 public override generation;
     // Stores when the next generation is allowed to start
-    uint256 public nextGenerationStart;
+    uint256 public nextGenerationWindowOpen;
     // Stores all contracts that need a function called on generation increase
     bytes32[] public notificationHashes;
 
@@ -72,10 +72,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         policyProposalImpl = TimedPolicies(_self).policyProposalImpl();
 
         generation = TimedPolicies(_self).generation();
-        bytes32[] memory hashes = TimedPolicies(_self).getNotificationHashes();
-        for (uint256 i = 0; i < hashes.length; ++i) {
-            notificationHashes.push(hashes[i]);
-        }
+        notificationHashes = TimedPolicies(_self).getNotificationHashes();
     }
 
     function getNotificationHashes() public view returns (bytes32[] memory) {
@@ -85,11 +82,11 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     function incrementGeneration() external {
         uint256 time = getTime();
         require(
-            time > nextGenerationStart,
+            time >= nextGenerationWindowOpen,
             "Cannot update the generation counter so soon"
         );
 
-        nextGenerationStart = time + GENERATION_DURATION;
+        nextGenerationWindowOpen = time + MIN_GENERATION_DURATION;
         generation++;
 
         CurrencyGovernance bg = CurrencyGovernance(
