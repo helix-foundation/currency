@@ -1,67 +1,91 @@
+/* eslint-disable camelcase */
 import * as ethers from 'ethers'
 
-import { Policy, TimedPolicies } from '../typechain-types'
+import {
+  Policy,
+  TimedPolicies,
+  TimedPolicies__factory,
+} from '../typechain-types'
+
+const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['TimedPolicies']
+)
 
 export class TimeGovernor {
   provider: ethers.providers.BaseProvider
   wallet: ethers.Signer
   policy: Policy
-  timedPolicy: TimedPolicies
+  timedPolicy!: TimedPolicies
   nextGenStart: number = 0
   triedUpdate: Boolean = false
+  generation: number = 0
 
   constructor(
     provider: ethers.providers.BaseProvider,
     supervisorWallet: ethers.Signer,
-    rootPolicy: Policy,
-    timedPolicy: TimedPolicies
+    rootPolicy: Policy
   ) {
     this.provider = provider
     this.policy = rootPolicy
     this.wallet = supervisorWallet
-    this.timedPolicy = timedPolicy
   }
 
-  async startTimer() {
+  async setup() {
+    this.timedPolicy = TimedPolicies__factory.connect(
+      await this.policy.policyFor(ID_TIMED_POLICIES),
+      this.wallet
+    )
     this.nextGenStart = (
       await this.timedPolicy.nextGenerationStart()
     ).toNumber()
-
-    this.provider.on('block', async () => {
-      const block = await this.provider.getBlock('latest')
-      if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
-        this.genUpdate()
-      }
-    })
+    this.generation = (await this.timedPolicy.generation()).toNumber()
+    await this.startListeners()
   }
 
-  async genUpdate() {
-    try {
-      this.triedUpdate = true
-      const tx = await this.timedPolicy.incrementGeneration()
-      const rc = await tx.wait()
-      if (rc.status === 1) {
-        console.log('updated')
-        this.triedUpdate = false
-        this.nextGenStart = (
-          await this.timedPolicy.nextGenerationStart()
-        ).toNumber()
-      }
-    } catch (e) {
-      if (
-        (await this.timedPolicy.nextGenerationStart()).toNumber() >
-        this.nextGenStart
-      ) {
-        // generation has been updated
-        this.triedUpdate = false
-        this.nextGenStart = (
-          await this.timedPolicy.nextGenerationStart()
-        ).toNumber()
-      } else {
-        // error logging
-        console.log(e)
-        this.triedUpdate = false
+  async startListeners() {
+    this.provider.on('block', async () => {
+      await this.generationUpdateListener()
+    })
+    // listener for annualUpdate
+  }
+
+  async generationUpdateListener() {
+    const block = await this.provider.getBlock('latest')
+    if (block.timestamp > this.nextGenStart && !this.triedUpdate) {
+      try {
+        this.triedUpdate = true
+        const tx = await this.timedPolicy.incrementGeneration()
+        const rc = await tx.wait()
+        if (rc.status === 1) {
+          this.generation = (await this.timedPolicy.generation()).toNumber()
+          console.log(`generation incremented to ${this.generation}`)
+          this.triedUpdate = false
+          this.nextGenStart = (
+            await this.timedPolicy.nextGenerationStart()
+          ).toNumber()
+        }
+      } catch (e) {
+        if (
+          (await this.timedPolicy.nextGenerationStart()).toNumber() >
+          this.nextGenStart
+        ) {
+          // generation has been updated
+          this.triedUpdate = false
+          this.nextGenStart = (
+            await this.timedPolicy.nextGenerationStart()
+          ).toNumber()
+        } else {
+          // error logging
+          console.log(e)
+          this.triedUpdate = false
+        }
       }
     }
+  }
+
+  async killListener() {
+    // this.provider.off("block", this.callUpdateOnBlock)
+    this.provider.removeAllListeners('block')
   }
 }
