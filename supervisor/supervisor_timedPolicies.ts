@@ -40,7 +40,6 @@ export class TimeGovernor {
       await this.timedPolicy.nextGenerationStart()
     ).toNumber()
     this.generation = (await this.timedPolicy.generation()).toNumber()
-    await this.startListeners()
   }
 
   async startListeners() {

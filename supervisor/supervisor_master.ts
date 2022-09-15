@@ -56,7 +56,8 @@ export class Supervisor {
         this.wallet,
         this.rootPolicy
       )
-      this.timeGovernor.setup()
+      await this.timeGovernor.setup()
+      await this.timeGovernor.startListeners()
 
       this.currencyGovernor = new CurrencyGovernor(
         this.provider,
