@@ -84,7 +84,7 @@ export class TimeGovernor {
   }
 
   async killListener() {
-    // this.provider.off("block", this.callUpdateOnBlock)
+    // pending stackoverflow answers on how to make this not universal
     this.provider.removeAllListeners('block')
   }
 }
