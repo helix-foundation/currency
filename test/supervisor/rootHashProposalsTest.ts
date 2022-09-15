@@ -3,7 +3,6 @@ import { ethers } from 'hardhat'
 import { expect } from 'chai'
 import {
   Policy,
-  TimedPolicies,
   CurrencyGovernance,
   ECO,
 } from '../../typechain-types'
@@ -23,17 +22,12 @@ describe('RandomInflation [@group=13]', () => {
   let dave: Signer
   let eco: ECO
   let initInflation
-  let currencyTimer
-  let rootHashProposal
-  let inflation
   let policy: Policy
-  let timedPolicies: TimedPolicies
   let supervisor: Supervisor
   let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
   let map: [string, BigNumber][]
-  let tree: any
 
   const hash = (x: any) =>
     ethers.utils.solidityKeccak256(
@@ -56,10 +50,6 @@ describe('RandomInflation [@group=13]', () => {
       policy,
       eco,
       faucet: initInflation,
-      timedPolicies,
-      currencyTimer,
-      rootHashProposal,
-      inflation,
     } = await ecoFixture(trustees))
 
     if (timeGovernor) {
@@ -106,13 +96,9 @@ describe('RandomInflation [@group=13]', () => {
     inflationGovernor = supervisor.inflationGovernor
 
     await time.advanceBlock()
-    let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
+    await time.waitBlockTime()
     await time.increase(3600 * 24 * 14.1)
-    result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
+    await time.waitBlockTime()
 
     const governance: CurrencyGovernance = await ethers.getContractAt(
       'CurrencyGovernance',
@@ -123,9 +109,7 @@ describe('RandomInflation [@group=13]', () => {
       .propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', '')
 
     await time.increase(3600 * 24 * 10)
-    // let result = await new Promise<void>((resolve, reject) => {
-    //   setTimeout(() => resolve(), 10000)
-    // })
+
     const bobvote: any = [
       ethers.utils.randomBytes(32),
       await bob.getAddress(),
@@ -145,9 +129,8 @@ describe('RandomInflation [@group=13]', () => {
     ]
     await governance.connect(dave).commit(hash(davevote))
     await time.increase(3600 * 24 * 3)
-    result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
+    await time.waitBlockTime
+
     await governance.connect(bob).reveal(bobvote[0], bobvote[2])
     await governance.connect(charlie).reveal(charlievote[0], charlievote[2])
     await governance.connect(dave).reveal(davevote[0], davevote[2])
@@ -155,11 +138,8 @@ describe('RandomInflation [@group=13]', () => {
 
   it('submits a root hash proposal', async () => {
     await time.increase(3600 * 24 * 1)
-    // console.log(await inflationGovernor.inflationRootHashProposal.rootHashProposals(await alice.getAddress()))
-    // expect(inflationGovernor.inflationRootHashProposal.)
-    const result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
-    })
+    await time.waitBlockTime(25000)
+
     expect(
       (
         await inflationGovernor.inflationRootHashProposal.rootHashProposals(
@@ -171,11 +151,7 @@ describe('RandomInflation [@group=13]', () => {
 
   it('responds to a challenge', async () => {
     await time.increase(3600 * 24 * 1)
-    // why is this map returning sums also?
-    console.log(map)
-    let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
-    })
+    await time.waitBlockTime()
 
     // check that rhp is proposed
     expect(
@@ -209,10 +185,7 @@ describe('RandomInflation [@group=13]', () => {
     ).to.eq(1)
 
     await time.advanceBlock()
-
-    result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
+    await time.waitBlockTime(25000)
 
     // check that challenge has been responded to
     expect(
@@ -230,11 +203,7 @@ describe('RandomInflation [@group=13]', () => {
 
   it('responds to multiple challenges', async () => {
     await time.increase(3600 * 24 * 1)
-    // why is this map returning sums also?
-    console.log(map)
-    let result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 10000)
-    })
+    await time.waitBlockTime()
 
     // check that rhp is proposed
     expect(
@@ -267,9 +236,7 @@ describe('RandomInflation [@group=13]', () => {
       .connect(bob)
       .challengeRootHashRequestAccount(await alice.getAddress(), 2)
 
-    result = await new Promise<void>((resolve, reject) => {
-      setTimeout(() => resolve(), 20000)
-    })
+    await time.waitBlockTime(25000)
 
     // check that challenges have been responded to
     expect(
