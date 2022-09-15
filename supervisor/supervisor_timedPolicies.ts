@@ -72,7 +72,7 @@ export class TimeGovernor {
           // generation has been updated
           this.triedUpdate = false
           this.nextGenStart = (
-            await this.timedPolicy.nextGenerationWindowOpen
+            await this.timedPolicy.nextGenerationWindowOpen()
           ).toNumber()
         } else {
           // error logging
