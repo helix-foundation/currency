@@ -85,6 +85,10 @@ export class InflationGovernor {
       await this.policy.policyFor(ID_CURRENCY_TIMER),
       this.wallet
     )
+    this.eco = ECO__factory.connect(
+      await this.policy.policyFor(ID_ECO),
+      this.wallet
+    )
     await this.inflationListener()
   }
 
@@ -104,10 +108,6 @@ export class InflationGovernor {
         )
       this.vdfVerifier = VDFVerifier__factory.connect(
         await this.randomInflation.vdfVerifier(),
-        this.wallet
-      )
-      this.eco = ECO__factory.connect(
-        await this.policy.policyFor(ID_ECO),
         this.wallet
       )
       await this.spawnListeners()

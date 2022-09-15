@@ -1,11 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { ethers } from 'hardhat'
 import { expect } from 'chai'
-import {
-  Policy,
-  CurrencyGovernance,
-  ECO,
-} from '../../typechain-types'
+import { Policy, CurrencyGovernance, ECO } from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
@@ -46,11 +42,7 @@ describe('RandomInflation [@group=13]', () => {
       await dave.getAddress(),
     ]
 
-    ;({
-      policy,
-      eco,
-      faucet: initInflation,
-    } = await ecoFixture(trustees))
+    ;({ policy, eco, faucet: initInflation } = await ecoFixture(trustees))
 
     if (timeGovernor) {
       console.log('kill time listener')
@@ -197,8 +189,6 @@ describe('RandomInflation [@group=13]', () => {
         ).amountPendingChallenges
       ).toNumber()
     ).to.eq(0)
-
-    // await inflationGovernor.inflationRootHashProposal.connect(bob).challengeRootHashRequestAccount(await alice.getAddress(), 1)
   })
 
   it('responds to multiple challenges', async () => {

@@ -1,11 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { ethers } from 'hardhat'
 import { expect } from 'chai'
-import {
-  Policy,
-  TimedPolicies,
-  CurrencyGovernance,
-} from '../../typechain-types'
+import { Policy, CurrencyGovernance } from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
@@ -21,13 +17,8 @@ describe('RandomInflation [@group=13]', () => {
   let bob: Signer
   let charlie: Signer
   let dave: Signer
-  let eco
   let initInflation
-  let currencyTimer
-  let rootHashProposal
-  let inflation
   let policy: Policy
-  let timedPolicies: TimedPolicies
   let supervisor: Supervisor
   let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
@@ -50,15 +41,7 @@ describe('RandomInflation [@group=13]', () => {
       await dave.getAddress(),
     ]
 
-    ;({
-      policy,
-      eco,
-      faucet: initInflation,
-      timedPolicies,
-      currencyTimer,
-      rootHashProposal,
-      inflation,
-    } = await ecoFixture(trustees))
+    ;({ policy, faucet: initInflation } = await ecoFixture(trustees))
 
     await initInflation.mint(
       await accounts[0].getAddress(),
