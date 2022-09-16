@@ -43,9 +43,7 @@ export class TimeGovernor {
   }
 
   async startListeners() {
-    this.provider.on('block', async () => {
-      await this.generationUpdateListener()
-    })
+    this.provider.on('block', this.generationUpdateListener.bind(this))
     // listener for annualUpdate
   }
 
