@@ -15,10 +15,6 @@ import "../currency/ECOx.sol";
  * Eco currency.
  */
 contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
-    // The minimum time of a generation.
-    uint256 public constant MIN_GENERATION_DURATION = 14 days;
-    // The initial generation
-    uint256 private constant GENERATION_START = 1000;
     // Stores the current generation
     uint256 public override generation;
     // Stores when the next generation is allowed to start

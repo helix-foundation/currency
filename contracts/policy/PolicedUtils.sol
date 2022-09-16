@@ -25,6 +25,11 @@ abstract contract PolicedUtils is Policed, CloneFactory {
     bytes32 internal constant ID_CURRENCY_TIMER = keccak256("CurrencyTimer");
     bytes32 internal constant ID_ECOXSTAKING = keccak256("ECOxStaking");
 
+    // The minimum time of a generation.
+    uint256 public constant MIN_GENERATION_DURATION = 14 days;
+    // The initial generation
+    uint256 public constant GENERATION_START = 1000;
+
     address internal expectedInterfaceSet;
 
     constructor(Policy _policy) Policed(_policy) {}

@@ -5,6 +5,7 @@ import "../../policy/PolicedUtils.sol";
 import "../../currency/ECOx.sol";
 import "../TimedPolicies.sol";
 import "../IGeneration.sol";
+import "../../utils/TimeUtils.sol";
 
 /** @title TrustedNodes
  *
@@ -13,9 +14,8 @@ import "../IGeneration.sol";
  * proposals.
  *
  */
-contract TrustedNodes is PolicedUtils {
-    uint256 private constant GENERATION = 14 days;
-    uint256 private constant YEAR = 26 * 14 days;
+contract TrustedNodes is PolicedUtils, TimeUtils {
+    uint256 public constant GENERATIONS_PER_YEAR = 26;
 
     uint256 public yearEnd;
 
@@ -90,7 +90,6 @@ contract TrustedNodes is PolicedUtils {
         for (uint256 i = 0; i < trusteeCount; ++i) {
             address node = _initialTrustedNodes[i];
             _trust(node);
-            emit TrustedNodeAddition(node, cohort);
         }
     }
 
@@ -106,25 +105,27 @@ contract TrustedNodes is PolicedUtils {
         // vote reward is left as mutable for easier governance
         voteReward = TrustedNodes(_self).voteReward();
         hoard = TrustedNodes(_self).hoard();
-        yearStartGen = 1001;
-        yearEnd = block.timestamp + YEAR;
+        yearStartGen = GENERATION_START + 1;
+        yearEnd = getTime() + GENERATIONS_PER_YEAR * MIN_GENERATION_DURATION;
 
         uint256 _numTrustees = TrustedNodes(_self).numTrustees();
 
-        unallocatedRewardsCount = (_numTrustees * YEAR) / GENERATION;
+        unallocatedRewardsCount = _numTrustees * GENERATIONS_PER_YEAR;
         uint256 _cohort = TrustedNodes(_self).cohort();
+        address[] memory trustees = TrustedNodes(_self)
+            .getTrustedNodesFromCohort(_cohort);
 
         for (uint256 i = 0; i < _numTrustees; ++i) {
-            _trust(TrustedNodes(_self).getTrustedNodeFromCohort(_cohort, i));
+            _trust(trustees[i]);
         }
     }
 
-    function getTrustedNodeFromCohort(uint256 _cohort, uint256 _trusteeNumber)
+    function getTrustedNodesFromCohort(uint256 _cohort)
         public
         view
-        returns (address trustee)
+        returns (address[] memory)
     {
-        return cohorts[_cohort].trustedNodes[_trusteeNumber];
+        return cohorts[_cohort].trustedNodes;
     }
 
     /** Grant trust to a node.
@@ -194,7 +195,7 @@ contract TrustedNodes is PolicedUtils {
         uint256 rewardsToRedeem = (
             record > yearGenerationCount ? yearGenerationCount : record
         );
-        lastYearVotingRecord[msg.sender] -= rewardsToRedeem;
+        lastYearVotingRecord[msg.sender] = record - rewardsToRedeem;
 
         // fully vested rewards if they exist
         if (vested > 0) {
@@ -223,7 +224,8 @@ contract TrustedNodes is PolicedUtils {
      * @param _node The node to add to the trusted set.
      */
     function _trust(address _node) private {
-        Cohort storage currentCohort = cohorts[cohort];
+        uint256 _cohort = cohort;
+        Cohort storage currentCohort = cohorts[_cohort];
         require(
             currentCohort.trusteeNumbers[_node] == 0,
             "Node is already trusted"
@@ -233,7 +235,7 @@ contract TrustedNodes is PolicedUtils {
             currentCohort.trustedNodes.length +
             1;
         currentCohort.trustedNodes.push(_node);
-        emit TrustedNodeAddition(_node, cohort);
+        emit TrustedNodeAddition(_node, _cohort);
     }
 
     /** Checks if a node address is trusted in the current cohort
@@ -249,7 +251,8 @@ contract TrustedNodes is PolicedUtils {
         uint256 trustees = cohorts[cohort].trustedNodes.length;
         if (_newCohort.length > trustees) {
             emit FundingRequest(
-                ((voteReward * YEAR) / GENERATION) *
+                voteReward *
+                    GENERATIONS_PER_YEAR *
                     (_newCohort.length - trustees)
             );
         }
@@ -258,7 +261,6 @@ contract TrustedNodes is PolicedUtils {
 
         for (uint256 i = 0; i < _newCohort.length; ++i) {
             _trust(_newCohort[i]);
-            emit TrustedNodeAddition(_newCohort[i], cohort);
         }
     }
 
@@ -267,7 +269,7 @@ contract TrustedNodes is PolicedUtils {
      */
     function annualUpdate() external {
         require(
-            block.timestamp > yearEnd,
+            getTime() > yearEnd,
             "cannot call this until the current year term has ended"
         );
         address[] memory trustees = cohorts[cohort].trustedNodes;
@@ -281,8 +283,8 @@ contract TrustedNodes is PolicedUtils {
         uint256 reward = unallocatedRewardsCount * voteReward;
         unallocatedRewardsCount =
             cohorts[cohort].trustedNodes.length *
-            (YEAR / GENERATION);
-        yearEnd = block.timestamp + YEAR;
+            GENERATIONS_PER_YEAR;
+        yearEnd = getTime() + GENERATIONS_PER_YEAR * MIN_GENERATION_DURATION;
         yearStartGen = IGeneration(policyFor(ID_TIMED_POLICIES)).generation();
 
         ECOx ecoX = ECOx(policyFor(ID_ECOX));
