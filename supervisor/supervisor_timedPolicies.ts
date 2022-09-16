@@ -70,6 +70,6 @@ export class TimeGovernor {
 
   async killListener() {
     // this.provider.off("block", this.callUpdateOnBlock)
-    this.provider.removeAllListeners('block')
+    await this.provider.removeAllListeners('block')
   }
 }

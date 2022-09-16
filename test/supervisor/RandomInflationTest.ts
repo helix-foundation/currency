@@ -101,7 +101,7 @@ describe('RandomInflation [@group=13]', () => {
   it('fetches new randomInflation stuff on newInflation', async () => {
     expect(inflationGovernor.randomInflation).to.be.undefined
     await time.increase(3600 * 24 * 1)
-    await time.waitBlockTime()
+    await time.waitBlockTime(25000)
 
     expect(inflationGovernor.randomInflation).to.not.be.undefined
   })
@@ -112,7 +112,7 @@ describe('RandomInflation [@group=13]', () => {
     await time.waitBlockTime()
 
     await time.advanceBlock()
-    await time.waitBlockTime(20000)
+    await time.waitBlockTime(25000)
 
     expect(inflationGovernor.vdfSeed).to.not.be.undefined
   })
