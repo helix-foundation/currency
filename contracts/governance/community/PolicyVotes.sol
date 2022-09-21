@@ -59,21 +59,15 @@ contract PolicyVotes is VotingPower, TimeUtils {
         Failed
     }
 
-    /** Event emitted when vote outcome is known.
+    /** Event emitted when the vote outcome is known.
      */
     event VoteCompletion(Result indexed result);
 
-    /** Event emitted when vote is submitted.
+    /** Event emitted when a vote is submitted.
+     * simple votes have the address's voting power as votesYes or votesNo, depending on the vote
+     * split votes show the split and votesYes + votesNo might be less than the address's voting power
      */
-    event PolicyVote(address indexed voter, bool indexed vote, uint256 amount);
-
-    /** Event emitted when split vote is.
-     */
-    event PolicySplitVoteCast(
-        address indexed voter,
-        uint256 votesYes,
-        uint256 votesNo
-    );
+    event PolicyVote(address indexed voter, uint256 votesYes, uint256 votesNo);
 
     /** The store block number to use when checking account balances for staking.
      */
@@ -113,7 +107,9 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
         if (_oldStake != 0) {
             require(
-                _prevVote != _vote || _oldStake != _oldYesVotes,
+                _prevVote != _vote ||
+                    _oldStake != _amount ||
+                    (_vote && (_oldYesVotes != _amount)),
                 "Your vote has already been recorded"
             );
 
@@ -123,15 +119,17 @@ contract PolicyVotes is VotingPower, TimeUtils {
             }
         }
 
-        if (_vote) {
-            yesStake += _amount;
-            vpower.yesVotes = _amount;
-        }
-
         vpower.stake = _amount;
         totalStake = totalStake + _amount - _oldStake;
 
-        emit PolicyVote(msg.sender, _vote, _amount);
+        if (_vote) {
+            yesStake += _amount;
+            vpower.yesVotes = _amount;
+
+            emit PolicyVote(msg.sender, _amount, 0);
+        } else {
+            emit PolicyVote(msg.sender, 0, _amount);
+        }
     }
 
     /** Submit a mixed vote of yes/no support
@@ -183,7 +181,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
         vpower.stake = _totalVotes;
         totalStake = totalStake + _totalVotes - _oldStake;
 
-        emit PolicySplitVoteCast(msg.sender, _votesYes, _votesNo);
+        emit PolicyVote(msg.sender, _votesYes, _votesNo);
     }
 
     /** Initialize a cloned/proxied copy of this contract.
@@ -225,7 +223,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
     /** Execute the proposal if it has enough support.
      *
      * Can only be called after the voting and the delay phase,
-     * or after the point that more than 50% of the total voting power
+     * or after the point that at least 50% of the total voting power
      * has voted in favor of the proposal.
      *
      * If the proposal has been accepted, it will be enacted by
@@ -233,12 +231,11 @@ contract PolicyVotes is VotingPower, TimeUtils {
      * from the root policy.
      */
     function execute() external {
-        uint256 _requiredStake = totalStake / 2;
         uint256 _total = totalVotingPower(blockNumber);
 
         Result _res;
 
-        if (yesStake < _total / 2) {
+        if (2 * yesStake < _total) {
             require(
                 getTime() > voteEnds + ENACTION_DELAY,
                 "Majority support required for early enaction"
@@ -253,7 +250,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
         if (totalStake == 0) {
             // Nobody voted
             _res = Result.Failed;
-        } else if (yesStake < _requiredStake) {
+        } else if (2 * yesStake < totalStake) {
             // Not enough yes votes
             _res = Result.Rejected;
         } else {

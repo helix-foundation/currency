@@ -213,20 +213,11 @@ Attributes:
 Emitted when an outcome is known.
 
 ##### PolicyVote
-Attributes:
-  - `voter` (address) - the address of the voter
-  - `vote` (bool) - the vote cast, `true` to pass, `false` to fail
-  - `amount` (uint256) - the voting power of the vote
-
-Emitted when an address votes simply.
-
-##### PolicySplitVoteCast
-Attributes:
   - `voter` (address) - the address of the voter
   - `votesYes` (uint256) - the voting power contributed to yes
   - `votesNo` (uint256) - the voting power contributed to no
 
-Emitted when an address votes in a split manner.
+Emitted when an address votes. A simple vote has the total voting power in `votesYes` or `votesNo` and zero in the other attribute to show their vote and amount. A split vote instead shows the split between yes and no. Notably, the total voting power available can be more than `votesYes` + `votesNo`, see the function `voteSplit` for more details.
 
 #### configure
 Arguments:
@@ -258,7 +249,7 @@ Arguments:
   - `_voteYes` (uint256) - the amount of the users voting power to submit as a yes vote
   - `_voteNo` (uint256) - the amount of the users voting power to submit as a no vote
 
-This function allows an aggregator contract to correctly display a split of its users' voting decisions. Raw yes and no votes much be recorded so as to correctly capture the progress toward the 50% threshold for early enaction. Records the sum of the two inputs in `totalStake` and `voteYes` in `yesStake`. Emits a `PolicySplitVoteCast` event.
+This function allows an aggregator contract to correctly display a split of its users' voting decisions. Raw yes and no votes much be recorded so as to correctly capture the progress toward the 50% threshold for early enaction. Records the sum of the two inputs in `totalStake` and `voteYes` in `yesStake`. Emits a `PolicyVote` event.
 
 ##### Security Notes
   - Cannot be called if the voting period is over
