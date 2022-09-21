@@ -23,9 +23,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * phase and starts a vote.
  */
 contract PolicyProposals is VotingPower, TimeUtils {
-    /** A proposal submitted to the process.
+    /** The data tracked for a proposal in the process.
      */
-    struct Prop {
+    struct PropData {
+        // the returnable data
+        PropMetadata metadata;
+        // A record of which addresses have already staked in support of the proposal
+        mapping(address => bool) staked;
+    }
+
+    /** The submitted data for a proposal submitted to the process.
+     */
+    struct PropMetadata {
         /* The address of the proposing account.
          */
         address proposer;
@@ -35,25 +44,20 @@ contract PolicyProposals is VotingPower, TimeUtils {
         /* The amount of tokens staked in support of this proposal.
          */
         uint256 totalStake;
+        /* Flag to mark if a pause caused the fee to be waived.
+         */
+        bool feeWaived;
     }
-
-    /* A record of which addresses have already staked in support of each proposal
-     */
-    mapping(Proposal => mapping(address => bool)) public staked;
 
     /** The set of proposals under consideration.
      * maps from addresses of proposals to structs containing with info and
-     * the staking data (struct defined above)
+     * the staking data (structs defined above)
      */
-    mapping(Proposal => Prop) public proposals;
+    mapping(Proposal => PropData) public proposals;
 
     /** The total number of proposals made.
      */
     uint256 public totalProposals;
-
-    /** A list of the addresses of all proposals made.
-     */
-    Proposal[] public allProposals;
 
     /** The duration of the proposal portion of the proposal phase.
      */
@@ -83,6 +87,12 @@ contract PolicyProposals is VotingPower, TimeUtils {
      */
     uint256 public constant SUPPORT_THRESHOLD_DIVISOR = 100;
 
+    /** The total voting value against which to compare for the threshold
+     * This is a fixed digit number with 2 decimal digits
+     * see SUPPORT_THRESHOLD_DIVISOR variable
+     */
+    uint256 public totalVotingThreshold;
+
     /** The time at which the proposal portion of the proposals phase ends.
      */
     uint256 public proposalEnds;
@@ -99,18 +109,21 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** An event indicating a proposal has been proposed
      *
+     * @param proposer The address that submitted the Proposal
      * @param proposalAddress The address of the Proposal contract instance that was added
      */
     event Register(address indexed proposer, Proposal indexed proposalAddress);
 
     /** An event indicating that proposal have been supported by stake.
      *
+     * @param supporter The address submitting their support for the proposal
      * @param proposalAddress The address of the Proposal contract instance that was supported
      */
     event Support(address indexed supporter, Proposal indexed proposalAddress);
 
     /** An event indicating that support has been removed from a proposal.
      *
+     * @param unsupporter The address removing their support for the proposal
      * @param proposalAddress The address of the Proposal contract instance that was unsupported
      */
     event Unsupport(
@@ -120,7 +133,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** An event indicating a proposal has reached its support threshold
      *
-     * @param proposalAddress The address of the Proposal contract instance.
+     * @param proposalAddress The address of the Proposal contract instance that reached the threshold.
      */
     event SupportThresholdReached(Proposal indexed proposalAddress);
 
@@ -133,6 +146,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
     /** An event indicating that proposal fee was partially refunded.
      *
      * @param proposer The address of the proposee which was refunded
+     * @param proposalAddress The address of the Proposal instance that was refunded
      */
     event ProposalRefund(
         address indexed proposer,
@@ -176,78 +190,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
         blockNumber = block.number;
     }
 
-    /**
-     * Returns a paginated response from the proposal addresses array. Trying to return out of bounds
-     * page results will return an empty array
-     *
-     * Parameters:
-     *  - _page Start page, must be greater than 0
-     *  - _resultsPerPage  Number of results per page
-     */
-    function getPaginatedProposalAddresses(
-        uint256 _page,
-        uint256 _resultsPerPage
-    ) external view returns (Proposal[] memory) {
-        (
-            uint256 _startIndex,
-            uint256 _loopEnd,
-            uint256 _returnLength
-        ) = _getPaginationBounds(_page, _resultsPerPage);
-        //avoid overflows by returning empty if out of bounds on index
-        if (totalProposals == 0 || _startIndex > totalProposals - 1) {
-            return new Proposal[](0);
-        }
-
-        //paginated proposal array
-        Proposal[] memory pageProposals = new Proposal[](_returnLength);
-
-        //index of position in array we are writing to
-        uint256 _pageIndex = 0;
-        for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
-            //prevent accessing overflow in base array
-            pageProposals[_pageIndex] = allProposals[_startIndex];
-            _pageIndex++;
-        }
-
-        return pageProposals;
-    }
-
-    /**
-     * Returns a paginated response of proposal data. Trying to return out of bounds
-     * page results will return an empty array
-     *
-     * Parameters:
-     *  - _page Start page, must be greater than 0
-     *  - _resultsPerPage  Number of results per page
-     */
-    function getPaginatedProposalData(uint256 _page, uint256 _resultsPerPage)
-        external
-        view
-        returns (Prop[] memory)
-    {
-        (
-            uint256 _startIndex,
-            uint256 _loopEnd,
-            uint256 _returnLength
-        ) = _getPaginationBounds(_page, _resultsPerPage);
-        //avoid overflows by returning empty if out of bounds on index
-        if (totalProposals == 0 || _startIndex > totalProposals - 1) {
-            return new Prop[](0);
-        }
-
-        //paginated props array
-        Prop[] memory propsData = new Prop[](_returnLength);
-
-        //index of position in array we are writing to
-        uint256 _pageIndex = 0;
-        for (_startIndex; _startIndex < _loopEnd; _startIndex++) {
-            propsData[_pageIndex] = proposals[allProposals[_startIndex]];
-            _pageIndex++;
-        }
-
-        return propsData;
-    }
-
     /** Submit a proposal.
      *
      * You must approve the policy proposals contract to withdraw the required
@@ -258,7 +200,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
      *
      * @param _prop The address of the proposal to submit.
      */
-    function registerProposal(Proposal _prop) external returns (uint256) {
+    function registerProposal(Proposal _prop) external {
         require(
             address(_prop) != address(0),
             "The proposal address can't be 0"
@@ -269,32 +211,36 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "Proposals may no longer be registered because the registration period has ended"
         );
 
-        Prop storage _p = proposals[_prop];
+        PropMetadata storage _p = proposals[_prop].metadata;
 
         require(
             address(_p.proposal) == address(0),
             "A proposal may only be registered once"
         );
 
+        _p.proposal = _prop;
+        _p.proposer = msg.sender;
+
+        totalProposals++;
+
         // if eco token is paused we can't take proposal fee
-        // note that currently refunds can be claimed for failed proposals even if fees were not taken
         if (!ecoToken.paused()) {
             require(
                 ecoToken.transferFrom(msg.sender, address(this), COST_REGISTER),
                 "The token cost of registration must be approved to transfer prior to calling registerProposal"
             );
+        } else {
+            _p.feeWaived = true;
         }
-
-        _p.proposal = _prop;
-        _p.proposer = msg.sender;
-
-        allProposals.push(_prop);
-        totalProposals += 1;
 
         emit Register(msg.sender, _prop);
 
-        // returns the index of the proposal in the allProposals array
-        return totalProposals - 1;
+        // check if totalVotingThreshold still needs to be precomputed
+        if (totalVotingThreshold == 0) {
+            totalVotingThreshold =
+                totalVotingPower(blockNumber) *
+                SUPPORT_THRESHOLD;
+        }
     }
 
     /** Stake in support of an existing proposal.
@@ -316,6 +262,18 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "Proposals may no longer be supported because the registration period has ended"
         );
 
+        PropData storage _p = proposals[_prop];
+        PropMetadata storage _pMeta = _p.metadata;
+
+        require(
+            address(_pMeta.proposal) != address(0),
+            "The supported proposal is not registered"
+        );
+        require(
+            !_p.staked[msg.sender],
+            "You may not stake in support of a proposal twice"
+        );
+
         uint256 _amount = votingPower(msg.sender, blockNumber);
 
         require(
@@ -323,28 +281,14 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "In order to support a proposal you must stake a non-zero amount of tokens"
         );
 
-        Prop storage _p = proposals[_prop];
+        uint256 _totalStake = _pMeta.totalStake + _amount;
 
-        require(
-            address(_p.proposal) != address(0),
-            "The supported proposal is not registered"
-        );
-        require(
-            !staked[_p.proposal][msg.sender],
-            "You may not stake in support of a proposal twice"
-        );
-
-        _p.totalStake = _p.totalStake + _amount;
-        staked[_p.proposal][msg.sender] = true;
+        _pMeta.totalStake = _totalStake;
+        _p.staked[msg.sender] = true;
 
         emit Support(msg.sender, _prop);
 
-        uint256 _total = totalVotingPower(blockNumber);
-
-        if (
-            _p.totalStake >
-            (_total * SUPPORT_THRESHOLD) / SUPPORT_THRESHOLD_DIVISOR
-        ) {
+        if (_totalStake * SUPPORT_THRESHOLD_DIVISOR > totalVotingThreshold) {
             emit SupportThresholdReached(_prop);
             proposalSelected = true;
             proposalToConfigure = _prop;
@@ -362,59 +306,34 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "Proposals may no longer be supported because the registration period has ended"
         );
 
-        Prop storage _p = proposals[_prop];
+        PropData storage _p = proposals[_prop];
 
-        require(
-            staked[_p.proposal][msg.sender],
-            "You have not staked this proposal"
-        );
+        require(_p.staked[msg.sender], "You have not staked this proposal");
 
         uint256 _amount = votingPower(msg.sender, blockNumber);
-        _p.totalStake = _p.totalStake - _amount;
-        staked[_p.proposal][msg.sender] = false;
+        _p.metadata.totalStake -= _amount;
+        _p.staked[msg.sender] = false;
 
         emit Unsupport(msg.sender, _prop);
     }
 
-    /** Remove a proposal from proposals mapping and allProposals array
-     * @param _prop The proposal to delete.
-     */
-    function deleteProposal(Proposal _prop) internal {
-        require(totalProposals > 0, "no proposals to delete");
-
-        uint256 proposalIndex = totalProposals;
-        for (uint256 i = 0; i < totalProposals; i++) {
-            if (address(allProposals[i]) == address(_prop)) {
-                proposalIndex = i;
-                break;
-            }
-        }
-        require(proposalIndex < totalProposals, "proposal does not exist");
-
-        if (proposalIndex < totalProposals - 1) {
-            Proposal lastProposal = allProposals[totalProposals - 1];
-            allProposals[proposalIndex] = lastProposal;
-        }
-
-        // delete last proposal
-        allProposals.pop();
-        delete proposals[_prop];
-        totalProposals = totalProposals - 1;
-    }
-
     function deployProposalVoting() external {
         require(proposalSelected, "no proposal has been selected");
+        Proposal _proposalToConfigure = proposalToConfigure;
         require(
-            address(proposalToConfigure) != address(0),
+            address(_proposalToConfigure) != address(0),
             "voting has already been deployed"
         );
-        Prop storage votingProp = proposals[proposalToConfigure];
+        address _proposer = proposals[_proposalToConfigure].metadata.proposer;
+
         delete proposalToConfigure;
+        delete proposals[_proposalToConfigure];
+        totalProposals--;
 
         PolicyVotes pv = PolicyVotes(policyVotesImpl.clone());
         pv.configure(
-            votingProp.proposal,
-            votingProp.proposer,
+            _proposalToConfigure,
+            _proposer,
             blockNumber,
             totalECOxVotingPower,
             excludedVotingPower
@@ -422,15 +341,13 @@ contract PolicyProposals is VotingPower, TimeUtils {
         policy.setPolicy(ID_POLICY_VOTES, address(pv), ID_POLICY_PROPOSALS);
 
         emit VoteStart(pv);
-
-        deleteProposal(votingProp.proposal);
     }
 
     /** Refund the fee for a proposal that was not selected.
      *
      * Returns a partial refund only, does not work on proposals that are
-     * on the ballot for the voting phase, and can only be called after the
-     * period is over.
+     * on the ballot for the voting phase, and can only be called after voting
+     * been deployed or when the period is over and no vote was selected.
      *
      * @param _prop The proposal to issue a refund for.
      */
@@ -438,7 +355,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         require(
             (proposalSelected && address(proposalToConfigure) == address(0)) ||
                 getTime() > proposalEnds,
-            "Refunds may not be distributed until the period is over"
+            "Refunds may not be distributed until the period is over or voting has started"
         );
 
         require(
@@ -446,19 +363,27 @@ contract PolicyProposals is VotingPower, TimeUtils {
             "The proposal address can't be 0"
         );
 
-        Prop storage _p = proposals[_prop];
+        PropMetadata storage _p = proposals[_prop].metadata;
+
         require(
             _p.proposal == _prop,
             "The provided proposal address is not valid"
         );
 
         address receiver = _p.proposer;
+        bool _feePaid = !_p.feeWaived;
 
-        deleteProposal(_prop);
+        delete proposals[_prop];
+        totalProposals--;
 
-        require(ecoToken.transfer(receiver, REFUND_IF_LOST), "Transfer Failed");
-
-        emit ProposalRefund(receiver, _prop);
+        // if fee was waived, still delete the proposal, but do not refund
+        if (_feePaid) {
+            require(
+                ecoToken.transfer(receiver, REFUND_IF_LOST),
+                "Transfer Failed"
+            );
+            emit ProposalRefund(receiver, _prop);
+        }
     }
 
     /** Reclaim tokens after end time
@@ -483,37 +408,6 @@ contract PolicyProposals is VotingPower, TimeUtils {
         );
     }
 
-    /** Calculates bounds for the propossals array pagination
-     */
-    function _getPaginationBounds(uint256 _page, uint256 _resultsPerPage)
-        internal
-        view
-        returns (
-            uint256 _startIndex,
-            uint256 _loopEnd,
-            uint256 _returnLength
-        )
-    {
-        require(_page > 0, "Page must be non-zero");
-
-        _startIndex = (_page - 1) * _resultsPerPage;
-
-        //avoid overflows by returning empty if out of bounds on index
-        uint256 _totalProposals = totalProposals;
-        if (_totalProposals == 0 || _startIndex > _totalProposals - 1) {
-            return (_startIndex, _loopEnd, _returnLength);
-        }
-
-        uint256 _endIndex = _startIndex + _resultsPerPage;
-
-        //Check bounds at the end of the array to avoid creating a paginated array that has empty values padded on the end
-        _returnLength = _endIndex < _totalProposals
-            ? _resultsPerPage
-            : totalProposals - _startIndex;
-
-        _loopEnd = _startIndex + _returnLength;
-    }
-
     // configure the total voting power for the vote thresholds
     function configure(
         uint256 _totalECOxVotingPower,
@@ -522,6 +416,10 @@ contract PolicyProposals is VotingPower, TimeUtils {
         require(
             totalECOxVotingPower == 0,
             "This instance has already been configured"
+        );
+        require(
+            _totalECOxVotingPower != 0,
+            "Invalid value for ECOx voting power"
         );
 
         totalECOxVotingPower = _totalECOxVotingPower;
