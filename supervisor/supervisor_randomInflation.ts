@@ -4,6 +4,7 @@ import fetch from 'cross-fetch'
 import {
   Policy,
   TimedPolicies,
+  TimedPolicies__factory,
   CurrencyTimer,
   CurrencyTimer__factory,
   RandomInflation,
@@ -17,12 +18,17 @@ import {
 } from '../typechain-types'
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
+import time from '../test/utils/time'
 
 const { getPrimal, getTree, answer } = require('../tools/randomInflationUtils')
 
 const { prove, bnHex } = require('../tools/vdf')
 
 const SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
+const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['TimedPolicies']
+)
 const ID_CURRENCY_TIMER = ethers.utils.solidityKeccak256(
   ['string'],
   ['CurrencyTimer']
@@ -54,7 +60,7 @@ export class InflationGovernor {
   provider: ethers.providers.BaseProvider
   wallet: ethers.Signer
   policy: Policy
-  timedPolicy: TimedPolicies
+  timedPolicy!: TimedPolicies
   currencyTimer!: CurrencyTimer
   eco!: ECO
   randomInflation!: RandomInflation
@@ -70,17 +76,19 @@ export class InflationGovernor {
     provider: ethers.providers.BaseProvider,
     supervisorWallet: ethers.Signer,
     rootPolicy: Policy,
-    timedPolicy: TimedPolicies,
     production: boolean
   ) {
     this.provider = provider
     this.wallet = supervisorWallet
     this.policy = rootPolicy
-    this.timedPolicy = timedPolicy
     this.production = production
   }
 
   async setup() {
+    this.timedPolicy = TimedPolicies__factory.connect(
+      await this.policy.policyFor(ID_TIMED_POLICIES),
+      this.wallet
+    )
     this.currencyTimer = CurrencyTimer__factory.connect(
       await this.policy.policyFor(ID_CURRENCY_TIMER),
       this.wallet
@@ -89,10 +97,9 @@ export class InflationGovernor {
       await this.policy.policyFor(ID_ECO),
       this.wallet
     )
-    await this.inflationListener()
   }
 
-  async inflationListener() {
+  async startListeners() {
     // make this better after you figure out how to do listeners
     console.log('listening for new RI')
     this.currencyTimer.on('NewInflation', async (inflationAddr, _) => {
@@ -143,7 +150,7 @@ export class InflationGovernor {
       )
     this.inflationRootHashProposal.on(
       filter,
-      async (proposer, challenger, index) => {
+      async (_, challenger, index) => {
         await this.respondToChallenge(challenger, index.toNumber())
       }
     )
@@ -157,6 +164,13 @@ export class InflationGovernor {
 
   async commitVdfSeed() {
     console.log('trying to commit vdf seed')
+
+    // let primalNumber: number = 0
+    // const block: ethers.ethers.providers.Block = await this.provider.getBlock('latest')
+    // console.log(block.number)
+    // primalNumber = await getPrimal(block)
+
+
     let primalNumber: number = 0
     primalNumber = await getPrimal(
       (
@@ -179,13 +193,12 @@ export class InflationGovernor {
           // shouldnt happen
           console.log('failed to commit seed')
         }
-      } else {
-        // failed setPrimal
       }
     } catch (e) {
       // error logging
       // this gets hit a lot due to setPrimal being kind of finnicky
       console.log('failed setPrimal, trying again')
+      console.log(await this.provider.getBlockNumber('latest'))
       setTimeout(this.commitVdfSeed.bind(this), 1000)
     }
   }
