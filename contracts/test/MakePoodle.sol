@@ -18,8 +18,7 @@ contract MakePoodle is Policy, Proposal {
     address public immutable switcherCurrencyTimer;
 
     // The ID hash for CurrencyTimer
-    bytes32 public constant currencyTimerId =
-        keccak256(abi.encodePacked("CurrencyTimer"));
+    bytes32 public constant currencyTimerId = keccak256("CurrencyTimer");
 
     /** Instantiate a new proposal.
      *

@@ -19,8 +19,7 @@ contract MakeTrustedPoodles is Policy, Proposal {
     address public immutable implementationUpdatingTarget;
 
     // The ID hash for the TrustedNodes contract
-    bytes32 public constant trustedNodesId =
-        keccak256(abi.encodePacked("TrustedNodes"));
+    bytes32 public constant trustedNodesId = keccak256("TrustedNodes");
 
     /** Instantiate a new proposal.
      *

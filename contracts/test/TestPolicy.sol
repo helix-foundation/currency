@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
  */
 contract TestPolicy is Policy, IERC1820Implementer {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
-        keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
+        keccak256("ERC1820_ACCEPT_MAGIC");
 
     /** This policy is used for testing only, so it offers to implement any
      * interface for any address. Arguments are ignored.
