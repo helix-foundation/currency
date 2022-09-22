@@ -126,7 +126,7 @@ describe('ecoXStaking [@group=12]', () => {
 
       it('alice successfully added voting support to the proposal', async () => {
         const testProposalObj = await proposals.proposals(testProposal.address)
-        expect(testProposalObj.totalStake).to.equal('5010000000000000000000')
+        expect(testProposalObj.totalStake).to.equal('5100000000000000000000')
       })
 
       it('alice can still deposit', async () => {
@@ -137,7 +137,7 @@ describe('ecoXStaking [@group=12]', () => {
       it('alice cannot deposit more than approved', async () => {
         await ecox.connect(alice).approve(ecoXStaking.address, one.mul(10))
         await expect(
-          ecoXStaking.connect(alice).deposit(one.mul(1000))
+          ecoXStaking.connect(alice).deposit(one.mul(100))
         ).to.be.revertedWith('ERC20: transfer amount exceeds allowance')
       })
     })
@@ -155,7 +155,7 @@ describe('ecoXStaking [@group=12]', () => {
 
       it('charlie can vote', async () => {
         await votes.connect(charlie).vote(true)
-        expect(await votes.yesStake()).to.equal('10100000000000000000000')
+        expect(await votes.yesStake()).to.equal('11000000000000000000000')
       })
 
       it('alice can withdraw then vote', async () => {

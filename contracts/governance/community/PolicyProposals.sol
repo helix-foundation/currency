@@ -335,7 +335,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
             _proposalToConfigure,
             _proposer,
             blockNumber,
-            totalECOxVotingPower,
+            totalECOxSnapshot,
             excludedVotingPower
         );
         policy.setPolicy(ID_POLICY_VOTES, address(pv), ID_POLICY_PROPOSALS);
@@ -409,20 +409,16 @@ contract PolicyProposals is VotingPower, TimeUtils {
     }
 
     // configure the total voting power for the vote thresholds
-    function configure(
-        uint256 _totalECOxVotingPower,
-        uint256 _excludedVotingPower
-    ) external {
+    function configure(uint256 _totalECOxSnapshot, uint256 _excludedVotingPower)
+        external
+    {
         require(
-            totalECOxVotingPower == 0,
+            totalECOxSnapshot == 0,
             "This instance has already been configured"
         );
-        require(
-            _totalECOxVotingPower != 0,
-            "Invalid value for ECOx voting power"
-        );
+        require(_totalECOxSnapshot != 0, "Invalid value for ECOx voting power");
 
-        totalECOxVotingPower = _totalECOxVotingPower;
+        totalECOxSnapshot = _totalECOxSnapshot;
         excludedVotingPower = _excludedVotingPower;
     }
 }

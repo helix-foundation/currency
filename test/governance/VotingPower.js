@@ -20,7 +20,9 @@ describe('VotingPower [@group=2]', () => {
   let charlie
 
   const aliceBalance = 250
-  const aliceXBalance = 400
+  const aliceXBalance = 40
+
+  const ECOxMultiplier = 10
 
   async function getProposals() {
     const proposalsHash = ethers.utils.solidityKeccak256(
@@ -80,7 +82,7 @@ describe('VotingPower [@group=2]', () => {
         const ecoTotal = await eco.totalSupply()
         const ecoXTotal = await ecox.totalSupply()
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(
-          ecoTotal.add(ecoXTotal)
+          ecoTotal.add(ecoXTotal.mul(ECOxMultiplier))
         )
       })
 
@@ -94,7 +96,7 @@ describe('VotingPower [@group=2]', () => {
 
     describe('only ECO power, bolstered by exchanged ECOx', () => {
       beforeEach(async () => {
-        await ecox.connect(alice).exchange(one.mul(400))
+        await ecox.connect(alice).exchange(one.mul(aliceXBalance))
         await time.increase(3600 * 24 * 14 + 1)
         await timedPolicies.incrementGeneration()
         blockNumber = await time.latestBlock()
@@ -106,7 +108,7 @@ describe('VotingPower [@group=2]', () => {
         const ecoTotal = await eco.totalSupply()
         const ecoXTotal = await ecox.totalSupply()
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(
-          ecoTotal.add(ecoXTotal)
+          ecoTotal.add(ecoXTotal.mul(ECOxMultiplier))
         )
       })
 
@@ -271,14 +273,20 @@ describe('VotingPower [@group=2]', () => {
     describe('Voting power with ECO and ECOx', async () => {
       beforeEach(async () => {
         // approve deposits
-        await ecox.connect(alice).approve(ecoXStaking.address, one.mul(400))
-        await ecox.connect(bob).approve(ecoXStaking.address, one.mul(400))
-        await ecox.connect(charlie).approve(ecoXStaking.address, one.mul(200))
+        await ecox
+          .connect(alice)
+          .approve(ecoXStaking.address, one.mul(aliceXBalance))
+        await ecox
+          .connect(bob)
+          .approve(ecoXStaking.address, one.mul(aliceXBalance))
+        await ecox
+          .connect(charlie)
+          .approve(ecoXStaking.address, one.mul(aliceXBalance / 2))
 
         // stake funds
-        await ecoXStaking.connect(alice).deposit(one.mul(400))
-        await ecoXStaking.connect(bob).deposit(one.mul(400))
-        await ecoXStaking.connect(charlie).deposit(one.mul(200))
+        await ecoXStaking.connect(alice).deposit(one.mul(aliceXBalance))
+        await ecoXStaking.connect(bob).deposit(one.mul(aliceXBalance))
+        await ecoXStaking.connect(charlie).deposit(one.mul(aliceXBalance / 2))
 
         // one total generation in stake before voting
         await time.increase(3600 * 24 * 14 + 1)
@@ -291,14 +299,14 @@ describe('VotingPower [@group=2]', () => {
       })
 
       it('Has the correct total power', async () => {
-        // 10k ECO total + 10k ECOx total
+        // 1k ECO total + 100 ECOx total * 10x multiplier
         expect(await proposals.totalVotingPower(blockNumber)).to.equal(
           one.mul(2000)
         )
       })
 
       it('Has the right power for alice', async () => {
-        // 2.5k ECO + 4k ECOx
+        // 250 ECO + 40 ECOx * 10x multiplier
         expect(
           await proposals.votingPower(await alice.getAddress(), blockNumber)
         ).to.equal(one.mul(650))

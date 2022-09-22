@@ -182,14 +182,14 @@ Partially refunds (80%) the fee for the registration of a proposal that did not 
 
 #### configure
 Arguments:
-  - `_totalECOxVotingPower` (uint256) - the snapshot of total ECOx supply
+  - `_totalECOxSnapshot` (uint256) - the snapshot of total ECOx supply
   - `_excludedVotingPower` (uint256) - the amount of voting power to exclude from the ECO supply
 
-Configures the voting aspect of the contract for `totalVotingPower` to measure the 30% threshold. `_totalECOxVotingPower` and `_excludedVotingPower` are saved and used in the inherited `VotingPower` functionality. `_excludedVotingPower` is the amount of ECO minted on the generation increase.
+Configures the voting aspect of the contract for `totalVotingPower` to measure the 30% threshold. `_totalECOxSnapshot` and `_excludedVotingPower` are saved and used in the inherited `VotingPower` functionality. `_excludedVotingPower` is the amount of ECO minted on the generation increase.
 
 ##### Security Notes
   - Is called atomically with instantiation by `CurrencyTimer`.
-  - Can only be called once, checks that the `_totalECOxVotingPower` hasn't been set.
+  - Can only be called once, checks that the `_totalECOxSnapshot` hasn't been set.
 
 #### destruct
 Arguments: none
@@ -224,7 +224,7 @@ Arguments:
   - `_proposal` (address) - the address of the proposal to vote on
   - `_proposer` (address) - the person who proposed the proposal being voted on
   - `_cutoffBlockNumber` (uint256) - the block number to measure user voting power at
-  - `_totalECOxVotingPower` (uint256) - the snapshot of total ECOx supply
+  - `_totalECOxSnapshot` (uint256) - the snapshot of total ECOx supply
   - `_excludedVotingPower` (uint256) - the amount of voting power to exclude from the ECO supply
 
 Configures a policy vote, setting the policy to be voted on, the times that the voting ends, the block to use for voting power calculation, and the parameters to calculate `totalVotingPower` to use for the 50% threshold (see [here](./README.md#configure)). The `proposer` is stored as the data is deleted in the `PolicyProposals` contract as we move to this stage, so it is preserved for the UI.

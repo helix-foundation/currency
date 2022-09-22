@@ -240,7 +240,7 @@ describe('RandomInflation [@group=6]', () => {
         await policyProposals.totalVotingPower(
           await policyProposals.blockNumber()
         )
-      ).to.equal(preInflationEcoSupply.add(ecoXsupply))
+      ).to.equal(preInflationEcoSupply.add(ecoXsupply.mul(10))) // 10x voting power mult
     })
   })
 

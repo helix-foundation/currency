@@ -206,14 +206,14 @@ contract PolicyVotes is VotingPower, TimeUtils {
         Proposal _proposal,
         address _proposer,
         uint256 _cutoffBlockNumber,
-        uint256 _totalECOxVotingPower,
+        uint256 _totalECOxSnapshot,
         uint256 _excludedVotingPower
     ) external {
         require(voteEnds == 0, "This instance has already been configured");
 
         voteEnds = getTime() + VOTE_TIME;
         blockNumber = _cutoffBlockNumber;
-        totalECOxVotingPower = _totalECOxVotingPower;
+        totalECOxSnapshot = _totalECOxSnapshot;
         excludedVotingPower = _excludedVotingPower;
 
         proposal = _proposal;
