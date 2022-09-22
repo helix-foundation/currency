@@ -29,7 +29,7 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
     // the ECOx contract address
     IERC20 public immutable ecoXToken;
 
-    constructor(Policy _policy, address _ecoXAddr)
+    constructor(Policy _policy, IERC20 _ecoXAddr)
         // Note that the policy has the ability to pause transfers
         // through ERC20Pausable, although transfers are paused by default
         VoteCheckpoints("S-Eco-X", "sECOx", address(_policy))
@@ -39,7 +39,7 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
             address(_ecoXAddr) != address(0),
             "Critical: do not set the _ecoXAddr as the zero address"
         );
-        ecoXToken = IERC20(_ecoXAddr);
+        ecoXToken = _ecoXAddr;
     }
 
     function deposit(uint256 _amount) external {
