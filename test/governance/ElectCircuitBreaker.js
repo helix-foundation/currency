@@ -11,6 +11,10 @@
 const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
@@ -152,12 +156,6 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
   })
 
   describe('currency governance immediately pauseable', async () => {
-    const hash = (x) =>
-      ethers.utils.solidityKeccak256(
-        ['bytes32', 'address', 'address[]'],
-        [x[0], x[1], x[2]]
-      )
-
     it('is not paused', async () => {
       expect(await borda.pauser()).to.equal(await bob.getAddress())
       expect(await borda.paused()).to.be.false
@@ -212,15 +210,21 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
       await borda.updateStage()
 
       // commit
-      await borda.connect(bob).commit(hash(bobvote))
-      await borda.connect(charlie).commit(hash(charlievote))
-      await borda.connect(dave).commit(hash(davevote))
+      await borda.connect(bob).commit(getCommit(...bobvote))
+      await borda.connect(charlie).commit(getCommit(...charlievote))
+      await borda.connect(dave).commit(getCommit(...davevote))
 
       await time.increase(3600 * 24 * 3)
       // reveal
-      await borda.connect(bob).reveal(bobvote[0], bobvote[2])
-      await borda.connect(charlie).reveal(charlievote[0], charlievote[2])
-      await borda.connect(dave).reveal(davevote[0], davevote[2])
+      await borda
+        .connect(bob)
+        .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+      await borda
+        .connect(charlie)
+        .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
+      await borda
+        .connect(dave)
+        .reveal(davevote[0], getFormattedBallot(davevote[2]))
       expect(await borda.leader()).to.equal(await bob.getAddress())
       await time.increase(3600 * 24 * 1)
       await borda.updateStage()
@@ -235,12 +239,6 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
   })
 
   describe('currency governance pauseable in subsequent generations', async () => {
-    const hash = (x) =>
-      ethers.utils.solidityKeccak256(
-        ['bytes32', 'address', 'address[]'],
-        [x[0], x[1], x[2]]
-      )
-
     before(async () => {
       await timedPolicies.incrementGeneration()
       borda = await ethers.getContractAt(
@@ -301,15 +299,21 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
       await borda.updateStage()
 
       // commit
-      await borda.connect(bob).commit(hash(bobvote))
-      await borda.connect(charlie).commit(hash(charlievote))
-      await borda.connect(dave).commit(hash(davevote))
+      await borda.connect(bob).commit(getCommit(...bobvote))
+      await borda.connect(charlie).commit(getCommit(...charlievote))
+      await borda.connect(dave).commit(getCommit(...davevote))
 
       await time.increase(3600 * 24 * 3)
       // reveal
-      await borda.connect(bob).reveal(bobvote[0], bobvote[2])
-      await borda.connect(charlie).reveal(charlievote[0], charlievote[2])
-      await borda.connect(dave).reveal(davevote[0], davevote[2])
+      await borda
+        .connect(bob)
+        .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+      await borda
+        .connect(charlie)
+        .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
+      await borda
+        .connect(dave)
+        .reveal(davevote[0], getFormattedBallot(davevote[2]))
       expect(await borda.leader()).to.equal(await bob.getAddress())
     })
 

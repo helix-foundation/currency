@@ -1,6 +1,10 @@
 /* eslint-disable no-console, no-underscore-dangle */
 const { expect } = require('chai')
 const { signTypedData } = require('@metamask/eth-sig-util')
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const time = require('../utils/time.ts')
@@ -53,13 +57,9 @@ describe('ECO [@group=1]', () => {
       await bob.getAddress(),
       [await bob.getAddress()],
     ]
-    const bobvotehash = ethers.utils.solidityKeccak256(
-      ['bytes32', 'address', 'address[]'],
-      [bobvote[0], bobvote[1], bobvote[2]]
-    )
-    await borda.connect(bob).commit(bobvotehash)
+    await borda.connect(bob).commit(getCommit(...bobvote))
     await time.increase(3600 * 24 * 3)
-    await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+    await borda.connect(bob).reveal(bobvote[0], getFormattedBallot(bobvote[2]))
     await time.increase(3600 * 24 * 1)
     await borda.updateStage()
     await borda.compute()

@@ -5,6 +5,10 @@ const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { BigNumber } = ethers
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 
 describe('CurrencyTimer [@group=4]', () => {
   let alice
@@ -56,12 +60,6 @@ describe('CurrencyTimer [@group=4]', () => {
   })
 
   describe('With a valid vote', () => {
-    const hash = (x) =>
-      ethers.utils.solidityKeccak256(
-        ['bytes32', 'address', 'address[]'],
-        [x[0], x[1], x[2]]
-      )
-
     const proposedInflationMult = BigNumber.from('1100000000000000000')
     const aliceBal = BigNumber.from(1000000000)
 
@@ -78,16 +76,20 @@ describe('CurrencyTimer [@group=4]', () => {
         await alice.getAddress(),
         [await bob.getAddress()],
       ]
-      await borda.connect(alice).commit(hash(alicevote))
+      await borda.connect(alice).commit(getCommit(...alicevote))
       const bobvote = [
         ethers.utils.randomBytes(32),
         await bob.getAddress(),
         [await bob.getAddress()],
       ]
-      await borda.connect(bob).commit(hash(bobvote))
+      await borda.connect(bob).commit(getCommit(...bobvote))
       await time.increase(3600 * 24 * 3)
-      await borda.connect(alice).reveal(alicevote[0], alicevote[2])
-      await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+      await borda
+        .connect(alice)
+        .reveal(alicevote[0], getFormattedBallot(alicevote[2]))
+      await borda
+        .connect(bob)
+        .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
       await time.increase(3600 * 24 * 1)
     })
 

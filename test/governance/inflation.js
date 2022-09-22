@@ -6,6 +6,10 @@ const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { prove, bnHex } = require('../../tools/vdf')
 const { getTree, answer } = require('../../tools/randomInflationUtils')
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 const { BigNumber } = ethers
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 
@@ -47,12 +51,6 @@ describe('RandomInflation [@group=6]', () => {
   const amountOfAccounts = 3
   let map
   let timedPolicies
-
-  const hash = (x) =>
-    ethers.utils.solidityKeccak256(
-      ['bytes32', 'address', 'address[]'],
-      [x[0], x[1], x[2]]
-    )
 
   async function configureInflationRootHash() {
     addressRootHashProposal = await inflation.inflationRootHashProposal()
@@ -192,23 +190,29 @@ describe('RandomInflation [@group=6]', () => {
       await bob.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(bob).commit(hash(bobvote))
+    await governance.connect(bob).commit(getCommit(...bobvote))
     const charlievote = [
       ethers.utils.randomBytes(32),
       await charlie.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(charlie).commit(hash(charlievote))
+    await governance.connect(charlie).commit(getCommit(...charlievote))
     const davevote = [
       ethers.utils.randomBytes(32),
       await dave.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(dave).commit(hash(davevote))
+    await governance.connect(dave).commit(getCommit(...davevote))
     await time.increase(3600 * 24 * 3)
-    await governance.connect(bob).reveal(bobvote[0], bobvote[2])
-    await governance.connect(charlie).reveal(charlievote[0], charlievote[2])
-    await governance.connect(dave).reveal(davevote[0], davevote[2])
+    await governance
+      .connect(bob)
+      .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+    await governance
+      .connect(charlie)
+      .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
+    await governance
+      .connect(dave)
+      .reveal(davevote[0], getFormattedBallot(davevote[2]))
     await time.increase(3600 * 24 * 1)
     await governance.updateStage()
     await governance.compute()
