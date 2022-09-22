@@ -9,9 +9,14 @@ const { BigNumber } = ethers
  * Takes an array of sorted items and recursively builds an merkle tree
  */
 
-function arrayToTree(items, min, max) {
+function arrayToTree(items, min, max, maxFilled) {
   let index
   let sum
+  if (min > maxFilled) {
+    return {
+      hash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    }
+  }
   if (min === max) {
     if (items[min][0] === ethers.constants.AddressZero) {
       index = 0
@@ -32,8 +37,8 @@ function arrayToTree(items, min, max) {
     }
   }
   const spread = Math.floor((max - min) / 2)
-  const a = arrayToTree(items, min, min + spread)
-  const b = arrayToTree(items, max - spread, max)
+  const a = arrayToTree(items, min, min + spread, maxFilled)
+  const b = arrayToTree(items, max - spread, max, maxFilled)
   const params = [a.hash, b.hash]
   return {
     left: a,
@@ -67,9 +72,6 @@ function getTree(map, wrongSum = [], swapIndex = []) {
   const len = items.length
 
   const wantitems = 2 ** Math.ceil(Math.log2(len))
-  for (let i = len; i < wantitems; i += 1) {
-    items.push([ethers.constants.AddressZero, 0])
-  }
   let sum = BigNumber.from(0)
   for (let i = 0; i < len; i += 1) {
     if (wrongSum.length > 0) {
@@ -81,11 +83,8 @@ function getTree(map, wrongSum = [], swapIndex = []) {
     items[i].push(sum)
     sum = sum.add(BigNumber.from(items[i][1]))
   }
-  for (let i = len; i < wantitems; i += 1) {
-    items[i].push(0)
-  }
 
-  const r = arrayToTree(items, 0, items.length - 1)
+  const r = arrayToTree(items, 0, wantitems - 1, items.length - 1)
   r.items = len
   r.total = sum
   return r

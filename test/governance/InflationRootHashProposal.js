@@ -313,7 +313,7 @@ describe('InflationRootHashProposal', () => {
             await accounts[0].getAddress(),
             requestedIndex
           )
-        const a = answer(tree, 2)
+        const a = answer(tree, requestedIndex)
         await expect(
           rootHashProposal
             .connect(accounts[0])
@@ -330,6 +330,137 @@ describe('InflationRootHashProposal', () => {
           .withArgs(
             await accounts[0].getAddress(),
             await accounts[1].getAddress(),
+            a[0].account,
+            a[0].balance,
+            a[0].sum,
+            requestedIndex
+          )
+      })
+
+      it('challenge responding deep in empty part of tree successfully', async () => {
+        const _totalSum = BigNumber.from('1150000000000000000000000000')
+        const _amountOfAccounts = 11
+        map = new Map([
+          [
+            await accounts[0].getAddress(),
+            BigNumber.from('50000000000000000000000000'),
+          ],
+          [
+            await accounts[1].getAddress(),
+            BigNumber.from('100000000000000000000000000'),
+          ],
+          [
+            await accounts[2].getAddress(),
+            BigNumber.from('150000000000000000000000000'),
+          ],
+          [
+            await accounts[3].getAddress(),
+            BigNumber.from('50000000000000000000000000'),
+          ],
+          [
+            await accounts[4].getAddress(),
+            BigNumber.from('100000000000000000000000000'),
+          ],
+          [
+            await accounts[5].getAddress(),
+            BigNumber.from('150000000000000000000000000'),
+          ],
+          [
+            await accounts[6].getAddress(),
+            BigNumber.from('50000000000000000000000000'),
+          ],
+          [
+            await accounts[7].getAddress(),
+            BigNumber.from('100000000000000000000000000'),
+          ],
+          [
+            await accounts[8].getAddress(),
+            BigNumber.from('150000000000000000000000000'),
+          ],
+          [
+            await accounts[9].getAddress(),
+            BigNumber.from('100000000000000000000000000'),
+          ],
+          [
+            await accounts[10].getAddress(),
+            BigNumber.from('150000000000000000000000000'),
+          ],
+        ])
+        await initInflation.mint(
+          await accounts[3].getAddress(),
+          '50000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[4].getAddress(),
+          '100000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[5].getAddress(),
+          '150000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[6].getAddress(),
+          '50000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[7].getAddress(),
+          '100000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[8].getAddress(),
+          '150000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[9].getAddress(),
+          '100000000000000000000000000'
+        )
+        await initInflation.mint(
+          await accounts[10].getAddress(),
+          '150000000000000000000000000'
+        )
+        await time.advanceBlock()
+
+        tree = getTree(map)
+        proposedRootHash = tree.hash
+        rootHashProposal = await getRootHash()
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .proposeRootHash(proposedRootHash, _totalSum, _amountOfAccounts)
+        )
+          .to.emit(rootHashProposal, 'RootHashPost')
+          .withArgs(
+            await accounts[1].getAddress(),
+            proposedRootHash,
+            _totalSum,
+            _amountOfAccounts
+          )
+
+        const requestedIndex = 10
+        await rootHashProposal
+          .connect(accounts[2])
+          .challengeRootHashRequestAccount(
+            await accounts[1].getAddress(),
+            requestedIndex
+          )
+        const a = answer(tree, requestedIndex)
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .respondToChallenge(
+              await accounts[2].getAddress(),
+              a[1].reverse(),
+              a[0].account,
+              a[0].balance,
+              a[0].sum,
+              requestedIndex
+            )
+        )
+          .to.emit(rootHashProposal, 'ChallengeSuccessResponse')
+          .withArgs(
+            await accounts[1].getAddress(),
+            await accounts[2].getAddress(),
             a[0].account,
             a[0].balance,
             a[0].sum,

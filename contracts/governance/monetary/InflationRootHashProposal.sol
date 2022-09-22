@@ -94,118 +94,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     uint256 public blockNumber;
 
-    /** This array tracks the allowed data in proofs to fill out the empty part of the merkle
-     * tree. The first element is the result of a node value with all zero data (see where
-     * verifyMerkleProof is called in respondToChallenge for more info on how the data is typed).
-     * Each subsequent element after the first is a hashing of two copies of the previous element.
-     * These hashes are precomputed to save gas and accomodate up to 2^33 active addresses
-     * (minimal upper bound on the world population at time of writing).
-     */
-    bytes32[34] public ALLOWED_ZERO_DATA = [
-        bytes32(
-            0x3bdd562417b2b6c29b6c37a0fbf5c08139fe63f7baf013194f112d8319bf8b32
-        ),
-        bytes32(
-            0x422368e34d87bbb713e283dad123fed473e105cb74d37751f74867ab4fa87edd
-        ),
-        bytes32(
-            0xf27703a76b6cfeda85aef5a7207fb15760fdc0a162fd616cf250471474e93064
-        ),
-        bytes32(
-            0xf929785be718729ceabcb86d15bfa39b70c5ca2d430061be1555d41e48651375
-        ),
-        bytes32(
-            0x93786748e00c02a99af4dce47e7ce8ac741000befb5264ea4fb14273b3fc7332
-        ),
-        bytes32(
-            0x95695af3951d243667eb4a8110eafd09a6c323e4a83970ee18a4e417aeab6b46
-        ),
-        bytes32(
-            0xfe8a835cd62790af744e0f74b439a14953a4560b2854ed74e46b7ab3f9d0ec84
-        ),
-        bytes32(
-            0x50b158d1b56319c75fa84bbf35c6be81b74658e52133cf80ce69cf8412676dab
-        ),
-        bytes32(
-            0xf821f04ade470a841f53c946523e8cadc4c3126466c9e360da641d163bf94d45
-        ),
-        bytes32(
-            0x89fcc5a6f1ce62a204c07e25d4be37bb6abcbaae7c3dcef32168f6776d1f3b30
-        ),
-        bytes32(
-            0xe9899ac52db5b000d178480fe653578b5c8298b11226427735f69819af117283
-        ),
-        bytes32(
-            0xcc11d2b08ed3235c9db4f0e81cda57ffbb0a2bce262dd047f1fbec17138fa3a0
-        ),
-        bytes32(
-            0x817ca40addaa46113d0d93c9b4e0a6653ccefd7be164981df4021cb156e581f5
-        ),
-        bytes32(
-            0xf642e9a700a89f0c2376ef3e27096ae0a9aa004aa13c418a43d03f281780bc6c
-        ),
-        bytes32(
-            0xdcc5fb90bdb02900974d26fea2f08bd727dd87bac6feb3092d4d794adce07d7d
-        ),
-        bytes32(
-            0x341922905d8f0ad976a7926d61cd3cefc00f71b4189e996276c3b67248dc56ce
-        ),
-        bytes32(
-            0xa4521c78c157299308a6cf452a7f92e41da1ac1bf410ab669c158c4971289fc3
-        ),
-        bytes32(
-            0xeb5645021221cbbbe4dfe15917f1131fab92ae3f89f4ed22a72f72d0326b6996
-        ),
-        bytes32(
-            0x535cf4c0d87516f7f91f15e22c454a28758315386ceb055143265a8678da8d32
-        ),
-        bytes32(
-            0x867be7d011bbfddc0cf8e84bcaf579161a22ccc1fe31469ecc7d69abd6a4fe44
-        ),
-        bytes32(
-            0x45924a35e31e7b38e729b1d06b5b0362f65054c5173e71ddd8e684b4ccb53010
-        ),
-        bytes32(
-            0x77d7566b9985683b9ce74ac609ea0cbb07033475796e7eac736bf50963a96c63
-        ),
-        bytes32(
-            0xa1860c29c0172e7b4e1841b0be9b94a762f630b069ac198c2b3ade33a6acf4e6
-        ),
-        bytes32(
-            0x92b5f37f2d83c6417e3b750460faf4f4173f3f1f8aada7c55c2aa6694adf9fe9
-        ),
-        bytes32(
-            0x02a9d327f039021e04948268ff66f805007a6c30353d6d5d7996890f35948dac
-        ),
-        bytes32(
-            0xff2e7b675fc1dd7d9b9bf728a034886b6d9e44073b9c1faa096714f435bf684f
-        ),
-        bytes32(
-            0xf00a9c17ce7e52771884528e3f14b513a938fbf66e5166bb108e65a23f4df764
-        ),
-        bytes32(
-            0x554b57844825163cff94995356fa9ef1404e7419c5efa562a2dbdede0348bb67
-        ),
-        bytes32(
-            0x4a24b92759a0746442c5c69457f9e08327b2ba3977f67871107125a7ad3b102c
-        ),
-        bytes32(
-            0xd1a9cf27f8f87d22a0d282846bfbde81777e3d6505b3635945f87181f202daa2
-        ),
-        bytes32(
-            0x81b858655769500c9040590a626665d038664a81554c0ada4f00acb4f16c8771
-        ),
-        bytes32(
-            0x5fcda3026802a31538986984a97b9886b328467ae421c9ed21fe8d8eeb756a64
-        ),
-        bytes32(
-            0x1600b37f0df1767945b7a5ea9541b28ab36d4767f5ded2d3c3a490958747ab57
-        ),
-        bytes32(
-            0x064f2f7cf038f44f2b1959a171d52c7ec4ba817fb2cfa9460676eac90a51e3ab
-        )
-    ];
-
     /* Event to be emitted whenever a new root hash proposal submitted to the contract.
      */
     event RootHashPost(
@@ -285,17 +173,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         blockNumber = _blockNumber;
         emit ConfigureBlock(_blockNumber);
-    }
-
-    // as you cannot declare a reference type as a constant, memory must be explicitly moved on cloning
-    function initialize(address _self) public override onlyConstruction {
-        super.initialize(_self);
-        ALLOWED_ZERO_DATA = InflationRootHashProposal(_self).allowedZeroData();
-    }
-
-    // used to cleanly get the data for the initialize
-    function allowedZeroData() public view returns (bytes32[34] memory) {
-        return ALLOWED_ZERO_DATA;
     }
 
     /** @notice Allows to propose new root hash
@@ -714,7 +591,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         bytes32 _leaf,
         uint256 _index,
         uint256 _numAccounts
-    ) internal view returns (bool) {
+    ) internal pure returns (bool) {
         // ensure that the proof conforms to the minimum possible tree height
         // and also that the number of accounts is small enough to fit in the claimed tree
         if (
@@ -756,7 +633,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             if ((branchBitMap >> (i - 1)) & 1 == 0) {
                 // see if we are in a left branch requiring a zero valued right branch
                 if ((_index >> (i - 1)) & 1 == 0) {
-                    if (_proof[i - 1] != ALLOWED_ZERO_DATA[i - 1]) {
+                    if (_proof[i - 1] != bytes32(0)) {
                         return false;
                     }
                 }
