@@ -9,7 +9,7 @@ import "./ForwardTarget.sol";
 /** @title Upgradable proxy */
 contract ForwardProxy {
     // this is the storage slot to hold the target of the proxy
-    // keccak256(abi.encodePacked("com.eco.ForwardProxy.target"))
+    // keccak256("com.eco.ForwardProxy.target")
     uint256 private constant IMPLEMENTATION_SLOT =
         0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4;
 

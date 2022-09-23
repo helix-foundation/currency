@@ -208,7 +208,7 @@ async function deployStage1(options) {
       bootstrapGas,
       options.gasPrice,
       ethers.utils.defaultAbiCoder.encode(
-        ['address', 'uint8'],
+        ['address', 'uint256'],
         [options.account, options.numPlaceholders]
       )
     )

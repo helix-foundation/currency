@@ -21,7 +21,7 @@ contract PolicyTestPolicy is Policy {
     function setLabel(string calldata _label, address _impl) external {
         ERC1820REGISTRY.setInterfaceImplementer(
             address(this),
-            keccak256(abi.encodePacked(_label)),
+            keccak256(bytes(_label)),
             _impl
         );
     }
@@ -219,8 +219,7 @@ contract DummyInflation is PolicedUtils {
      * Inflation role is sufficient.
      */
     function callModifierTest() public {
-        DummyPolicedUtils(policyFor(keccak256(abi.encodePacked("Dummy"))))
-            .modifierTest();
+        DummyPolicedUtils(policyFor(keccak256("Dummy"))).modifierTest();
     }
 }
 
@@ -258,7 +257,7 @@ contract RevertingAction is PolicedUtils {
  */
 contract PolicyForAll is IERC1820Implementer {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
-        keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
+        keccak256("ERC1820_ACCEPT_MAGIC");
 
     /** ERC1820 permissioning interface
      */
@@ -289,7 +288,7 @@ contract RegistrationAttemptContract is ERC1820Client {
     function register() external {
         ERC1820REGISTRY.setInterfaceImplementer(
             address(this),
-            keccak256(abi.encodePacked(identifier)),
+            keccak256(bytes(identifier)),
             implementer
         );
     }

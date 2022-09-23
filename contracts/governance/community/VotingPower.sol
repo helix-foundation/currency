@@ -12,7 +12,7 @@ import "./ECOxStaking.sol";
  */
 contract VotingPower is PolicedUtils {
     // ECOx voting power is snapshotted when the contract is cloned
-    uint256 public totalECOxVotingPower;
+    uint256 public totalECOxSnapshot;
 
     // voting power to exclude from totalVotingPower
     uint256 public excludedVotingPower;
@@ -35,7 +35,7 @@ contract VotingPower is PolicedUtils {
     {
         uint256 _supply = ecoToken.totalSupplyAt(_blockNumber);
 
-        return _supply + totalECOxVotingPower - excludedVotingPower;
+        return _supply + 10 * totalECOxSnapshot - excludedVotingPower;
     }
 
     function votingPower(address _who, uint256 _blockNumber)
@@ -45,7 +45,8 @@ contract VotingPower is PolicedUtils {
     {
         uint256 _power = ecoToken.getPastVotes(_who, _blockNumber);
         uint256 _powerx = getXStaking().votingECOx(_who, _blockNumber);
-        return _power + _powerx;
+        // ECOx has 10x the voting power of ECO per unit
+        return _power + 10 * _powerx;
     }
 
     function getXStaking() internal view returns (ECOxStaking) {

@@ -5,6 +5,8 @@ const {
 } = require('../../tools/constants')
 const { deployFrom } = require('./contracts')
 
+const initialECOxSupply = ethers.utils.parseEther('100')
+
 const ECOx_STAKING_HASH = ethers.utils.solidityKeccak256(
   ['string'],
   ['ECOxStaking']
@@ -183,7 +185,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   await tokenInit.distributeTokens(ecox.address, [
     {
       holder: await wallet.getAddress(),
-      balance: ethers.utils.parseEther('1000'),
+      balance: initialECOxSupply,
     },
   ])
 
@@ -223,7 +225,6 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
   deployments.push(deployFrom(wallet, 'TokenInit'))
   const [ecoImpl, tokenInit] = await Promise.all(deployments)
 
-  const initialECOxSupply = ethers.utils.parseEther('1000')
   const ecoxImpl = await deployFrom(
     wallet,
     'ECOx',

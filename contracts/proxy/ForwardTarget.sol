@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
 /** @title Target for ForwardProxy and EcoInitializable */
 abstract contract ForwardTarget {
     // Must match definition in ForwardProxy
-    // keccak256(abi.encodePacked("com.eco.ForwardProxy.target"))
+    // keccak256("com.eco.ForwardProxy.target")
     uint256 private constant IMPLEMENTATION_SLOT =
         0xf86c915dad5894faca0dfa067c58fdf4307406d255ed0a65db394f82b77f53d4;
 

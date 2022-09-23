@@ -19,7 +19,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
     bytes public constant N =
         hex"c7970ceedcc3b0754490201a7aa613cd73911081c790f5f1a8726f463550bb5b7ff0db8e1ea1189ec72f93d1650011bd721aeeacc2acde32a04107f0648c2813a31f5b0b7765ff8b44b4b6ffc93384b646eb09c7cf5e8592d40ea33c80039f35b4f14a04b51f7bfd781be4d1673164ba8eb991c2c4d730bbbe35f592bdef524af7e8daefd26c66fc02c479af89d64d373f442709439de66ceb955f3ea37d5159f6135809f85334b5cb1813addc80cd05609f10ac6a95ad65872c909525bdad32bc729592642920f24c61dc5b3c3b7923e56b16a4d9d373d8721f24a3fc0f1b3131f55615172866bccc30f95054c824e733a5eb6817f7bc16399d48c6361cc7e5";
-    uint8 public constant MIN_BYTES = 64;
+    uint256 public constant MIN_BYTES = 64;
 
     /* The State is a data structure that tracks progress of a logical single verification session
      * from a single verifier. Once verification is complete,
@@ -82,7 +82,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
         require(
             y.minimalByteLength() >= MIN_BYTES,
-            "The secret (y) must be at least 512 bit long"
+            "The secret (y) must be at least 64 bytes long"
         );
         require(BigNumber.cmp(y, n) == -1, "y must be less than N");
 
@@ -123,12 +123,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
         BigNumber.Instance memory u = BigNumber.from(_ubytes);
         BigNumber.Instance memory u2 = BigNumber.modexp(u, two, n); // u2 = u^2 mod n
 
-        uint256 ulen = u.byteLength();
-
-        require(
-            ulen > 32 || (ulen == 32 && BigNumber.cmp(u, one) == 1),
-            "u must be greater than 1"
-        );
+        require(BigNumber.cmp(u, one) == 1, "u must be greater than 1");
         require(BigNumber.cmp(u, n) == -1, "u must be less than N");
         require(BigNumber.cmp(u2, one) == 1, "u*u must be greater than 1");
 

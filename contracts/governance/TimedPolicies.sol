@@ -136,7 +136,14 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         // snapshot the ECOx total
         uint256 totalx = ECOx(policyFor(ID_ECOX)).totalSupply();
 
-        _proposals.configure(totalx, _mintedOnGenerationIncrease);
+        /**
+         * totalx not allowed to be passed through as zero as a safeguard to if ECOx is
+         * completely burned without first removing this part of the system
+         */
+        _proposals.configure(
+            totalx == 0 ? 1 : totalx,
+            _mintedOnGenerationIncrease
+        );
         policy.setPolicy(
             ID_POLICY_PROPOSALS,
             address(_proposals),
