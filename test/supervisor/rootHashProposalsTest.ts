@@ -208,19 +208,21 @@ describe('RandomInflation [@group=13]', () => {
       .connect(bob)
       .approve(
         inflationGovernor.inflationRootHashProposal.address,
-        await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+        (
+          await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+        ).mul(2)
       )
 
     await inflationGovernor.inflationRootHashProposal
       .connect(bob)
       .challengeRootHashRequestAccount(await alice.getAddress(), 1)
 
-    await eco
-      .connect(bob)
-      .approve(
-        inflationGovernor.inflationRootHashProposal.address,
-        await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
-      )
+    // await eco
+    //   .connect(bob)
+    //   .approve(
+    //     inflationGovernor.inflationRootHashProposal.address,
+    //     await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+    //   )
 
     await inflationGovernor.inflationRootHashProposal
       .connect(bob)

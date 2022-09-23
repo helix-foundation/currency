@@ -148,6 +148,7 @@ export class InflationGovernor {
         await this.wallet.getAddress()
       )
     this.inflationRootHashProposal.on(filter, async (_, challenger, index) => {
+      console.log(index)
       await this.respondToChallenge(challenger, index.toNumber())
     })
   }
