@@ -18,7 +18,6 @@ import {
 } from '../typechain-types'
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
-import time from '../test/utils/time'
 
 const { getPrimal, getTree, answer } = require('../tools/randomInflationUtils')
 
@@ -148,12 +147,9 @@ export class InflationGovernor {
       this.inflationRootHashProposal.filters.RootHashChallengeIndexRequest(
         await this.wallet.getAddress()
       )
-    this.inflationRootHashProposal.on(
-      filter,
-      async (_, challenger, index) => {
-        await this.respondToChallenge(challenger, index.toNumber())
-      }
-    )
+    this.inflationRootHashProposal.on(filter, async (_, challenger, index) => {
+      await this.respondToChallenge(challenger, index.toNumber())
+    })
   }
 
   async killListeners() {
@@ -164,12 +160,6 @@ export class InflationGovernor {
 
   async commitVdfSeed() {
     console.log('trying to commit vdf seed')
-
-    // let primalNumber: number = 0
-    // const block: ethers.ethers.providers.Block = await this.provider.getBlock('latest')
-    // console.log(block.number)
-    // primalNumber = await getPrimal(block)
-
 
     let primalNumber: number = 0
     primalNumber = await getPrimal(
@@ -198,7 +188,7 @@ export class InflationGovernor {
       // error logging
       // this gets hit a lot due to setPrimal being kind of finnicky
       console.log('failed setPrimal, trying again')
-      console.log(await this.provider.getBlockNumber('latest'))
+      console.log((await this.provider.getBlock('latest')).number)
       setTimeout(this.commitVdfSeed.bind(this), 1000)
     }
   }
@@ -233,16 +223,17 @@ export class InflationGovernor {
 
   async submitVDF(output: ethers.ethers.utils.Bytes) {
     console.log('trying to submit vdf')
-    tx = await this.randomInflation.submitEntropyVDF(output)
-    rc = await tx.wait()
-    if (rc.status) {
-      // done
-      // emits EntropySeedReveal
-      console.log('submitted vdf')
-    } else {
-      console.log('failed to submit vdf')
-      // no reason why this would happen
-      throw tx
+    try {
+      tx = await this.randomInflation.submitEntropyVDF(output)
+      rc = await tx.wait()
+      if (rc.status) {
+        // done
+        // emits EntropySeedReveal
+        console.log('submitted vdf')
+      }
+    } catch (e) {
+      // error logging
+      console.log(e)
     }
   }
 
@@ -256,10 +247,17 @@ export class InflationGovernor {
 
     this.tree = await getTree(sortedBalances)
 
-    await this.eco.approve(
-      this.inflationRootHashProposal.address,
-      await this.inflationRootHashProposal.PROPOSER_FEE()
-    )
+    try {
+      tx = await this.eco.approve(
+        this.inflationRootHashProposal.address,
+        await this.inflationRootHashProposal.PROPOSER_FEE()
+      )
+      rc = await tx.wait()
+    } catch (e) {
+      // error logging
+      // need to send more ECO to supervisor address
+      console.log(e)
+    }
 
     try {
       tx = await this.inflationRootHashProposal.proposeRootHash(
