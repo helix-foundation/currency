@@ -188,7 +188,6 @@ export class InflationGovernor {
     } catch (e) {
       // error logging
       // this gets hit a lot due to setPrimal being kind of finnicky
-      console.log(e)
       console.log('failed setPrimal, trying again')
       console.log((await this.provider.getBlock('latest')).number)
       setTimeout(this.commitVdfSeed.bind(this), 1000)
