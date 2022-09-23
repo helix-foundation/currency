@@ -16,7 +16,7 @@ contract FakePolicy is TestPolicy {
     function setLabel(string calldata _label, address _impl) external {
         ERC1820REGISTRY.setInterfaceImplementer(
             address(this),
-            keccak256(abi.encodePacked(_label)),
+            keccak256(bytes(_label)),
             _impl
         );
     }

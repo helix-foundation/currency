@@ -99,19 +99,11 @@ describe('PolicyProposals [@group=7]', () => {
           await policyProposals.registerProposal(testProposal.address)
         })
 
-        it('updates the allProposalAddresses index', async () => {
-          await policyProposals.registerProposal(testProposal.address)
-          const allProposalAddresses =
-            await policyProposals.getPaginatedProposalAddresses(1, 1)
-          expect(allProposalAddresses).to.deep.equal([testProposal.address])
-        })
-
         it('starts with the correct supporting stake', async () => {
           await policyProposals.registerProposal(testProposal.address)
 
-          const stake = (
-            await policyProposals.proposals(testProposal.address)
-          )[2]
+          const stake = (await policyProposals.proposals(testProposal.address))
+            .totalStake
           expect(stake).to.equal(0)
         })
 
@@ -186,119 +178,10 @@ describe('PolicyProposals [@group=7]', () => {
     })
   })
 
-  describe('paginate proposals', () => {
-    const totalProposals = 25
-    let allProposals
-    let allPropsData
-    let policyProposals
-    beforeEach(async () => {
-      policyProposals = await getProposals()
-
-      /* eslint-disable no-await-in-loop */
-      for (let i = 0; i < totalProposals; i++) {
-        const testProposal = await deploy('Empty', i)
-        await eco
-          .connect(charlie)
-          .approve(
-            policyProposals.address,
-            await policyProposals.COST_REGISTER()
-          )
-        await policyProposals
-          .connect(charlie)
-          .registerProposal(testProposal.address)
-      }
-      /* eslint-enable no-await-in-loop */
-
-      allProposals = await policyProposals.getPaginatedProposalAddresses(
-        1,
-        totalProposals
-      )
-      allPropsData = await policyProposals.getPaginatedProposalData(
-        1,
-        totalProposals
-      )
-    })
-
-    it('should revert if we ask for page 0', async () => {
-      await expect(
-        policyProposals.getPaginatedProposalAddresses(0, 10)
-      ).to.be.revertedWith('Page must be non-zero')
-      await expect(
-        policyProposals.getPaginatedProposalData(0, 10)
-      ).to.be.revertedWith('Page must be non-zero')
-    })
-
-    it('should return all proposals', async () => {
-      expect(allProposals.length).to.equal(totalProposals)
-      expect(allPropsData.length).to.equal(totalProposals)
-    })
-
-    it('should return all proposals on overflow of end bound', async () => {
-      const proposals = await policyProposals.getPaginatedProposalAddresses(
-        1,
-        totalProposals * 2
-      )
-      const data = await policyProposals.getPaginatedProposalData(
-        1,
-        totalProposals * 2
-      )
-      expect(proposals).to.deep.equal(allProposals)
-      expect(data).to.deep.equal(allPropsData)
-    })
-
-    it('should return empty if we ask for results out of index', async () => {
-      const proposals = await policyProposals.getPaginatedProposalAddresses(
-        3,
-        totalProposals
-      )
-      const data = await policyProposals.getPaginatedProposalData(
-        3,
-        totalProposals
-      )
-      expect(proposals.length).to.eq(0)
-      expect(data.length).to.eq(0)
-    })
-
-    it('should get the paginated results', async () => {
-      const proposals = await policyProposals.getPaginatedProposalAddresses(
-        1,
-        10
-      )
-      const data = await policyProposals.getPaginatedProposalData(1, 10)
-      expect(proposals.length).to.eq(10)
-      expect(data.length).to.eq(10)
-      expect(proposals).to.deep.equal(allProposals.slice(0, 10))
-      expect(data).to.deep.equal(allPropsData.slice(0, 10))
-
-      const proposals1 = await policyProposals.getPaginatedProposalAddresses(
-        2,
-        5
-      )
-      const data1 = await policyProposals.getPaginatedProposalData(2, 5)
-      expect(proposals1.length).to.eq(5)
-      expect(data1.length).to.eq(5)
-      expect(proposals1).to.deep.equal(allProposals.slice(5, 10))
-      expect(data1).to.deep.equal(allPropsData.slice(5, 10))
-    })
-
-    it('should get truncated paginated results at proposals end', async () => {
-      const proposals = await policyProposals.getPaginatedProposalAddresses(
-        3,
-        10
-      )
-      const data = await policyProposals.getPaginatedProposalData(3, 10)
-      expect(proposals.length).to.eq(5)
-      expect(data.length).to.eq(5)
-      expect(proposals).to.deep.equal(allProposals.slice(20, 25))
-      expect(data).to.deep.equal(allPropsData.slice(20, 25))
-    })
-  })
-
   describe('support', () => {
     let policyProposals
     let testProposal
     let testProposal2
-    const totalProposals = 2
     beforeEach(async () => {
       policyProposals = await getProposals()
       testProposal = await deploy('Empty', 1)
@@ -343,35 +226,15 @@ describe('PolicyProposals [@group=7]', () => {
       it('adds the correct stake amount', async () => {
         const preSupportStake = (
           await policyProposals.proposals(testProposal.address)
-        )[2]
+        ).totalStake
 
         await policyProposals.support(testProposal.address)
 
         const postSupportStake = (
           await policyProposals.proposals(testProposal.address)
-        )[2]
+        ).totalStake
 
         expect(postSupportStake).to.equal(one.mul(50000).add(preSupportStake))
-      })
-
-      it('has the correct data in allProposalData', async () => {
-        await policyProposals.connect(alice).support(testProposal.address)
-        await policyProposals.connect(bob).support(testProposal2.address)
-
-        const proposal1 = await policyProposals.proposals(testProposal.address)
-        const proposal2 = await policyProposals.proposals(testProposal2.address)
-
-        const proposalData = await policyProposals.getPaginatedProposalData(
-          1,
-          totalProposals
-        )
-
-        expect(proposal1[0]).to.equal(proposalData[0][0])
-        expect(proposal1[1]).to.equal(proposalData[0][1])
-        expect(proposal1[2]).to.equal(proposalData[0][2])
-        expect(proposal2[0]).to.equal(proposalData[1][0])
-        expect(proposal2[1]).to.equal(proposalData[1][1])
-        expect(proposal2[2]).to.equal(proposalData[1][2])
       })
 
       it('does not allow staking twice', async () => {
@@ -478,13 +341,13 @@ describe('PolicyProposals [@group=7]', () => {
 
       it('subtracts the correct stake amount', async () => {
         const preUnsupportStake = BigNumber.from(
-          (await policyProposals.proposals(testProposal.address))[2]
+          (await policyProposals.proposals(testProposal.address)).totalStake
         )
 
         await policyProposals.unsupport(testProposal.address)
 
         const postUnsupportStake = BigNumber.from(
-          (await policyProposals.proposals(testProposal.address))[2]
+          (await policyProposals.proposals(testProposal.address)).totalStake
         )
 
         expect(postUnsupportStake).to.equal(
@@ -503,7 +366,7 @@ describe('PolicyProposals [@group=7]', () => {
         await policyProposals.support(testProposal.address)
 
         const supportedStake = BigNumber.from(
-          (await policyProposals.proposals(testProposal.address))[2]
+          (await policyProposals.proposals(testProposal.address)).totalStake
         )
 
         expect(supportedStake).to.equal(one.mul(50000))
@@ -655,7 +518,7 @@ describe('PolicyProposals [@group=7]', () => {
         await expect(
           policyProposals.refund(testProposal.address)
         ).to.be.revertedWith(
-          'Refunds may not be distributed until the period is over'
+          'Refunds may not be distributed until the period is over or voting has started'
         )
       })
     })
@@ -670,7 +533,7 @@ describe('PolicyProposals [@group=7]', () => {
         await expect(
           policyProposals.refund(testProposal2.address)
         ).to.be.revertedWith(
-          'Refunds may not be distributed until the period is over'
+          'Refunds may not be distributed until the period is over or voting has started'
         )
       })
 

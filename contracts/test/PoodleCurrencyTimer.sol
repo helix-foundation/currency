@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "../policy/PolicedUtils.sol";
 import "../policy/Policed.sol";
 import "../governance/IGenerationIncrease.sol";
-import "../governance/monetary/ILockups.sol";
 import "../governance/monetary/Lockup.sol";
 import "../governance/monetary/CurrencyGovernance.sol";
 import "../governance/CurrencyTimer.sol";

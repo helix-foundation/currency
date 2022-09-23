@@ -50,7 +50,7 @@ contract SingleTrusteeReplacement is Policy, Proposal {
      * This is executed in the storage context of the root policy contract.
      */
     function enacted(address) public override {
-        bytes32 _trustedNodesId = keccak256(abi.encodePacked("TrustedNodes"));
+        bytes32 _trustedNodesId = keccak256("TrustedNodes");
         TrustedNodes _trustedNodes = TrustedNodes(policyFor(_trustedNodesId));
 
         _trustedNodes.distrust(oldTrustee);

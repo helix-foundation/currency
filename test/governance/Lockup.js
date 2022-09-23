@@ -3,6 +3,10 @@
 const { expect } = require('chai')
 
 const time = require('../utils/time.ts')
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 
 describe('Lockup [@group=3]', () => {
@@ -16,12 +20,6 @@ describe('Lockup [@group=3]', () => {
   let borda
   let faucet
   let lockup
-
-  const hash = (x) =>
-    ethers.utils.solidityKeccak256(
-      ['bytes32', 'address', 'address[]'],
-      [x[0], x[1], x[2]]
-    )
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
@@ -60,16 +58,18 @@ describe('Lockup [@group=3]', () => {
       await alice.getAddress(),
       [await bob.getAddress()],
     ]
-    await borda.connect(alice).commit(hash(alicevote))
+    await borda.connect(alice).commit(getCommit(...alicevote))
     const bobvote = [
       ethers.utils.randomBytes(32),
       await bob.getAddress(),
       [await bob.getAddress()],
     ]
-    await borda.connect(bob).commit(hash(bobvote))
+    await borda.connect(bob).commit(getCommit(...bobvote))
     await time.increase(3600 * 24 * 3)
-    await borda.connect(alice).reveal(alicevote[0], alicevote[2])
-    await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+    await borda
+      .connect(alice)
+      .reveal(alicevote[0], getFormattedBallot(alicevote[2]))
+    await borda.connect(bob).reveal(bobvote[0], getFormattedBallot(bobvote[2]))
     await time.increase(3600 * 24 * 1)
     await borda.updateStage()
     await borda.compute()
@@ -258,16 +258,20 @@ describe('Lockup [@group=3]', () => {
           await alice.getAddress(),
           [await bob.getAddress()],
         ]
-        await borda.connect(alice).commit(hash(alicevote))
+        await borda.connect(alice).commit(getCommit(...alicevote))
         const bobvote = [
           ethers.utils.randomBytes(32),
           await bob.getAddress(),
           [await bob.getAddress()],
         ]
-        await borda.connect(bob).commit(hash(bobvote))
+        await borda.connect(bob).commit(getCommit(...bobvote))
         await time.increase(3600 * 24 * 3)
-        await borda.connect(alice).reveal(alicevote[0], alicevote[2])
-        await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+        await borda
+          .connect(alice)
+          .reveal(alicevote[0], getFormattedBallot(alicevote[2]))
+        await borda
+          .connect(bob)
+          .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
         await time.increase(3600 * 24 * 1)
         await borda.updateStage()
         await borda.compute()

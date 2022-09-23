@@ -51,8 +51,8 @@ contract MakeRich is Policy, Proposal {
      * This is executed in the storage context of the root policy contract.
      */
     function enacted(address) public override {
-        bytes32 _inflationId = keccak256(abi.encodePacked("EcoLabs"));
-        bytes32 _ecoId = keccak256(abi.encodePacked("ECO"));
+        bytes32 _inflationId = keccak256("EcoLabs");
+        bytes32 _ecoId = keccak256("ECO");
 
         // The token has security allowing only 'Inflation' to mint,
         // but right now we're executing with absolute privileges

@@ -7,6 +7,10 @@ import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
 import { BigNumber, Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
@@ -107,25 +111,30 @@ describe('RandomInflation [@group=13]', () => {
       await bob.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(bob).commit(hash(bobvote))
+    await governance.connect(bob).commit(getCommit(...bobvote))
     const charlievote: any = [
       ethers.utils.randomBytes(32),
       await charlie.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(charlie).commit(hash(charlievote))
+    await governance.connect(charlie).commit(getCommit(...charlievote))
     const davevote: any = [
       ethers.utils.randomBytes(32),
       await dave.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(dave).commit(hash(davevote))
+    await governance.connect(dave).commit(getCommit(...davevote))
     await time.increase(3600 * 24 * 3)
-    await time.waitBlockTime
 
-    await governance.connect(bob).reveal(bobvote[0], bobvote[2])
-    await governance.connect(charlie).reveal(charlievote[0], charlievote[2])
-    await governance.connect(dave).reveal(davevote[0], davevote[2])
+    await governance
+      .connect(bob)
+      .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+    await governance
+      .connect(charlie)
+      .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
+    await governance
+      .connect(dave)
+      .reveal(davevote[0], getFormattedBallot(davevote[2]))
   })
 
   it('submits a root hash proposal', async () => {
@@ -213,10 +222,10 @@ describe('RandomInflation [@group=13]', () => {
         ).mul(2)
       )
 
-    await inflationGovernor.inflationRootHashProposal
+    const tx = await inflationGovernor.inflationRootHashProposal
       .connect(bob)
       .challengeRootHashRequestAccount(await alice.getAddress(), 1)
-
+    await tx.wait()
     // await eco
     //   .connect(bob)
     //   .approve(

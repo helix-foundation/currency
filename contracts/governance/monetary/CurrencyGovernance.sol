@@ -44,6 +44,14 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         string description;
     }
 
+    struct Vote {
+        // the proposal being voted for
+        address proposal;
+        // the score of this proposal within the ballot, min recorded score is one
+        // to get a score of zero, an item must be unscored
+        uint256 score;
+    }
+
     // timescales
     uint256 public constant PROPOSAL_TIME = 10 days;
     uint256 public constant VOTING_TIME = 3 days;
@@ -106,7 +114,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
      * participants. Records the voter, as well as all of the parameters of
      * the vote cast.
      */
-    event VoteReveal(address indexed voter, address[] votes);
+    event VoteReveal(address indexed voter, Vote[] votes);
 
     /** Fired when vote results are computed, creating a permanent record of
      * vote outcomes.
@@ -215,67 +223,79 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         emit VoteCast(msg.sender);
     }
 
-    function reveal(bytes32 _seed, address[] calldata _votes)
+    function reveal(bytes32 _seed, Vote[] calldata _votes)
         external
         atStage(Stage.Reveal)
     {
         uint256 numVotes = _votes.length;
-        require(numVotes > 0, "Cannot vote empty");
+        require(numVotes > 0, "Invalid vote, cannot vote empty");
         require(
             commitments[msg.sender] != bytes32(0),
-            "No unrevealed commitment exists"
+            "Invalid vote, no unrevealed commitment exists"
         );
         require(
-            keccak256(abi.encodePacked(_seed, msg.sender, _votes)) ==
+            keccak256(abi.encode(_seed, msg.sender, _votes)) ==
                 commitments[msg.sender],
-            "Commitment mismatch"
+            "Invalid vote, commitment mismatch"
         );
-
-        address[] memory voteCheck = _votes;
-
-        if (numVotes > 1) {
-            for (uint256 i = 1; i < numVotes; ++i) {
-                for (uint256 j = i; j > 0; --j) {
-                    address right = voteCheck[j];
-                    address left = voteCheck[j - 1];
-                    require(right != left, "Invalid vote, repeated address");
-                    if (right < left) {
-                        voteCheck[j] = left;
-                        voteCheck[j - 1] = right;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
 
         delete commitments[msg.sender];
 
         // remove the trustee's default vote
         score[address(0)] -= 1;
 
-        //store leader before we increment scores for current vote
+        // use memory vars to store and track the changes of the leader
         address priorLeader = leader;
+        address leaderTracker = priorLeader;
+        uint256 leaderRankTracker = 0;
+
+        /**
+         * by setting this to 1, we allow ourselves to skip checking _score != 0
+         */
+        uint256 scoreDuplicateCheck = 1;
 
         for (uint256 i = 0; i < numVotes; ++i) {
-            address v = _votes[i];
+            Vote memory v = _votes[i];
+            address _proposal = v.proposal;
+            uint256 _score = v.score;
 
             require(
-                proposals[v].inflationMultiplier > 0,
+                proposals[_proposal].inflationMultiplier > 0,
                 "Invalid vote, missing proposal"
             );
+            require(
+                i == 0 || _votes[i - 1].proposal < _proposal,
+                "Invalid vote, proposals not in increasing order"
+            );
+            require(
+                _score <= numVotes,
+                "Invalid vote, proposal score out of bounds"
+            );
+            require(
+                scoreDuplicateCheck & (1 << _score) == 0,
+                "Invalid vote, duplicate score"
+            );
 
-            score[v] += numVotes - i;
-            if (score[v] > score[leader]) {
-                leader = v;
+            scoreDuplicateCheck += 1 << _score;
+
+            score[_proposal] += _score;
+            if (score[_proposal] > score[leaderTracker]) {
+                leaderTracker = _proposal;
+                leaderRankTracker = _score;
+            } else if (score[_proposal] == score[leaderTracker]) {
+                if (_score > leaderRankTracker) {
+                    leaderTracker = _proposal;
+                    leaderRankTracker = _score;
+                }
             }
         }
 
-        //check if the prior leader has a tie with the current leader, after the new vote sums
-        //in case of tie, the prior leader should meaintain leadership in order
-        //to prevent trustees from having undue tie-braking power based on their position in the vote proposals
-        if (score[priorLeader] == score[leader]) {
-            leader = priorLeader;
+        // only changes the leader if the new leader is of greater score
+        if (
+            leaderTracker != priorLeader &&
+            score[leaderTracker] > score[priorLeader]
+        ) {
+            leader = leaderTracker;
         }
 
         // record the trustee's vote for compensation purposes

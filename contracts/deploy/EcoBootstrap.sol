@@ -20,14 +20,14 @@ contract EcoBootstrap is Ownable {
     EcoInitializable[] public placeholders;
 
     /** @dev Number of placeholder contracts to deploy */
-    uint8 public immutable NUM_PLACEHOLDERS;
+    uint256 public immutable NUM_PLACEHOLDERS;
 
     /** Reserve new addresses for future use.
      *
      * @param _owner The owner of the reservation contract. Also the only
      *               address permitted to claim reserved addresses.
      */
-    constructor(address _owner, uint8 _numPlaceholders) {
+    constructor(address _owner, uint256 _numPlaceholders) {
         require(_numPlaceholders != 0, "must create placeholders");
         transferOwnership(_owner);
         NUM_PLACEHOLDERS = _numPlaceholders;
@@ -37,7 +37,7 @@ contract EcoBootstrap is Ownable {
          * now, and there is no particular reason why 20 was selected other than
          * to provide ample room for future growth.
          */
-        for (uint8 i = 0; i < NUM_PLACEHOLDERS; i++) {
+        for (uint256 i = 0; i < NUM_PLACEHOLDERS; i++) {
             placeholders.push(
                 EcoInitializable(address(new ForwardProxy(init)))
             );

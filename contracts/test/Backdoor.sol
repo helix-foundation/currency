@@ -157,7 +157,7 @@ contract PolicyTest is FakePolicy {
     function testDirectSet(string calldata _key, address _value) external {
         ERC1820REGISTRY.setInterfaceImplementer(
             address(this),
-            keccak256(abi.encodePacked(_key)),
+            keccak256(bytes(_key)),
             _value
         );
     }

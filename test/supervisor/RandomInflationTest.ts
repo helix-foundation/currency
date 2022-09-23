@@ -7,6 +7,10 @@ import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
 import { Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
+const {
+  getCommit,
+  getFormattedBallot,
+} = require('../../tools/test/currencyGovernanceVote')
 
 const time = require('../utils/time.ts')
 
@@ -24,11 +28,6 @@ describe('RandomInflation [@group=13]', () => {
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
 
-  const hash = (x: any) =>
-    ethers.utils.solidityKeccak256(
-      ['bytes32', 'address', 'address[]'],
-      [x[0], x[1], x[2]]
-    )
   const inflationVote = 10
   const rewardVote = 20000
 
@@ -77,25 +76,31 @@ describe('RandomInflation [@group=13]', () => {
       await bob.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(bob).commit(hash(bobvote))
+    await governance.connect(bob).commit(getCommit(...bobvote))
     const charlievote: any = [
       ethers.utils.randomBytes(32),
       await charlie.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(charlie).commit(hash(charlievote))
+    await governance.connect(charlie).commit(getCommit(...charlievote))
     const davevote: any = [
       ethers.utils.randomBytes(32),
       await dave.getAddress(),
       [await bob.getAddress()],
     ]
-    await governance.connect(dave).commit(hash(davevote))
+    await governance.connect(dave).commit(getCommit(...davevote))
     await time.increase(3600 * 24 * 3)
     await time.waitBlockTime()
 
-    await governance.connect(bob).reveal(bobvote[0], bobvote[2])
-    await governance.connect(charlie).reveal(charlievote[0], charlievote[2])
-    await governance.connect(dave).reveal(davevote[0], davevote[2])
+    await governance
+      .connect(bob)
+      .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+    await governance
+      .connect(charlie)
+      .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
+    await governance
+      .connect(dave)
+      .reveal(davevote[0], getFormattedBallot(davevote[2]))
   })
 
   it('fetches new randomInflation stuff on newInflation', async () => {
