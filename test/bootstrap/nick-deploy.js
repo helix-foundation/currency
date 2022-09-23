@@ -19,7 +19,7 @@ describe("Nick's method [@group=2]", async () => {
         5000000,
         100000000000,
         ethers.utils.defaultAbiCoder.encode(
-          ['address', 'uint8'],
+          ['address', 'uint256'],
           [await accounts[2].getAddress(), numPlaceholders]
         )
       )

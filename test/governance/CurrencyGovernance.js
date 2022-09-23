@@ -5,6 +5,11 @@ const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
+const {
+  getCommit,
+  getFormattedBallot,
+  hash,
+} = require('../../tools/test/currencyGovernanceVote')
 
 describe('CurrencyGovernance [@group=4]', () => {
   let alice
@@ -20,12 +25,6 @@ describe('CurrencyGovernance [@group=4]', () => {
   let faucet
   let ecox
   let timedPolicies
-
-  const hash = (x) =>
-    ethers.utils.solidityKeccak256(
-      ['bytes32', 'address', 'address[]'],
-      [x[0], x[1], x[2]]
-    )
 
   const votingReward = BigNumber.from(1000000000000000)
   // 76000000000000000
@@ -204,11 +203,14 @@ describe('CurrencyGovernance [@group=4]', () => {
         await time.increase(3600 * 24 * 3)
 
         await expect(
-          borda.reveal(ethers.utils.randomBytes(32), [
-            await bob.getAddress(),
-            await charlie.getAddress(),
-          ])
-        ).to.be.revertedWith('No unrevealed commitment exists')
+          borda.reveal(
+            ethers.utils.randomBytes(32),
+            getFormattedBallot([
+              await bob.getAddress(),
+              await charlie.getAddress(),
+            ])
+          )
+        ).to.be.revertedWith('Invalid vote, no unrevealed commitment exists')
       })
 
       it('Rejects empty votes', async () => {
@@ -216,10 +218,10 @@ describe('CurrencyGovernance [@group=4]', () => {
         await time.increase(3600 * 24 * 10.1)
         await borda
           .connect(bob)
-          .commit(hash([seed, await bob.getAddress(), []]))
+          .commit(getCommit(seed, await bob.getAddress(), []))
         await time.increase(3600 * 24 * 3)
         await expect(borda.connect(bob).reveal(seed, [])).to.be.revertedWith(
-          'Cannot vote empty'
+          'Invalid vote, cannot vote empty'
         )
       })
 
@@ -229,11 +231,13 @@ describe('CurrencyGovernance [@group=4]', () => {
         await borda
           .connect(bob)
           .commit(
-            hash([seed, await bob.getAddress(), [await alice.getAddress()]])
+            getCommit(seed, await bob.getAddress(), [await alice.getAddress()])
           )
         await time.increase(3600 * 24 * 3)
         await expect(
-          borda.connect(bob).reveal(seed, [await alice.getAddress()])
+          borda
+            .connect(bob)
+            .reveal(seed, getFormattedBallot([await alice.getAddress()]))
         ).to.be.revertedWith('Invalid vote, missing proposal')
       })
 
@@ -248,18 +252,143 @@ describe('CurrencyGovernance [@group=4]', () => {
         await borda
           .connect(bob)
           .commit(
-            hash([
-              seed,
+            getCommit(seed, await bob.getAddress(), [
               await bob.getAddress(),
-              [await bob.getAddress(), await bob.getAddress()],
+              await bob.getAddress(),
             ])
           )
         await time.increase(3600 * 24 * 3)
         await expect(
           borda
             .connect(bob)
-            .reveal(seed, [await bob.getAddress(), await bob.getAddress()])
-        ).to.be.revertedWith('Invalid vote, repeated address')
+            .reveal(
+              seed,
+              getFormattedBallot([
+                await bob.getAddress(),
+                await bob.getAddress(),
+              ])
+            )
+        ).to.be.revertedWith('Invalid vote, proposals not in increasing order')
+      })
+
+      it('Rejects incorrect ordering', async () => {
+        const seed = ethers.utils.randomBytes(32)
+        await borda
+          .connect(bob)
+          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(charlie)
+          .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(dave)
+          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+
+        await time.increase(3600 * 24 * 10.1)
+
+        const badArray = getFormattedBallot([
+          await bob.getAddress(),
+          await charlie.getAddress(),
+          await dave.getAddress(),
+        ]).reverse()
+
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), badArray]))
+        await time.increase(3600 * 24 * 3)
+        await expect(
+          borda.connect(bob).reveal(seed, badArray)
+        ).to.be.revertedWith('Invalid vote, proposals not in increasing order')
+      })
+
+      it('Rejects score that is out of bounds', async () => {
+        const seed = ethers.utils.randomBytes(32)
+        await borda
+          .connect(bob)
+          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(charlie)
+          .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(dave)
+          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+
+        await time.increase(3600 * 24 * 10.1)
+
+        const badArray = getFormattedBallot([
+          await bob.getAddress(),
+          await charlie.getAddress(),
+          await dave.getAddress(),
+        ])
+        badArray[0].score = 10
+
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), badArray]))
+        await time.increase(3600 * 24 * 3)
+        await expect(
+          borda.connect(bob).reveal(seed, badArray)
+        ).to.be.revertedWith('Invalid vote, proposal score out of bounds')
+      })
+
+      it('Rejects score something as zero', async () => {
+        const seed = ethers.utils.randomBytes(32)
+        await borda
+          .connect(bob)
+          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(charlie)
+          .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(dave)
+          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+
+        await time.increase(3600 * 24 * 10.1)
+
+        const badArray = getFormattedBallot([
+          await bob.getAddress(),
+          await charlie.getAddress(),
+          await dave.getAddress(),
+        ])
+        badArray[0].score = 0
+
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), badArray]))
+        await time.increase(3600 * 24 * 3)
+        await expect(
+          borda.connect(bob).reveal(seed, badArray)
+        ).to.be.revertedWith('Invalid vote, duplicate score')
+      })
+
+      it('Rejects scoring multiple proposals as the same rank', async () => {
+        const seed = ethers.utils.randomBytes(32)
+        await borda
+          .connect(bob)
+          .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(charlie)
+          .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(dave)
+          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
+
+        await time.increase(3600 * 24 * 10.1)
+
+        const badArray = getFormattedBallot([
+          await bob.getAddress(),
+          await charlie.getAddress(),
+          await dave.getAddress(),
+        ])
+        badArray[0].score = 2
+        badArray[1].score = 2
+
+        await borda
+          .connect(bob)
+          .commit(hash([seed, await bob.getAddress(), badArray]))
+        await time.increase(3600 * 24 * 3)
+        await expect(
+          borda.connect(bob).reveal(seed, badArray)
+        ).to.be.revertedWith('Invalid vote, duplicate score')
       })
 
       it('Rejects changed votes', async () => {
@@ -268,12 +397,14 @@ describe('CurrencyGovernance [@group=4]', () => {
         await borda
           .connect(bob)
           .commit(
-            hash([seed, await bob.getAddress(), [await bob.getAddress()]])
+            getCommit(seed, await bob.getAddress(), [await bob.getAddress()])
           )
         await time.increase(3600 * 24 * 3)
         await expect(
-          borda.connect(bob).reveal(seed, [await charlie.getAddress()])
-        ).to.be.revertedWith('Commitment mismatch')
+          borda
+            .connect(bob)
+            .reveal(seed, getFormattedBallot([await charlie.getAddress()]))
+        ).to.be.revertedWith('Invalid vote, commitment mismatch')
       })
 
       it('Emits VoteReveal when vote is correctly revealed', async () => {
@@ -287,12 +418,22 @@ describe('CurrencyGovernance [@group=4]', () => {
         await borda
           .connect(bob)
           .commit(
-            hash([seed, await bob.getAddress(), [await bob.getAddress()]])
+            getCommit(seed, await bob.getAddress(), [await bob.getAddress()])
           )
         await time.increase(3600 * 24 * 3)
-        await expect(borda.connect(bob).reveal(seed, [await bob.getAddress()]))
-          .to.emit(borda, 'VoteReveal')
-          .withArgs(await bob.getAddress(), [await bob.getAddress()])
+        await borda
+          .connect(bob)
+          .reveal(seed, getFormattedBallot([await bob.getAddress()]))
+        const [evt] = await borda.queryFilter('VoteReveal')
+        expect(evt.args.voter.toLowerCase()).to.equal(
+          (await bob.getAddress()).toLowerCase()
+        )
+        expect(evt.args.votes[0].proposal.toLowerCase()).to.equal(
+          getFormattedBallot([await bob.getAddress()])[0].proposal.toLowerCase()
+        )
+        expect(evt.args.votes[0].score).to.equal(
+          getFormattedBallot([await bob.getAddress()])[0].score
+        )
       })
 
       it('Allows reveals of correct votes', async () => {
@@ -301,15 +442,34 @@ describe('CurrencyGovernance [@group=4]', () => {
         await borda
           .connect(bob)
           .propose(30, 30, 30, 30, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(charlie)
+          .propose(20, 20, 20, 20, BigNumber.from('1000000000000000000'), '')
+        await borda
+          .connect(dave)
+          .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
 
         await time.increase(3600 * 24 * 10.1)
         await borda
           .connect(bob)
           .commit(
-            hash([seed, await bob.getAddress(), [await bob.getAddress()]])
+            getCommit(seed, await bob.getAddress(), [
+              await bob.getAddress(),
+              await charlie.getAddress(),
+              await dave.getAddress(),
+            ])
           )
         await time.increase(3600 * 24 * 3)
-        await borda.connect(bob).reveal(seed, [await bob.getAddress()])
+        await borda
+          .connect(bob)
+          .reveal(
+            seed,
+            getFormattedBallot([
+              await bob.getAddress(),
+              await charlie.getAddress(),
+              await dave.getAddress(),
+            ])
+          )
       })
 
       describe('With valid commits', async () => {
@@ -381,17 +541,19 @@ describe('CurrencyGovernance [@group=4]', () => {
 
           await time.increase(3600 * 24 * 10.1)
 
-          await borda.connect(bob).commit(hash(bobvote))
-          await borda.connect(charlie).commit(hash(charlievote))
-          await borda.connect(dave).commit(hash(davevote))
-          await borda.connect(niko).commit(hash(nikovote))
-          await borda.connect(mila).commit(hash(milavote))
+          await borda.connect(bob).commit(getCommit(...bobvote))
+          await borda.connect(charlie).commit(getCommit(...charlievote))
+          await borda.connect(dave).commit(getCommit(...davevote))
+          await borda.connect(niko).commit(getCommit(...nikovote))
+          await borda.connect(mila).commit(getCommit(...milavote))
 
           await time.increase(3600 * 24 * 3)
         })
 
         it('Updates state after bob reveals', async () => {
-          const tx = await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+          const tx = await borda
+            .connect(bob)
+            .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
           const receipt = await tx.wait()
           console.log(receipt.gasUsed)
           expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
@@ -402,13 +564,15 @@ describe('CurrencyGovernance [@group=4]', () => {
         })
 
         it('Updates state after bob and charlie reveals', async () => {
-          const tx1 = await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+          const tx1 = await borda
+            .connect(bob)
+            .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
           const receipt1 = await tx1.wait()
           console.log(receipt1.gasUsed)
           // Charlie has only 1 vote, and as each vote gets n-1 points, this does nothing
           const tx2 = await borda
             .connect(charlie)
-            .reveal(charlievote[0], charlievote[2])
+            .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
           const receipt2 = await tx2.wait()
           console.log(receipt2.gasUsed)
           expect(await borda.score(ethers.constants.AddressZero)).to.equal(3)
@@ -418,10 +582,16 @@ describe('CurrencyGovernance [@group=4]', () => {
           expect(await borda.leader()).to.equal(ethers.constants.AddressZero)
         })
 
-        it('Updates state after everyone reveals', async () => {
-          await borda.connect(bob).reveal(bobvote[0], bobvote[2])
-          await borda.connect(charlie).reveal(charlievote[0], charlievote[2])
-          const tx = await borda.connect(dave).reveal(davevote[0], davevote[2])
+        it('Updates state after 3 people reveal', async () => {
+          await borda
+            .connect(bob)
+            .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+          await borda
+            .connect(charlie)
+            .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
+          const tx = await borda
+            .connect(dave)
+            .reveal(davevote[0], getFormattedBallot(davevote[2]))
           const receipt = await tx.wait()
           console.log(receipt.gasUsed)
           expect(await borda.score(await bob.getAddress())).to.equal(4)
@@ -432,7 +602,9 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         describe('In a tie', () => {
           it('should set the leader as the proposal that hit the highest point total first', async () => {
-            await borda.connect(niko).reveal(nikovote[0], nikovote[2])
+            await borda
+              .connect(niko)
+              .reveal(nikovote[0], getFormattedBallot(nikovote[2]))
             // should get {d: 4, bob: 3, charlie: 2, dave: 1, niko: 4, mila: 5}, mila is leader first with 5
             expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
@@ -441,9 +613,13 @@ describe('CurrencyGovernance [@group=4]', () => {
             expect(await borda.score(await charlie.getAddress())).to.equal(2)
             expect(await borda.score(await dave.getAddress())).to.equal(3)
 
-            await borda.connect(charlie).reveal(charlievote[0], charlievote[2])
+            await borda
+              .connect(charlie)
+              .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
             expect(await borda.score(await charlie.getAddress())).to.equal(3)
-            await borda.connect(bob).reveal(bobvote[0], bobvote[2])
+            await borda
+              .connect(bob)
+              .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
             // should get {d: 3, bob: 4, charlie: 5, dave: 2, niko: 4, mila: 5} // mila is now tied with charlie
             expect(await borda.score(ethers.constants.AddressZero)).to.equal(2)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
@@ -457,7 +633,9 @@ describe('CurrencyGovernance [@group=4]', () => {
           })
 
           it('should set the leader as the proposal that was ahead before the final vote created a tie', async () => {
-            await borda.connect(niko).reveal(nikovote[0], nikovote[2])
+            await borda
+              .connect(niko)
+              .reveal(nikovote[0], getFormattedBallot(nikovote[2]))
             // should get {d: 4, bob: 3, charlie: 2, dave: 1, niko: 4, mila: 5}, mila is leader first with 5
             expect(await borda.score(ethers.constants.AddressZero)).to.equal(4)
             expect(await borda.score(await niko.getAddress())).to.equal(4)
@@ -466,7 +644,9 @@ describe('CurrencyGovernance [@group=4]', () => {
             expect(await borda.score(await charlie.getAddress())).to.equal(2)
             expect(await borda.score(await dave.getAddress())).to.equal(3)
 
-            await borda.connect(mila).reveal(milavote[0], milavote[2])
+            await borda
+              .connect(mila)
+              .reveal(milavote[0], getFormattedBallot(milavote[2]))
             // should get {d: 3, bob: 3, charlie: 2, dave: 1, niko: 6, mila: 6}, mila is leader first with 6, but niko is tied
             expect(await borda.score(ethers.constants.AddressZero)).to.equal(3)
             expect(await borda.score(await niko.getAddress())).to.equal(6)
@@ -490,7 +670,9 @@ describe('CurrencyGovernance [@group=4]', () => {
         })
 
         it('Charlie reveal should not override the default vote', async () => {
-          await borda.connect(charlie).reveal(charlievote[0], charlievote[2])
+          await borda
+            .connect(charlie)
+            .reveal(charlievote[0], getFormattedBallot(charlievote[2]))
           await time.increase(3600 * 24 * 1)
           await borda.updateStage()
           await borda.compute()
@@ -501,10 +683,18 @@ describe('CurrencyGovernance [@group=4]', () => {
 
         describe('Compute Phase', async () => {
           beforeEach(async () => {
-            await borda.connect(bob).reveal(bobvote[0], bobvote[2]) // 32100
-            // await borda.reveal(charlievote[0], charlievote[2], { from: charlie });
-            await borda.connect(dave).reveal(davevote[0], davevote[2]) // 4,4,4
+            await borda
+              .connect(bob)
+              .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+            await borda
+              .connect(dave)
+              .reveal(davevote[0], getFormattedBallot(davevote[2]))
           })
+
+          // this test checks a difficult case where the second reveal causes multiple new tied winners
+          // the previous leader after bob reveals is the default proposal
+          // dave's vote gives a tied score to all 3 of dave, charlie, and bob's proposals
+          // in this case, the higher ranked proposal on the vote that just revealed and created the tie is made the leader
 
           it('Emits VoteResult', async () => {
             await time.increase(3600 * 24 * 1)
@@ -652,10 +842,12 @@ describe('CurrencyGovernance [@group=4]', () => {
                 await dave.getAddress(),
                 [await dave.getAddress()],
               ]
-              await borda.connect(dave).commit(hash(davevote2))
+              await borda.connect(dave).commit(getCommit(...davevote2))
               await time.increase(3600 * 24 * 3)
 
-              await borda.connect(dave).reveal(davevote2[0], davevote2[2])
+              await borda
+                .connect(dave)
+                .reveal(davevote2[0], getFormattedBallot(davevote2[2]))
               expect(
                 await trustedNodes
                   .connect(dave)
@@ -704,10 +896,12 @@ describe('CurrencyGovernance [@group=4]', () => {
                 )
               await time.increase(3600 * 24 * 10.1)
 
-              await borda.connect(dave).commit(hash(davevote2))
+              await borda.connect(dave).commit(getCommit(...davevote2))
               await time.increase(3600 * 24 * 3)
 
-              await borda.connect(dave).reveal(davevote2[0], davevote2[2])
+              await borda
+                .connect(dave)
+                .reveal(davevote2[0], getFormattedBallot(davevote2[2]))
               expect(
                 await trustedNodes
                   .connect(dave)
@@ -844,10 +1038,12 @@ describe('CurrencyGovernance [@group=4]', () => {
           .propose(10, 10, 10, 10, BigNumber.from('1000000000000000000'), '')
         await time.increase(3600 * 24 * 10)
 
-        await borda.connect(dave).commit(hash(davevote2))
+        await borda.connect(dave).commit(getCommit(...davevote2))
         await time.increase(3600 * 24 * 3)
 
-        await borda.connect(dave).reveal(davevote2[0], davevote2[2])
+        await borda
+          .connect(dave)
+          .reveal(davevote2[0], getFormattedBallot(davevote2[2]))
         await time.increase(3600 * 24 * 1)
 
         await timedPolicies.connect(alice).incrementGeneration()
@@ -915,8 +1111,8 @@ describe('CurrencyGovernance [@group=4]', () => {
               ...additionalTrustees.slice(0, i + 1),
             ],
           ]
-          const bobreveal = [bobvote[0], bobvote[2]]
-          await borda.connect(bob).commit(hash(bobvote))
+          const bobreveal = [bobvote[0], getFormattedBallot(bobvote[2])]
+          await borda.connect(bob).commit(getCommit(...bobvote))
 
           await time.increase(3600 * 24 * 3)
 

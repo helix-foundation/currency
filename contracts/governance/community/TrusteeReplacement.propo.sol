@@ -52,7 +52,7 @@ contract TrusteeReplacement is Policy, Proposal {
      * @param _self The address of the proposal.
      */
     function enacted(address _self) public override {
-        bytes32 _trustedNodesId = keccak256(abi.encodePacked("TrustedNodes"));
+        bytes32 _trustedNodesId = keccak256("TrustedNodes");
         TrustedNodes _trustedNodes = TrustedNodes(policyFor(_trustedNodesId));
 
         address[] memory _newTrustees = TrusteeReplacement(_self)

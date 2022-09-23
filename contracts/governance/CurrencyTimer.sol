@@ -10,14 +10,13 @@ import "./IGenerationIncrease.sol";
 import "./IGeneration.sol";
 import "./monetary/Lockup.sol";
 import "./monetary/RandomInflation.sol";
-import "./monetary/ILockups.sol";
 import "../currency/ECO.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
+contract CurrencyTimer is PolicedUtils, IGenerationIncrease {
     /** The on-chain address for the currency voting contract. This contract is
      * cloned for each new currency vote.
      */
@@ -32,7 +31,7 @@ contract CurrencyTimer is PolicedUtils, IGenerationIncrease, ILockups {
     /* Current generation of the balance store. */
     uint256 public currentGeneration;
 
-    mapping(uint256 => Lockup) public override lockups;
+    mapping(uint256 => Lockup) public lockups;
     mapping(address => bool) public isLockup;
 
     mapping(uint256 => RandomInflation) public randomInflations;

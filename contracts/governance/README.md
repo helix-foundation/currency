@@ -71,7 +71,7 @@ A `PolicyDecisionStart` event is emitted with the `PolicyProposals` contract add
   - This function is internal.
 
 ### CurrencyTimer
-  - Inherits: `PolicedUtils`, `IGenerationIncrease`, `ILockups`
+  - Inherits: `PolicedUtils`, `IGenerationIncrease`
 
 The `CurrencyTimer` contract is delegated the responsibility of implementing the decisions decided on by the trustees in their Currency Governance votes
 (detailed more below). It holds the on-chain address of clone template for the `CurrencyGoverance`, `RandomInflation`, and `Lockup` contracts as the public variables `bordaImpl`, `inflationImpl`, and `lockupImpl`, respectively. It also tracks all clones for `Lockup` and `RandomInflation` in the public mappings `lockups` and `randomInflations` respectively, keyed by the generation number where the policy decision for them originated. Finally, it is called by `Lockup` contracts to payout interest or enact penalties for withdrawals.

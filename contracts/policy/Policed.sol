@@ -11,7 +11,7 @@ import "./Policy.sol";
  */
 abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
-        keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
+        keccak256("ERC1820_ACCEPT_MAGIC");
 
     /** The address of the root policy instance overseeing this instance.
      *

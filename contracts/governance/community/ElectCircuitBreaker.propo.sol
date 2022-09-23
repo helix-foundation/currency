@@ -57,12 +57,10 @@ contract ElectCircuitBreaker is Policy, Proposal {
     function enacted(
         address // _self,
     ) public override {
-        bytes32 _ecoId = keccak256(abi.encodePacked("ECO"));
-        bytes32 _ecoxId = keccak256(abi.encodePacked("ECOx"));
-        bytes32 _currencyGovernanceId = keccak256(
-            abi.encodePacked("CurrencyGovernance")
-        );
-        bytes32 _currencyTimerId = keccak256(abi.encodePacked("CurrencyTimer"));
+        bytes32 _ecoId = keccak256("ECO");
+        bytes32 _ecoxId = keccak256("ECOx");
+        bytes32 _currencyGovernanceId = keccak256("CurrencyGovernance");
+        bytes32 _currencyTimerId = keccak256("CurrencyTimer");
 
         ECO eco = ECO(policyFor(_ecoId));
         ECOx ecox = ECOx(policyFor(_ecoxId));

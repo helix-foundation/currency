@@ -24,28 +24,28 @@ describe('ECOx', () => {
 
     await faucet.mint(
       await alice.getAddress(),
-      BigNumber.from('20000000000000000000000')
+      BigNumber.from('200000000000000000000')
     )
     await faucet.mint(
       await bob.getAddress(),
-      BigNumber.from('30000000000000000000000')
+      BigNumber.from('300000000000000000000')
     )
     await faucet.mint(
       await charlie.getAddress(),
-      BigNumber.from('50000000000000000000000')
+      BigNumber.from('500000000000000000000')
     )
 
     await ecox.transfer(
       await alice.getAddress(),
-      BigNumber.from('500000000000000000000')
+      BigNumber.from('50000000000000000000')
     )
     await ecox.transfer(
       await bob.getAddress(),
-      BigNumber.from('300000000000000000000')
+      BigNumber.from('30000000000000000000')
     )
     await ecox.transfer(
       await charlie.getAddress(),
-      BigNumber.from('200000000000000000000')
+      BigNumber.from('20000000000000000000')
     )
 
     return {
@@ -61,27 +61,27 @@ describe('ECOx', () => {
 
   it('Verifies starting conditions', async () => {
     expect(await eco.balanceOf(await alice.getAddress())).to.equal(
-      '20000000000000000000000'
+      '200000000000000000000'
     )
     expect(await eco.balanceOf(await bob.getAddress())).to.equal(
-      '30000000000000000000000'
+      '300000000000000000000'
     )
     expect(await eco.balanceOf(await charlie.getAddress())).to.equal(
-      '50000000000000000000000'
+      '500000000000000000000'
     )
 
     expect(await ecox.balanceOf(await alice.getAddress())).to.equal(
-      '500000000000000000000'
+      '50000000000000000000'
     )
     expect(await ecox.balanceOf(await bob.getAddress())).to.equal(
-      '300000000000000000000'
+      '30000000000000000000'
     )
     expect(await ecox.balanceOf(await charlie.getAddress())).to.equal(
-      '200000000000000000000'
+      '20000000000000000000'
     )
 
-    expect(await eco.totalSupply()).to.equal('100000000000000000000000')
-    expect(await ecox.totalSupply()).to.equal('1000000000000000000000')
+    expect(await eco.totalSupply()).to.equal('1000000000000000000000')
+    expect(await ecox.totalSupply()).to.equal('100000000000000000000')
   })
 
   it('checks the gas cost of converting', async () => {
@@ -106,48 +106,38 @@ describe('ECOx', () => {
 
   it('doesnt allow minting to 0 address', async () => {
     await expect(
-      faucet.mint(ethers.constants.AddressZero, BigNumber.from('1000000'))
+      faucet.mintx(ethers.constants.AddressZero, BigNumber.from('1000000'))
     ).to.be.revertedWith('ERC20: mint to the zero address')
   })
 
-  it('doesnt allow minting past a certain block', async () => {
-    // takes too long to test
-    // const maxInt32 = 2**32;
-    // await time.advanceBlockTo(maxInt32);
-    // await expectRevert(
-    //   faucet.mint(await alice.getAddress(), BigNumber.from('1000000')),
-    //   'block number cannot be casted safely',
-    // );
-  })
-
   it('exchanges ECOx', async () => {
-    await ecox.connect(alice).exchange('100000000000000000000')
+    await ecox.connect(alice).exchange('10000000000000000000')
     expect(await ecox.balanceOf(await alice.getAddress())).to.equal(
-      '400000000000000000000'
+      '40000000000000000000'
     )
     // compare to exact value, truncated
     expect(await eco.balanceOf(await alice.getAddress())).to.equal(
-      '30517091807564762481170'
+      '305170918075647624811'
     )
   })
 
   it('exchanges a lot of ECOx', async () => {
-    await ecox.connect(alice).exchange('500000000000000000000')
+    await ecox.connect(alice).exchange('50000000000000000000')
     expect(await ecox.balanceOf(await alice.getAddress())).to.equal('0')
     // compare to exact value, truncated
     expect(await eco.balanceOf(await alice.getAddress())).to.equal(
-      '84872127070012814684865'
+      '848721270700128146848'
     )
   })
 
   it('exchanges a small amount of ECOx', async () => {
     await ecox.connect(alice).exchange('1500000')
     expect(await ecox.balanceOf(await alice.getAddress())).to.equal(
-      '499999999999998500000'
+      '49999999999998500000'
     )
     // compare to exact value, truncated
     expect(await eco.balanceOf(await alice.getAddress())).to.equal(
-      '20000000000000150000000'
+      '200000000000015000000'
     )
 
     // THIS IS THE APPROXIMATE MINIMUM ACCURATE EXCHANGEABLE PERCENTAGE VALUE
@@ -163,7 +153,7 @@ describe('ECOx', () => {
         (await ecox.balanceOf(await alice.getAddress())).sub('1000000')
       )
     await expect(
-      ecox.connect(alice).exchange(BigNumber.from('3000000000000000000000'))
+      ecox.connect(alice).exchange(BigNumber.from('300000000000000000000'))
     ).to.be.revertedWith('ERC20: burn amount exceeds balance')
   })
 
@@ -171,19 +161,13 @@ describe('ECOx', () => {
     it('returns the correct allowance', async () => {
       await ecox
         .connect(alice)
-        .approve(
-          await bob.getAddress(),
-          BigNumber.from('300000000000000000000')
-        )
+        .approve(await bob.getAddress(), BigNumber.from('30000000000000000000'))
       await ecox
         .connect(alice)
-        .approve(
-          await bob.getAddress(),
-          BigNumber.from('100000000000000000000')
-        )
+        .approve(await bob.getAddress(), BigNumber.from('10000000000000000000'))
       expect(
         await ecox.allowance(await alice.getAddress(), await bob.getAddress())
-      ).to.equal('100000000000000000000')
+      ).to.equal('10000000000000000000')
     })
   })
 
@@ -197,7 +181,7 @@ describe('ECOx', () => {
     })
 
     context('when the source address has enough balance', async () => {
-      const amount = ethers.utils.parseEther('1').mul(1000)
+      const amount = ethers.utils.parseEther('1').mul(100)
 
       it('emits an Approval event', async () => {
         await expect(permit(ecox, owner, spender, chainId, amount)).to.emit(

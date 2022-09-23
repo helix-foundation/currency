@@ -57,7 +57,13 @@ contract RandomInflation is PolicedUtils, TimeUtils {
 
     /** A mapping recording which claim numbers have been claimed.
      */
-    mapping(uint256 => bool) public claimed;
+    mapping(uint256 => uint256) public claimed;
+
+    // the max bits that can be stored in a uint256 number
+    uint256 public constant BITMAP_MAXIMUM = 256;
+
+    // A counter of outstanding unclaimed rewards
+    uint256 public unclaimedRewards;
 
     /** The base VDFVerifier implementation */
     /** The VDF is used to set the random seed for inflation */
@@ -77,8 +83,8 @@ contract RandomInflation is PolicedUtils, TimeUtils {
     /** Emitted when inflation starts.
      */
     event InflationStart(
-        VDFVerifier vdfVerifier,
-        InflationRootHashProposal inflationRootHashProposal,
+        VDFVerifier indexed vdfVerifier,
+        InflationRootHashProposal indexed inflationRootHashProposal,
         uint256 claimPeriodStarts
     );
 
@@ -133,19 +139,12 @@ contract RandomInflation is PolicedUtils, TimeUtils {
             "Entropy not set, wait until end of full claim period to abort"
         );
 
-        if (seed != 0 || getTime() < claimPeriodStarts + CLAIM_PERIOD) {
-            /* The higher bound for the loop iterations is the number
-             * of reward recipients according to a vote by trusted nodes.
-             * It is supposed to be a reasonable number which does not impose a threat
-             * to a system from a gas consumption standpoint.
-             */
-            for (uint256 i = 0; i < numRecipients; ++i) {
-                require(
-                    claimed[i],
-                    "All rewards must be claimed prior to destruct"
-                );
-            }
-        }
+        // consider putting a long scale timeout to allow for late stage aborts
+        // unclaimedRewards is guaranteed to be set before the seed
+        require(
+            seed == 0 || unclaimedRewards == 0,
+            "All rewards must be claimed prior to destruct"
+        );
 
         require(
             ecoToken.transfer(
@@ -192,12 +191,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
             "primal block invalid"
         );
         require(
-            !(_primal % 3 == 0) &&
-                !(_primal % 5 == 0) &&
-                !(_primal % 7 == 0) &&
-                !(_primal % 11 == 0) &&
-                !(_primal % 13 == 0) &&
-                vdfVerifier.isProbablePrime(_primal, MILLER_RABIN_ROUNDS),
+            vdfVerifier.isProbablePrime(_primal, MILLER_RABIN_ROUNDS),
             "input failed primality test"
         );
 
@@ -242,6 +236,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         /* This sets the amount of recipients we will iterate through later, it is important
         this number stay reasonable from gas consumption standpoint */
         numRecipients = _numRecipients;
+        unclaimedRewards = _numRecipients;
         reward = _reward;
         claimPeriodStarts = getTime();
         emit InflationStart(
@@ -303,7 +298,9 @@ contract RandomInflation is PolicedUtils, TimeUtils {
             "A claim can only be made after enough time has passed"
         );
         require(
-            !claimed[_sequence],
+            claimed[_sequence / BITMAP_MAXIMUM] &
+                (1 << (_sequence % BITMAP_MAXIMUM)) ==
+                0,
             "A claim can only be made if it has not already been made"
         );
 
@@ -322,7 +319,10 @@ contract RandomInflation is PolicedUtils, TimeUtils {
             "A claim submission failed root hash verification"
         );
 
-        claimed[_sequence] = true;
+        claimed[_sequence / BITMAP_MAXIMUM] +=
+            1 <<
+            (_sequence % BITMAP_MAXIMUM);
+        unclaimedRewards--;
 
         uint256 claimable = uint256(
             keccak256(abi.encodePacked(seed, _sequence))

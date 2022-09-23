@@ -5,6 +5,7 @@ const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
 const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
+const { BigNumber } = require('ethers')
 
 describe('PolicyVotes [@group=8]', () => {
   let policy
@@ -148,7 +149,11 @@ describe('PolicyVotes [@group=8]', () => {
           it('can vote', async () => {
             await expect(proxiedPolicyVotes.connect(alice).vote(true))
               .to.emit(proxiedPolicyVotes, 'PolicyVote')
-              .withArgs(await alice.getAddress(), true, one.mul(5000))
+              .withArgs(
+                await alice.getAddress(),
+                one.mul(5000),
+                BigNumber.from(0)
+              )
           })
 
           it('increases the total stake', async () => {
@@ -184,6 +189,12 @@ describe('PolicyVotes [@group=8]', () => {
               await proxiedPolicyVotes.vote(true)
             })
 
+            it('cannot vote yes again', async () => {
+              await expect(proxiedPolicyVotes.vote(true)).to.be.revertedWith(
+                'Your vote has already been recorded'
+              )
+            })
+
             it('does not increase total stake', async () => {
               const startStake = await proxiedPolicyVotes.totalStake()
 
@@ -206,6 +217,12 @@ describe('PolicyVotes [@group=8]', () => {
           context('with an existing no vote', () => {
             beforeEach(async () => {
               await proxiedPolicyVotes.vote(false)
+            })
+
+            it('cannot vote no again', async () => {
+              await expect(proxiedPolicyVotes.vote(false)).to.be.revertedWith(
+                'Your vote has already been recorded'
+              )
             })
 
             it('does not increase total stake', async () => {
@@ -277,7 +294,7 @@ describe('PolicyVotes [@group=8]', () => {
         context('with tokens', () => {
           it('can vote', async () => {
             await expect(proxiedPolicyVotes.voteSplit(42, 1101))
-              .to.emit(proxiedPolicyVotes, 'PolicySplitVoteCast')
+              .to.emit(proxiedPolicyVotes, 'PolicyVote')
               .withArgs(await alice.getAddress(), '42', '1101')
           })
 
@@ -430,6 +447,18 @@ describe('PolicyVotes [@group=8]', () => {
               expect(await proxiedPolicyVotes.yesStake()).to.equal(
                 startStake.sub(one.mul(1500))
               )
+            })
+          })
+
+          context('voteSplit -> vote: weird cases', () => {
+            it('can vote yes after a partial yes without no votes', async () => {
+              await proxiedPolicyVotes.voteSplit(one.mul(1500), one.mul(0))
+              await proxiedPolicyVotes.vote(true)
+            })
+
+            it('can vote no after a partial no without yes votes', async () => {
+              await proxiedPolicyVotes.voteSplit(one.mul(0), one.mul(1500))
+              await proxiedPolicyVotes.vote(false)
             })
           })
         })

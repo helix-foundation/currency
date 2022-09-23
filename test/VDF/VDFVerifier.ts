@@ -87,7 +87,7 @@ describe('VDFVerifier [@group=6]', () => {
           instanceVDFVerifier.start(bnHex(xbn), t, bnHex(new BN(2)), {
             gasLimit: 6000000,
           })
-        ).to.be.revertedWith('The secret (y) must be at least 512 bit long')
+        ).to.be.revertedWith('The secret (y) must be at least 64 bytes long')
       })
 
       it('Does not allow Y between 32 and 64 bytes', async () => {
@@ -100,7 +100,7 @@ describe('VDFVerifier [@group=6]', () => {
               gasLimit: 6000000,
             }
           )
-        ).to.be.revertedWith('The secret (y) must be at least 512 bit long')
+        ).to.be.revertedWith('The secret (y) must be at least 64 bytes long')
       })
 
       it('Does not allow X < 2', async () => {
