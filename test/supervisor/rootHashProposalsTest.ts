@@ -7,6 +7,7 @@ import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
 import { BigNumber, Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
+
 const {
   getCommit,
   getFormattedBallot,
@@ -152,7 +153,7 @@ describe('RandomInflation [@group=13]', () => {
 
   it('responds to a challenge', async () => {
     await time.increase(3600 * 24 * 1)
-    await time.waitBlockTime()
+    await time.waitBlockTime(15000)
 
     // check that rhp is proposed
     expect(
@@ -186,7 +187,7 @@ describe('RandomInflation [@group=13]', () => {
     ).to.eq(1)
 
     await time.advanceBlock()
-    await time.waitBlockTime(25000)
+    await time.waitBlockTime(20000)
 
     // check that challenge has been responded to
     expect(
@@ -202,7 +203,7 @@ describe('RandomInflation [@group=13]', () => {
 
   it('responds to multiple challenges', async () => {
     await time.increase(3600 * 24 * 1)
-    await time.waitBlockTime()
+    await time.waitBlockTime(15000)
 
     // check that rhp is proposed
     expect(
@@ -213,31 +214,32 @@ describe('RandomInflation [@group=13]', () => {
       ).initialized
     ).to.be.true
 
-    await eco
+    let tx = await eco
       .connect(bob)
       .approve(
         inflationGovernor.inflationRootHashProposal.address,
-        (
-          await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
-        ).mul(2)
+        await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
       )
+    let rc = await tx.wait()
 
-    const tx = await inflationGovernor.inflationRootHashProposal
+    tx = await inflationGovernor.inflationRootHashProposal
       .connect(bob)
       .challengeRootHashRequestAccount(await alice.getAddress(), 1)
-    await tx.wait()
-    // await eco
-    //   .connect(bob)
-    //   .approve(
-    //     inflationGovernor.inflationRootHashProposal.address,
-    //     await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
-    //   )
+    rc = await tx.wait()
+
+    tx = await eco
+      .connect(charlie)
+      .approve(
+        inflationGovernor.inflationRootHashProposal.address,
+        await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+      )
+    rc = await tx.wait()
 
     await inflationGovernor.inflationRootHashProposal
-      .connect(bob)
+      .connect(charlie)
       .challengeRootHashRequestAccount(await alice.getAddress(), 2)
 
-    await time.waitBlockTime(25000)
+    await time.waitBlockTime(15000)
 
     // check that challenges have been responded to
     expect(

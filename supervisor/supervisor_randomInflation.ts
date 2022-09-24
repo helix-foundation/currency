@@ -283,7 +283,7 @@ export class InflationGovernor {
 
   async respondToChallenge(challenger: string, index: number) {
     console.log(
-      `trying to respond to RPH challenge by ${challenger} at index ${index}`
+      `trying to respond to RHP challenge by ${challenger} at index ${index}`
     )
     if (!this.tree) {
       this.tree = await getTree(
