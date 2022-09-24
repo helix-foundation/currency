@@ -75,7 +75,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
       (await time.latestBlockTimestamp())
 
     await time.increase(timeToNextGeneration + 1)
-    await time.waitBlockTime()
+    await time.waitBlockTime(20000)
 
     const newCurrGov = currencyGovernor.currencyGovernance.address
     expect(newCurrGov).to.not.equal(initialCurrGov)

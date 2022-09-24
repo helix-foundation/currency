@@ -104,26 +104,7 @@ describe('RandomInflation [@group=13]', () => {
       .reveal(davevote[0], getFormattedBallot(davevote[2]))
   })
 
-  it('fetches new randomInflation stuff on newInflation', async () => {
-    expect(inflationGovernor.randomInflation).to.be.undefined
-    await time.increase(3600 * 24 * 1)
-    await time.waitBlockTime(25000)
-
-    expect(inflationGovernor.randomInflation).to.not.be.undefined
-  })
-
-  it('gets primal and commits vdfSeed', async () => {
-    expect(inflationGovernor.vdfSeed).to.be.undefined
-    await time.increase(3600 * 24 * 1)
-    await time.waitBlockTime()
-
-    await time.advanceBlock()
-    await time.waitBlockTime(25000)
-
-    expect(inflationGovernor.vdfSeed).to.not.be.undefined
-  })
-
-  it('proves and submits vdfSeed', async () => {
+  it('gets primal, commits, proves and submits vdfSeed', async () => {
     expect(inflationGovernor.vdfOutput).to.be.undefined
     await time.increase(3600 * 24 * 1)
     await time.waitBlockTime()
@@ -133,8 +114,17 @@ describe('RandomInflation [@group=13]', () => {
     await time.advanceBlock()
     await time.waitBlockTime(25000)
 
+    expect(inflationGovernor.vdfOutput).to.not.be.undefined
     expect(await inflationGovernor.randomInflation.seed()).to.not.equal(
       unsetSeed
     )
+  })
+
+  it('fetches new randomInflation stuff on newInflation', async () => {
+    expect(inflationGovernor.randomInflation).to.be.undefined
+    await time.increase(3600 * 24 * 1)
+    await time.waitBlockTime(25000)
+
+    expect(inflationGovernor.randomInflation).to.not.be.undefined
   })
 })

@@ -34,7 +34,7 @@ describe('TimedPolicies [@group=13]', () => {
       nextGenStart - (await time.latestBlockTimestamp())
 
     await time.increase(timeToNextGeneration + 1)
-    await time.waitBlockTime()
+    await time.waitBlockTime(20000)
 
     expect((await timedPolicies.generation()).toNumber()).to.equal(startGen + 1)
 
