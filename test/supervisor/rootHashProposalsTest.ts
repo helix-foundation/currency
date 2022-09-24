@@ -187,7 +187,7 @@ describe('RandomInflation [@group=13]', () => {
     ).to.eq(1)
 
     await time.advanceBlock()
-    await time.waitBlockTime(20000)
+    await time.waitBlockTime(15000)
 
     // check that challenge has been responded to
     expect(
