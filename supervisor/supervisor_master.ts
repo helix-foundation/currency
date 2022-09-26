@@ -3,6 +3,7 @@ import * as hre from 'hardhat'
 import * as ethers from 'ethers'
 
 import { CurrencyGovernor } from './supervisor_currencyGovernance'
+import { CommunityGovernor } from './supervisor_communityGovernance'
 import { TimeGovernor } from './supervisor_timedPolicies'
 import { Policy__factory, Policy } from '../typechain-types'
 require('dotenv').config({ path: '../.env' })
@@ -13,6 +14,7 @@ const pk = process.env.PRIVATE_KEY || ''
 export class Supervisor {
   timeGovernor!: TimeGovernor
   currencyGovernor!: CurrencyGovernor
+  communityGovernor!: CommunityGovernor
   provider?: ethers.providers.BaseProvider
   rootPolicy?: Policy
   wallet?: ethers.Signer
@@ -39,6 +41,7 @@ export class Supervisor {
       }
     } else if (signer && policy) {
       // test
+      console.log('test')
       this.provider = hre.ethers.provider
       this.wallet = signer
       this.rootPolicy = policy
@@ -66,6 +69,14 @@ export class Supervisor {
       )
       await this.currencyGovernor.setup()
       await this.currencyGovernor.startListeners()
+
+      this.communityGovernor = new CommunityGovernor(
+        this.provider,
+        this.wallet,
+        this.rootPolicy
+      )
+      await this.communityGovernor.setup()
+      await this.communityGovernor.startListeners()
     }
   }
 }
