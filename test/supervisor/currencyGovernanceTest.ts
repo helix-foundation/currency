@@ -5,13 +5,14 @@ import { Supervisor } from '../../supervisor/supervisor_master'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
 import { expect } from 'chai'
+import { Signer } from 'ethers'
 
 const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
 
 describe('currencyGovernance_supervisor [@group=13]', () => {
-  let alice
+  let alice: Signer
   let policy: Policy
 
   let supervisor: Supervisor
