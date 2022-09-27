@@ -62,11 +62,6 @@ describe('CommunityGovernor [@group=13]', () => {
       '5000000000000000000000000'
     )
 
-    // if (timeGovernor) {
-    //   console.log('kill time listener')
-    //   await timeGovernor.killListener()
-    // }
-
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
     timeGovernor = supervisor.timeGovernor

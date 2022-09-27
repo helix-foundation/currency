@@ -48,15 +48,6 @@ describe('RandomInflation [@group=13]', () => {
       '50000000000000000000000000'
     )
 
-    // if (timeGovernor) {
-    //   console.log('kill time listener')
-    //   await timeGovernor.killListener()
-    // }
-    // if (inflationGovernor) {
-    //   console.log('killing inflation listeners')
-    //   await inflationGovernor.killListeners()
-    // }
-
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
     timeGovernor = supervisor.timeGovernor

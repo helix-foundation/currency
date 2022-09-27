@@ -20,10 +20,6 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
   let timeGovernor: TimeGovernor
 
   beforeEach(async () => {
-    // if (currencyGovernor) {
-    //   await currencyGovernor.killListeners()
-    // }
-
     const accounts = await ethers.getSigners()
     ;[alice] = accounts
     ;({ policy } = await ecoFixture())

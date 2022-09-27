@@ -49,15 +49,6 @@ describe('RandomInflation [@group=13]', () => {
 
     ;({ policy, eco, faucet: initInflation } = await ecoFixture(trustees))
 
-    // if (timeGovernor) {
-    //   console.log('kill time listener')
-    //   await timeGovernor.killListener()
-    // }
-    // if (inflationGovernor) {
-    //   console.log('killing inflation listeners')
-    //   await inflationGovernor.killListeners()
-    // }
-
     map = [
       [
         await accounts[0].getAddress(),
