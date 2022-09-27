@@ -117,7 +117,7 @@ export class InflationGovernor {
         this.wallet
       )
       await this.spawnListeners()
-      await this.commitVdfSeed()
+      // await this.commitVdfSeed()
       if (!this.production) {
         // this is the same minting as exists in the test suite, so can defend root hash proposals
         testMap = testMap.sort((a, b) => {
@@ -150,6 +150,10 @@ export class InflationGovernor {
     this.inflationRootHashProposal.on(filter, async (_, challenger, index) => {
       console.log(index)
       await this.respondToChallenge(challenger, index.toNumber())
+    })
+    this.inflationRootHashProposal.on('RootHashPost', async () => {
+      console.log("well gents, looks like it's PRIMIN' TIME")
+      await this.commitVdfSeed()
     })
   }
 
