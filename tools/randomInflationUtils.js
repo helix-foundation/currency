@@ -138,9 +138,9 @@ function getRandomIntInclusiveOdd(min, max) {
   return shiftWithinRange(x, max)
 }
 
-async function getPrimal(blockHash, attempts = 0) {
+async function getPrimal(blockHash) {
   const baseNum = BigNumber.from(blockHash)
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 1; i < 1000; i++) {
     if (
       await bigintCryptoUtils.isProbablyPrime(
         BigInt(baseNum.add(i).toString()),
@@ -150,10 +150,11 @@ async function getPrimal(blockHash, attempts = 0) {
       return baseNum.add(i).toString()
     }
   }
-  if (attempts > 2) {
-    return
-  }
-  return getPrimal(blockHash, ++attempts)
+  // if (attempts > 2) {
+  //   return
+  // }
+  // return getPrimal(blockHash, ++attempts)
+  return -1
 }
 
 module.exports = {

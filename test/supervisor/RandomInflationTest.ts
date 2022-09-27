@@ -7,7 +7,7 @@ import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
 import { Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+
 const {
   getCommit,
   getFormattedBallot,
@@ -107,12 +107,12 @@ describe('RandomInflation [@group=13]', () => {
   it('gets primal, commits, proves and submits vdfSeed', async () => {
     expect(inflationGovernor.vdfOutput).to.be.undefined
     await time.increase(3600 * 24 * 1)
-    await time.waitBlockTime()
+    // await time.waitBlockTime()
 
     const unsetSeed: string =
       '0x0000000000000000000000000000000000000000000000000000000000000000'
     await time.advanceBlock()
-    await time.waitBlockTime(25000)
+    await time.waitBlockTime(38000)
 
     expect(inflationGovernor.vdfOutput).to.not.be.undefined
     expect(await inflationGovernor.randomInflation.seed()).to.not.equal(

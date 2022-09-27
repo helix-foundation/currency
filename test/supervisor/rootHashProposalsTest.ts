@@ -16,7 +16,7 @@ const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
 
-describe('RandomInflation [@group=13]', () => {
+describe('RootHashProposal [@group=13]', () => {
   let alice: Signer
   let bob: Signer
   let charlie: Signer
