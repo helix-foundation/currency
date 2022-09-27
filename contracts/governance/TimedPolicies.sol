@@ -20,6 +20,8 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     // Stores when the next generation is allowed to start
     uint256 public nextGenerationWindowOpen;
     // Stores all contracts that need a function called on generation increase
+    // Order matters here if there are any cross contract dependencies on the
+    // actions taking on generation increase.
     bytes32[] public notificationHashes;
 
     /** The on-chain address for the policy proposal process contract. The
@@ -75,6 +77,14 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         return notificationHashes;
     }
 
+    /**
+     * This function kicks off a new generation
+     * The process of a new generation is a bit of a chain reaction of creating contracts
+     * This function only directly clones and configures the PolicyProposals contract
+     * Everything else is notified via the notificationHashes array
+     * At launch this contains the ECO contract and the CurrencyGovernance contract
+     * however the structure is extensible to other contracts if needed.
+     */
     function incrementGeneration() external {
         uint256 time = getTime();
         require(
@@ -103,6 +113,28 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
         uint256 mintedOnGenerationIncrease = _numberOfRecipients *
             _randomInflationReward;
 
+        // snapshot the ECOx total
+        uint256 totalx = ECOx(policyFor(ID_ECOX)).totalSupply();
+
+        PolicyProposals _proposals = PolicyProposals(
+            policyProposalImpl.clone()
+        );
+
+        /**
+         * totalx not allowed to be passed through as zero as a safeguard to if ECOx is
+         * completely burned without first removing this part of the system
+         */
+        _proposals.configure(
+            totalx == 0 ? 1 : totalx,
+            mintedOnGenerationIncrease
+        );
+
+        policy.setPolicy(
+            ID_POLICY_PROPOSALS,
+            address(_proposals),
+            ID_TIMED_POLICIES
+        );
+
         uint256 notificationHashesLength = notificationHashes.length;
         for (uint256 i = 0; i < notificationHashesLength; ++i) {
             IGenerationIncrease notified = IGenerationIncrease(
@@ -113,42 +145,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             }
         }
 
-        startPolicyProposal(mintedOnGenerationIncrease);
-
-        emit NewGeneration(generation);
-    }
-
-    /** Begin a policies decision process.
-     *
-     * The proposals contract specified by `policyProposalImpl` is cloned and
-     * granted the necessary permissions to run a policies decision process.
-     *
-     * The decision process begins immediately.
-     *
-     * Use `policyFor(ID_POLICY_PROPOSALS)` to find the resulting contract
-     * address, or watch for the PolicyDecisionStart event.
-     */
-    function startPolicyProposal(uint256 _mintedOnGenerationIncrease) internal {
-        PolicyProposals _proposals = PolicyProposals(
-            policyProposalImpl.clone()
-        );
-
-        // snapshot the ECOx total
-        uint256 totalx = ECOx(policyFor(ID_ECOX)).totalSupply();
-
-        /**
-         * totalx not allowed to be passed through as zero as a safeguard to if ECOx is
-         * completely burned without first removing this part of the system
-         */
-        _proposals.configure(
-            totalx == 0 ? 1 : totalx,
-            _mintedOnGenerationIncrease
-        );
-        policy.setPolicy(
-            ID_POLICY_PROPOSALS,
-            address(_proposals),
-            ID_TIMED_POLICIES
-        );
         emit PolicyDecisionStart(address(_proposals));
+        emit NewGeneration(generation);
     }
 }

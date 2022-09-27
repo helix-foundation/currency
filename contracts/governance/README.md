@@ -53,22 +53,11 @@ Emitted at the end of a generation increment process. The value of `generation` 
 #### incrementGeneration
 Arguments: none
 
-Increments the `generation` variable and sets the time at which the new generation will end. It calculates the amount of ECO that will be minted during the process. Then it goes through the list of `notificationHashes` and calls `notifyGenerationIncrease` on each of them. Finally calls `startPolicyProposal`.
+Increments the `generation` variable and sets the time at which the new generation will end. It calculates the amount of ECO that will be minted during the process. Then it goes through the list of `notificationHashes` and calls `notifyGenerationIncrease` on each of them. Finally calls it begins a new policy voting process. A new instance of the `PolicyProposals` contract is created, configured, and granted appropriate permissions. The address of the new contract can be found by querying the root policy address for the `PolicyProposals` policy provider (see [here](../policy/README.md#policyfor) for more info). The community voting contracts are passed the amount of ECO minted during the generation increment to be ignored for calculating voting power.
 
 ##### Security Notes
   - This method can only be invoked at most once every 14 days, marked by the constant `MIN_GENERATION_DURATION`.
-  - It can be invoked by anyone who wishes to begin a the next generation and will likely be maintained by off-chain automation.
-
-#### startPolicyProposal
-Arguments:
-  - `_mintedOnGenerationIncrease` (uint256) - the amount of ECO minted during the generation increment to be ignored by the community voting contracts.
-
-Begins a new policy voting process. A new instance of the `PolicyProposals` contract is created, configured, and granted appropriate permissions. The address of the new contract can be found by querying the root policy address for the `PolicyProposals` policy provider (see [here](../policy/README.md#policyfor) for more info).
-
-A `PolicyDecisionStart` event is emitted with the `PolicyProposals` contract address to indicate the start of a new vote.
-
-##### Security Notes
-  - This function is internal.
+  - It can be invoked by anyone who wishes to begin a the next generation but will likely be maintained by off-chain automation.
 
 ### CurrencyTimer
   - Inherits: `PolicedUtils`, `IGenerationIncrease`
