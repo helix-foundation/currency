@@ -1,26 +1,30 @@
 /* eslint-disable no-unused-vars */
 import { ethers } from 'hardhat'
-import { Policy, TimedPolicies } from '../../typechain-types'
+import { EcoFaucet, Policy, TimedPolicies } from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { expect } from 'chai'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
+import { BigNumber, Signer } from 'ethers'
 
 const time = require('../utils/time.ts')
 
 const { ecoFixture } = require('../utils/fixtures')
 
 describe('TimedPolicies [@group=13]', () => {
-  let alice
+  let alice: Signer
+  let bob: Signer
   let policy: Policy
   let timedPolicies: TimedPolicies
+  let faucet: EcoFaucet
 
   let supervisor: Supervisor
   let timeGovernor: TimeGovernor
 
   before(async () => {
     const accounts = await ethers.getSigners()
-    ;[alice] = accounts
-    ;({ policy, timedPolicies } = await ecoFixture())
+    ;[alice, bob] = accounts
+    const trustees = [await alice.getAddress(), await bob.getAddress()]
+    ;({ policy, timedPolicies, faucet } = await ecoFixture(trustees))
 
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
@@ -39,5 +43,28 @@ describe('TimedPolicies [@group=13]', () => {
     expect((await timedPolicies.generation()).toNumber()).to.equal(startGen + 1)
 
     expect(timeGovernor.nextGenStart).to.be.gt(nextGenStart)
+  })
+
+  it('calls annualUpdate and updates supervisor values', async () => {
+    const rewardValue: BigNumber = await timeGovernor.trustedNodes.voteReward()
+    const rewardsCount: number = (
+      await timeGovernor.trustedNodes.unallocatedRewardsCount()
+    ).toNumber()
+    const initialYearEnd: number = await timeGovernor.yearEnd
+    await faucet.mintx(
+      timeGovernor.trustedNodes.address,
+      rewardValue.mul(rewardsCount)
+    )
+    const generationTime: number = (
+      await timeGovernor.timedPolicy.MIN_GENERATION_DURATION()
+    ).toNumber()
+    const generationsPerYear: number = (
+      await timeGovernor.trustedNodes.GENERATIONS_PER_YEAR()
+    ).toNumber()
+    await time.increase(generationsPerYear * generationTime)
+    await time.waitBlockTime()
+
+    const newYearEnd: number = timeGovernor.yearEnd
+    expect(newYearEnd).to.be.gt(initialYearEnd)
   })
 })
