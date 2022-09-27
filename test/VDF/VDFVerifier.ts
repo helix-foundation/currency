@@ -36,21 +36,13 @@ describe('VDFVerifier [@group=6]', () => {
     )
   })
   describe('BigNumbers', () => {
-    it('Rejects malformed bigint bytes', async () => {
-      await expect(
-        instanceVDFVerifier.start(bnHex(xbn), t, '0x0001', {
-          gasLimit: 6000000,
-        })
-      ).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned numbers'
-      )
-    })
-
     it('Rejects malformed bigint words', async () => {
       const bigone = `0x${'00'.repeat(63)}01`
       await expect(
         instanceVDFVerifier.start(bnHex(xbn), t, bigone, { gasLimit: 6000000 })
-      ).to.be.revertedWith('High-word must be set for 256bit-aligned numbers')
+      ).to.be.revertedWith(
+        'High-word must be set when input is bytes32-aligned'
+      )
     })
   })
 

@@ -51,62 +51,64 @@ library BigNumber {
      * @param _value Number stored in big endian bytes
      * @return instance of BigNumber
      */
-    function from(bytes memory _value) internal pure returns (Instance memory) {
+    function from(bytes memory _value) internal view returns (Instance memory) {
         uint256 length = _value.length;
         if (length == 0) {
             // Zero
             return Instance(new bytes32[](0));
         }
-        uint256 numSlots = (length - 1) / 32 + 1;
-        Instance memory instance = Instance(new bytes32[](numSlots));
+        uint256 numSlots = (length + 31) >> 5;
+        Instance memory _instance = Instance(new bytes32[](numSlots));
 
-        uint256 offset = length % 32;
+        // ensure there aren't any leading zero words
+        // this is not the zeroOffset yet, this is the modulo of the length
+        uint256 zeroOffset = length & 0x1f;
         bytes32 word;
-        if (offset == 0) {
+        if (zeroOffset == 0) {
             assembly {
                 // load the first word from _value
                 word := mload(add(_value, 0x20))
             }
             require(
                 word != 0,
-                "High-word must be set for 256bit-aligned numbers"
+                "High-word must be set when input is bytes32-aligned"
             );
-            offset = 32;
         } else {
-            bytes32 topByte;
+            // calculate zeroOffset
+            zeroOffset = 32 - zeroOffset;
             assembly {
-                // load the next word from _value
-                // then shift 248 bits to get just the top byte
-                word := mload(add(_value, 0x20))
-                topByte := shr(248, word)
-                // shift right for proper padding
-                word := shr(
-                    // shift right by the # of bits not included in _value to make a whole word
-                    mul(8, sub(0x20, offset)),
-                    word
-                )
+                // load the first word from _value
+                word := shr(mul(0x8, zeroOffset), mload(add(_value, 0x20)))
             }
             require(
-                topByte != 0,
-                "High-byte must be set for non-256bit-aligned numbers"
+                word != 0,
+                "High-word must be set when input is bytes32-aligned"
             );
         }
 
-        // set the first word
-        instance.value[0] = word;
-
-        // load the rest of the words starting at the end of the first
-        for (uint256 i = 1; i < numSlots; i++) {
-            // add the whole word
-            assembly {
-                // load the next word from _value
-                word := mload(add(_value, add(offset, 0x20)))
+        assembly {
+            /*
+            Call precompiled contract to copy data
+            gas cost is 15 + 3/word
+            there is no packing for structs in memory, so we just load the slot for _instance
+            shift 32 bytes to skip the length value of each reference type
+            shift an additional 32 - offset bits on the result to naturally create the offset
+            */
+            if iszero(
+                staticcall(
+                    add(0x0f, mul(0x03, numSlots)),
+                    0x04,
+                    add(_value, 0x20),
+                    length,
+                    add(mload(_instance), add(0x20, zeroOffset)),
+                    length
+                )
+            ) {
+                revert(0, 0)
             }
-            instance.value[i] = word;
-            offset += 32;
         }
 
-        return instance;
+        return _instance;
     }
 
     /**
@@ -127,91 +129,170 @@ library BigNumber {
 
     /**
      * @notice Convert instance to padded byte array
-     * @dev  If the caller modifies the returned buffer instance, it will corrupt the BigNumber value.
      * @param _instance BigNumber instance to convert
      * @param _size Desired size of byte array
      * @return result byte array
      */
     function asBytes(Instance memory _instance, uint256 _size)
         internal
-        pure
-        returns (bytes memory result)
+        view
+        returns (bytes memory)
     {
         uint256 length = _instance.value.length;
-        require(_size >= length * 32, "Number too large to represent");
-
         require(_size & 0x1f == 0x0, "Size must be multiple of 0x20");
 
-        for (uint256 i = 0; i < _size / 32 - length; i++) {
-            // Is this already multiple of 256 bit, and highest word is used?
-            result = bytes.concat(result, bytes32(0x0));
+        uint256 _byteLength = length << 5;
+        require(_size >= _byteLength, "Number too large to represent");
+
+        uint256 zeroOffset = _size - _byteLength;
+        bytes memory result = new bytes(_size);
+
+        assembly {
+            /*
+            Call precompiled contract to copy data
+            gas cost is 15 + 3/word
+            there is no packing for structs in memory, so we just load the slot for _instance
+            shift 32 bytes to skip the length value of each reference type
+            shift an additional zeroOffset bits on the result to naturally create the offset
+            */
+            if iszero(
+                staticcall(
+                    add(0x0f, mul(0x03, length)),
+                    0x04,
+                    add(mload(_instance), 0x20),
+                    _byteLength,
+                    add(result, add(0x20, zeroOffset)),
+                    _byteLength
+                )
+            ) {
+                revert(0, 0)
+            }
         }
 
-        for (uint256 i = 0; i < length; i++) {
-            // Is this already multiple of 256 bit, and highest word is used?
-            bytes32 word = _instance.value[i];
-            result = bytes.concat(result, abi.encode(word));
-        }
+        return result;
     }
 
     /**
      * @notice Convert instance to minimal byte array
-     * @param _base BigNumber instance to convert
+     * @param _instance BigNumber instance to convert
      * @return result byte array
      */
-    function asBytes(Instance memory _base)
+    function asBytes(Instance memory _instance)
         internal
-        pure
-        returns (bytes memory result)
+        view
+        returns (bytes memory)
     {
-        uint256 baseLength = _base.value.length;
-        if (baseLength == 0) {
-            return result;
+        uint256 _length = _instance.value.length;
+        if (_length == 0) {
+            return new bytes(0);
         }
 
-        bytes32 firstWord = _base.value[0];
-        uint256 offset = 0;
-        while (
-            firstWord > 0 && firstWord & bytes32(uint256(0xff << 248)) == 0
-        ) {
-            firstWord <<= 8;
-            offset += 1;
+        bytes32 firstWord = _instance.value[0];
+        uint256 zeroOffset = 0;
+        if (firstWord >> 128 == 0) {
+            firstWord <<= 128;
+            zeroOffset += 16;
         }
-        result = abi.encode(firstWord);
+        if (firstWord >> 192 == 0) {
+            firstWord <<= 64;
+            zeroOffset += 8;
+        }
+        if (firstWord >> 224 == 0) {
+            firstWord <<= 32;
+            zeroOffset += 4;
+        }
+        if (firstWord >> 240 == 0) {
+            firstWord <<= 16;
+            zeroOffset += 2;
+        }
+        if (firstWord >> 248 == 0) {
+            zeroOffset += 1;
+        }
+
+        uint256 _byteLength = (_length << 5) - zeroOffset;
+
+        bytes memory result = new bytes(_byteLength);
+
         assembly {
-            mstore(result, sub(32, offset))
+            /*
+            Call precompiled contract to copy data
+            gas cost is 15 + 3/word
+            there is no packing for structs in memory, so we just load the slot for _instance
+            shift 32 bytes to skip the length value of each reference type
+            shift an additional 32 + zeroOffset bits on the result to naturally create the offset
+            */
+            if iszero(
+                staticcall(
+                    add(0x0f, mul(0x03, _length)),
+                    0x04,
+                    add(mload(_instance), add(0x20, zeroOffset)),
+                    _byteLength,
+                    add(result, 0x20),
+                    _byteLength
+                )
+            ) {
+                revert(0, 0)
+            }
         }
 
-        for (uint256 i = 1; i < baseLength; i++) {
-            // Is this already multiple of 256 bit, and highest word is used?
-            bytes32 word = _base.value[i];
-            result = bytes.concat(result, abi.encode(word));
-        }
+        return result;
     }
 
     /**
      * @notice Obtain length (in bytes) of BigNumber instance
      * This will be rounded up to nearest multiple of 0x20 bytes
      *
-     * @param _base BigNumber instance
+     * @param _instance BigNumber instance
      * @return Size (in bytes) of BigNumber instance
      */
-    function byteLength(Instance memory _base) internal pure returns (uint256) {
-        return _base.value.length * 32;
+    function byteLength(Instance memory _instance)
+        internal
+        pure
+        returns (uint256)
+    {
+        return _instance.value.length << 5;
     }
 
     /**
      * @notice Obtain minimal length (in bytes) of BigNumber instance
      *
-     * @param _base BigNumber instance
+     * @param _instance BigNumber instance
      * @return Size (in bytes) of minimal BigNumber instance
      */
-    function minimalByteLength(Instance memory _base)
+    function minimalByteLength(Instance memory _instance)
         internal
         pure
         returns (uint256)
     {
-        return asBytes(_base).length;
+        uint256 _byteLength = byteLength(_instance);
+
+        if (_byteLength == 0) {
+            return 0;
+        }
+
+        bytes32 firstWord = _instance.value[0];
+        uint256 zeroOffset = 0;
+        if (firstWord >> 128 == 0) {
+            firstWord <<= 128;
+            zeroOffset += 16;
+        }
+        if (firstWord >> 192 == 0) {
+            firstWord <<= 64;
+            zeroOffset += 8;
+        }
+        if (firstWord >> 224 == 0) {
+            firstWord <<= 32;
+            zeroOffset += 4;
+        }
+        if (firstWord >> 240 == 0) {
+            firstWord <<= 16;
+            zeroOffset += 2;
+        }
+        if (firstWord >> 248 == 0) {
+            zeroOffset += 1;
+        }
+
+        return _byteLength - zeroOffset;
     }
 
     /**
@@ -331,40 +412,52 @@ library BigNumber {
             // set result_ptr end.
             let result_ptr := add(add(result_start, 0x20), max_len)
 
+            // while 'min' words are still available
+            // for(int i=0; i<min_length; i+=0x20)
             for {
-                let i := max_len
-            } gt(i, 0x0) {
-                i := sub(i, 0x20)
+                let i := 0x0
+            } lt(i, min_len) {
+                i := add(i, 0x20)
             } {
-                // for(int i=max_length; i!=0; i-=0x20)
                 // get next word for 'max'
                 let max_val := mload(max_ptr)
-                // if(i>(max_length-min_length)). while 'min' words are still available.
-                switch gt(i, sub(max_len, min_len))
-                case 1 {
-                    // get next word for 'min'
-                    let min_val := mload(min_ptr)
+                // get next word for 'min'
+                let min_val := mload(min_ptr)
 
-                    // check if we need to carry over to a new word
-                    // sum of both words that we're adding
-                    let min_max := add(min_val, max_val)
-                    // plus the carry amount if there is one
-                    let min_max_carry := add(min_max, carry)
-                    // store result
-                    mstore(result_ptr, min_max_carry)
-                    // carry again if we've overflowed
-                    carry := or(lt(min_max, min_val), lt(min_max_carry, carry))
-                    // point to next 'min' word
-                    min_ptr := sub(min_ptr, 0x20)
-                }
-                default {
-                    // else: remainder after 'min' words are complete.
-                    // result_word = max_word+carry
-                    let max_carry := add(max_val, carry)
-                    mstore(result_ptr, max_carry)
-                    // finds whether or not to set the carry bit for the next iteration.
-                    carry := lt(max_carry, carry)
-                }
+                // check if we need to carry over to a new word
+                // sum of both words that we're adding
+                let min_max := add(min_val, max_val)
+                // plus the carry amount if there is one
+                let min_max_carry := add(min_max, carry)
+                // store result
+                mstore(result_ptr, min_max_carry)
+                // carry again if we've overflowed
+                carry := or(lt(min_max, min_val), lt(min_max_carry, carry))
+                // point to next 'min' word
+                min_ptr := sub(min_ptr, 0x20)
+
+                // point to next 'result' word
+                result_ptr := sub(result_ptr, 0x20)
+                // point to next 'max' word
+                max_ptr := sub(max_ptr, 0x20)
+            }
+
+            // remainder after 'min' words are complete.
+            // for(int i=min_length; i<max_length; i+=0x20)
+            for {
+                let i := min_len
+            } lt(i, max_len) {
+                i := add(i, 0x20)
+            } {
+                // get next word for 'max'
+                let max_val := mload(max_ptr)
+
+                // result_word = max_word+carry
+                let max_carry := add(max_val, carry)
+                mstore(result_ptr, max_carry)
+                // finds whether or not to set the carry bit for the next iteration.
+                carry := lt(max_carry, carry)
+
                 // point to next 'result' word
                 result_ptr := sub(result_ptr, 0x20)
                 // point to next 'max' word
@@ -393,8 +486,7 @@ library BigNumber {
         pure
         returns (Instance memory instance)
     {
-        int256 compare;
-        compare = cmp(_a, _b);
+        int256 compare = cmp(_a, _b);
 
         if (compare == 1) {
             instance.value = innerDiff(_a.value, _b.value);
@@ -423,9 +515,6 @@ library BigNumber {
             let max_len := shl(5, mload(_max))
             let min_len := shl(5, mload(_min))
 
-            //get differences in lengths.
-            let len_diff := sub(max_len, min_len)
-
             //go to end of arrays
             let max_ptr := add(_max, max_len)
             let min_ptr := add(_min, min_len)
@@ -435,41 +524,48 @@ library BigNumber {
             // save memory_end to update free memory pointer at the end.
             let memory_end := add(result_ptr, 0x20)
 
+            // while 'min' words are still available.
+            // for(int i=0; i<min_len; i+=0x20)
             for {
-                let i := max_len
-            } iszero(eq(i, 0x0)) {
-                i := sub(i, 0x20)
+                let i := 0x0
+            } lt(i, min_len) {
+                i := add(i, 0x20)
             } {
-                // for(int i=max_length; i!=0x0; i-=0x20)
                 // get next word for 'max'
                 let max_val := mload(max_ptr)
-                // if(i>(max_length-min_length)). while 'min' words are still available.
-                switch gt(i, len_diff)
-                case 0x1 {
-                    // get next word for 'min'
-                    let min_val := mload(min_ptr)
+                // get next word for 'min'
+                let min_val := mload(min_ptr)
 
-                    // result_word = (max_word-min_word)-carry
-                    // find whether or not to set the carry bit for the next iteration.
-                    let max_min := sub(max_val, min_val)
-                    let max_min_carry := sub(max_min, carry)
-                    mstore(result_ptr, max_min_carry)
-                    carry := or(
-                        gt(max_min, max_val),
-                        gt(max_min_carry, max_min)
-                    )
+                // result_word = (max_word-min_word)-carry
+                // find whether or not to set the carry bit for the next iteration.
+                let max_min := sub(max_val, min_val)
+                let max_min_carry := sub(max_min, carry)
+                mstore(result_ptr, max_min_carry)
+                carry := or(gt(max_min, max_val), gt(max_min_carry, max_min))
 
-                    // point to next 'result' word
-                    min_ptr := sub(min_ptr, 0x20)
-                }
-                default {
-                    // else: remainder after 'min' words are complete.
+                // point to next 'result' word
+                min_ptr := sub(min_ptr, 0x20)
+                // point to next 'result' word
+                result_ptr := sub(result_ptr, 0x20)
+                // point to next 'max' word
+                max_ptr := sub(max_ptr, 0x20)
+            }
 
-                    // result_word = max_word-carry
-                    let max_carry := sub(max_val, carry)
-                    mstore(result_ptr, max_carry)
-                    carry := gt(max_carry, max_val)
-                }
+            // remainder after 'min' words are complete.
+            // for(int i=min_len; i<max_len; i+=0x20)
+            for {
+                let i := min_len
+            } lt(i, max_len) {
+                i := add(i, 0x20)
+            } {
+                // get next word for 'max'
+                let max_val := mload(max_ptr)
+
+                // result_word = max_word-carry
+                let max_carry := sub(max_val, carry)
+                mstore(result_ptr, max_carry)
+                carry := gt(max_carry, max_val)
+
                 // point to next 'result' word
                 result_ptr := sub(result_ptr, 0x20)
                 // point to next 'max' word
@@ -477,17 +573,22 @@ library BigNumber {
             }
 
             // the following code removes any leading words containing all zeroes in the result.
-            result_ptr := add(result_ptr, 0x20)
+            let shift := 0x20
             for {
 
-            } iszero(mload(result_ptr)) {
-                result_ptr := add(result_ptr, 0x20)
+            } iszero(mload(add(result_ptr, shift))) {
+
             } {
+                shift := add(shift, 0x20)
+            }
+
+            shift := sub(shift, 0x20)
+            if gt(shift, 0x0) {
                 // for(result_ptr+=0x20;; result==0x0; result_ptr+=0x20)
                 // push up the start pointer for the result..
-                result_start := add(result_start, 0x20)
+                result_start := add(result_start, shift)
                 // and subtract a word (0x20 bytes) from the result length.
-                max_len := sub(max_len, 0x20)
+                max_len := sub(max_len, shift)
             }
 
             // point 'result' bytes value to the correct address in memory
@@ -525,7 +626,7 @@ library BigNumber {
             // so we are safe to use innerDiff directly instead of absdiff
             res.value = innerDiff(res.value, diffSquared.value);
         }
-        res = privateRightShift(res, 0x2);
+        res = privateRightShift(res);
         return res;
     }
 
@@ -542,16 +643,19 @@ library BigNumber {
         bytes memory _modulus;
 
         res = _add ? privateAdd(_a, _b) : absdiff(_a, _b);
-        uint256 modIndex = (res.value.length * 32 * 0x2) + 0x20;
+        uint256 modIndex = (res.value.length << 6) + 0x1;
 
-        _modulus = new bytes(64);
+        _modulus = new bytes(1);
         assembly {
             //store length of modulus
             mstore(_modulus, modIndex)
             //set first modulus word
-            mstore(add(_modulus, 0x20), 0x1)
+            mstore(
+                add(_modulus, 0x20),
+                0xf000000000000000000000000000000000000000000000000000000000000000
+            )
             //update freemem pointer to be modulus index + length
-            mstore(0x40, add(_modulus, add(modIndex, 0x20)))
+            // mstore(0x40, add(_modulus, add(modIndex, 0x20)))
         }
 
         Instance memory modulus;
@@ -656,27 +760,31 @@ library BigNumber {
             } //fail where we haven't enough gas to make the call
 
             let length := ml
-            let resultPtr := add(0x60, freemem)
+            let result_ptr := add(0x60, freemem)
 
             // the following code removes any leading words containing all zeroes in the result.
+            let shift := 0x0
             for {
 
-            } and(gt(length, 0x0), iszero(mload(resultPtr))) {
+            } and(gt(length, shift), iszero(mload(add(result_ptr, shift)))) {
 
             } {
-                //push up the length pointer for the result..
-                resultPtr := add(resultPtr, 0x20)
-                //and subtract a word (0x20 bytes) from the result length.
-                length := sub(length, 0x20)
+                shift := add(shift, 0x20)
             }
 
-            ret := sub(resultPtr, 0x20)
+            if gt(shift, 0x0) {
+                // push up the start pointer for the result..
+                result_ptr := add(result_ptr, shift)
+                // and subtract a the words from the result length.
+                length := sub(length, shift)
+            }
+
+            ret := sub(result_ptr, 0x20)
             mstore(ret, shr(5, length))
 
             // point to the location of the return value (length, bits)
             // assuming mod length is multiple of 0x20, return value is already in the right format.
             // Otherwise, the offset needs to be adjusted.
-            // function visibility is changed to internal to reflect this.
             // ret := add(0x40,freemem)
             // deallocate freemem pointer
             mstore(0x40, add(add(0x60, freemem), ml))
@@ -688,19 +796,18 @@ library BigNumber {
      * @dev Right shift instance 'dividend' by 'value' bits.
      * This clobbers the passed _dividend
      */
-    function privateRightShift(Instance memory _dividend, uint256 _value)
+    function privateRightShift(Instance memory _dividend)
         internal
         pure
         returns (Instance memory)
     {
         bytes32[] memory result;
         uint256 wordShifted;
-        uint256 maskShift = 0x100 - _value;
+        uint256 maskShift = 0xfe;
         uint256 precedingWord;
         uint256 resultPtr;
-        uint256 length = _dividend.value.length * 32;
+        uint256 length = _dividend.value.length << 5;
 
-        require(_value == 0x2, "May only shift by 0x2");
         require(length <= 1024, "Length must be less than 8192 bits");
 
         assembly {
@@ -724,7 +831,7 @@ library BigNumber {
                 }
             }
             // right shift current by value
-            wordShifted >>= _value;
+            wordShifted >>= 0x2;
             // left shift next significant word by maskShift
             precedingWord <<= maskShift;
             assembly {

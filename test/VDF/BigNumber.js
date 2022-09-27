@@ -15,16 +15,17 @@ describe('BigNumber [@group=3]', () => {
   })
 
   describe('Input', () => {
-    it('Rejects malformed bigint bytes', async () => {
-      await expect(bignum.fromBytes('0x0001')).to.be.revertedWith(
-        'High-byte must be set for non-256bit-aligned numbers'
+    it('Rejects malformed aligned bigint words', async () => {
+      const bigone = `0x${'00'.repeat(63)}01`
+      await expect(bignum.fromBytes(bigone)).to.be.revertedWith(
+        'High-word must be set when input is bytes32-aligned'
       )
     })
 
-    it('Rejects malformed bigint words', async () => {
-      const bigone = `0x${'00'.repeat(63)}01`
+    it('Rejects malformed unaligned bigint words', async () => {
+      const bigone = `0x0001${'00'.repeat(63)}`
       await expect(bignum.fromBytes(bigone)).to.be.revertedWith(
-        'High-word must be set for 256bit-aligned numbers'
+        'High-word must be set when input is bytes32-aligned'
       )
     })
 
@@ -46,6 +47,11 @@ describe('BigNumber [@group=3]', () => {
 
     it('Matches padded byte 1', async () => {
       const one = `0x${'00'.repeat(31)}01`
+      expect(await bignum.asBytes(one, 32)).to.equal(one)
+    })
+
+    it('Reduces padded byte 1', async () => {
+      const one = `0x${'00'.repeat(31)}01`
       expect(await bignum.fromBytes(one)).to.equal('0x01')
     })
 
@@ -61,15 +67,9 @@ describe('BigNumber [@group=3]', () => {
       )
     })
 
-    it('Rejects invalid rightShift value', async () => {
-      await expect(bignum.rightShift('0x01', 4)).to.be.revertedWith(
-        'May only shift by 0x2'
-      )
-    })
-
     it('Rejects invalid rightShift input', async () => {
       await expect(
-        bignum.rightShift(`0x${'ff'.repeat(1092)}`, 2)
+        bignum.rightShift(`0x${'ff'.repeat(1092)}`)
       ).to.be.revertedWith('Length must be less than 8192 bits')
     })
 
@@ -91,6 +91,32 @@ describe('BigNumber [@group=3]', () => {
       ).to.equal(
         '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d783'
       )
+    })
+  })
+
+  describe('byte lengths', () => {
+    it('Matches 1', async () => {
+      expect(await bignum.byteLength('0x')).to.equal(0)
+    })
+
+    it('Matches 1', async () => {
+      expect(
+        await bignum.byteLength(
+          '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d78348c39ff18627137ab25b4a7a2dde2fa3e3d05e8396c7b61cf752bb5b7490f3622a4639e9b46eb541b9d4644ba3d423af9d5fc4ef419c2ce2f32915ec52169efa0a773fbc6b94a2869d910fb0d97d613a712844e5abfbf774713efcc767dfa8178b201e54b3a060e1c618ff3f49c6dcbda7f94b7beb59b74eea8da0c7c7bb2e13e564fbb4bd5d0fb7e4a96cd3c8f0f0b7504c9e9e1fe4e6e308a01156aa33a650a62024e04cefe7f7cea1bf4d634a904921cd24af684715c0803253338f1ab024e31af141faa882d8af7c901135f31b51abb9a3854aafa45a7ab63422baf972'
+        )
+      ).to.equal(256)
+    })
+
+    it('Matches 1', async () => {
+      expect(await bignum.minimalByteLength('0x')).to.equal(0)
+    })
+
+    it('Matches 1', async () => {
+      expect(
+        await bignum.minimalByteLength(
+          '0xd2e9ea92ccee6456e017363666e41169e73466c0238983d47864e121b741d78348c39ff18627137ab25b4a7a2dde2fa3e3d05e8396c7b61cf752bb5b7490f3622a4639e9b46eb541b9d4644ba3d423af9d5fc4ef419c2ce2f32915ec52169efa0a773fbc6b94a2869d910fb0d97d613a712844e5abfbf774713efcc767dfa8178b201e54b3a060e1c618ff3f49c6dcbda7f94b7beb59b74eea8da0c7c7bb2e13e564fbb4bd5d0fb7e4a96cd3c8f0f0b7504c9e9e1fe4e6e308a01156aa33a650a62024e04cefe7f7cea1bf4d634a904921cd24af684715c0803253338f1ab024e31af141faa882d8af7c901135f31b51abb9a3854aafa45a7ab63422baf972'
+        )
+      ).to.equal(255)
     })
   })
 
