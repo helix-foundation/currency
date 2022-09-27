@@ -168,8 +168,12 @@ export class InflationGovernor {
   }
 
   async killListeners() {
-    await this.randomInflation.removeAllListeners(entropyVDFSeedCommitEvent)
-    await this.vdfVerifier.removeAllListeners(successfulVerificationEvent)
+    if (this.randomInflation) {
+      await this.randomInflation.removeAllListeners(entropyVDFSeedCommitEvent)
+    }
+    if (this.vdfVerifier) {
+      await this.vdfVerifier.removeAllListeners(successfulVerificationEvent)
+    }
     await this.currencyTimer.removeAllListeners(newInflationEvent)
   }
 

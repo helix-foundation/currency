@@ -20,7 +20,7 @@ describe('TimedPolicies [@group=13]', () => {
   let supervisor: Supervisor
   let timeGovernor: TimeGovernor
 
-  before(async () => {
+  beforeEach(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob] = accounts
     const trustees = [await alice.getAddress(), await bob.getAddress()]
@@ -29,6 +29,10 @@ describe('TimedPolicies [@group=13]', () => {
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
     timeGovernor = supervisor.timeGovernor
+  })
+
+  afterEach(async () => {
+    await supervisor.killAllListeners()
   })
 
   it('increments generation and updates supervisor values', async () => {

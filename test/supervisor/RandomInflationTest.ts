@@ -48,14 +48,14 @@ describe('RandomInflation [@group=13]', () => {
       '50000000000000000000000000'
     )
 
-    if (timeGovernor) {
-      console.log('kill time listener')
-      await timeGovernor.killListener()
-    }
-    if (inflationGovernor) {
-      console.log('killing inflation listeners')
-      await inflationGovernor.killListeners()
-    }
+    // if (timeGovernor) {
+    //   console.log('kill time listener')
+    //   await timeGovernor.killListener()
+    // }
+    // if (inflationGovernor) {
+    //   console.log('killing inflation listeners')
+    //   await inflationGovernor.killListeners()
+    // }
 
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
@@ -102,6 +102,10 @@ describe('RandomInflation [@group=13]', () => {
     await governance
       .connect(dave)
       .reveal(davevote[0], getFormattedBallot(davevote[2]))
+  })
+
+  afterEach(async () => {
+    await supervisor.killAllListeners()
   })
 
   it('gets primal, commits, proves and submits vdfSeed', async () => {

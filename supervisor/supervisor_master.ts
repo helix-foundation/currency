@@ -90,4 +90,11 @@ export class Supervisor {
       await this.communityGovernor.startListeners()
     }
   }
+
+  async killAllListeners() {
+    await this.timeGovernor.killListener()
+    await this.communityGovernor.killListeners()
+    await this.currencyGovernor.killListeners()
+    await this.inflationGovernor.killListeners()
+  }
 }

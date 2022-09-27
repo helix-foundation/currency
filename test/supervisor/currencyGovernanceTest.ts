@@ -20,9 +20,9 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
   let timeGovernor: TimeGovernor
 
   beforeEach(async () => {
-    if (currencyGovernor) {
-      await currencyGovernor.killListeners()
-    }
+    // if (currencyGovernor) {
+    //   await currencyGovernor.killListeners()
+    // }
 
     const accounts = await ethers.getSigners()
     ;[alice] = accounts
@@ -33,6 +33,10 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
 
     currencyGovernor = supervisor.currencyGovernor
     timeGovernor = supervisor.timeGovernor
+  })
+
+  afterEach(async () => {
+    await supervisor.killAllListeners()
   })
 
   it('updates stages correctly happy path', async () => {

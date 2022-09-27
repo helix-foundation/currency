@@ -49,14 +49,14 @@ describe('RandomInflation [@group=13]', () => {
 
     ;({ policy, eco, faucet: initInflation } = await ecoFixture(trustees))
 
-    if (timeGovernor) {
-      console.log('kill time listener')
-      await timeGovernor.killListener()
-    }
-    if (inflationGovernor) {
-      console.log('killing inflation listeners')
-      await inflationGovernor.killListeners()
-    }
+    // if (timeGovernor) {
+    //   console.log('kill time listener')
+    //   await timeGovernor.killListener()
+    // }
+    // if (inflationGovernor) {
+    //   console.log('killing inflation listeners')
+    //   await inflationGovernor.killListeners()
+    // }
 
     map = [
       [
@@ -136,6 +136,10 @@ describe('RandomInflation [@group=13]', () => {
     await governance
       .connect(dave)
       .reveal(davevote[0], getFormattedBallot(davevote[2]))
+  })
+
+  afterEach(async () => {
+    await supervisor.killAllListeners()
   })
 
   it('submits a root hash proposal', async () => {
