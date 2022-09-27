@@ -5,6 +5,7 @@ import * as ethers from 'ethers'
 import { CurrencyGovernor } from './supervisor_currencyGovernance'
 import { CommunityGovernor } from './supervisor_communityGovernance'
 import { TimeGovernor } from './supervisor_timedPolicies'
+import { InflationGovernor } from './supervisor_randomInflation'
 import { Policy__factory, Policy } from '../typechain-types'
 require('dotenv').config({ path: '../.env' })
 const fs = require('fs')
@@ -14,6 +15,7 @@ const pk = process.env.PRIVATE_KEY || ''
 export class Supervisor {
   timeGovernor!: TimeGovernor
   currencyGovernor!: CurrencyGovernor
+  inflationGovernor!: InflationGovernor
   communityGovernor!: CommunityGovernor
   provider?: ethers.providers.BaseProvider
   rootPolicy?: Policy
@@ -70,6 +72,15 @@ export class Supervisor {
       await this.currencyGovernor.setup()
       await this.currencyGovernor.startListeners()
 
+      this.inflationGovernor = new InflationGovernor(
+        this.provider,
+        this.wallet,
+        this.rootPolicy,
+        this.production
+      )
+      await this.inflationGovernor.setup()
+      await this.inflationGovernor.startListeners()
+
       this.communityGovernor = new CommunityGovernor(
         this.provider,
         this.wallet,
@@ -78,5 +89,12 @@ export class Supervisor {
       await this.communityGovernor.setup()
       await this.communityGovernor.startListeners()
     }
+  }
+
+  async killAllListeners() {
+    await this.timeGovernor.killListener()
+    await this.communityGovernor.killListeners()
+    await this.currencyGovernor.killListeners()
+    await this.inflationGovernor.killListeners()
   }
 }

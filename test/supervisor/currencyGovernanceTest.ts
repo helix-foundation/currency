@@ -20,10 +20,6 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
   let timeGovernor: TimeGovernor
 
   beforeEach(async () => {
-    if (currencyGovernor) {
-      await currencyGovernor.killListeners()
-    }
-
     const accounts = await ethers.getSigners()
     ;[alice] = accounts
     ;({ policy } = await ecoFixture())
@@ -33,6 +29,10 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
 
     currencyGovernor = supervisor.currencyGovernor
     timeGovernor = supervisor.timeGovernor
+  })
+
+  afterEach(async () => {
+    await supervisor.killAllListeners()
   })
 
   it('updates stages correctly happy path', async () => {
@@ -76,7 +76,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
       (await time.latestBlockTimestamp())
 
     await time.increase(timeToNextGeneration + 1)
-    await time.waitBlockTime()
+    await time.waitBlockTime(20000)
 
     const newCurrGov = currencyGovernor.currencyGovernance.address
     expect(newCurrGov).to.not.equal(initialCurrGov)

@@ -4,6 +4,7 @@
 /* eslint prefer-destructuring: 0 */
 
 const { BigNumber } = ethers
+const bigintCryptoUtils = require('bigint-crypto-utils')
 
 /*
  * Takes an array of sorted items and recursively builds an merkle tree
@@ -137,10 +138,26 @@ function getRandomIntInclusiveOdd(min, max) {
   return shiftWithinRange(x, max)
 }
 
+async function getPrimal(blockHash) {
+  const baseNum = BigNumber.from(blockHash)
+  for (let i = 1; i < 1000; i++) {
+    if (
+      await bigintCryptoUtils.isProbablyPrime(
+        BigInt(baseNum.add(i).toString()),
+        30
+      )
+    ) {
+      return baseNum.add(i).toString()
+    }
+  }
+  return -1
+}
+
 module.exports = {
   getTree,
   answer,
   getRandomIntInclusive,
   getRandomIntInclusiveEven,
   getRandomIntInclusiveOdd,
+  getPrimal,
 }

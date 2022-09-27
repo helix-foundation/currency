@@ -62,16 +62,16 @@ describe('CommunityGovernor [@group=13]', () => {
       '5000000000000000000000000'
     )
 
-    if (timeGovernor) {
-      console.log('kill time listener')
-      await timeGovernor.killListener()
-    }
-
     supervisor = new Supervisor()
     await supervisor.startSupervisor('', policy, alice)
     timeGovernor = supervisor.timeGovernor
     communityGovernor = supervisor.communityGovernor
   })
+
+  afterEach(async () => {
+    await supervisor.killAllListeners()
+  })
+
   it('fetches new PolicyProposals + starts listeners', async () => {
     const oldPolicyProposalsAddress: string =
       communityGovernor.policyProposals.address
