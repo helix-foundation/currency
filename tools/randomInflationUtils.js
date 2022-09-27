@@ -150,10 +150,6 @@ async function getPrimal(blockHash) {
       return baseNum.add(i).toString()
     }
   }
-  // if (attempts > 2) {
-  //   return
-  // }
-  // return getPrimal(blockHash, ++attempts)
   return -1
 }
 

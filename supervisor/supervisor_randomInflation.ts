@@ -37,6 +37,11 @@ const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from(
   '1000000000000000000'
 )
 
+const newInflationEvent = 'NewInflation'
+const entropyVDFSeedCommitEvent = 'EntropyVDFSeedCommit'
+const successfulVerificationEvent = 'SuccessfulVerification'
+const rootHashPostEvent = 'RootHashPost'
+
 let tx
 let rc
 
@@ -101,48 +106,53 @@ export class InflationGovernor {
   async startListeners() {
     // make this better after you figure out how to do listeners
     console.log('listening for new RI')
-    this.currencyTimer.on('NewInflation', async (inflationAddr, _) => {
+    this.currencyTimer.on(newInflationEvent, async (inflationAddr, _) => {
       console.log('new RI')
-      this.randomInflation = await RandomInflation__factory.connect(
-        inflationAddr,
-        this.wallet
-      )
-      this.inflationRootHashProposal =
-        InflationRootHashProposal__factory.connect(
-          await this.randomInflation.inflationRootHashProposal(),
-          this.wallet
-        )
-      this.vdfVerifier = VDFVerifier__factory.connect(
-        await this.randomInflation.vdfVerifier(),
-        this.wallet
-      )
-      await this.spawnListeners()
-      // await this.commitVdfSeed()
-      if (!this.production) {
-        // this is the same minting as exists in the test suite, so can defend root hash proposals
-        testMap = testMap.sort((a, b) => {
-          return a[0].toLowerCase().localeCompare(b[0].toLowerCase(), 'en')
-        })
-        this.proposeRootHash(testMap)
-      } else {
-        this.proposeRootHash(
-          await this.fetchBalances(
-            (await this.randomInflation.blockNumber()).toNumber(),
-            SUBGRAPHS_URL
-          )
-        )
-      }
+      this.startRIprocesses(inflationAddr)
     })
+  }
+
+  async startRIprocesses(inflationAddr: string) {
+    this.randomInflation = await RandomInflation__factory.connect(
+      inflationAddr,
+      this.wallet
+    )
+    this.inflationRootHashProposal = InflationRootHashProposal__factory.connect(
+      await this.randomInflation.inflationRootHashProposal(),
+      this.wallet
+    )
+    this.vdfVerifier = VDFVerifier__factory.connect(
+      await this.randomInflation.vdfVerifier(),
+      this.wallet
+    )
+    await this.spawnListeners()
+    if (!this.production) {
+      // this is the same minting as exists in the test suite, so can defend root hash proposals
+      testMap = testMap.sort((a, b) => {
+        return a[0].toLowerCase().localeCompare(b[0].toLowerCase(), 'en')
+      })
+      this.proposeRootHash(testMap)
+    } else {
+      this.proposeRootHash(
+        await this.fetchBalances(
+          (await this.randomInflation.blockNumber()).toNumber(),
+          SUBGRAPHS_URL
+        )
+      )
+    }
   }
 
   async spawnListeners() {
     // flags once each finishes?
-    this.randomInflation.once('EntropyVDFSeedCommit', async () => {
+    this.randomInflation.once(entropyVDFSeedCommitEvent, async () => {
       await this.proveVDF()
     })
-    this.vdfVerifier.once('SuccessfulVerification', async (_, __, output) => {
-      await this.submitVDF(output)
-    })
+    this.vdfVerifier.once(
+      successfulVerificationEvent,
+      async (_, __, output) => {
+        await this.submitVDF(output)
+      }
+    )
     const filter =
       this.inflationRootHashProposal.filters.RootHashChallengeIndexRequest(
         await this.wallet.getAddress()
@@ -151,19 +161,19 @@ export class InflationGovernor {
       console.log(index)
       await this.respondToChallenge(challenger, index.toNumber())
     })
-    this.inflationRootHashProposal.on('RootHashPost', async () => {
+    this.inflationRootHashProposal.on(rootHashPostEvent, async () => {
       console.log("well gents, looks like it's PRIMIN' TIME")
       await this.commitVdfSeed()
     })
   }
 
   async killListeners() {
-    await this.randomInflation.removeAllListeners('EntropyVDFSeedCommit')
-    await this.vdfVerifier.removeAllListeners('SuccessfulVerification')
-    await this.currencyTimer.removeAllListeners('NewInflation')
+    await this.randomInflation.removeAllListeners(entropyVDFSeedCommitEvent)
+    await this.vdfVerifier.removeAllListeners(successfulVerificationEvent)
+    await this.currencyTimer.removeAllListeners(newInflationEvent)
   }
 
-  async commitVdfSeed() {
+  async commitVdfSeed(): Promise<void> {
     console.log('trying to commit vdf seed')
 
     let primalNumber: number = 0
@@ -194,7 +204,7 @@ export class InflationGovernor {
       // this gets hit a lot due to setPrimal being kind of finnicky
       console.log('failed setPrimal, trying again')
       console.log((await this.provider.getBlock('latest')).number)
-      setTimeout(this.commitVdfSeed.bind(this), 1000)
+      return await this.commitVdfSeed()
     }
   }
 
@@ -317,8 +327,7 @@ export class InflationGovernor {
     } catch (e) {
       // error logging
       console.log(e)
-      // this one gets hit (in hh) when multiple challenges come in during the same block
-      setTimeout(this.respondToChallenge.bind(this, challenger, index), 1000)
+      await this.respondToChallenge(challenger, index)
     }
   }
 

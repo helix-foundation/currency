@@ -80,7 +80,7 @@ export class Supervisor {
       )
       await this.inflationGovernor.setup()
       await this.inflationGovernor.startListeners()
-      
+
       this.communityGovernor = new CommunityGovernor(
         this.provider,
         this.wallet,

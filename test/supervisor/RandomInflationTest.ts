@@ -107,11 +107,10 @@ describe('RandomInflation [@group=13]', () => {
   it('gets primal, commits, proves and submits vdfSeed', async () => {
     expect(inflationGovernor.vdfOutput).to.be.undefined
     await time.increase(3600 * 24 * 1)
-    // await time.waitBlockTime()
 
     const unsetSeed: string =
       '0x0000000000000000000000000000000000000000000000000000000000000000'
-    await time.advanceBlock()
+    // await time.advanceBlock()
     await time.waitBlockTime(38000)
 
     expect(inflationGovernor.vdfOutput).to.not.be.undefined
