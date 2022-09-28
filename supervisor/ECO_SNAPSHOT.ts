@@ -7,7 +7,6 @@ type SubgraphBalance = {
 
 type SubgraphAccount = {
   address: string
-  ECOBalances: SubgraphBalance[]
   ECOVotingPowers: SubgraphBalance[]
 }
 
@@ -20,15 +19,6 @@ export const ECO_SNAPSHOT = gql`
   query EcoSnapshot($blockNumber: BigInt!) {
     accounts {
       address: id
-      ECOBalances: historicalECOBalances(
-        where: { blockNumber_lte: $blockNumber }
-        orderBy: blockNumber
-        orderDirection: desc
-        first: 1
-      ) {
-        value
-        blockNumber
-      }
       ECOVotingPowers: historicalVotingPowers(
         where: { token: "eco", blockNumber_lte: $blockNumber }
         orderBy: blockNumber

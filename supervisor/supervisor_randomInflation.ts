@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable no-unused-vars */
 import * as ethers from 'ethers'
 import fetch from 'cross-fetch'
 import {
@@ -368,10 +369,10 @@ export class InflationGovernor {
               '',
               ethers.BigNumber.from(0),
             ]
-            if (account.ECOBalances.length) {
+            if (account.ECOVotingPowers.length) {
               result[0] = account.address
               result[1] = ethers.BigNumber.from(
-                account.ECOBalances[0].value
+                account.ECOVotingPowers[0].value
               ).div(inflationMultiplier)
             }
             return result

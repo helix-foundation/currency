@@ -5,7 +5,7 @@ import { Policy, CurrencyGovernance } from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor_master'
 import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
 import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
 
 const {
@@ -28,6 +28,7 @@ describe('RandomInflation [@group=13]', () => {
   let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
+  const someBlockWhereBalancesExist: number = 7471818
 
   const inflationVote = 10
   const rewardVote = 20000
@@ -120,5 +121,40 @@ describe('RandomInflation [@group=13]', () => {
     await time.waitBlockTime(25000)
 
     expect(inflationGovernor.randomInflation).to.not.be.undefined
+  })
+
+  it('fetches from subgraph', async () => {
+    const balances: [string, BigNumber][] | undefined =
+      await inflationGovernor.fetchBalances(
+        someBlockWhereBalancesExist,
+        'https://api.thegraph.com/subgraphs/name/paged1/policy'
+      )
+    if (balances) {
+      expect(balances.length).to.be.greaterThan(0)
+    } else {
+      expect(false)
+    }
+  })
+
+  it('orders the balances by address', async () => {
+    const balances: [string, BigNumber][] | undefined =
+      await inflationGovernor.fetchBalances(
+        someBlockWhereBalancesExist,
+        'https://api.thegraph.com/subgraphs/name/paged1/policy'
+      )
+    if (balances) {
+      const addresses: string[] = balances.map(
+        (object: [string, BigNumber]) => {
+          return object[0]
+        }
+      )
+      addresses.sort()
+
+      let prev: string = ''
+      for (const i of addresses) {
+        expect(i.localeCompare(prev)).to.eq(1)
+        prev = i
+      }
+    }
   })
 })
