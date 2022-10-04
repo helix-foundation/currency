@@ -22,7 +22,8 @@ describe('Nicks Method', () => {
         bytecode,
         `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
         800000,
-        100000000000,
+        100000000000, // 100 GWei
+        1500000000, // 1.5 GWei
         params
       )
 
@@ -40,7 +41,8 @@ describe('Nicks Method', () => {
         bytecode,
         `0x${Buffer.from(ethers.utils.randomBytes(16)).toString('hex')}`,
         800000,
-        100000000000,
+        100000000000, // 100 GWei
+        1500000000, // 1.5 GWei
         params
       )
 
