@@ -1211,6 +1211,8 @@ async function deployStage3(options) {
 // which starts the governance cycle.
 //
 async function deployStage4(options) {
+  const maxFeePerGas = options.maxFeePerGas
+  const maxPriorityFeePerGas = options.maxPriorityFeePerGas
   if (options.verbose) {
     console.log('Incrementing initial generation')
   }
