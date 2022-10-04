@@ -15,7 +15,8 @@ describe('TokenInit [@group=11]', () => {
       'ECO',
       policy.address,
       tokenInit.address,
-      1000
+      1000,
+      ethers.constants.AddressZero
     )
     const ecoProxy = await deploy('ForwardProxy', ecoToken.address)
     const ecoProxied = await ethers.getContractAt('ECO', ecoProxy.address)
@@ -25,7 +26,8 @@ describe('TokenInit [@group=11]', () => {
       policy.address,
       tokenInit.address,
       10,
-      ecoProxy.address
+      ecoProxy.address,
+      ethers.constants.AddressZero
     )
     const ecoXProxy = await deploy('ForwardProxy', ecoXToken.address)
     const ecoXProxied = await ethers.getContractAt('ECOx', ecoXProxy.address)

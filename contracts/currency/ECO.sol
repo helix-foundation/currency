@@ -25,8 +25,9 @@ contract ECO is InflationCheckpoints {
     constructor(
         Policy _policy,
         address _distributor,
-        uint256 _initialSupply
-    ) InflationCheckpoints(_policy, "Eco", "ECO") {
+        uint256 _initialSupply,
+        address _initialPauser
+    ) InflationCheckpoints(_policy, "Eco", "ECO", _initialPauser) {
         distributor = _distributor;
         initialSupply = _initialSupply;
     }
@@ -38,6 +39,7 @@ contract ECO is InflationCheckpoints {
         onlyConstruction
     {
         super.initialize(_self);
+        pauser = ERC20Pausable(_self).pauser();
         _mint(distributor, initialSupply);
     }
 

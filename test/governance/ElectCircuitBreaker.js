@@ -105,7 +105,10 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
     expect(await eco.pauser()).not.to.equal(await bob.getAddress())
     expect(await ecox.pauser()).not.to.equal(await bob.getAddress())
     expect(await borda.pauser()).not.to.equal(await bob.getAddress())
-    expect(await eco.pauser()).to.equal(ethers.constants.AddressZero)
+    // this also tests that the initial pauser is set
+    expect(await eco.pauser()).to.equal(
+      '0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0'
+    )
     expect(await ecox.pauser()).to.equal(ethers.constants.AddressZero)
     expect(await borda.pauser()).to.equal(ethers.constants.AddressZero)
   })

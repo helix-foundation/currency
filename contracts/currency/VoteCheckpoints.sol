@@ -77,8 +77,9 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
     constructor(
         string memory _name,
         string memory _symbol,
-        address admin
-    ) ERC20Pausable(_name, _symbol, admin) {
+        address admin,
+        address _initialPauser
+    ) ERC20Pausable(_name, _symbol, admin, _initialPauser) {
         // call to super constructor
     }
 

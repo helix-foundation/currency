@@ -25,13 +25,16 @@ contract ERC20Pausable is ERC20, Pausable {
     constructor(
         string memory name,
         string memory symbol,
-        address _roleAdmin
+        address _roleAdmin,
+        address _initialPauser
     ) ERC20(name, symbol) {
         require(
             address(_roleAdmin) != address(0),
             "Unrecoverable: do not set the _roleAdmin as the zero address"
         );
         roleAdmin = _roleAdmin;
+        pauser = _initialPauser;
+        emit PauserAssignment(_initialPauser);
     }
 
     modifier onlyAdmin() {

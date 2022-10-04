@@ -37,8 +37,12 @@ abstract contract InflationCheckpoints is
     constructor(
         Policy _policy,
         string memory _name,
-        string memory _symbol
-    ) VoteCheckpoints(_name, _symbol, address(_policy)) PolicedUtils(_policy) {
+        string memory _symbol,
+        address _initialPauser
+    )
+        VoteCheckpoints(_name, _symbol, address(_policy), _initialPauser)
+        PolicedUtils(_policy)
+    {
         _writeCheckpoint(
             _linearInflationCheckpoints,
             _replace,

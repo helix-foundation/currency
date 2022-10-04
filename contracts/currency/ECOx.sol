@@ -25,8 +25,12 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         Policy _policy,
         address _distributor,
         uint256 _initialSupply,
-        IECO _ecoAddr
-    ) ERC20Pausable("Eco-X", "ECOx", address(_policy)) PolicedUtils(_policy) {
+        IECO _ecoAddr,
+        address _initialPauser
+    )
+        ERC20Pausable("Eco-X", "ECOx", address(_policy), _initialPauser)
+        PolicedUtils(_policy)
+    {
         require(_initialSupply > 0, "initial supply not properly set");
         require(
             address(_ecoAddr) != address(0),
@@ -45,6 +49,7 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         onlyConstruction
     {
         super.initialize(_self);
+        pauser = ERC20Pausable(_self).pauser();
         _mint(distributor, initialSupply);
     }
 

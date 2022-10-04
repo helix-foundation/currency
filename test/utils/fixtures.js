@@ -220,7 +220,14 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
 
   const deployments = []
   deployments.push(
-    deployFrom(wallet, 'ECO', policyProxy.address, _tokenInit.address, 0)
+    deployFrom(
+      wallet,
+      'ECO',
+      policyProxy.address,
+      _tokenInit.address,
+      0,
+      '0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0'
+    )
   )
   deployments.push(deployFrom(wallet, 'TokenInit'))
   const [ecoImpl, tokenInit] = await Promise.all(deployments)
@@ -231,7 +238,8 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
     policyProxy.address,
     tokenInit.address,
     initialECOxSupply,
-    ecoProxy.address
+    ecoProxy.address,
+    ethers.constants.AddressZero
   )
 
   return {
@@ -301,7 +309,8 @@ exports.deployPeripheralContracts = async (
   const governance = await deployFrom(
     wallet,
     'CurrencyGovernance',
-    policyProxy.address
+    policyProxy.address,
+    ethers.constants.AddressZero
   )
 
   const policyVotes = await deployFrom(

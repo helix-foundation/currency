@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "../proxy/ForwardProxy.sol";
-import "../currency/ERC20Pausable.sol";
 
 /** @title PolicyTestPolicy
  * A policy object used for testing policy actions.

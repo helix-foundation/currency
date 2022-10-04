@@ -48,7 +48,11 @@ describe('CurrencyGovernance [@group=4]', () => {
       ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
         await ecoFixture(trustees, votingReward))
 
-      const originalBorda = await deploy('CurrencyGovernance', policy.address)
+      const originalBorda = await deploy(
+        'CurrencyGovernance',
+        policy.address,
+        ethers.constants.AddressZero
+      )
       const bordaCloner = await deploy('Cloner', originalBorda.address)
       borda = await ethers.getContractAt(
         'CurrencyGovernance',
@@ -816,7 +820,8 @@ describe('CurrencyGovernance [@group=4]', () => {
               // currencyGovernance cycle in gen 1 of year - dave reveals
               let originalBorda2 = await deploy(
                 'CurrencyGovernance',
-                policy.address
+                policy.address,
+                ethers.constants.AddressZero
               )
               let bordaCloner2 = await deploy('Cloner', originalBorda2.address)
               borda = await ethers.getContractAt(
@@ -860,7 +865,8 @@ describe('CurrencyGovernance [@group=4]', () => {
               // currencyGovernance cycle in gen 2 of year 2, nothing happens
               originalBorda2 = await deploy(
                 'CurrencyGovernance',
-                policy.address
+                policy.address,
+                ethers.constants.AddressZero
               )
               bordaCloner2 = await deploy('Cloner', originalBorda2.address)
               borda = await ethers.getContractAt(
@@ -875,7 +881,8 @@ describe('CurrencyGovernance [@group=4]', () => {
               // currencyGovernance cycle in gen 3 of year 2 - dave reveals again
               originalBorda2 = await deploy(
                 'CurrencyGovernance',
-                policy.address
+                policy.address,
+                ethers.constants.AddressZero
               )
               bordaCloner2 = await deploy('Cloner', originalBorda2.address)
               borda = await ethers.getContractAt(
@@ -1025,7 +1032,11 @@ describe('CurrencyGovernance [@group=4]', () => {
     it('doesnt let unallocatedRewards underflow', async () => {
       /* eslint-disable no-await-in-loop */
       for (let i = 0; i < unallocatedRewards + 1; i++) {
-        originalBorda = await deploy('CurrencyGovernance', policy.address)
+        originalBorda = await deploy(
+          'CurrencyGovernance',
+          policy.address,
+          ethers.constants.AddressZero
+        )
         bordaCloner = await deploy('Cloner', originalBorda.address)
         borda = await ethers.getContractAt(
           'CurrencyGovernance',
@@ -1063,7 +1074,11 @@ describe('CurrencyGovernance [@group=4]', () => {
       ;({ policy, trustedNodes, faucet, ecox, timedPolicies } =
         await ecoFixture(trustees))
 
-      const originalBorda = await deploy('CurrencyGovernance', policy.address)
+      const originalBorda = await deploy(
+        'CurrencyGovernance',
+        policy.address,
+        ethers.constants.AddressZero
+      )
       const bordaCloner = await deploy('Cloner', originalBorda.address)
       borda = await ethers.getContractAt(
         'CurrencyGovernance',

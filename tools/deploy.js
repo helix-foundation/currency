@@ -115,6 +115,10 @@ async function parseFlags(options) {
     options.trusteeVoteReward = options.trusteeVoteReward || '1000'
   }
 
+  if (!options.pauser) {
+    options.pauser = ethers.constants.AddressZero
+  }
+
   return options
 }
 
@@ -384,6 +388,7 @@ async function deployStage2(options) {
       policyProxyAddress,
       tokenInit.address,
       options.initialECOSupply,
+      options.pauser,
       { gasPrice }
     )
   } else {
@@ -403,6 +408,7 @@ async function deployStage2(options) {
       tokenInit.address,
       options.initialECOxSupply,
       ecoProxyAddress,
+      options.pauser,
       { gasPrice }
     )
   } else {
@@ -860,6 +866,7 @@ async function deployStage3(options) {
 
   const currencyGovernanceImpl = await currencyGovernanceFactory.deploy(
     policyProxyAddress,
+    options.pauser,
     { gasPrice }
   )
 

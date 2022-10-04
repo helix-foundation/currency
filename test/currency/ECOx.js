@@ -99,6 +99,7 @@ describe('ECOx', () => {
         policy.address,
         await charlie.getAddress(),
         0,
+        ethers.constants.AddressZero,
         ethers.constants.AddressZero
       )
     ).to.be.revertedWith('initial supply not properly set')
