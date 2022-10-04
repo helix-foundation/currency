@@ -10,9 +10,9 @@ import {
   TrusteeReplacement,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { Supervisor } from '../../supervisor/supervisor_master'
-import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
-import { CommunityGovernor } from '../../supervisor/supervisor_communityGovernance'
+import { Supervisor } from '../../supervisor/supervisor'
+import { TimeGovernor } from '../../supervisor/timeGovernor'
+import { CommunityGovernor } from '../../supervisor/communityGovernor'
 
 const time = require('../utils/time.ts')
 

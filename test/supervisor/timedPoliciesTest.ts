@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 import { ethers } from 'hardhat'
 import { EcoFaucet, Policy, TimedPolicies } from '../../typechain-types'
-import { Supervisor } from '../../supervisor/supervisor_master'
+import { Supervisor } from '../../supervisor/supervisor'
 import { expect } from 'chai'
-import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
+import { TimeGovernor } from '../../supervisor/timeGovernor'
 import { BigNumber, Signer } from 'ethers'
 
 const time = require('../utils/time.ts')

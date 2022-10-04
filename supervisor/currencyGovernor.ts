@@ -66,7 +66,6 @@ export class CurrencyGovernor {
 
   async killListeners() {
     await this.timedPolicy.removeAllListeners(newGenerationEvent)
-    await this.provider.removeAllListeners('block')
   }
 
   async stageUpdateListener() {

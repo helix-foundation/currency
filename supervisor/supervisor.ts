@@ -2,10 +2,10 @@
 import * as hre from 'hardhat'
 import * as ethers from 'ethers'
 
-import { CurrencyGovernor } from './supervisor_currencyGovernance'
-import { CommunityGovernor } from './supervisor_communityGovernance'
-import { TimeGovernor } from './supervisor_timedPolicies'
-import { InflationGovernor } from './supervisor_randomInflation'
+import { CurrencyGovernor } from './currencyGovernor'
+import { CommunityGovernor } from './communityGovernor'
+import { TimeGovernor } from './timeGovernor'
+import { InflationGovernor } from './inflationGovernor'
 import { Policy__factory, Policy } from '../typechain-types'
 require('dotenv').config({ path: '../.env' })
 const fs = require('fs')
@@ -17,7 +17,7 @@ export class Supervisor {
   currencyGovernor!: CurrencyGovernor
   inflationGovernor!: InflationGovernor
   communityGovernor!: CommunityGovernor
-  provider?: ethers.providers.BaseProvider
+  provider!: ethers.providers.BaseProvider
   rootPolicy?: Policy
   wallet?: ethers.Signer
   production: boolean = false
@@ -51,10 +51,10 @@ export class Supervisor {
       throw new Error('bad inputs')
     }
 
-    await this.startModules()
+    await this.startGovernors()
   }
 
-  async startModules() {
+  async startGovernors() {
     if (this.rootPolicy && this.wallet && this.provider) {
       this.timeGovernor = new TimeGovernor(
         this.provider,
@@ -92,7 +92,7 @@ export class Supervisor {
   }
 
   async killAllListeners() {
-    await this.timeGovernor.killListener()
+    await this.provider.removeAllListeners('block')
     await this.communityGovernor.killListeners()
     await this.currencyGovernor.killListeners()
     await this.inflationGovernor.killListeners()

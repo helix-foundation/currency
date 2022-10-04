@@ -150,7 +150,7 @@ export class CommunityGovernor {
   }
 
   async killListeners() {
-    // await this.timedPolicy.removeAllListeners(policyDecisionStartEvent)
+    await this.timedPolicy.removeAllListeners(policyDecisionStartEvent)
     await this.policyProposals.removeAllListeners(supportThresholdReachedEvent)
     await this.policyProposals.removeAllListeners(voteStartEvent)
   }

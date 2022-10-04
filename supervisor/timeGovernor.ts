@@ -125,9 +125,4 @@ export class TimeGovernor {
       }
     }
   }
-
-  async killListener() {
-    // pending stackoverflow answers on how to make this not universal
-    this.provider.removeAllListeners('block')
-  }
 }

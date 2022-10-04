@@ -109,11 +109,11 @@ export class InflationGovernor {
     console.log('listening for new RI')
     this.currencyTimer.on(newInflationEvent, async (inflationAddr, _) => {
       console.log('new RI')
-      this.startRIprocesses(inflationAddr)
+      this.startRIProcesses(inflationAddr)
     })
   }
 
-  async startRIprocesses(inflationAddr: string) {
+  async startRIProcesses(inflationAddr: string) {
     this.randomInflation = await RandomInflation__factory.connect(
       inflationAddr,
       this.wallet
@@ -126,7 +126,7 @@ export class InflationGovernor {
       await this.randomInflation.vdfVerifier(),
       this.wallet
     )
-    await this.spawnListeners()
+    await this.startRIInstanceListeners()
     if (!this.production) {
       // this is the same minting as exists in the test suite, so can defend root hash proposals
       testMap = testMap.sort((a, b) => {
@@ -143,7 +143,7 @@ export class InflationGovernor {
     }
   }
 
-  async spawnListeners() {
+  async startRIInstanceListeners() {
     // flags once each finishes?
     this.randomInflation.once(entropyVDFSeedCommitEvent, async () => {
       await this.proveVDF()

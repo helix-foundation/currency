@@ -2,11 +2,11 @@
 import { ethers } from 'hardhat'
 import { expect } from 'chai'
 import { Policy, CurrencyGovernance, ECO } from '../../typechain-types'
-import { Supervisor } from '../../supervisor/supervisor_master'
-import { InflationGovernor } from '../../supervisor/supervisor_randomInflation'
-import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
+import { Supervisor } from '../../supervisor/supervisor'
+import { InflationGovernor } from '../../supervisor/inflationGovernor'
+import { CurrencyGovernor } from '../../supervisor/currencyGovernor'
 import { BigNumber, Signer } from 'ethers'
-import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
+import { TimeGovernor } from '../../supervisor/timeGovernor'
 
 const {
   getCommit,

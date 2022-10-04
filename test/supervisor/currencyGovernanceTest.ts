@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 import { ethers } from 'hardhat'
 import { Policy } from '../../typechain-types'
-import { Supervisor } from '../../supervisor/supervisor_master'
-import { TimeGovernor } from '../../supervisor/supervisor_timedPolicies'
-import { CurrencyGovernor } from '../../supervisor/supervisor_currencyGovernance'
+import { Supervisor } from '../../supervisor/supervisor'
+import { TimeGovernor } from '../../supervisor/timeGovernor'
+import { CurrencyGovernor } from '../../supervisor/currencyGovernor'
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 
