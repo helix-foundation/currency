@@ -67,16 +67,27 @@ const OPT_DEFS = [
  * @param {bytecode} The constructor bytecode (should start with "0x").
  * @param {s} The signature of the transaction (s of the r,s pair from ECDSA).
  * @param {gas} The gas limit to use when running the transaction.
- * @param {gasPrice} The price (in wei) to pay for gas.
+ * @param {maxFeePerGas} The max total gasPrice (in wei).
+ * @param {maxPriorityFeePerGas} The max priority fee (in wei).
  * @param {paramdata} The encoded parameter list to pass to the constructor. This
  *                    is just appended to the bytecode (less and 0x prefix) and
  *                    the result forms the data field of the transaction object.
  */
-function generateTx(bytecode, s, gas, gasPrice, paramdata) {
+function generateTx(
+  bytecode,
+  s,
+  gas,
+  maxFeePerGas,
+  maxPriorityFeePerGas,
+  paramdata
+) {
   const tx = ethers.utils.serializeTransaction(
     {
+      type: 2,
+      chainId: 1,
       nonce: 0,
-      gasPrice,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
       gasLimit: gas,
       value: 0,
       data:
@@ -146,7 +157,8 @@ function main() {
     JSON.parse(fs.readFileSync(options.contract, 'utf8')).bytecode,
     options.signature,
     options.gas,
-    options.gasPrice,
+    options.maxFeePerGas,
+    options.maxPriorityFeePerGas,
     options.paramdata
   )
   createTxFile(tx, options.outfile)

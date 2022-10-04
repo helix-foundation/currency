@@ -59,7 +59,7 @@ const config: HardhatUserConfig = {
         count: 100,
         mnemonic,
       },
-      chainId: NetworkID.hardhat,
+      chainId: 1,
     },
     goerli: createTestnetConfig(NetworkID.goerli),
     kovan: createTestnetConfig(NetworkID.kovan),

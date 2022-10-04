@@ -200,6 +200,7 @@ async function initUsers() {
 }
 
 async function deployEco() {
+  console.log('Begin deploy eco')
   if (options.deployTokens) {
     options = await deployTokens(options)
     const printOptions = JSON.parse(JSON.stringify(options)) // don't shallow copy
