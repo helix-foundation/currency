@@ -263,13 +263,5 @@ contract PolicyVotes is VotingPower, TimeUtils {
 
         emit VoteCompletion(_res);
         policy.removeSelf(ID_POLICY_VOTES);
-
-        require(
-            ecoToken.transfer(
-                address(policy),
-                ecoToken.balanceOf(address(this))
-            ),
-            "Transfer Failed"
-        );
     }
 }
