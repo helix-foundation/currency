@@ -6,6 +6,11 @@ const BN = require('bn.js');
 
 const importPath = "currency/artifacts";
 
+const {
+    getCommit,
+    getFormattedBallot,
+  } = require('./tools/test/currencyGovernanceVote')
+
 const PolicyABI = require(`../${importPath}/contracts/policy/Policy.sol/Policy.json`);
 const PolicyTestABI = require(`../${importPath}/contracts/test/Backdoor.sol/PolicyTest.json`);
 const PolicyInitABI = require(`../${importPath}/contracts/policy/PolicyInit.sol/PolicyInit.json`);
@@ -89,7 +94,7 @@ const contracts = {
     "timedPolicies": "0x18c6397a49d887e31973c85c0683cb87da192473",
     "policyProposals": "0x306ee7ff8e37de1a55f12262b9cda1379bdf6603",
     "policyVotes": "0xff2baF9db90BBDCce3eC1A1db3Ae3f66AC599975",
-    // "currencyGovernance": "0x26b540485Fbff49e3219aBBa243c69C08a3F31a8",
+    "currencyGovernance": "0xf874d12de2753e796adf0b04c52ec770908a344a",
     // "lockupVaultFactory": "0xf6d82882b9ae041760ffa8c879a4e9ce10710b5a",
     // "lockupVault": "",
     // "fundsLockup": "0xcdbb56abf0ca46c6139dbff926a4f2018fa6370f",
@@ -97,11 +102,24 @@ const contracts = {
     "newProposal": "0x7D971EE0Cc1a5E7Ae6F2C46965F783F8D74f652A"
 }
 
+let randomBytes = []
+
 
 async function runtest() {
     const blockNumber = await provider.getBlockNumber();
 
+    const seeds = [
+                    [],
+                    [191,59,141,236,8,54,182,202,100,57,159,96,188,201,215,8,147,28,110,189,133,87,4,220,27,45,65,40,179,241,133,106],
+                    []
+    ]
     let tx, contract;
+
+    async function checkTrustees() {
+        contract = new ethers.Contract(contracts.trustedNodes, TrustedNodesABI.abi, accounts[1].signer)
+        const cohort = await contract.cohort()
+        console.log(await contract.getTrustedNodesFromCohort(cohort))
+    }
 
     async function whatever() {
         // create proposal
@@ -134,7 +152,47 @@ async function runtest() {
 
         
     }
+    // monetary governance
 
+    async function proposeCurrencyGovernance() {
+        contract = new ethers.Contract(contracts.currencyGovernance, CurrencyGovernanceABI.abi, accounts[1].signer)
+        tx = await contract.propose(10, 11, 12, 13, BigNumber.from('1000000000000000000'), '')
+        tx = await tx.wait();
+        if (tx.status == 1) {
+            console.log(`currency governance proposed by ${accounts[1].address}`)
+        }
+    }
+
+    async function commit(i) {
+        contract = new ethers.Contract(contracts.currencyGovernance, CurrencyGovernanceABI.abi, accounts[i].signer)
+        // const temp = ethers.utils.randomBytes(32)
+        const temp = seed
+        tx = await contract.commit(
+            getCommit(temp, accounts[1].address, [accounts[1].address]),
+            {gasLimit: 2_000_000}
+        )
+        tx = await tx.wait();
+        if (tx.status == 1) {
+            console.log(`vote committed by ${accounts[i].address} with seed ${temp}`)
+            //copy the seed into the corresponding array in the seeds object, this will be necessarily for reveal phase
+        }
+    }
+
+    async function reveal(i) {
+        contract = new ethers.Contract(contracts.currencyGovernance, CurrencyGovernanceABI.abi, accounts[i].signer)
+        tx = await contract.reveal(
+            seed[i],
+            getFormattedBallot([accounts[i].address]),
+            {gasLimit: 2_000_000}
+        )
+        tx = await tx.wait();
+        if (tx.status == 1) {
+            console.log(`vote revealed by ${accounts[i].address}`)
+        }
+    }
+
+
+    // community governance
     async function deployProposal() {
         const factory = new ethers.ContractFactory(
             TrusteeReplacementABI.abi,
@@ -163,7 +221,6 @@ async function runtest() {
         if (tx.status == 1) {
             console.log('registered proposal')
         }
-        
     }
 
     async function support(i) {
@@ -187,7 +244,9 @@ async function runtest() {
 
         tx = await contract.vote(bool, {gasLimit: 2_000_000})
         tx = await tx.wait();
-        console.log(tx.status === 1,i);
+        if (tx.status) {
+            console.log(`${accounts[i]} has voted ${bool}`)
+        }
     }
 
     async function incrementGeneration() {
@@ -196,18 +255,33 @@ async function runtest() {
 
         tx = await contract.connect(accounts[1].signer).incrementGeneration()
         tx = await tx.wait();
-        console.log(tx.status === 1);
+        if (tx.status) {
+            console.log('incremented generation')
+        }
     }
 
+    // incrementGeneration();
+    // checkTrustees();
+
+    //****** community governance *****
     // deployProposal();
-    registerProposal();
+    // registerProposal();
     // support(1);
     // support(2);
     // support(3);
     // doVote(1, true);
     // doVote(2, false);
     // doVote(3, true);
-    // incrementGeneration();
+
+    // **** monetary governance *****
+    // proposeCurrencyGovernance();
+    // commit(1);
+    // commit(2);
+    // commit(3);
+    // reveal(1);
+    reveal(2);
+    // reveal(3);
+
     
 
 }
