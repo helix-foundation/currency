@@ -310,11 +310,51 @@ async function deployStage2(options) {
     console.log(`Bootstrap contract address: ${options.bootstrap.address}`)
   }
 
-  // name this proxy for later
+  // name this proxy for ease of use
   const policyProxyAddress = (options.policyAddress =
     options.bootstrap.placeholders[0])
 
-  // proxies used in this stage
+  const ecoPolicyMint = options.initialECO.findIndex(
+    (val) => val.holder === ethers.constants.AddressZero
+  )
+  if (ecoPolicyMint >= 0) {
+    if (options.verbose) {
+      console.log(
+        `Setting initialECO holder marked as ${options.initialECO[ecoPolicyMint].safe} with amount ${options.initialECO[ecoPolicyMint].balance} as the root policy address`
+      )
+    }
+    options.initialECO[ecoPolicyMint].holder = policyProxyAddress
+    if (
+      options.initialECO.findIndex(
+        (val) => val.holder === ethers.constants.AddressZero
+      ) >= 0
+    ) {
+      // eslint-disable-next-line no-throw-literal
+      throw 'too many zero address eco inputs'
+    }
+  }
+
+  const ecoxPolicyMint = options.initialECOx.findIndex(
+    (val) => val.holder === ethers.constants.AddressZero
+  )
+  if (ecoxPolicyMint >= 0) {
+    if (options.verbose) {
+      console.log(
+        `Setting initialECO holder marked as ${options.initialECOx[ecoxPolicyMint].safe} with amount ${options.initialECOx[ecoxPolicyMint].balance} as the root policy address`
+      )
+    }
+    options.initialECOx[ecoxPolicyMint].holder = policyProxyAddress
+    if (
+      options.initialECOx.findIndex(
+        (val) => val.holder === ethers.constants.AddressZero
+      ) >= 0
+    ) {
+      // eslint-disable-next-line no-throw-literal
+      throw 'too many zero address ecox inputs'
+    }
+  }
+
+  // other proxies used in this stage
   const ecoProxyAddress = (options.ecoAddress =
     options.bootstrap.placeholders[1])
   const ecoXProxyAddress = (options.ecoXAddress =
