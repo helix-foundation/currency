@@ -174,7 +174,7 @@ async function runtest() {
         tx = await tx.wait();
         if (tx.status == 1) {
             console.log(`vote committed by ${accounts[i].address} with seed ${temp}`)
-            //copy the seed into the corresponding array in the seeds object, this will be necessarily for reveal phase
+            //copy the seed into the corresponding index in the seeds object, this will be necessarily for reveal phase
         }
     }
 
