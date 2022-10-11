@@ -2,10 +2,26 @@
 This implements the Eco Governance Supervisor, a set of typescript objects smoothing the governance processes of the Eco Currency System. 
 
 ## Table of Contents
+ -[Building](#building)
  -[Security](#security)
  -[Background](#background)
  -[API](#security)
 
+## Building
+To build the docker image for the supervisor:
+```
+docker build .
+```
+
+Build and tag the image:
+```
+docker build -t  beamnetwork/supervisor:0.0.2 .
+```
+
+To run the image, you need to have the variables in [.env.example](.env.example) or pass them in to the run command:
+```
+docker run -p 3000:8080 -e PRIVATE_KEY=<privatekey>  -e INFURA_URL=https://goerli.infura.io/v3/<key> -e POLICY_ROOT=<policyRootAddress> <imageID>
+```
 
 ## Security
 Since the Supervisor is not privileged, it cannot affect system state in any way beyond how a traditional EOA can, and therefore does not present an additional attack surface at a contract level. The Eco Foundation will be funding the Supervisor and will using the most advanced key management tools to maintain  its integrity.
@@ -26,18 +42,17 @@ The Supervisor consists of several component 'governors' united by one master 's
 ### Master Supervisor
 The master supervisor is responsible for parsing the config files and initializing all the governors with the correct wallet, provider and root policy address. If a config file is used, it will provide information on both the policy and signer. Providing a Policy and Signer and no config file results in a test deploy of the master supervisor. 
 
-#### startSupervisor
+#### startTestSupervisor
 Arguments: 
-    - `filepath` (string) (optional) - the path to the configuration file, if it exists
     - `policy` (Policy) (optional) - the root policy of the eco ecosystem to be referenced by the supervisor.
     - `signer` (ethers.Signer) (optional) - the signer from which the supervisor's wallet will be constructed.
 
-This method parses inputs and sets class variables for startGovernors. Should be called immediately upon construction. The filepath input is to be used for production cases, and the policy and signer are used primarily in testing. Policy and signer will not be used if filepath arg exists.
+This method starts the supervisor for a test environmnet. Should be called immediately upon construction. The filepath input is to be used for production cases, and the policy and signer are used primarily in testing. Policy and signer will not be used if filepath arg exists.
 
 #### startGovernors
 Arguments: None
 
-This method utilizes class methods set in startSupervisor to deploy start the various governors. 
+This method deploys the various governors.
 
 #### killAllListeners
 Arguments: None

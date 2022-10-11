@@ -63,7 +63,7 @@ describe('CommunityGovernor [@group=13]', () => {
     )
 
     supervisor = new Supervisor()
-    await supervisor.startSupervisor('', policy, alice)
+    await supervisor.startTestSupervisor(policy, alice)
     timeGovernor = supervisor.timeGovernor
     communityGovernor = supervisor.communityGovernor
   })

@@ -27,7 +27,8 @@
     "deploy": "npm run build && node tools/eco.js --config",
     "test:all": "yarn test && yarn test:hardhat",
     "typechain": "hardhat typechain",
-    "test:hardhat": "yarn typechain && hardhat test test/**/*.ts"
+    "test:hardhat": "yarn typechain && hardhat test test/**/*.ts",
+    "startSupervisor" :"npx ts-node supervisor/app.ts"
   },
   "repository": {
     "type": "git",

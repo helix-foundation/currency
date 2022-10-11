@@ -25,7 +25,7 @@ describe('currencyGovernance_supervisor [@group=13]', () => {
     ;({ policy } = await ecoFixture())
 
     supervisor = new Supervisor()
-    await supervisor.startSupervisor('', policy, alice)
+    await supervisor.startTestSupervisor(policy, alice)
 
     currencyGovernor = supervisor.currencyGovernor
     timeGovernor = supervisor.timeGovernor

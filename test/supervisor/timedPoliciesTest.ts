@@ -27,7 +27,7 @@ describe('TimedPolicies [@group=13]', () => {
     ;({ policy, timedPolicies, faucet } = await ecoFixture(trustees))
 
     supervisor = new Supervisor()
-    await supervisor.startSupervisor('', policy, alice)
+    await supervisor.startTestSupervisor(policy, alice)
     timeGovernor = supervisor.timeGovernor
   })
 

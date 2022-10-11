@@ -78,7 +78,7 @@ describe('RandomInflation [@group=13]', () => {
     )
 
     supervisor = new Supervisor()
-    await supervisor.startSupervisor('', policy, alice)
+    await supervisor.startTestSupervisor(policy, alice)
     timeGovernor = supervisor.timeGovernor
     currencyGovernor = supervisor.currencyGovernor
     inflationGovernor = supervisor.inflationGovernor

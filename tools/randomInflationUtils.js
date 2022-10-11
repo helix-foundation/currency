@@ -3,7 +3,7 @@
 /* eslint no-await-in-loop: 0 */
 /* eslint prefer-destructuring: 0 */
 
-const { BigNumber } = ethers
+const { BigNumber } = require('ethers')
 const bigintCryptoUtils = require('bigint-crypto-utils')
 
 /*

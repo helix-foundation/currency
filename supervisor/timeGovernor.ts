@@ -49,9 +49,11 @@ export class TimeGovernor {
       await this.policy.policyFor(ID_TRUSTED_NODES),
       this.wallet
     )
+
     this.nextGenStart = (
       await this.timedPolicy.nextGenerationWindowOpen()
     ).toNumber()
+
     this.generation = (await this.timedPolicy.generation()).toNumber()
     this.yearEnd = (await this.trustedNodes.yearEnd()).toNumber()
   }

@@ -7,10 +7,11 @@ import { CommunityGovernor } from './communityGovernor'
 import { TimeGovernor } from './timeGovernor'
 import { InflationGovernor } from './inflationGovernor'
 import { Policy__factory, Policy } from '../typechain-types'
-require('dotenv').config({ path: '../.env' })
-const fs = require('fs')
+require('dotenv').config({ path: '.env' })
 
-const pk = process.env.PRIVATE_KEY || ''
+const privateKey = process.env.PRIVATE_KEY || ''
+const rpcEndpoint = process.env.INFURA_URL || ''
+const policyRoot = process.env.POLICY_ROOT || ''
 
 export class Supervisor {
   timeGovernor!: TimeGovernor
@@ -22,34 +23,22 @@ export class Supervisor {
   wallet?: ethers.Signer
   production: boolean = false
 
-  async startSupervisor(
-    filepath?: string,
-    policy?: Policy,
-    signer?: ethers.Signer
-  ) {
-    if (filepath) {
-      // prod
-      try {
-        let args = fs.readFileSync(filepath)
-        args = args.toString().split('\n')
-        const rpc: string = args[0]
-        const root: string = args[1]
-        this.provider = new ethers.providers.JsonRpcProvider(rpc)
-        this.wallet = new ethers.Wallet(pk, this.provider)
-        this.rootPolicy = Policy__factory.connect(root, this.wallet)
-        this.production = true
-      } catch (e) {
-        throw new Error('bad filepath, rpcURL, pk or rootPolicy address')
-      }
-    } else if (signer && policy) {
-      // test
-      console.log('test')
-      this.provider = hre.ethers.provider
-      this.wallet = signer
-      this.rootPolicy = policy
-    } else {
-      throw new Error('bad inputs')
-    }
+  async start() {
+    this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint)
+    this.wallet = new ethers.Wallet(privateKey, this.provider)
+    this.rootPolicy = Policy__factory.connect(policyRoot, this.wallet)
+    this.production = true
+
+    await this.startGovernors()
+  }
+
+  async startTestSupervisor(policy: Policy, signer: ethers.Signer) {
+    // test
+    console.log('test')
+    // @ts-ignore
+    this.provider = hre.ethers.provider
+    this.wallet = signer
+    this.rootPolicy = policy
 
     await this.startGovernors()
   }
@@ -61,6 +50,7 @@ export class Supervisor {
         this.wallet,
         this.rootPolicy
       )
+
       await this.timeGovernor.setup()
       await this.timeGovernor.startListeners()
 
@@ -69,6 +59,7 @@ export class Supervisor {
         this.wallet,
         this.rootPolicy
       )
+
       await this.currencyGovernor.setup()
       await this.currencyGovernor.startListeners()
 
@@ -78,6 +69,7 @@ export class Supervisor {
         this.rootPolicy,
         this.production
       )
+
       await this.inflationGovernor.setup()
       await this.inflationGovernor.startListeners()
 
@@ -86,6 +78,7 @@ export class Supervisor {
         this.wallet,
         this.rootPolicy
       )
+
       await this.communityGovernor.setup()
       await this.communityGovernor.startListeners()
     }
