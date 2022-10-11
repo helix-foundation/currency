@@ -80,11 +80,9 @@ export class TimeGovernor {
         }
       } catch (e) {
         if ((await this.trustedNodes.yearEnd()).toNumber() > this.yearEnd) {
-          // generation has been updated
+          // annual update successful
           this.triedAnnualUpdate = false
-          this.nextGenStart = (
-            await this.timedPolicy.nextGenerationWindowOpen()
-          ).toNumber()
+          this.yearEnd = (await this.trustedNodes.yearEnd()).toNumber()
         } else {
           // error logging
           console.log(e)
