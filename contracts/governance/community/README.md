@@ -294,7 +294,7 @@ The Withdrawal event indicates that a withdrawal has been made to a particular a
 Arguments:
   - `_amount` (uint256) - amount of EcoX sender is attempting to deposit
 
-Transfers EcoX in the amount `_amount` from msg.sender to the EcoXLockup contract. A checkpoint is written to increase totalSupply and the voting balance of msg.sender by `_amount` for the current block number. This also results in a `Deposit` event being emitted.
+Transfers EcoX in the amount `_amount` from msg.sender to the EcoXStaking contract. A checkpoint is written to increase totalSupply and the voting balance of msg.sender by `_amount` for the current block number. This also results in a `Deposit` event being emitted.
 
 ##### Security Notes
   - only updates totalSupply and voting power balance if the transfer is successful i.e. if msg.sender has at least `_amount` of EcoX in their balance
