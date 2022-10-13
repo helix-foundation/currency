@@ -152,6 +152,7 @@ async function initUsers() {
       } else {
         // a nonsensical input will fail here
         options.signer = ethers.Wallet.fromMnemonic(options.from)
+        options.signer = options.signer.connect(options.ethersProvider)
       }
       account = await options.signer.getAddress()
       // wrap the signer in a nonce manager
@@ -206,6 +207,7 @@ async function deployEco() {
     delete printOptions.correctPolicyArtifact
     delete printOptions.ethersProvider
     delete printOptions.signer
+    delete printOptions.from
     console.log(JSON.stringify(printOptions, null, 2))
   }
   if (options.deployGovernance) {
