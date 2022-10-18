@@ -189,11 +189,11 @@ async function deployStage1(options) {
         `Gas limit (${BLOCK_GAS_LIMIT}) too high compared to block limit (${limit}); unlikely to succeed in deploying`
       )
     }
-    // bootstrapGas = 4538418; // old estimate, included 20 proxies
-    bootstrapGas = 2000000
+    // bootstrapGas = 1557741; exact value, rounded up to increase deploytime resilience
+    bootstrapGas = 1600000
   } else {
     BLOCK_GAS_LIMIT = limit
-    bootstrapGas = 1700000
+    bootstrapGas = 2000000
   }
 
   if (options.verbose) {
@@ -219,11 +219,11 @@ async function deployStage1(options) {
   )
 
   if (!options.production) {
-    if (options.verbose) {
-      console.log('setting up ERC1820 Registry')
-    }
     // empty code is 0x
-    if ((await options.ethersProvider.getCode(ERC1820_REGISTRY)).length >= 2) {
+    if ((await options.ethersProvider.getCode(ERC1820_REGISTRY)).length <= 2) {
+      if (options.verbose) {
+        console.log('setting up ERC1820 Registry')
+      }
       await (
         await options.signer.sendTransaction({
           to: '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96',
