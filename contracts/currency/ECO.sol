@@ -27,7 +27,7 @@ contract ECO is InflationCheckpoints {
         address _distributor,
         uint256 _initialSupply,
         address _initialPauser
-    ) InflationCheckpoints(_policy, "Eco", "ECO", _initialPauser) {
+    ) InflationCheckpoints(_policy, "ECO", "ECO", _initialPauser) {
         distributor = _distributor;
         initialSupply = _initialSupply;
     }

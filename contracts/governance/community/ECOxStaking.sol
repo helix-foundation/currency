@@ -33,7 +33,7 @@ contract ECOxStaking is VoteCheckpoints, PolicedUtils {
         // Note that the policy has the ability to pause transfers
         // through ERC20Pausable, although transfers are paused by default
         // therefore the pauser is unset
-        VoteCheckpoints("S-Eco-X", "sECOx", address(_policy), address(0))
+        VoteCheckpoints("Staked ECOx", "sECOx", address(_policy), address(0))
         PolicedUtils(_policy)
     {
         require(

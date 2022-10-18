@@ -257,7 +257,7 @@ describe('ECOx', () => {
 
   describe('getters work properly', () => {
     it('name returns correct name', async () => {
-      expect(await ecox.name()).to.equal('Eco-X')
+      expect(await ecox.name()).to.equal('ECOx')
     })
 
     it('symbol returns correct symbol', async () => {

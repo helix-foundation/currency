@@ -350,7 +350,7 @@ Overrides the `getPastVotes` function in `VoteCheckpoints` to account for inflat
 ### ECO
  - Inherits: `InflationCheckpoints`
 
-The `ECO` contract manages the function of our primary token, ECO. Its constructor sets the `name` and `symbol` values for `ERC20` to "Eco" and "ECO" respectively. On creation it mints an initial supply to a distributor contract, both set in the constructor. See [TokenInit](./README.md#tokeninit) for more details on the distribution. The rest of the functionality is permissioning `mint` and `burn` as well as recieving the inflation multiplier each generation.
+The `ECO` contract manages the function of our primary token, ECO. Its constructor sets the `name` and `symbol` values for `ERC20` both to "ECO". On creation it mints an initial supply to a distributor contract, both set in the constructor. See [TokenInit](./README.md#tokeninit) for more details on the distribution. The rest of the functionality is permissioning `mint` and `burn` as well as recieving the inflation multiplier each generation.
 
 #### Events
 

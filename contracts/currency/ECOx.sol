@@ -28,7 +28,7 @@ contract ECOx is ERC20Pausable, PolicedUtils {
         IECO _ecoAddr,
         address _initialPauser
     )
-        ERC20Pausable("Eco-X", "ECOx", address(_policy), _initialPauser)
+        ERC20Pausable("ECOx", "ECOx", address(_policy), _initialPauser)
         PolicedUtils(_policy)
     {
         require(_initialSupply > 0, "initial supply not properly set");
