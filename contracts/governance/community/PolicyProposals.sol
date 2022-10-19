@@ -73,15 +73,15 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
     /** The minimum cost to register a proposal.
      */
-    uint256 public constant COST_REGISTER = 1000e18;
+    uint256 public constant COST_REGISTER = 10000e18;
 
     /** The amount refunded if a proposal does not get selected.
      */
-    uint256 public constant REFUND_IF_LOST = 800e18;
+    uint256 public constant REFUND_IF_LOST = 5000e18;
 
     /** The percentage of total voting power required to push to a vote.
      */
-    uint256 public constant SUPPORT_THRESHOLD = 30;
+    uint256 public constant SUPPORT_THRESHOLD = 15;
 
     /** The divisor for the above constant, tracks the digits of precision.
      */

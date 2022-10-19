@@ -57,7 +57,7 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
     })
 
     it('Stakes accounts', async () => {
-      const stake = ethers.utils.parseEther('5000')
+      const stake = ethers.utils.parseEther('2000000')
       await initInflation.mint(await alice.getAddress(), stake)
       await initInflation.mint(await bob.getAddress(), stake)
       await initInflation.mint(await charlie.getAddress(), stake)
@@ -128,7 +128,6 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
     })
 
     it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-      await policyProposals.connect(alice).support(electCircuitBreaker.address)
       await policyProposals.connect(bob).support(electCircuitBreaker.address)
       await policyProposals.connect(bob).deployProposalVoting()
     })
@@ -503,21 +502,19 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
       it('still charges a fee', async () => {
         const newProposal = await deploy(
           'ElectCircuitBreaker',
-          await alice.getAddress()
+          await bob.getAddress()
         )
-        const aliceBalanceBefore = await eco.balanceOf(await alice.getAddress())
+        const bobBalanceBefore = await eco.balanceOf(await bob.getAddress())
         await eco
-          .connect(alice)
+          .connect(bob)
           .approve(
             policyProposals.address,
             await policyProposals.COST_REGISTER()
           )
-        await policyProposals
-          .connect(alice)
-          .registerProposal(newProposal.address)
-        const aliceBalanceAfter = await eco.balanceOf(await alice.getAddress())
-        expect(aliceBalanceAfter).to.equal(
-          aliceBalanceBefore.sub(await policyProposals.COST_REGISTER())
+        await policyProposals.connect(bob).registerProposal(newProposal.address)
+        const bobBalanceAfter = await eco.balanceOf(await bob.getAddress())
+        expect(bobBalanceAfter).to.equal(
+          bobBalanceBefore.sub(await policyProposals.COST_REGISTER())
         )
       })
 
@@ -630,7 +627,6 @@ describe('Proposal Circuit Breaker Change [@group=9]', () => {
       })
 
       it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-        await policyProposals.connect(alice).support(secondaryProposal.address)
         await policyProposals.connect(bob).support(secondaryProposal.address)
         await policyProposals.connect(bob).deployProposalVoting()
       })

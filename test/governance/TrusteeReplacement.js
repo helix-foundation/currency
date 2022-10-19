@@ -43,7 +43,7 @@ describe('E2E Proposal Trustee Cohort Change [@group=9]', () => {
     })
 
     it('Stakes accounts', async () => {
-      const stake = ethers.utils.parseEther('5000')
+      const stake = ethers.utils.parseEther('5000000')
       /* Until we have some idea how initial distribution is done, this *does* use
        *a test-function
        */
@@ -132,7 +132,6 @@ describe('E2E Proposal Trustee Cohort Change [@group=9]', () => {
     })
 
     it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-      await policyProposals.connect(alice).support(trusteeReplacement.address)
       await policyProposals.connect(bob).support(trusteeReplacement.address)
       await policyProposals.connect(bob).deployProposalVoting()
     })
@@ -217,7 +216,7 @@ describe('E2E Proposal Trustee Cohort Change [@group=9]', () => {
     })
 
     it('Stakes accounts', async () => {
-      const stake = ethers.utils.parseEther('5000')
+      const stake = ethers.utils.parseEther('5000000')
       /* Until we have some idea how initial distribution is done, this *does* use
        *a test-function
        */
@@ -290,7 +289,6 @@ describe('E2E Proposal Trustee Cohort Change [@group=9]', () => {
     })
 
     it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-      await policyProposals.connect(alice).support(trusteeReplacement.address)
       await policyProposals.connect(bob).support(trusteeReplacement.address)
       await policyProposals.connect(bob).deployProposalVoting()
     })

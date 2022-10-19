@@ -31,6 +31,8 @@ describe('E2E Funding an Account with a Proposal [@group=4]', () => {
   let initInflation
   let accounts
 
+  const stake = ethers.utils.parseEther('5000000')
+
   it('Deploys the production system', async () => {
     accounts = await ethers.getSigners()
     ;({
@@ -42,7 +44,6 @@ describe('E2E Funding an Account with a Proposal [@group=4]', () => {
   })
 
   it('Stakes accounts', async () => {
-    const stake = ethers.utils.parseEther('5000')
     /* Until we have some idea how initial distribution is done, this *does* use
      *a test-function
      */
@@ -50,6 +51,7 @@ describe('E2E Funding an Account with a Proposal [@group=4]', () => {
     await initInflation.mint(await accounts[2].getAddress(), stake)
     await initInflation.mint(await accounts[3].getAddress(), stake)
     await initInflation.mint(await accounts[4].getAddress(), stake)
+    await initInflation.mint(await accounts[5].getAddress(), stake.mul(4))
   })
 
   it('Waits a generation', async () => {
@@ -58,7 +60,7 @@ describe('E2E Funding an Account with a Proposal [@group=4]', () => {
   })
 
   it('Constructs the proposals', async () => {
-    makerich = await deploy('MakeRich', await accounts[5].getAddress(), 1000000)
+    makerich = await deploy('MakeRich', await accounts[6].getAddress(), stake)
     backdoor = await deploy('MakeBackdoor', await accounts[2].getAddress())
   })
 
@@ -138,9 +140,7 @@ describe('E2E Funding an Account with a Proposal [@group=4]', () => {
     )
   })
 
-  it('Celebrates accounts[5]', async () => {
-    expect(await eco.balanceOf(await accounts[5].getAddress())).to.equal(
-      1000000
-    )
+  it('Celebrates accounts[6]', async () => {
+    expect(await eco.balanceOf(await accounts[6].getAddress())).to.equal(stake)
   })
 })

@@ -12,12 +12,13 @@ describe('VotingPower [@group=2]', () => {
   let blockNumber
   let ecox
   let ecoXStaking
-  let one
   let alicePower
 
   let alice
   let bob
   let charlie
+
+  const one = ethers.utils.parseEther('1')
 
   const aliceBalance = 250
   const aliceXBalance = 40
@@ -36,7 +37,6 @@ describe('VotingPower [@group=2]', () => {
   }
 
   beforeEach(async () => {
-    one = ethers.utils.parseEther('1')
     const accounts = await ethers.getSigners()
     let deployer
     ;[deployer, alice, bob, charlie] = accounts

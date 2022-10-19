@@ -55,11 +55,11 @@ describe('CommunityGovernor [@group=13]', () => {
 
     await initInflation.mint(
       await alice.getAddress(),
-      '50000000000000000000000000'
+      '5000000000000000000000000000'
     )
     await initInflation.mint(
       await bob.getAddress(),
-      '5000000000000000000000000'
+      '5000000000000000000000000000'
     )
 
     supervisor = new Supervisor()

@@ -3,7 +3,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-const stake = ethers.utils.parseEther('5000')
+const stake = ethers.utils.parseEther('20000')
 
 describe('E2E Test to access funds in treasury [@group=9]', () => {
   describe('sends eco and ecox from the root policy to the charlie address', async () => {

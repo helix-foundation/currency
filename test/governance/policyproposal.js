@@ -5,8 +5,6 @@ const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
 
-const one = ethers.utils.parseEther('1')
-
 describe('PolicyProposals [@group=7]', () => {
   let alice
   let bob
@@ -16,6 +14,7 @@ describe('PolicyProposals [@group=7]', () => {
   let eco
   let initInflation
   let timedPolicies
+  const stake = ethers.utils.parseEther('5000000')
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
@@ -27,18 +26,9 @@ describe('PolicyProposals [@group=7]', () => {
       timedPolicies,
     } = await ecoFixture([]))
 
-    await initInflation.mint(
-      await alice.getAddress(),
-      ethers.utils.parseEther('50000')
-    )
-    await initInflation.mint(
-      await bob.getAddress(),
-      ethers.utils.parseEther('50000')
-    )
-    await initInflation.mint(
-      await charlie.getAddress(),
-      ethers.utils.parseEther('100000')
-    )
+    await initInflation.mint(await alice.getAddress(), stake)
+    await initInflation.mint(await bob.getAddress(), stake)
+    await initInflation.mint(await charlie.getAddress(), stake.mul(6))
     await time.increase(3600 * 24 * 14)
     await timedPolicies.incrementGeneration()
   })
@@ -234,7 +224,7 @@ describe('PolicyProposals [@group=7]', () => {
           await policyProposals.proposals(testProposal.address)
         ).totalStake
 
-        expect(postSupportStake).to.equal(one.mul(50000).add(preSupportStake))
+        expect(postSupportStake).to.equal(stake.add(preSupportStake))
       })
 
       it('does not allow staking twice', async () => {
@@ -350,9 +340,7 @@ describe('PolicyProposals [@group=7]', () => {
           (await policyProposals.proposals(testProposal.address)).totalStake
         )
 
-        expect(postUnsupportStake).to.equal(
-          preUnsupportStake.sub(one.mul(50000))
-        )
+        expect(postUnsupportStake).to.equal(preUnsupportStake.sub(stake))
       })
 
       it('can be indicisive if you want', async () => {
@@ -369,7 +357,7 @@ describe('PolicyProposals [@group=7]', () => {
           (await policyProposals.proposals(testProposal.address)).totalStake
         )
 
-        expect(supportedStake).to.equal(one.mul(50000))
+        expect(supportedStake).to.equal(stake)
       })
     })
   })

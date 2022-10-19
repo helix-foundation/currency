@@ -16,10 +16,12 @@ describe('ecoXStaking [@group=12]', () => {
   let votes
   let ecox
   let ecoXStaking
-  let one
+
+  const one = ethers.utils.parseEther('1')
+  const stake = one.mul(50000000)
+  const stakeX = one.mul(200)
 
   beforeEach(async () => {
-    one = ethers.utils.parseEther('1')
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie] = accounts
     const trustees = [await bob.getAddress()]
@@ -27,13 +29,13 @@ describe('ecoXStaking [@group=12]', () => {
     ;({ policy, eco, faucet, timedPolicies, ecox, ecoXStaking } =
       await ecoFixture(trustees))
 
-    await faucet.mint(await alice.getAddress(), one.mul(5000))
-    await faucet.mint(await bob.getAddress(), one.mul(5000))
-    await faucet.mint(await charlie.getAddress(), one.mul(10000))
+    await faucet.mint(await alice.getAddress(), stake)
+    await faucet.mint(await bob.getAddress(), stake)
+    await faucet.mint(await charlie.getAddress(), stake.mul(6))
 
-    await faucet.mintx(await alice.getAddress(), one.mul(400))
-    await faucet.mintx(await bob.getAddress(), one.mul(400))
-    await faucet.mintx(await charlie.getAddress(), one.mul(200))
+    await faucet.mintx(await alice.getAddress(), stakeX.mul(2))
+    await faucet.mintx(await bob.getAddress(), stakeX.mul(2))
+    await faucet.mintx(await charlie.getAddress(), stakeX)
 
     await time.increase(3600 * 24 * 14 + 1)
     await timedPolicies.incrementGeneration()
@@ -44,7 +46,7 @@ describe('ecoXStaking [@group=12]', () => {
   describe('disabled ERC20 functionality', () => {
     it('reverts on transfer', async () => {
       await expect(
-        ecoXStaking.transfer(await alice.getAddress(), 1000)
+        ecoXStaking.transfer(await alice.getAddress(), 1)
       ).to.be.revertedWith('sECOx is non-transferrable')
     })
 
@@ -53,7 +55,7 @@ describe('ecoXStaking [@group=12]', () => {
         ecoXStaking.transferFrom(
           await alice.getAddress(),
           await bob.getAddress(),
-          1000
+          1
         )
       ).to.be.revertedWith('sECOx is non-transferrable')
     })
@@ -126,7 +128,7 @@ describe('ecoXStaking [@group=12]', () => {
 
       it('alice successfully added voting support to the proposal', async () => {
         const testProposalObj = await proposals.proposals(testProposal.address)
-        expect(testProposalObj.totalStake).to.equal('5100000000000000000000')
+        expect(testProposalObj.totalStake).to.equal(stake.add(one.mul(100)))
       })
 
       it('alice can still deposit', async () => {
@@ -135,7 +137,7 @@ describe('ecoXStaking [@group=12]', () => {
       })
 
       it('alice cannot deposit more than approved', async () => {
-        await ecox.connect(alice).approve(ecoXStaking.address, one.mul(10))
+        await ecox.connect(alice).approve(ecoXStaking.address, one.mul(0))
         await expect(
           ecoXStaking.connect(alice).deposit(one.mul(100))
         ).to.be.revertedWith('ERC20: transfer amount exceeds allowance')
@@ -155,7 +157,7 @@ describe('ecoXStaking [@group=12]', () => {
 
       it('charlie can vote', async () => {
         await votes.connect(charlie).vote(true)
-        expect(await votes.yesStake()).to.equal('11000000000000000000000')
+        expect(await votes.yesStake()).to.equal(stake.mul(6).add(one.mul(1000)))
       })
 
       it('alice can withdraw then vote', async () => {
