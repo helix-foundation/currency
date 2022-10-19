@@ -24,7 +24,6 @@ const { getPrimal, getTree, answer } = require('../tools/randomInflationUtils')
 
 const { prove, bnHex } = require('../tools/vdf')
 
-const SUBGRAPHS_URL = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
 const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
   ['string'],
   ['TimedPolicies']
@@ -63,6 +62,7 @@ let testMap: [string, ethers.BigNumber][] = [
 
 export class InflationGovernor {
   provider: ethers.providers.BaseProvider
+  subgraphsUrl: string
   wallet: ethers.Signer
   policy: Policy
   timedPolicy!: TimedPolicies
@@ -81,11 +81,13 @@ export class InflationGovernor {
     provider: ethers.providers.BaseProvider,
     supervisorWallet: ethers.Signer,
     rootPolicy: Policy,
+    subgraphsUrl: string,
     production: boolean
   ) {
     this.provider = provider
     this.wallet = supervisorWallet
     this.policy = rootPolicy
+    this.subgraphsUrl = subgraphsUrl
     this.production = production
   }
 
@@ -137,7 +139,7 @@ export class InflationGovernor {
       this.proposeRootHash(
         await this.fetchBalances(
           (await this.randomInflation.blockNumber()).toNumber(),
-          SUBGRAPHS_URL
+          this.subgraphsUrl
         )
       )
     }
@@ -308,7 +310,7 @@ export class InflationGovernor {
       this.tree = await getTree(
         await this.fetchBalances(
           (await this.randomInflation.blockNumber()).toNumber(),
-          SUBGRAPHS_URL
+          this.subgraphsUrl
         )
       )
     }

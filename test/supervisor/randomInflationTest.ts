@@ -28,7 +28,7 @@ describe('RandomInflation [@group=13]', () => {
   let timeGovernor: TimeGovernor
   let currencyGovernor: CurrencyGovernor
   let inflationGovernor!: InflationGovernor
-  const someBlockWhereBalancesExist: number = 7471818
+  const someBlockWhereBalancesExist: number = 7747311
 
   const inflationVote = 10
   const rewardVote = 20000

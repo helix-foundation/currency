@@ -12,6 +12,7 @@ require('dotenv').config({ path: '.env' })
 const privateKey = process.env.PRIVATE_KEY || ''
 const rpcEndpoint = process.env.INFURA_URL || ''
 const policyRoot = process.env.POLICY_ROOT || ''
+const subgraphsEndpoint = process.env.SUBGRAPHS_URL || ''
 
 export class Supervisor {
   timeGovernor!: TimeGovernor
@@ -20,6 +21,7 @@ export class Supervisor {
   communityGovernor!: CommunityGovernor
   provider!: ethers.providers.BaseProvider
   rootPolicy?: Policy
+  subgraphsUrl!: string
   wallet?: ethers.Signer
   production: boolean = false
 
@@ -27,6 +29,7 @@ export class Supervisor {
     this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint)
     this.wallet = new ethers.Wallet(privateKey, this.provider)
     this.rootPolicy = Policy__factory.connect(policyRoot, this.wallet)
+    this.subgraphsUrl = subgraphsEndpoint
     this.production = true
 
     await this.startGovernors()
@@ -39,6 +42,7 @@ export class Supervisor {
     this.provider = hre.ethers.provider
     this.wallet = signer
     this.rootPolicy = policy
+    this.subgraphsUrl = 'https://api.thegraph.com/subgraphs/name/paged1/policy'
 
     await this.startGovernors()
   }
@@ -67,6 +71,7 @@ export class Supervisor {
         this.provider,
         this.wallet,
         this.rootPolicy,
+        this.subgraphsUrl,
         this.production
       )
 
