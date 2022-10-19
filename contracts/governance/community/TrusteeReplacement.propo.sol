@@ -6,8 +6,8 @@ import "../../policy/Policed.sol";
 import "./Proposal.sol";
 import "../monetary/TrustedNodes.sol";
 
-/** @title SingleTrusteeReplacement
- * A proposal to replace one trustee
+/** @title TrusteeReplacement
+ * A proposal to replace the current cohort of trustees
  */
 contract TrusteeReplacement is Policy, Proposal {
     // the new trustees that will be trusted
@@ -23,13 +23,19 @@ contract TrusteeReplacement is Policy, Proposal {
 
     /** The name of the proposal.
      */
-    function name() public pure override returns (string memory) {
+    function name() public pure virtual override returns (string memory) {
         return "Trustee Election Proposal Template";
     }
 
     /** A description of what the proposal does.
      */
-    function description() public pure override returns (string memory) {
+    function description()
+        public
+        pure
+        virtual
+        override
+        returns (string memory)
+    {
         return
             "Created with a list of trustees and replaces all current trustees with those trustees";
     }
@@ -51,7 +57,7 @@ contract TrusteeReplacement is Policy, Proposal {
      *
      * @param _self The address of the proposal.
      */
-    function enacted(address _self) public override {
+    function enacted(address _self) public virtual override {
         bytes32 _trustedNodesId = keccak256("TrustedNodes");
         TrustedNodes _trustedNodes = TrustedNodes(policyFor(_trustedNodesId));
 
