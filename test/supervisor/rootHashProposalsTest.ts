@@ -1,7 +1,12 @@
 /* eslint-disable no-unused-vars */
 import { ethers } from 'hardhat'
 import { expect } from 'chai'
-import { Policy, CurrencyGovernance, ECO } from '../../typechain-types'
+import {
+  Policy,
+  CurrencyGovernance,
+  ECO,
+  contracts,
+} from '../../typechain-types'
 import { Supervisor } from '../../supervisor/supervisor'
 import { InflationGovernor } from '../../supervisor/inflationGovernor'
 import { CurrencyGovernor } from '../../supervisor/currencyGovernor'
@@ -246,5 +251,75 @@ describe('RandomInflation [@group=13]', () => {
         ).amountPendingChallenges
       ).toNumber()
     ).to.eq(0)
+  })
+
+  it('sets timestamps + happy path acceptance', async () => {
+    await time.increase(3600 * 24 * 1)
+    await time.waitBlockTime(10000)
+
+    const rhp =
+      await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+        await inflationGovernor.wallet.getAddress()
+      )
+
+    expect(inflationGovernor.lastLiveChallenge).to.eq(
+      rhp.lastLiveChallenge.toNumber()
+    )
+    expect(inflationGovernor.newChallengerSubmissionEnds).to.eq(
+      rhp.newChallengerSubmissionEnds.toNumber()
+    )
+    expect(
+      inflationGovernor.newChallengerSubmissionEnds >
+        inflationGovernor.lastLiveChallenge
+    )
+
+    await time.setNextBlockTimestamp(
+      inflationGovernor.newChallengerSubmissionEnds + 1
+    )
+    await time.advanceBlock()
+    await time.waitBlockTime()
+
+    expect(
+      await inflationGovernor.inflationRootHashProposal.acceptedRootHash()
+    ).to.not.eq(ethers.constants.HashZero)
+  })
+
+  it('updates values upon challenge + accepts root hash at the right time', async () => {
+    await time.increase(3600 * 24 * 1)
+    await time.waitBlockTime()
+
+    const rhp =
+      await inflationGovernor.inflationRootHashProposal.rootHashProposals(
+        await inflationGovernor.wallet.getAddress()
+      )
+    const initialLastLiveChallenge: number = inflationGovernor.lastLiveChallenge
+    console.log(initialLastLiveChallenge)
+
+    let tx = await eco
+      .connect(bob)
+      .approve(
+        inflationGovernor.inflationRootHashProposal.address,
+        await inflationGovernor.inflationRootHashProposal.CHALLENGE_FEE()
+      )
+    let rc = await tx.wait()
+    tx = await inflationGovernor.inflationRootHashProposal
+      .connect(bob)
+      .challengeRootHashRequestAccount(await alice.getAddress(), 1)
+    rc = await tx.wait()
+    await time.waitBlockTime()
+
+    expect(inflationGovernor.lastLiveChallenge > initialLastLiveChallenge)
+    expect(
+      inflationGovernor.newChallengerSubmissionEnds <
+        inflationGovernor.lastLiveChallenge
+    )
+
+    await time.setNextBlockTimestamp(inflationGovernor.lastLiveChallenge + 1)
+    await time.advanceBlock()
+    await time.waitBlockTime(5000)
+
+    expect(
+      await inflationGovernor.inflationRootHashProposal.acceptedRootHash()
+    ).to.not.eq(ethers.constants.HashZero)
   })
 })

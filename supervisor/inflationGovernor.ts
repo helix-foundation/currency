@@ -41,6 +41,8 @@ const newInflationEvent = 'NewInflation'
 const entropyVDFSeedCommitEvent = 'EntropyVDFSeedCommit'
 const successfulVerificationEvent = 'SuccessfulVerification'
 const rootHashPostEvent = 'RootHashPost'
+const rootHashChallengeIndexRequestEvent = 'RootHashChallengeIndexRequest'
+// const rootHashAcceptanceEvent = 'RootHashAcceptance'
 
 let tx
 let rc
@@ -70,6 +72,8 @@ export class InflationGovernor {
   eco!: ECO
   randomInflation!: RandomInflation
   inflationRootHashProposal!: InflationRootHashProposal
+  newChallengerSubmissionEnds!: number
+  lastLiveChallenge!: number
   vdfVerifier!: VDFVerifier
   vdfSeed!: ethers.BigNumber
   vdfOutput!: ethers.Bytes
@@ -113,6 +117,7 @@ export class InflationGovernor {
       console.log('new RI')
       this.startRIProcesses(inflationAddr)
     })
+    this.provider.on('block', this.checkRootHashStatus.bind(this))
   }
 
   async startRIProcesses(inflationAddr: string) {
@@ -128,6 +133,8 @@ export class InflationGovernor {
       await this.randomInflation.vdfVerifier(),
       this.wallet
     )
+    this.newChallengerSubmissionEnds = 0
+    this.lastLiveChallenge = 0
     await this.startRIInstanceListeners()
     if (!this.production) {
       // this is the same minting as exists in the test suite, so can defend root hash proposals
@@ -164,7 +171,7 @@ export class InflationGovernor {
       console.log(index)
       await this.respondToChallenge(challenger, index.toNumber())
     })
-    this.inflationRootHashProposal.on(rootHashPostEvent, async () => {
+    this.inflationRootHashProposal.once(rootHashPostEvent, async () => {
       console.log("well gents, looks like it's PRIMIN' TIME")
       await this.commitVdfSeed()
     })
@@ -291,6 +298,12 @@ export class InflationGovernor {
       if (rc.status) {
         // successfully proposed
         console.log('proposed roothash')
+        const rhp = await this.inflationRootHashProposal.rootHashProposals(
+          await this.wallet.getAddress()
+        )
+        this.newChallengerSubmissionEnds =
+          rhp.newChallengerSubmissionEnds.toNumber()
+        this.lastLiveChallenge = rhp.lastLiveChallenge.toNumber()
       } else {
         // shouldn't happen
         console.log('failed to propose')
@@ -303,6 +316,10 @@ export class InflationGovernor {
   }
 
   async respondToChallenge(challenger: string, index: number) {
+    const rhp = await this.inflationRootHashProposal.rootHashProposals(
+      await this.wallet.getAddress()
+    )
+    this.lastLiveChallenge = rhp.lastLiveChallenge.toNumber()
     console.log(
       `trying to respond to RHP challenge by ${challenger} at index ${index}`
     )
@@ -335,6 +352,50 @@ export class InflationGovernor {
       // error logging
       console.log(e)
       await this.respondToChallenge(challenger, index)
+    }
+  }
+
+  async checkRootHashStatus() {
+    if (this.newChallengerSubmissionEnds > 0) {
+      const block = await this.provider.getBlock('latest')
+      if (
+        block.timestamp > this.newChallengerSubmissionEnds &&
+        block.timestamp > this.lastLiveChallenge
+      ) {
+        const supervisorAddress: string = await this.wallet.getAddress()
+        try {
+          tx = await this.inflationRootHashProposal.checkRootHashStatus(
+            supervisorAddress
+          )
+          rc = await tx.wait()
+          if (
+            (await this.inflationRootHashProposal.acceptedRootHash()) !==
+            ethers.constants.HashZero
+          ) {
+            // root hash is accepted
+            // agnostic of if it was the supervisor's or someone elses
+            this.newChallengerSubmissionEnds = 0
+            this.lastLiveChallenge = 0
+            // stop listening for challenges
+            await this.inflationRootHashProposal.removeAllListeners(
+              rootHashChallengeIndexRequestEvent
+            )
+            console.log(
+              `root hash accepted: ${await this.inflationRootHashProposal.acceptedRootHash()}`
+            )
+          } else {
+            // error: supervisor expected root hash proposal to have been accepted but it wasnt.
+            // regardless of other activity, supervisor's rhp should have been accepted by now.
+            const rhp = await this.inflationRootHashProposal.rootHashProposals(
+              supervisorAddress
+            )
+            console.log(`expected status = 2, got ${rhp.status}`)
+          }
+        } catch (e) {
+          // error logging
+          console.log(e)
+        }
+      }
     }
   }
 
