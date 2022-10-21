@@ -37,6 +37,11 @@ const ECOxABI = require(`../${importPath}/contracts/currency/ECOx.sol/ECOx.json`
 const ECOxStakingABI = require(`../${importPath}/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json`);
 const TrusteeReplacementABI = require(`../${importPath}/contracts/governance/community/TrusteeReplacement.propo.sol/TrusteeReplacement.json`);
 
+
+const ECOxEmployeeLockupFactoryABI = require(`../ecox-lockup/out/ECOxEmployeeLockupFactory.sol/ECOxEmployeeLockupFactory.json`);
+const ECOxEmployeeLockupABI = require(`../ecox-lockup/out/ECOxEmployeeLockup.sol/ECOxEmployeeLockup.json`);
+const { time } = require("console");
+
 // const provider = new ethers.providers.JsonRpcProvider("https://kovan.infura.io/v3/b2eb74fe7b1847f29a35c8bdb93c0e84");
 const provider = new ethers.providers.JsonRpcProvider("https://goerli.infura.io/v3/b9ee89f0173e49bf934ba96531bae79c");
 
@@ -101,11 +106,64 @@ const contracts = {
     // "randomInflation": "",
     "newProposal": "0x7D971EE0Cc1a5E7Ae6F2C46965F783F8D74f652A"
 }
-
 let randomBytes = []
 
 
 async function runtest() {
+
+    async function deployLockup() {
+        const ID_ECOX = ethers.utils.solidityKeccak256(
+            ['string'],
+            ['ECOx']
+        )
+        const ID_ECOX_STAKING = ethers.utils.solidityKeccak256(
+            ['string'],
+            ['ECOxStaking']
+        )
+
+        const ecoxStaking = new ethers.Contract(
+            await (new ethers.Contract(contracts.policy, PolicyABI.abi, accounts[1].signer)).policyFor(ID_ECOX_STAKING),
+            ECOxStakingContractABI.abi
+        )
+        await ecoxStaking.connect(accounts[2].signer).enableDelegationTo()
+
+        let factory = new ethers.ContractFactory(
+            ECOxEmployeeLockupABI.abi,
+            ECOxEmployeeLockupABI.bytecode,
+            accounts[1].signer
+        )
+        const impl = await factory.deploy()
+        console.log(`impl address is ${impl.address}`)
+
+        factory = new ethers.ContractFactory(
+            ECOxEmployeeLockupFactoryABI.abi,
+            ECOxEmployeeLockupFactoryABI.bytecode,
+            accounts[1].signer
+        );
+        const lockupFactory = await factory.deploy(impl.address)
+        console.log(`factory address is ${lockupFactory.address}`)
+
+        const ecoxAddress = await (new ethers.Contract(contracts.policy, PolicyABI.abi, accounts[1].signer)).policyFor(ID_ECOX)
+        const lockupBeneficiary = accounts[2].address
+        const lockupAdmin = accounts[1].address
+        const timestamp = 1666324800 // midnight GMT, 8pm EST, 5pm PST
+        const lockup = await lockupFactory.createVault(ecoxAddress, lockupBeneficiary, lockupAdmin, timestamp)
+        tx = await lockup.wait()
+        console.log(tx.status)
+
+        const filter = lockupFactory.filters.VaultCreated()
+        console.log(await lockupFactory.queryFilter(filter))
+        
+        // console.log(lockup)
+        // const lockup = new ethers.Contract(
+        //     lockupAddress, 
+        //     ECOxEmployeeLockupABI.abi,
+        //     accounts[1].signer
+        // )
+        // console.log(`lockup address is ${lockup.address}`)
+
+    }
+
     const blockNumber = await provider.getBlockNumber();
 
     const seeds = [
@@ -279,8 +337,10 @@ async function runtest() {
     // commit(2);
     // commit(3);
     // reveal(1);
-    reveal(2);
+    // reveal(2);
     // reveal(3);
+    deployLockup();
+
 
     
 
