@@ -7,9 +7,11 @@ import { CommunityGovernor } from './communityGovernor'
 import { TimeGovernor } from './timeGovernor'
 import { InflationGovernor } from './inflationGovernor'
 import { Policy__factory, Policy } from '../typechain-types'
+import { EcoConfigService } from './services/eco-config.service'
+import { SecretsManagerService } from './services/secrets-manager.service'
+
 require('dotenv').config({ path: '.env' })
 
-const privateKey = process.env.PRIVATE_KEY || ''
 const rpcEndpoint = process.env.INFURA_URL || ''
 const policyRoot = process.env.POLICY_ROOT || ''
 const subgraphsEndpoint = process.env.SUBGRAPHS_URL || ''
@@ -24,15 +26,34 @@ export class Supervisor {
   subgraphsUrl!: string
   wallet?: ethers.Signer
   production: boolean = false
+  configService!: EcoConfigService
+  ecoConfig!: any
+  privateKey!: string
 
   async start() {
+    await this.init()
+
     this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint)
-    this.wallet = new ethers.Wallet(privateKey, this.provider)
+    this.wallet = new ethers.Wallet(this.privateKey, this.provider)
     this.rootPolicy = Policy__factory.connect(policyRoot, this.wallet)
     this.subgraphsUrl = subgraphsEndpoint
     this.production = true
 
     await this.startGovernors()
+  }
+
+  /**
+   * Initializes the configs and loads the private key
+   */
+  async init() {
+    // init the configs
+    this.configService = new EcoConfigService(new SecretsManagerService())
+    await this.configService.secretsManagerInitializationComplete()
+    this.ecoConfig = this.configService.getConfig()
+
+    let { privateKey } = this.ecoConfig.Supervisor
+    privateKey = Object.values(JSON.parse(privateKey))[0]
+    this.privateKey = privateKey
   }
 
   async startTestSupervisor(policy: Policy, signer: ethers.Signer) {

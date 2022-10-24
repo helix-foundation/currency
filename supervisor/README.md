@@ -18,6 +18,11 @@ Build and tag the image:
 docker build -t  beamnetwork/supervisor:0.0.2 .
 ```
 
+Push the image to docker hub:
+```
+docker image push beamnetwork/supervisor:0.0.2
+```
+
 To run the image, you need to have the variables in [.env.example](.env.example) or pass them in to the run command:
 ```
 docker run -p 3000:8080 -e PRIVATE_KEY=<privatekey>  -e INFURA_URL=https://goerli.infura.io/v3/<key> -e POLICY_ROOT=<policyRootAddress> <imageID>
