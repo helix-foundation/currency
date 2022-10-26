@@ -72,3 +72,4 @@ cache/
 out/
 yarn.lock
 typechain/
+a.out
