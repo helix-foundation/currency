@@ -8,6 +8,7 @@ import {
   TrustedNodes,
   TrustedNodes__factory,
 } from '../typechain-types'
+import { logError, SupervisorError } from './logError'
 
 const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
   ['string'],
@@ -71,7 +72,7 @@ export class TimeGovernor {
         this.triedAnnualUpdate = true
         const tx = await this.trustedNodes.annualUpdate()
         const rc = await tx.wait()
-        if (rc.status === 1) {
+        if (rc.status) {
           console.log(
             `annualUpdate complete, previous year's trustee rewards drip has begun`
           )
@@ -85,7 +86,10 @@ export class TimeGovernor {
           this.yearEnd = (await this.trustedNodes.yearEnd()).toNumber()
         } else {
           // error logging
-          console.log(e)
+          logError({
+            type: SupervisorError.AnnualUpdate,
+            error: e,
+          })
           this.triedAnnualUpdate = false
         }
       }
@@ -102,10 +106,7 @@ export class TimeGovernor {
         if (rc.status === 1) {
           this.generation = (await this.timedPolicy.generation()).toNumber()
           console.log(`generation incremented to ${this.generation}`)
-          this.triedGenerationIncrement = false
-          this.nextGenStart = (
-            await this.timedPolicy.nextGenerationWindowOpen()
-          ).toNumber()
+          await this.afterGenerationIncrement()
         }
       } catch (e) {
         if (
@@ -113,16 +114,37 @@ export class TimeGovernor {
           this.nextGenStart
         ) {
           // generation has been updated
-          this.triedGenerationIncrement = false
-          this.nextGenStart = (
-            await this.timedPolicy.nextGenerationWindowOpen()
-          ).toNumber()
+          await this.afterGenerationIncrement()
         } else {
           // error logging
-          console.log(e)
+          logError({
+            type: SupervisorError.IncrementGeneration,
+            error: e,
+          })
           this.triedGenerationIncrement = false
         }
       }
+    }
+  }
+
+  async afterGenerationIncrement() {
+    this.triedGenerationIncrement = false
+    this.nextGenStart = (
+      await this.timedPolicy.nextGenerationWindowOpen()
+    ).toNumber()
+    try {
+      // check eth balance
+      const balance = await this.wallet.getBalance()
+      if (balance.lt(ethers.utils.parseEther('0.5'))) {
+        logError({
+          type: SupervisorError.LowEthBalance,
+          context: `Supervisor Balance: ${ethers.utils.formatEther(
+            balance
+          )} ETH`,
+        })
+      }
+    } catch (err) {
+      console.log(err)
     }
   }
 }

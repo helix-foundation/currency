@@ -11,6 +11,8 @@ import {
   PolicyVotes__factory,
 } from '../typechain-types'
 
+import { logError, SupervisorError } from './logError'
+
 const policyDecisionStartEvent: string = 'PolicyDecisionStart'
 const supportThresholdReachedEvent: string = 'SupportThresholdReached'
 const voteStartEvent: string = 'VoteStart'
@@ -101,8 +103,10 @@ export class CommunityGovernor {
         ethers.constants.AddressZero
       ) {
         // error logging
-        console.log(e)
-        // try again, since proposalVoting still needs to be deployed
+        logError({
+          type: SupervisorError.DeployVoting,
+          error: e,
+        })
         setTimeout(this.deployProposalVotingListener.bind(this), 1000)
       }
     }
@@ -142,7 +146,10 @@ export class CommunityGovernor {
             ethers.constants.AddressZero
           ) {
             // error logging
-            console.log(e)
+            logError({
+              type: SupervisorError.Execute,
+              error: e,
+            })
           }
         }
       }

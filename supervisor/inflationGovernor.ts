@@ -19,6 +19,7 @@ import {
 } from '../typechain-types'
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
+import { logError, SupervisorError } from './logError'
 
 const { getPrimal, getTree, answer } = require('../tools/randomInflationUtils')
 
@@ -208,14 +209,10 @@ export class InflationGovernor {
           // done
           this.vdfSeed = await this.randomInflation.entropyVDFSeed()
           console.log(`committed vdf seed: ${this.vdfSeed}`)
-        } else {
-          // shouldnt happen
-          console.log('failed to commit seed')
         }
       }
     } catch (e) {
       // error logging
-      // this gets hit a lot due to setPrimal being kind of finnicky
       console.log('failed setPrimal, trying again')
       console.log((await this.provider.getBlock('latest')).number)
       return await this.commitVdfSeed()
@@ -224,29 +221,44 @@ export class InflationGovernor {
 
   async proveVDF() {
     console.log('trying to prove vdf')
-    // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
-    const difficulty: number = (
-      await this.randomInflation.randomVDFDifficulty()
-    ).toNumber()
-    const [y, Usqrt] = await prove(this.vdfSeed, difficulty)
-    tx = await this.vdfVerifier.start(bnHex(this.vdfSeed), difficulty, bnHex(y))
-    rc = await tx.wait()
-    if (rc.status) {
-      // successfully started
-      try {
-        for (let i = 0; i < difficulty - 1; i++) {
-          const u = Usqrt[i]
-          tx = await this.vdfVerifier.update(bnHex(u))
-          rc = await tx.wait()
-          // emits SuccessfulVerification if successful
+    try {
+      // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
+      const difficulty: number = (
+        await this.randomInflation.randomVDFDifficulty()
+      ).toNumber()
+      const [y, Usqrt] = prove(this.vdfSeed, difficulty)
+      tx = await this.vdfVerifier.start(
+        bnHex(this.vdfSeed),
+        difficulty,
+        bnHex(y)
+      )
+      rc = await tx.wait()
+      if (rc.status) {
+        // successfully started
+        try {
+          for (let i = 0; i < difficulty - 1; i++) {
+            const u = Usqrt[i]
+            tx = await this.vdfVerifier.update(bnHex(u))
+            rc = await tx.wait()
+            // emits SuccessfulVerification if successful
+          }
+          this.vdfOutput = bnHex(y)
+        } catch (e) {
+          // error logging
+          logError({
+            type: SupervisorError.VerifyVDF,
+            error: e,
+          })
+          console.log('failed vdfVerification')
+          // have to start again from setPrimal
         }
-        this.vdfOutput = bnHex(y)
-      } catch (e) {
-        console.log(e)
-        // error logging
-        console.log('failed vdfVerification')
-        // have to start again from setPrimal
       }
+    } catch (e) {
+      // error logging
+      logError({
+        type: SupervisorError.StartVDF,
+        error: e,
+      })
     }
   }
 
@@ -262,7 +274,10 @@ export class InflationGovernor {
       }
     } catch (e) {
       // error logging
-      console.log(e)
+      logError({
+        type: SupervisorError.SubmitVDF,
+        error: e,
+      })
     }
   }
 
@@ -284,9 +299,14 @@ export class InflationGovernor {
       rc = await tx.wait()
     } catch (e) {
       // error logging
-      // need to send more ECO to supervisor address
-      console.log(e)
+      logError({
+        type: SupervisorError.ApproveInflationFee,
+        error: e,
+      })
     }
+
+    // check the supervisor's eco balance
+    this.checkEcoBalance()
 
     try {
       tx = await this.inflationRootHashProposal.proposeRootHash(
@@ -304,14 +324,36 @@ export class InflationGovernor {
         this.newChallengerSubmissionEnds =
           rhp.newChallengerSubmissionEnds.toNumber()
         this.lastLiveChallenge = rhp.lastLiveChallenge.toNumber()
-      } else {
-        // shouldn't happen
-        console.log('failed to propose')
       }
     } catch (e) {
       // error logging
-      console.log(e)
+      logError({
+        type: SupervisorError.ProposeRootHash,
+        error: e,
+      })
+      // proposing the root hash failed
       setTimeout(this.proposeRootHash.bind(this), 1000)
+    }
+  }
+
+  async checkEcoBalance() {
+    try {
+      // check eco balance
+      // log error if balance is less than 2x the proposer fee
+      const balance = await this.eco.balanceOf(await this.wallet.getAddress())
+      const proposerFee = await this.inflationRootHashProposal.PROPOSER_FEE()
+      if (balance.lt(proposerFee.mul(2))) {
+        logError({
+          type: SupervisorError.LowEcoBalance,
+          context: `Supervisor Balance: ${ethers.utils.formatUnits(
+            balance
+          )} ECO, inflation proposer fee is ${ethers.utils.formatUnits(
+            proposerFee
+          )}`,
+        })
+      }
+    } catch (err) {
+      console.log(err)
     }
   }
 
@@ -344,13 +386,13 @@ export class InflationGovernor {
       rc = await tx.wait()
       if (rc.status) {
         console.log('responded!')
-      } else {
-        // shouldnt happen
-        console.log('failed to respond to challenge')
       }
     } catch (e) {
       // error logging
-      console.log(e)
+      logError({
+        type: SupervisorError.RespondToChallenge,
+        error: e,
+      })
       await this.respondToChallenge(challenger, index)
     }
   }
@@ -393,7 +435,10 @@ export class InflationGovernor {
           }
         } catch (e) {
           // error logging
-          console.log(e)
+          logError({
+            type: SupervisorError.CheckRootHashStatus,
+            error: e,
+          })
         }
       }
     }
