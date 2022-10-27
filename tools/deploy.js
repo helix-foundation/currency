@@ -75,7 +75,7 @@ async function parseFlags(options) {
   options.gasUsed = ethers.BigNumber.from(0)
 
   if (!options.randomVDFDifficulty) {
-    options.randomVDFDifficulty = 3
+    options.randomVDFDifficulty = options.production ? 31 : 8
   }
 
   if (options.production) {

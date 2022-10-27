@@ -8,8 +8,8 @@ import "../../currency/IECO.sol";
 import "../monetary/RandomInflation.sol";
 
 /** @title Inflation Root Hash Proposal
- * This implements a root hash proposal contract to be used by the ECO network to
- * establish root hash of merkle tree representing accounts and balances in the system given generation
+ * This implements a root hash proposal contract to
+ * establish a merkle tree representing accounts and balances
  *
  * Merkle Tree serves as a way to fairly establish which addresses can claim the random inflation reward
  */
@@ -71,10 +71,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     mapping(address => RootHashProposal) public rootHashProposals;
 
     /** Challenger charged with CHALLENGE_FEE ECO every time they challenge proposal */
-    uint256 public constant CHALLENGE_FEE = 500e18;
+    uint256 public constant CHALLENGE_FEE = 1000e18;
 
     /** Root hash proposer charged with PROPOSER_FEE ECO for the root hash submission */
-    uint256 public constant PROPOSER_FEE = 20000e18;
+    uint256 public constant PROPOSER_FEE = 100000e18;
 
     /** Initial amount of time given to challengers to submit challenges to new proposal */
     uint256 public constant CHALLENGING_TIME = 1 days;

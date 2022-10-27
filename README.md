@@ -24,7 +24,6 @@ Each component is documented in a README file in the corresponding contracts dir
  - [Install](#install)
  - [Usage](#usage)
  - [Components](#components)
- - [Maintainers](#maintainers)
  - [Contributing](#contributing)
  - [License](#license)
 
@@ -106,7 +105,7 @@ You can run the test suite by invoking:
 npm run test
 ```
 
-The test suite is extensive and can take some time to run - patience is often required.
+The test suite is extensive and can take some time to run.
 
 #### Coverage Reporting
 Coverage reports are generated separated for Solidity and JavaScript code:
@@ -139,9 +138,6 @@ Common deploy issues and solutions (use verbose flag):
  - [Deployment Tools](./contracts/deploy)
  - [The Verifiable Delay Function](./contracts/VDF)
 
-## Maintainers
-Maintained by the engineering team at Eco Network (eng at eco dot com).
-
 ## Contributing
 Contributions are welcome. Please submit any issues as issues on GitHub, and open a pull request with any contributions.
 
@@ -150,4 +146,4 @@ Please ensure that the test suite passes (run `npm test`) and that our linters r
 See the [contributing guide](./CONTRIBUTING.md) for more details.
 
 ## License
-[MIT (c) Eco Network](./LICENSE)
+[MIT (c) Helix Foundation](./LICENSE)
