@@ -135,7 +135,7 @@ export class TimeGovernor {
     try {
       // check eth balance
       const balance = await this.wallet.getBalance()
-      if (balance.lt(ethers.utils.parseEther('0.5'))) {
+      if (balance.lt(ethers.utils.parseEther('1'))) {
         logError({
           type: SupervisorError.LowEthBalance,
           context: `Supervisor Balance: ${ethers.utils.formatEther(
