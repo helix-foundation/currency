@@ -14,7 +14,7 @@ export enum SupervisorError {
   RespondToChallenge = 'Failed to respond to root hash challenge',
   AnnualUpdate = 'Failed to increment annual update',
   IncrementGeneration = 'Failed to increment generation',
-  CheckRootHashStatus = 'Failed to check root hash status'
+  CheckRootHashStatus = 'Failed to check root hash status',
 }
 
 type LogErrorOptions = {
@@ -32,7 +32,7 @@ export const logError = async ({
 }: LogErrorOptions) => {
   console.log(`${type} | reported at ${time.toISOString()}`)
   if (error) {
-    console.log(JSON.stringify(error, null, 2))
+    console.log(error.message)
   }
   if (context) {
     console.log('Context: ', context)
