@@ -104,7 +104,7 @@ async function initEthers() {
       serverPort = 8545
       ganacheServer = ganache.server({
         default_balance_ether: 1000000,
-        blockTime: 13, // use goerli block time just to not be too slow
+        blockTime: 13, // use realistic block time
         fork: `${options.webrpc}`,
       })
     } else if (options.deployTokens) {
@@ -177,9 +177,10 @@ async function initUsers() {
 
   const balance = await options.ethersProvider.getBalance(account)
 
-  if (balance < 1) {
+
+  if (options.production && balance.lt(ethers.constants.WeiPerEther.mul(5)) ) {
     console.log(
-      `Deployment account ${account} should have at least 1 Ether, has only ${balance}`
+      `Deployment account ${account} should test with at least 5 Ether, has only ${balance}`
     )
     const chumpBalance = ethers.utils.formatEther(
       await options.ethersProvider.getBalance(chumpAccount)
