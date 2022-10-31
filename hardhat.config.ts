@@ -6,6 +6,7 @@ import "@nomiclabs/hardhat-ethers"
 import "@typechain/hardhat"
 import "hardhat-gas-reporter"
 import "solidity-coverage"
+import "@nomiclabs/hardhat-etherscan"
 
 dotenv.config()
 
@@ -61,11 +62,15 @@ const config: HardhatUserConfig = {
       },
       chainId: NetworkID.hardhat,
     },
-    goerli: createTestnetConfig(NetworkID.goerli),
+    goerli: {
+      url: "INFURA_URL"
+    },
     kovan: createTestnetConfig(NetworkID.kovan),
     rinkeby: createTestnetConfig(NetworkID.rinkeby),
     ropsten: createTestnetConfig(NetworkID.ropsten),
-    mainnet: createTestnetConfig(NetworkID.mainnet),
+    mainnet: {
+      url: "INFURA_URL"
+    },
   },
   paths: {
     artifacts: "./artifacts",
@@ -99,6 +104,9 @@ const config: HardhatUserConfig = {
     grep: process.env.MOCHA_GREP ? new RegExp(process.env.MOCHA_GREP) : new RegExp(),
     //@ts-ignore
     invert: process.env.MOCHA_INVERT,
+  },
+  etherscan: {
+    apiKey: "ETHERSCAN_API_KEY"
   },
 };
 
