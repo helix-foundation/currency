@@ -6,42 +6,29 @@
 
 ## Security
 ### Reporting Vulnerabilities
-If you believe you've identified a security vulnerability in our contracts or
-other software please email eng at eco dot io. This will help ensure your issue
-gets attention promptly while also providing us an opportunity to fix any
-problem before it's publicized. We'll make sure to publicly disclose the
+If you believe you've identified a security vulnerability in Eco's contracts or
+other software please submit to the Immunefi bounty (link coming soon) or join the Eco Association Discord (https://discord.eco.org) and tag or message an Eco Association team member. This will help ensure your issue
+gets attention promptly while also providing the Eco community an opportunity to fix any
+problem before it's publicized. The community will make sure to publicly disclose the
 vulnerability and credit you for finding it.
 
 ## Tooling
 ### The Test Suites
-There are 4 key processes run by our CI tooling:
+There are 4 key processes run by Eco's CI tooling:
  - The lint/style rules
  - The main test suite
  - A full run of contract deployment onto ganache
  - An extra run of the test suite with coverage annotations
 
 #### The Linter
-We currently use `solhint` and `eslint` to check for common errors and ensure
+`solhint` and `eslint` are used to check for common errors and ensure
 consistent styling. You can run the full suite of lint rules (both linters)
 with `npm run lint` from the project root.
 
 ##### Auto-formatting
-We use `prettier` to automatically format our code. You can run the
+`prettier` is used to automatically format the code. You can run the
 autoformatter across the project by running `npm run format` from the project
 root.
-
-##### Linter Caveats
-Some of our solhint rules are in need of maintenace, and the following warnings
-tend to be emitted when they shouldn't be (Solidity code):
- - mixedcase
- - no-empty-blocks
- 
-We also exempt files that are imported from other projects from our style rules.
-These files should be kept as close to their upstream originals as possible, and
-should include both the URL they were retrieved from and any relevant license
-information. This will help us keep up with upstream changes. (When possible,
-include files using npm packages, but there are exceptions when the files need
-to be modified or when upstream does not publish packages.)
 
 ##### Disabling Linter Rules
 When a linter rule needs to be disabled it should be disabled for the smallest
@@ -69,9 +56,9 @@ docker run currency
 ```
 
 #### Coverage reporting
-Our coverage reporting toolchain works by inserting events into the solidity
-code, and not all functionality is supported. To make this possible we use the
-`run-cover.sh` script to run the coverage tools in an isolated environment and
+Eco's coverage reporting toolchain works by inserting events into the solidity
+code, and not all functionality is supported. To make this possible the
+`run-cover.sh` script is used to run the coverage tools in an isolated environment and
 apply some code changes to account for deficienies.
 
 You can run the coverage suite with `npm run coverage`. It produces two coverage

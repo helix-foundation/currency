@@ -342,7 +342,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         /* Since the merkle tree includes the index as the hash, it's impossible to give isomorphic answers,
          * so any attempt to answer with a different value than what was used before will fail the merkle check,
-         * hence we don't care we rewrite previous answer */
+         * hence this doesn't care if it rewrites previous answer */
         ChallengeResponse storage indexChallenge = proposal.challengeResponses[
             _index
         ];
@@ -628,17 +628,17 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         // verifies that unused tree nodes are reperesnted by bytes32(0)
         for (uint256 i = _proof.length; i > 0; i--) {
-            // check if we're traversing the right edge of the filled tree
+            // check if this is traversing the right edge of the filled tree
             // _numAccounts indexes from 1 but _index does so from zero
             if ((branchBitMap >> (i - 1)) & 1 == 0) {
-                // see if we are in a left branch requiring a zero valued right branch
+                // see if the index is in a left branch requiring a zero valued right branch
                 if ((_index >> (i - 1)) & 1 == 0) {
                     if (_proof[i - 1] != bytes32(0)) {
                         return false;
                     }
                 }
             } else {
-                // we are now in the middle of the tree, cannot check further
+                // the index is now in the middle of the tree, cannot check further
                 break;
             }
         }
@@ -647,7 +647,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         return true;
     }
 
-    /** @notice increment counter we use to track amount of open challenges etc
+    /** @notice increment counter that's used to track amount of open challenges and the timelines
      */
     function updateCounters(address _proposer, address _challenger) internal {
         RootHashProposal storage proposal = rootHashProposals[_proposer];

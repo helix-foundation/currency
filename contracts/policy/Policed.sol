@@ -41,7 +41,7 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
 
     /** ERC1820 permissioning interface
      *
-     * @param _addr The address of the contract we might act on behalf of.
+     * @param _addr The address of the contract this might act on behalf of.
      */
     function canImplementInterfaceForAddress(bytes32, address _addr)
         external
@@ -79,11 +79,11 @@ abstract contract Policed is ForwardTarget, IERC1820Implementer, ERC1820Client {
 
     /** Execute code as indicated by the managing policy contract
      *
-     * We allow the managing policy contract to execute arbitrary code in our
-     * context by allowing it to specify an implementation address and some
-     * message data, and then using delegatecall to execute the code at the
-     * implementation address, passing in the message data, all within our
-     * own address space.
+     * Governance allows the managing policy contract to execute arbitrary code in this
+     * contract's context by allowing it to specify an implementation address and
+     * some message data, and then using delegatecall to execute the code at the
+     * implementation address, passing in the message data, all within the protocol's
+     * address space.
      *
      * @param _delegate The address of the contract to delegate execution to.
      * @param _data The call message/data to execute on.

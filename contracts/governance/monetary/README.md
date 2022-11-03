@@ -1,7 +1,7 @@
 # Monetary Governance System
 > Monetary governance policies for the Eco currency.
 
-These contracts provide the monetary policy system for the eco currency. They specify how the currency is to be managed, and what economic processes are enacted.
+These contracts provide the monetary policy system for the Eco currency. They specify how the currency is to be managed, and what economic processes are enacted.
 
 ## Table of Contents
   - [Security](#security)
@@ -20,19 +20,19 @@ The trustee and monetary governance contracts provide an iterating economic syst
 
 The `CurrencyGovernance` contract implements the governmental decisionmaking process, and records the results of the vote for the [CurrencyTimer](../README.md#currencytimer) contract to enact. Only the trustees may participate in the `CurrencyGovernance` contract's proposal and voting process.
 
-The `TrustedNodes` contract manages the list of trustees as well as their rewards for participation in the monetary policy votes. The list of trusted nodes can be updated in a couple of different ways and there are example proposals in the [comminuty governance](../community/) folder to show some suggested paths.
+The `TrustedNodes` contract manages the list of trustees as well as their rewards for participation in the monetary policy votes. The list of trusted nodes can be updated in a couple of different ways and there are example proposals in the [community governance](../community/) folder to show some suggested paths.
 
 ### Monetary Policy Decisions
-The rest of the contracts are implementations of monetary Policy decisions. They're used to create and distribute new currency (to drive spending), to create and distribute deposit certificates (to discourage spending). Additionally, trustees may scale the currency across the board (to manage exchange value with other currencies), but this process is managed by the `ECO` contract. The different policy levers are designed to reward different behavior and provide incentives to achieve their desired results.
+The rest of the contracts are implementations of monetary Policy decisions. They're used to create and distribute new currency (to drive spending), to create and distribute lockup contracts (to discourage spending). Additionally, trustees may scale the currency across the board (to manage exchange value with other currencies), but this process is managed by the `ECO` contract. The different policy levers are designed to reward different behavior and provide incentives to achieve their desired results.
 
 #### Random Inflation
 A random inflation policy decision creates new currency and distributes it randomly to anyone who had votable ECO (not ECOx) at the end of the last generation. No registration is required, and probability of receiving a share of the newly minted currency is weighted by balance held.
 
 #### Lockups
-Deflation (or a similar slowing of the economy) is achieved by issuing deposit certificates that bear interest. These lockups are made available for a 48 hour window after the generation starts, and the certificate holders receive newly created currency as interest on their deposits when they retrieve their funds at the end of the lockup duration.
+Deflation (or a similar slowing of the economy) is achieved by issuing lockup contracts that produce more ECO. These lockups are made available for a 48 hour window after the generation starts, and the participants receive newly created currency as rewards for their deposits when they retrieve their funds at the end of the lockup duration.
 
 #### Linear Inflation/Deflation
-This policy lever scales the balance for every single address by the same percentage amount. It increases or decreases the total supply while leaving the relative purchasing power of each user, relative to each other, the same. This can be used to change the value of ECO when compared to other currencies as an example. See the [InflationCheckpoints](../../currency/README.md#inflationcheckpoints) contract for documentation.
+This policy lever scales the balance for every single address by the same percentage amount. It increases or decreases the total supply while leaving the relative purchasing power of each user, relative to each other, the same. This can be used to change the unit value of ECO when compared to other currencies as an example. See the [InflationCheckpoints](../../currency/README.md#inflationcheckpoints) contract for documentation.
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
@@ -338,7 +338,7 @@ Calls `claimFor` with `msg.sender` as the input for `_who`.
 ### InflationRootHashProposal
   - Inherits: `PolicedUtils`, `TimeUtils`
 
-To distribute RandomInflation rewards we need to establish which users can claim them. RandomInflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' ECO voting power match to each of those numbers - those users can claim the reward. The difference between ECO voting power and balance is that the voting power accounts for delegation.
+To distribute RandomInflation rewards, the protocol needs to establish which users can claim them. RandomInflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' ECO voting power match to each of those numbers - those users can claim the reward. The difference between ECO voting power and balance is that the voting power accounts for delegation.
 
 We assume that all users would always want to participate. Then, when claiming a reward, the user simply posts a proof stating that “if all users had participated, then I would have had claim numbers from X to Y”; and if that range overlaps a winning claim number, they get paid.
 
@@ -357,7 +357,7 @@ The contract can then hash account number, ECO voting power, and the cumulative 
 
 If the user submits the wrong index or cumulative sum, the root hash will be wrong. To simplify verification of trees, the number of nodes is always a power of two, and the extra nodes must have account, ECO voting power, and sum set to 0. The time window (`CHALLENGING_TIME`) for challenging a root hash submission is one day.
 
-To achieve it we need to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
+To achieve it, the protocol needs to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
 
 #### Events
 

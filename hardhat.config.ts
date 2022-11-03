@@ -20,7 +20,7 @@ enum NetworkID {
   ropsten = 3
 }
 
-// Ensure that we have all the environment variables we need.
+// Ensure that all the environment variables are present.
 let mnemonic: string;
 if (!process.env.MNEMONIC) {
   mnemonic = "test test test test test test test test test test test junk";

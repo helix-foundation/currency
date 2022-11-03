@@ -177,8 +177,7 @@ async function initUsers() {
 
   const balance = await options.ethersProvider.getBalance(account)
 
-
-  if (options.production && balance.lt(ethers.constants.WeiPerEther.mul(5)) ) {
+  if (options.production && balance.lt(ethers.constants.WeiPerEther.mul(5))) {
     console.log(
       `Deployment account ${account} should test with at least 5 Ether, has only ${balance}`
     )

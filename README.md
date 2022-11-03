@@ -29,35 +29,35 @@ Each component is documented in a README file in the corresponding contracts dir
 
 ## Security
 ### Note on Solidity Optimizations
-This repository has non-default compiler optimizations turned on! This can, in some cases, result in unexpected behavior. Our test suites are designed to be run with optimizations configured as they are when we deployed and will not detect changes in behavior caused by the optimizer.
+This repository has non-default compiler optimizations turned on! This can, in some cases, result in unexpected behavior. The test suites are designed to be run with optimizations configured as they are for deployment and will not detect changes in behavior caused by the optimizer.
 
 If you believe the optimizer may be changing the behavior of your code please test with the optimizer disabled to verify and discuss with the team.
 
 ### Reporting Vulnerabilities
-If you believe you've identified a security vulnerability in our contracts or other software please reach out to eng at eco dot com via email to ensure we're able to respond promptly.
+If you believe you've identified a security vulnerability in the Eco Currency contracts or other software, please submit to the Immunefi bounty (link coming soon) or join the Eco Association Discord (https://discord.eco.org) and tag or message an Eco Association team member.
 
 ## Background
-The Eco cryptocurrency is designed to be a low-volatility cryptocurrency for the express purposes of spending and saving. In order to minimize volatility  Eco uses a governance process which has in-built monetary policy levers (described below) controlled by a group of trustees who are incentivized to increase aggregate wealth in ECO.
+The Eco currency is intended to serve as a decentralized, free-floating alternative to fiat currencies - a currency used for saving and spending. To achieve this goal, Eco uses a governance process which has in-built monetary policy levers (described below) controlled by a group of elected individuals, as well as an overall community governance process for upgrades to the protocol.
 
 ### The ECOsystem
 The user-facing logic comprises of the `currency` and the `governance`, of which the latter can be further subdivided into `monetary governance` (managed by trustees) and  `community governance` (managed by all stakeholders):
 
 #### Tokens (/currency)
-##### The Token Implementation
-The token (ECO) implementation provides the code driving our ERC20 token. It takes responsibility for storing balances for all account holders, transferring funds between accounts, creating and destroying tokens, and providing the interfaces that token holders will typically interact with.
+##### The Base Currency
+ECO is a variable supply base currency. The token (ECO) implementation provides the code driving the ERC20 token. It takes responsibility for storing balances for all account holders, transferring funds between accounts, creating and destroying tokens, and providing the interfaces that token holders will typically interact with.
 
-##### The Partner Token
-The partner token (ECOx) establishes a value to the future success of the ECO token. It is also an ERC20 token and has a deflationary total supply. It's main function is being convertible to an amount of ECO proportionally based on percentage of total supply of each token. It is designed to be held long-term and most of the initial supply is set aside to be used as reward to trustees for governance.
+##### The Secondary Token
+The secondary token (ECOx) is a deflationary supply asset intended to incentivize long-term holders and bootstrap governance and an open market signaling expectations for ECO adoption. It is also an ERC20 token. Its initial main functionality, aside from governance, is being convertible to an amount of ECO proportionally based on percentage of the total supply of each token.
 
 #### The Governance System (/governance)
 The Governance module contains the monetary and community governance submodules, as well as the general governance logic for pushing the ECOsystem into a new generation. Monetary and community governance operate on a timescale defined by this logic.
 
 ##### Monetary Governance (/governance/monetary)
-The monetary governance submodule allows our trustees to make decisions about the monetary supply in the economy. It involves 3 possible actions: minting tokens and distributing them at random (Random Inflation), minting tokens and using them as rewards for lockup contracts (Lockups), and re-scaling each account balance equally (Linear Inflation).
+The monetary governance submodule allows community-elected trustees to make decisions about the monetary supply in the economy. It initially involves 3 possible actions: minting tokens and distributing them at random (Random Inflation), minting tokens and using them as rewards for lockup contracts (Lockups), and re-scaling each account balance equally (Linear Inflation).
 
 
 ##### Community Governance (/governance/community)
-The community governance submodule allows anyone with tokens (ECO or ECOx) to propose arbitrary changes to contracts and then participate in a vote on those changes, all  facilitated to by the policy framework. This allows for the ECOsystem to adapt to changing economic circumstances and evolve to meet users' needs and giving users direct influence over the economy they all participate.
+The community governance submodule allows anyone with tokens (ECO or ECOx) to propose arbitrary changes to contracts and then participate in a vote on those changes, all  facilitated to by the policy framework. This allows for the ECOsystem to adapt to changing economic circumstances and evolve to meet users' needs and giving users direct influence over the economy in which they all participate.
 
 ### Infrastructure
 Outside of these core modules there are a few major infrastructure components that underlie the system, but whose use is primarily abstracted away from the user:
@@ -86,10 +86,10 @@ npm ci
 These contracts are intended for deployment to the Ethereum blockchain. Once deployed, you can interact with the contracts using the standard Ethereum RPC mechanisms. The key contract functions are documented in the API sections of the component README files.
 
 ### Running the Linter, Tests and Coverage Report
-The commands below provide the basics to get set up developing following our conventions and standards - all code should pass the linter and prettier, all tests should pass, and code coverage should not decrease.
+The commands below provide the basics to get set up developing as well as outlining conventions and standards - all code should pass the linter and prettier, all tests should pass, and code coverage should not decrease.
 
 #### Linting + prettier
-We use `eslint` and `solhint` to lint the code in this repository. Additionally, our prettier enforces a clean code style for readability. You can run the linter and prettier using:
+`eslint` and `solhint` are used to lint the code in this repository. Additionally, the prettier enforces a clean code style for readability. You can run the linter and prettier using:
 ```
 npm run lint
 ```
@@ -120,7 +120,9 @@ npm run coverage
 ```
 
 ### Running a deployment
-Once the repo is cloned and all the libraries are installed, the project can be deployed by running `npm run deploy [path_to_config_file]` from the root directory. Running this deploy command recompiles all contracts and then attempts to deploy them via the deployment script found at `tools/eco.js`. The provided configurations differ by chain, deployed modules, and time windows for governance phases. `tools/deployConfigs/deployConfigTokensAndGovernanceHelix` serves as a good starting point for any custom configurations, just set the correct webrpc and private key, and input your own initial addresses and trusted nodes.
+Once the repo is cloned and all the libraries are installed, the project can be deployed by running `npm run deploy [path_to_config_file]` from the root directory. Running this deploy command recompiles all contracts and then attempts to deploy them via the deployment script found at `tools/eco.js`. The provided configurations differ by chain, deployed modules, and time windows for governance phases.
+
+`tools/deployConfigs/deployConfigTokensAndGovernanceHelix` serves as a good starting point for any custom configurations, just set the correct webrpc and private key, and input your own initial addresses and trusted nodes.
 
 Common deploy issues and solutions (use verbose flag):
 - if the token deploy fails while distributing initial ECOx, you will have to try to redeploy from a different private key. Failure before this point can be remedied by simply running the deploy again, and completion of this step means that the currency was fully deployed.
@@ -141,7 +143,7 @@ Common deploy issues and solutions (use verbose flag):
 ## Contributing
 Contributions are welcome. Please submit any issues as issues on GitHub, and open a pull request with any contributions.
 
-Please ensure that the test suite passes (run `npm test`) and that our linters run at least as cleanly as they did when you started (run `npm run lint`). Pull requests that do not pass the test suite, or that produce significant lint errors will likely not be accepted.
+Please ensure that the test suite passes (run `npm test`) and that the linters run at least as cleanly as they did when you started (run `npm run lint`). Pull requests that do not pass the test suite, or that produce significant lint errors will likely not be accepted.
 
 See the [contributing guide](./CONTRIBUTING.md) for more details.
 

@@ -230,7 +230,7 @@ contract TrustedNodes is PolicedUtils, TimeUtils {
             currentCohort.trusteeNumbers[_node] == 0,
             "Node is already trusted"
         );
-        // trustee number of new node is len(trustedNodes) + 1, since we dont want an actual trustee with trusteeNumber = 0
+        // trustee number of new node is len(trustedNodes) + 1, since there can't be a trustee with trusteeNumber = 0
         currentCohort.trusteeNumbers[_node] =
             currentCohort.trustedNodes.length +
             1;

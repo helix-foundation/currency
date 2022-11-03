@@ -36,9 +36,6 @@ describe('E2E Election of First Cohort and Funding of TrustedNodes [@group=9]', 
   })
 
   it('Stakes accounts', async () => {
-    /* Until we have some idea how initial distribution is done, this *does* use
-     *a test-function
-     */
     await initInflation.mint(await alice.getAddress(), stake)
     await initInflation.mint(await bob.getAddress(), stake)
     await initInflation.mint(await charlie.getAddress(), stake)

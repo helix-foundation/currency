@@ -55,7 +55,7 @@ contract MakeRich is Policy, Proposal {
         bytes32 _ecoId = keccak256("ECO");
 
         // The token has security allowing only 'Inflation' to mint,
-        // but right now we're executing with absolute privileges
+        // but right now this function is executing with absolute privileges
         // so just impersonate *being* Inflation
 
         // Another alternative is to policyCommand inflation to

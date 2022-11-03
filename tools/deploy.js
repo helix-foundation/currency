@@ -57,7 +57,7 @@ const ECOxArtifact = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
-  // we currently require 6 proxies for deployment
+  // The protocol currently requires 6 proxies for deployment
   options.numPlaceholders = '6'
 
   if (!options.gasMultiplier) {
@@ -163,9 +163,9 @@ async function checkIsProxyBound(proxyAddress, provider, verbose) {
 // `options` object.
 
 // ### Stage 1
-// In order to keep deployment addresses constant we use a set of proxies set up
-// by a bootstrap contract which instantiates a list of slots we can use to create proxies
-// and to hold addresses as part of the deployment process.
+// In order to keep deployment addresses constant the protocol uses a set of proxies set up
+// by a bootstrap contract which instantiates a list of slots it can use to create static proxies
+// to reserve addresses as part of the deployment process.
 //
 // Each of the instatiated contracts creates a forwarding proxy (`ForwardProxy`)
 // pointing to a placeholder allowing the `owner` address that started the deployment
@@ -292,14 +292,14 @@ async function deployStage1(options) {
 }
 
 // ### Stage 2
-// Once the initial proxy addresses we deploy the token contracts. The first proxy is reserved
+// Once the initial proxy addresses are set up, the token contracts are  deployed. The first proxy is reserved
 // for the future root Policy address and is given to the token contracts for future governance.
 //
 // Each currency contract (`ECO`, `ECOx`) is also hosted on a proxy. This allows all external
 // integrations to have constant references that will always be able to host all the data, but
 // still allow upgrades to the currency to be performed.
 //
-// To distribute the initial currency we deploy TokenInit. The currency contracts mint the initial
+// TokenInit is used to distribute the initial currency. The currency contracts mint the initial
 // supply to the distribution contract. From there, this stage calls to the distribution contracts
 // using the processed initialECO and initialECOx data processed in parseFlags.
 //
@@ -1179,7 +1179,7 @@ async function deployStage3(options) {
 }
 
 // ### Stage 4
-// Now that everything is in place, we increment the first generation
+// Now that everything is in place, increment the first generation
 // which starts the governance cycle.
 //
 async function deployStage4(options) {

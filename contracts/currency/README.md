@@ -1,7 +1,7 @@
 # The Eco Currency
 > Contracts implementing the Eco currency.
 
-This implements the ECO Cryptocurrency, and its partner token ECOx, in the form of smart contracts on the Ethereum VM.
+This implements the ECO cryptocurrency, and its secondary token ECOx, in the form of smart contracts on the Ethereum VM.
 
 ## Table of Contents
  - [Security](#security)
@@ -16,17 +16,17 @@ This implements the ECO Cryptocurrency, and its partner token ECOx, in the form 
 The Eco currency implementation is designed to be managed by the [Governance System](../governance). Other deployments have not been considered.
 
 ## Background
-The ECO and ECOx ERC20 tokens are managed by the `ECO` and `ECOx` contracts respectively, inhereting that functionality from a slightly modified copy of `ERC20.sol` in our repository. ECO has significant extra functionality added on top of this standard that is tied to our governance system. ECOx is closer to a base ERC20 and should be easily compliant in external systems.
+The ECO and ECOx ERC20 tokens are managed by the `ECO` and `ECOx` contracts respectively, inhereting that functionality from a slightly modified copy of `ERC20.sol` in this repository. ECO has significant extra functionality added on top of this standard that is tied to Eco's governance system. ECOx is closer to a base ERC20 and should be easily compliant in external systems.
 
-The first main function of ECO is a vote checkpointing system that operates off of post-transfer hooks. The checkpoint system is used to snapshot voting in our governance system (see the `VotingPower` contract [here](../governance/community/README.md#votingpower)). This allows for methods to lookup up the user's balance at the time (block number) when the vote in question starts and "snapshots" voting power.
+The first main function of ECO is a vote checkpointing system that operates off of post-transfer hooks. The checkpoint system is used to snapshot voting in Eco's governance system (see the `VotingPower` contract [here](../governance/community/README.md#votingpower)). This allows for methods to lookup up the user's balance at the time (block number) when the vote in question starts and "snapshots" voting power.
 
-The ECO token supports linear inflation (increasing all balances by a multiplier) and the effects of this operation is detailed in the `InflationCheckpoints` contract, a parent of `ECO`. The balances are stored in "uninflated" units that are not affected by inflation actions. The balances are then returned as the uninflated balance divided by the inflation factor. The inflation multiplier is stored in its own set of checkpoints to facilitate historical balance lookups. This is similar to rebase functions of other currencies, except it is infrequently and triggered by the decisions of human governance (see [Monetary Governance](../governance/monetary/README.md) for more information).
+The ECO token supports linear inflation (increasing or decreasing all balances by a multiplier) and the effects of this operation is detailed in the `InflationCheckpoints` contract, a parent of `ECO`. The balances are stored in "uninflated" units that are not affected by inflation actions. The balances are then returned as the uninflated balance divided by the inflation factor. The inflation multiplier is stored in its own set of checkpoints to facilitate historical balance lookups. This is similar to rebase functions of other currencies, except it is infrequent, and triggered by the decisions of governance (see [Monetary Governance](../governance/monetary/README.md) for more information).
 
 ECO can also be delegated. This allows the owner's balance to be tracked in the checkpoints for the delegates. Note, this doesn't change the balance of the user, only its voting power. Delegate functionality is detailed in the `VoteCheckpoints` contract, which is a parent of `InflationCheckpoints` and therefore `ECO`. Each address is, by default, not delegated.
 
-The ECOx token adds the functionality to convert ECOx into ECO. The amount of ECO gained is based on the percentage of total supply as the ECOx burned (explained in detail in the API). ECOx does not have inflation in its design and its voting is handled by a [staking contract](../governance/community/README.md#ecoxstaking) instead of by checkpoints.
+The ECOx token adds the functionality to convert ECOx into ECO. The amount of ECO received is based on the percentage of total supply of the ECOx burned (explained in detail in the API). ECOx does not have inflation in its design and its voting is handled by a [staking contract](../governance/community/README.md#ecoxstaking) instead of by checkpoints.
 
-Finally, both tokens can be "paused" by an elected address, governed by our governance system. During a pause, all transfers are rejected.
+Finally, both tokens can be "paused" by an elected address, governed by Eco's governance system. During a pause, all transfers are rejected.
 
 ### References
 
@@ -46,12 +46,12 @@ The currency contracts are intended for deployment on the Ethereum blockchain, u
 ### ERC20
  - Inherits: `ERC20Permit`
 
-Other than the `permit` functionality that will be detailed in its associated contract, our implementation of ERC20 differs from the baseline in a few ways. One is that transfers to the zero address are disallowed, the `burn` function must be used instead. The `approve` function disallows approvals to the zero address to make it clear that this is the case. Another difference is that `transferFrom` emits an `Approval` event to denote the fact that the approval amount is changed by its action. Towards clarity and for safety in other use, functions for `decreaseAllowance` and `increaseAllowance` are added. When it comes to return values, functions will revert instead of returning `false`, but will still return `true` on success to remain compatable for integrations that check for success. Finally, the `name` and `symbol` variables are stored as immutable bytes32 and converted to strings by the getter functions.
+Other than the `permit` functionality that will be detailed in its associated contract, Eco's implementation of ERC20 differs from the baseline in a few ways. One is that transfers to the zero address are disallowed and the `burn` function must be used instead. The `approve` function disallows approvals to the zero address to make it clear that this is the case. Another difference is that `transferFrom` emits an `Approval` event to denote the fact that the approval amount is changed by its action. Towards clarity and for safety in other use, functions for `decreaseAllowance` and `increaseAllowance` are added. When it comes to return values, functions will revert instead of returning `false`, but will still return `true` on success to remain compatible for integrations that check for success. Finally, the `name` and `symbol` variables are stored as immutable bytes32 and converted to strings by the getter functions.
 
 ### ERC20Pausable
  - Inherits: `ERC20`, `Pausable`
 
-Using the openzeppelin library for tracking the pause, this contract sets up a `pauser` and a `roleAdmin` to be in charge of the circuit breaker. The `pauser` is the address that is able to pause the system (stopping transfers) and the `roleAdmin` is the address which can change the `pauser`. In our system, the root policy contract is the `roleAdmin` as this allows the `pauser` to be changed by [Community Governance](../governance/community/README.md).
+Using the openzeppelin library for tracking the pause, this contract sets up a `pauser` and a `roleAdmin` to be in charge of the circuit breaker. The `pauser` is the address that is able to pause the system (stopping transfers) and the `roleAdmin` is the address which can change the `pauser`. In Eco's system, the root policy contract is the `roleAdmin` as this allows the `pauser` to be changed by [Community Governance](../governance/community/README.md).
 
 #### Events
 
@@ -103,7 +103,7 @@ Sets a new `pauser`. The old `pauser` is overwritten.
 ### VoteCheckpoints
  - Inherits: `ERC20Pausable`, `DelegatePermit`
 
- The `VoteCheckpoints` contract adds the tracking for voting in the ECO governance system. Here, the system of delegating voting power and checkpointing balances for that voting power is implemented. This contract sits before the linear inflation layer ([InflationCheckpoints](./README.md#inflationcheckpoints)), so all the values it stores, emits, and takes as inputs are in the base (unchanging) values stored in the ERC20 layer. This will require contracts interfacing with this layer to use the inflation multiplyer to 
+The `VoteCheckpoints` contract adds the tracking for voting in the Eco governance system. Here, the system of delegating voting power and checkpointing balances for that voting power is implemented. This contract sits before the linear inflation layer ([InflationCheckpoints](./README.md#inflationcheckpoints)), so all the values it stores, emits, and takes as inputs are in the base (unchanging) values stored in the ERC20 layer. This will require contracts interfacing with this layer to use the inflation multiplyer.
 
  #### Events
 
@@ -240,7 +240,7 @@ Arguments:
  - `delegatee` (address) - the address to delegate to
  - `amount` (uint256) - the amount to delegate
 
-This function allows an address to delegate only part of its voting power to another address. Any address may be targeted by this, not just addresses that have enabled primary delegation. This function can be called multiple times for multiple addresses. This interface is generally designed for use by contracts that are managing funds from multiple users. For an example of this usage, see our `Lockup` contract [here](../governance/monetary/README.md#lockup).
+This function allows an address to delegate only part of its voting power to another address. Any address may be targeted by this, not just addresses that have enabled primary delegation. This function can be called multiple times for multiple addresses. This interface is generally designed for use by contracts that are managing funds from multiple users. For an example of this usage, see the `Lockup` contract [here](../governance/monetary/README.md#lockup).
 
 ##### Security Notes
  - THIS AMOUNT, LIKE EVERY OTHER AMOUNT ON THIS CONTRACT, IS IN TERMS OF THE BASE VALUE OF THE TOKEN, NOT IN TERMS OF INFLATED AMOUNTS.
@@ -276,7 +276,7 @@ Undelegates a specified amount from an address. Is only available to amounts set
 ### DelegatePermit
  - Inherits: `EIP712`
 
-Implements a standard usage of EIP721 (read more [here](https://eips.ethereum.org/EIPS/eip-712)) for our `delegate` function. The typehash `keccak256("Delegate(address delegator,address delegatee,uint256 nonce,uint256 deadline)")` is used and the openzeppelin utility for `Counters` is used for the nonces. Other than allow the checking of nonces for addresses, all functionality of this contract is internal.
+Implements a standard usage of EIP721 (read more [here](https://eips.ethereum.org/EIPS/eip-712)) for the `delegate` function. The typehash `keccak256("Delegate(address delegator,address delegatee,uint256 nonce,uint256 deadline)")` is used and the openzeppelin utility for `Counters` is used for the nonces. Other than allow the checking of nonces for addresses, all functionality of this contract is internal.
 
 #### delegationNonce
 Arguments:
@@ -350,7 +350,7 @@ Overrides the `getPastVotes` function in `VoteCheckpoints` to account for inflat
 ### ECO
  - Inherits: `InflationCheckpoints`
 
-The `ECO` contract manages the function of our primary token, ECO. Its constructor sets the `name` and `symbol` values for `ERC20` both to "ECO". On creation it mints an initial supply to a distributor contract, both set in the constructor. See [TokenInit](./README.md#tokeninit) for more details on the distribution. The rest of the functionality is permissioning `mint` and `burn` as well as recieving the inflation multiplier each generation.
+The `ECO` contract manages the function of the primary token, ECO. Its constructor sets the `name` and `symbol` values for `ERC20` both to "ECO". On creation it mints an initial supply to a distributor contract, both set in the constructor. See [TokenInit](./README.md#tokeninit) for more details on the distribution. The rest of the functionality is permissioning `mint` and `burn` as well as recieving the inflation multiplier each generation.
 
 #### Events
 
@@ -388,13 +388,13 @@ This is part of the generation increase machinery. The `currentGeneration` is in
 ### ECOx
  - Inherits: `ERC20Pausable`, `PolicedUtils`
 
-The `ECOx` contract is our baseline `ERC20Pausable` without minting or burning (outside of proposals) with the added ability to exchanged ECOx for ECO tokens in a percentage way. The ECOx token exists for this function alone so as to provide a market for the future of the ECO token. Finally, much like ECO, the ECOx contract mints its initial supply to a distributor on construction, see [TokenInit](./README.md#tokeninit) for more details.
+The `ECOx` contract is a baseline `ERC20Pausable` without minting or burning (outside of proposals) with the added ability to exchanged ECOx for ECO tokens in a percentage way. The ECOx token exists for this function alone so as to provide a market for the future of the ECO token. Finally, much like ECO, the ECOx contract mints its initial supply to a distributor on construction, see [TokenInit](./README.md#tokeninit) for more details.
 
 #### exchange
 Arguments:
  - `_ecoXValue` (uint256) - the amount of ECOx for the calling address to exchange
 
-This function burns the specified amount of ECOx and mints the user ECO in return. The percentage that the burned ECOx was of the total initial supply of ECOx (stored in the variable `initialSupply`) is equal to the ECO given as a percentage of the current total supply of ECO, but continuously compounded along the process. This follows an exponential function relation between the two ratios. See our whitepaper for more discussion.
+This function burns the specified amount of ECOx and mints the user ECO in return. The percentage that the burned ECOx was of the total initial supply of ECOx (stored in the variable `initialSupply`) is equal to the ECO given as a percentage of the current total supply of ECO, but continuously compounded along the process. This follows an exponential function relation between the two ratios. See the [Eco whitepaper](https://eco.org/whitepaper.pdf) for more discussion.
 
 ##### Security Notes
  - The exponential calculation is achieved via a 33rd term taylor expansion. The input value is fed into a polynomial with precomputed coefficients and uses 100 bits of precision on the integer division. This gives a precision of approximately 1 in 10^24 when converting an amount as large as half the total supply, with more accuracy as the conversions approach zero. Then there is also a rounding error of 1 of the smallest unit of ECO when converting amounts as small as 10^-13 of the total supply.

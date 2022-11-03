@@ -218,7 +218,7 @@ This method responds to any challenges to the root hash proposed by the Inflatio
 #### fetchBalances
 Arguments:
     - block (number) - the block number of the desired snapshot
-    - subgraphURI (string) - the uri of the subgraphs endpoint we want to query for the snapshot
+    - subgraphURI (string) - the uri of the subgraphs endpoint to query for the snapshot
 
 This method fetches the voting power snapshot at a specific blockNumber `block` from the subgraph endpoint at `subgraphURI`
 

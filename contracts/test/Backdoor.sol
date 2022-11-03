@@ -77,7 +77,7 @@ contract BackdoorProposal is Policy, Proposal {
  * A policy hanlder used for testing policy adoption.
  */
 contract SampleHandler is Policed {
-    /** The ID of this handler, so we can tell which one was adopted when there
+    /** The ID of this handler, so this can tell which one was adopted when there
      * are multiple instances.
      */
     uint256 public id;

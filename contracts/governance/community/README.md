@@ -1,7 +1,7 @@
 # Community Governance System
 > Community governance policies for the Eco currency.
 
-These contracts provide the community governance system for the eco currency. They specifically address voting open to all token holders for code upgrades to the contract system. Upgrades are managed in terms of proposals, some templates of which are included as .propo.sol files, which are voted on and may be executed across the span of a generation.
+These contracts provide the community governance system for the Eco currency. They specifically address voting open to all token holders for code upgrades to the contract system. Upgrades are managed in terms of proposals, some templates of which are included as .propo.sol files, which are voted on and may be executed across the span of a generation.
 
 ## Table of Contents
   - [Security](#security)
@@ -29,14 +29,14 @@ The `PolicyProposals` and `PolicyVotes` contracts handle the vote process. `Poli
 ### VotingPower
   - Inherits: `PolicedUtils`
 
-This contract is for `PolicyProposals` and `PolicyVotes` to inherit the functionality for computing voting power for any address. The voting power calculation combines the amount of ECO in the last checkpoint before the voting process starts with the same checkpoint for qualified amounts of ECOx. There is no preferential weighting, one wei of ECO = one wei of ECOx = one vote. See the [currency](../../currency/README.md#votecheckpoints) documentation for more explanation about the checkpointing system and see [ECOxStaking](./README.md#ecoxstaking) in this readme to see what qualifies ECOx for voting.
+This contract is for `PolicyProposals` and `PolicyVotes` to inherit the functionality for computing voting power for any address. The voting power calculation combines the amount of ECO in the last checkpoint before the voting process starts with the same checkpoint for qualified amounts of ECOx. Each wei of ECO has 1 voting power, and each wei ECOx has 10 voting power. These voting weights presume the initial supply of ECO is ten times bigger than the initial supply of ECOx -- meaning that at genesis, ECO and ECOx have equal contributions to total voting power. See the [currency](../../currency/README.md#votecheckpoints) documentation for more explanation about the checkpointing system and see [ECOxStaking](./README.md#ecoxstaking) in this readme to see what qualifies ECOx for voting.
 
 #### votingPower
 Arguments:
   - `_who` (address) - the address's voting power to compute
   - `_blockNumber` (uint256) - the block number at which to compute the voting power.
 
-Queries `ECO` for the addresses's voting total at `_blockNumber` and similarly for `ECOxStaking`. Adds them both and returns.
+Queries `ECO` for the addresses's voting total at `_blockNumber` and similarly for `ECOxStaking`. Combines them both and returns.
 
 ##### Security Notes
   - Will revert on each lower level call if `_blockNumber` is in the future.
@@ -227,7 +227,7 @@ Arguments:
   - `_totalECOxSnapshot` (uint256) - the snapshot of total ECOx supply
   - `_excludedVotingPower` (uint256) - the amount of voting power to exclude from the ECO supply
 
-Configures a policy vote, setting the policy to be voted on, the times that the voting ends, the block to use for voting power calculation, and the parameters to calculate `totalVotingPower` to use for the 50% threshold (see [here](./README.md#configure)). The `proposer` is stored as the data is deleted in the `PolicyProposals` contract as we move to this stage, so it is preserved for the UI.
+Configures a policy vote, setting the policy to be voted on, the times that the voting ends, the block to use for voting power calculation, and the parameters to calculate `totalVotingPower` to use for the 50% threshold (see [here](./README.md#configure)). The `proposer` is stored as the data is deleted in the `PolicyProposals` contract as the process moves to this stage, so it is preserved for the UI.
 
 ##### Security Notes
   - Is called atomically with instantiation.

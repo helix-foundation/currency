@@ -54,7 +54,7 @@ describe('VDFVerifier [@group=6]', () => {
     it('Computed solutions match expectations', async () => {
       const x = new BN(3)
 
-      // We expect this to be 3, squared 2^t + 1 times
+      // This is expected to be 3, squared 2^t + 1 times
       const [y] = prove(x, 2)
 
       let s = x

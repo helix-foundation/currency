@@ -223,7 +223,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         totalProposals++;
 
-        // if eco token is paused we can't take proposal fee
+        // if eco token is paused, the proposal fee can't be and isn't collected
         if (!ecoToken.paused()) {
             require(
                 ecoToken.transferFrom(msg.sender, address(this), COST_REGISTER),

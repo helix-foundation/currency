@@ -190,10 +190,10 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
   ])
 
   // ### Stage 4
-  // Here we mint some initial tokens. The initialization
+  // Here it mints some initial tokens. The initialization
   // contract self-destructs on first use to prevent any possible future run.
   //
-  // Finally, now that everything is in place, we increment the first generation
+  // Finally, now that everything is in place, it increments the first generation
   // which sends the code live to be used.
   //  await tokenInit.initializeAndFuse(eco.address);
   await timedPolicies.incrementGeneration()

@@ -73,7 +73,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     uint256 public blockNumber;
 
-    /** Here we only call inherited constructor, and pass parameters to it
+    /** This constructor just passes the call to the super constructor
      */
     // solhint-disable-next-line no-empty-blocks
     constructor(Policy _policy, ECO _ecoAddr) VotingPower(_policy, _ecoAddr) {}

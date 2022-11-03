@@ -27,8 +27,8 @@ function bnHex(bnInput, bytes = 0) {
 // x and y must be in Montgomery form (in proper n)
 // returns an array of t-1 elements that are square roots, per algorithm
 //
-// The reason we start with x^2 (aka x = original_x^2) and not x, as in the Pietrzak's VDF paper,
-// is that we must ensure that x is a quadratic residue, and pre-squaring x is the easiest.
+// The reason this starts with x^2 (aka x = original_x^2) and not x, as in the Pietrzak's VDF paper,
+// is that the process must ensure that x is a quadratic residue, and pre-squaring x is the easiest.
 function prove(x, tinput, n = defn) {
   const t = Number(tinput.toString())
   const two = new BN(2)
