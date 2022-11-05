@@ -9,6 +9,7 @@ import {
   TrustedNodes__factory,
 } from '../typechain-types'
 import { logError, SupervisorError } from './logError'
+import { fetchLatestBlock } from './tools'
 
 const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
   ['string'],
@@ -66,7 +67,7 @@ export class TimeGovernor {
   }
 
   async annualUpdateListener() {
-    const block = await this.provider.getBlock('latest')
+    const block = await fetchLatestBlock(this.provider)
     if (block.timestamp > this.yearEnd && !this.triedAnnualUpdate) {
       try {
         this.triedAnnualUpdate = true
@@ -97,7 +98,7 @@ export class TimeGovernor {
   }
 
   async generationUpdateListener() {
-    const block = await this.provider.getBlock('latest')
+    const block = await fetchLatestBlock(this.provider)
     if (block.timestamp > this.nextGenStart && !this.triedGenerationIncrement) {
       try {
         this.triedGenerationIncrement = true

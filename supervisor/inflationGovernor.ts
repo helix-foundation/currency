@@ -20,6 +20,7 @@ import {
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
 import { logError, SupervisorError } from './logError'
+import { fetchLatestBlock } from './tools'
 
 const { getPrimal, getTree, answer } = require('../tools/randomInflationUtils')
 
@@ -194,7 +195,7 @@ export class InflationGovernor {
     let primalNumber: number = 0
     primalNumber = await getPrimal(
       (
-        await this.provider.getBlock('latest')
+        await fetchLatestBlock(this.provider)
       ).hash
     )
     console.log('got primal')
@@ -214,7 +215,7 @@ export class InflationGovernor {
     } catch (e) {
       // error logging
       console.log('failed setPrimal, trying again')
-      console.log((await this.provider.getBlock('latest')).number)
+      console.log((await fetchLatestBlock(this.provider)).number)
       return await this.commitVdfSeed()
     }
   }
@@ -399,7 +400,7 @@ export class InflationGovernor {
 
   async checkRootHashStatus() {
     if (this.newChallengerSubmissionEnds > 0) {
-      const block = await this.provider.getBlock('latest')
+      const block = await fetchLatestBlock(this.provider)
       if (
         block.timestamp > this.newChallengerSubmissionEnds &&
         block.timestamp > this.lastLiveChallenge

@@ -9,6 +9,7 @@ import {
   CurrencyGovernance,
 } from '../typechain-types'
 import { logError, SupervisorError } from './logError'
+import { fetchLatestBlock } from './tools'
 
 const ID_TIMED_POLICIES = ethers.utils.solidityKeccak256(
   ['string'],
@@ -70,7 +71,7 @@ export class CurrencyGovernor {
   }
 
   async stageUpdateListener() {
-    const timestamp: number = (await this.provider.getBlock('latest')).timestamp
+    const timestamp: number = (await fetchLatestBlock(this.provider)).timestamp
     if (
       !this.triedUpdateStage &&
       ((this.stage === 0 && timestamp > this.proposalEnds) ||

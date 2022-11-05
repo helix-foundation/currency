@@ -4,7 +4,7 @@ export enum SupervisorError {
   LowEthBalance = 'Low ETH balance detected',
   LowEcoBalance = 'Low ECO balance detected',
   DeployVoting = 'Failed to deploy voting',
-  Execute = 'Failed to execute community vote',
+  Execute = 'Failed to execute community proposal',
   UpdateStage = 'Failed to update monetary governance stage',
   StartVDF = 'Failed to start VDF',
   VerifyVDF = 'Failed to verify VDF',
@@ -12,9 +12,10 @@ export enum SupervisorError {
   ApproveInflationFee = 'Failed to approve inflation proposer fee',
   ProposeRootHash = 'Failed to propose root hash',
   RespondToChallenge = 'Failed to respond to root hash challenge',
-  AnnualUpdate = 'Failed to increment annual update',
+  AnnualUpdate = 'Failed to complete annual update',
   IncrementGeneration = 'Failed to increment generation',
   CheckRootHashStatus = 'Failed to check root hash status',
+  InfuraIssue = 'Failed to fetch latest block from infura, it may be down',
 }
 
 type LogErrorOptions = {

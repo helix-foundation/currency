@@ -12,6 +12,7 @@ import {
 } from '../typechain-types'
 
 import { logError, SupervisorError } from './logError'
+import { fetchLatestBlock } from './tools'
 
 const policyDecisionStartEvent: string = 'PolicyDecisionStart'
 const supportThresholdReachedEvent: string = 'SupportThresholdReached'
@@ -122,7 +123,7 @@ export class CommunityGovernor {
 
   async executePolicyListener() {
     if (this.policyVotesDeployed && !this.triedExecute) {
-      const currentTime: number = (await this.provider.getBlock('latest'))
+      const currentTime: number = (await fetchLatestBlock(this.provider))
         .timestamp
       const reqTime: number =
         (await this.policyVotes.voteEnds()).toNumber() +
