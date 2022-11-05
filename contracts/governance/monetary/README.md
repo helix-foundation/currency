@@ -163,19 +163,31 @@ A commitment is the hash of the packed ABI encoding of the ballot ranking. In So
 ```
 function encodeBallot(
     bytes32 _seed,
-    address[] _votes
+    Vote[] _votes
     )
-    internal
+    public
     pure
     returns (bytes memory)
 {
-    return keccak256(abi.encodePacked(
+    return keccak256(abi.encode(
         _seed,
         msg.sender,
         _votes
         ));
 }
 ```
+
+The Vote struct is defined as so:
+```
+struct Vote {
+    // the proposal being voted for
+    address proposal;
+    // the score of this proposal within the ballot, min recorded score is one
+    // to get a score of zero, an item must be unscored
+    uint256 score;
+}
+```
+Values for score must be in the interval `[1, numVotes]` (inclusive on both sides) where `numVotes` is the elements in the vote array being submitted. scores cannot be duplicated, they must define an ordered ranking of the proposals that are submitted with the highest score being ranked the highest. All non-included votes are treated as being given a tied score of zero. They may not be explicitly given a score of zero, you must omit them to give that score. All the `Vote` structs submitted in the hash commit must be ordered alphabetically by the proposal addresses in strictly increasing order. As such, no addresses may be duplicated.
 
 The seed is used so that people cannot brute force crack the commitment by checking each possible vote. The trustee must keep the seed to be able to reveal their vote successfully. 
 
@@ -188,16 +200,14 @@ Arguments:
   - `_seed` (bytes32) - the seed used to create the hash commit
   - `_votes` (address[]) - the submitted ballot to match to the hash commit
 
-Reveals a ballot that was previously committed to. This is called during the reveal phase of the voting process and is used to record the votes of all the trustees as well as update the currently leading proposal. Each reveal adds votes to a running tally (see the overview for this contract for a full explanation of the voting system) and checks to see if there's a new `leader`. The revealed vote also removes the trustee's default vote for the default proposal. If a revealed vote causes a proposal to tie the `leader`, it does not become the new `leader`.
+Reveals a ballot that was previously committed to. This is called during the reveal phase of the voting process and is used to record the votes of all the trustees as well as update the currently leading proposal. Revealing adds the `score` of each `Vote` (see commit for details) to a running tally for each proposal (see the overview for this contract for a full explanation of the voting system). Afterwards it checks to see if there's a new `leader`. If a revealed vote causes a proposal to tie the `leader`, it does not become the new `leader`. The revealed vote removes the trustee's default vote for the default proposal. 
 
-> If a vote is found to be invalid after decryption the vote will be discarded with no opportunity for adjustment or correction.
+Emits the `VoteReveal` event to create a record of the vote in the log. These events can and should be used to display information about the historical voting decisions of each participant.
 
-Emits the `VoteReveal` event to create a record of the vote in the log. These events are used by the client to display information about the historical voting decisions of each participant.
-
-Reverts in the case of an invalid vote. Invalid votes are ones that vote for invalid proposals (see `propose`/`unpropose`) or ones that vote for the same proposal multiple times.
+This method reverts in the case of an invalid vote. Invalid votes are ones that vote for addresses that do not match a submitted proposal, ones that vote for the same proposal multiple times, ones that assign an invalid score to a proposal (including a duplicate score), ones that are not ordered correctly, ones that are empty, and ones that do not match the previously submitted hash commit (see `commit`). If a vote is found to be invalid after decryption the vote will be discarded with no opportunity for adjustment or correction. Unless the hash commit was incorrectly matched and the correct matching is resubmitted, there is no way for an invalid vote to be corrected.
 
 ###### Security Notes
-  - Can only be called by accounts that have previously committed to a ballot by
+  - Can only be successfully called by accounts that have previously committed to a ballot by
     calling `commit` (and therefore are a trusted node).
   - The parameters must, when hashed together, match the value provided to the
     `commit` method during the commit phase.
