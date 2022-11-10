@@ -26,13 +26,15 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   let ecoXStaking
   let makePoodlexStaking
   let poodleCheck
-  let retryPoodleCheckAddress
+  let retryPoodleCheck
 
   let alice
   let bob
   let charlie
   let dave
   let trustedNodes
+
+  const staked = ethers.utils.parseEther('50')
 
   before('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
@@ -77,6 +79,11 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
     // the contract at ID_ECOXSTAKING is not poodles so it does not have this function
     expect(poodleCheck.address).to.equal(ecoXStaking.address)
     await expect(poodleCheck.provePoodles()).to.be.reverted
+  })
+
+  it('stakes ECOx on current staking contract', async () => {
+    await ecox.connect(alice).approve(ecoXStaking.address, staked)
+    await ecoXStaking.connect(alice).deposit(staked)
   })
 
   it('Constructs the proposal', async () => {
