@@ -14,7 +14,7 @@ contract InfiniteVote{
     function InfiniteVote(TimedPolicies timed, Policy policy){
         timed.incrementGeneration();
         PolicyProposal policyprops=policy.policyFor(keccak256("PolicyProposals"));
-
+        policyprops.register();
     }
 
 }
