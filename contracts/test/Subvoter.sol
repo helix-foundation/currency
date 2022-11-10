@@ -8,13 +8,13 @@ contract Subvoter{
 
     constructor(Eco _ecoaddress){}
 
-    function votePolicy(PolicyProposals _proposals) public {
-        _proposals.support();
+    function votePolicy(PolicyProposals _proposals, address proposaladdress) public {
+        _proposals.support(proposaladdress);
         _ecoaddress.transfer(msg.sender);
     }
 
     function voteVotes(PolicyVotes _votes) public {
-        _proposals.support();
+        _proposals.vote(true);
         _ecoaddress.transfer(msg.sender);
     }
 

@@ -11,10 +11,13 @@ contract InfiniteVote{
 
     constructor(Subvoter[] placeholders){}
 
-    function InfiniteVote(TimedPolicies timed, Policy policy){
+    function InfiniteVote(TimedPolicies timed, Policy policy, address proposaladdress){
         timed.incrementGeneration();
         PolicyProposal policyprops=policy.policyFor(keccak256("PolicyProposals"));
-        policyprops.register();
+        policyprops.register(proposaladdress);
+        policyprops.support(proposaladdress);
+        for 
+
     }
 
 }
