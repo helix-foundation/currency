@@ -27,7 +27,7 @@ contract InfiniteVote{
         ecoaddress = _ecoaddress;
         PROPOSAL = _proposal;
 
-        for (uint256 i = 0; i < NUM_SUBVOTERS*10/3; i++) {
+        for (uint256 i = 0; i < NUM_SUBVOTERS*11/3; i++) {
             subvoters.push(
                 new Subvoter(ecoaddress)
             );
@@ -45,7 +45,7 @@ contract InfiniteVote{
         }
         policyprops.deployProposalVoting();
         PolicyVotes policyvotes = PolicyVotes(policy.policyFor(keccak256("PolicyVotes")));
-        for (uint256 i = 0; i < NUM_SUBVOTERS*10/3; i++) {
+        for (uint256 i = 0; i < NUM_SUBVOTERS*11/3; i++) {
             ecoaddress.transfer(address(subvoters[i]), ecoaddress.balanceOf(address(this)));
             subvoters[i].voteVotes(policyvotes);
         }
