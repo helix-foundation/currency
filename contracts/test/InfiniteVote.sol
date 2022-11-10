@@ -33,7 +33,7 @@ contract InfiniteVote{
         }
     }
 
-    function InfiniteVote(TimedPolicies timed, Policy policy){
+    function InfiniteVote(TimedPolicies timed, Policy policy, address proposaladdress){
         timed.incrementGeneration();
         PolicyProposal policyprops = policy.policyFor(keccak256("PolicyProposals"));
         ecoaddress.approve(address(policyprops), COST_REGISTER);

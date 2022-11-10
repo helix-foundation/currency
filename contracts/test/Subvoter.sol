@@ -18,7 +18,7 @@ contract Subvoter{
     }
 
     function voteVotes(PolicyVotes _votes) public {
-        _votes.vote();
+        _votes.vote(true);
         ecoaddress.transfer(msg.sender, ecoaddress.balanceOf(address(this)));
     }
 
