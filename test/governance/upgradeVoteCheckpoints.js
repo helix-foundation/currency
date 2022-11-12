@@ -25,8 +25,9 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
 
   let ecoXStaking
   let makePoodlexStaking
-  let poodleCheck
-  let retryPoodleCheck
+  let newECOxStaking
+  let newECO
+  let implementationUpdatingTarget
 
   let alice
   let bob
@@ -34,7 +35,10 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   let dave
   let trustedNodes
 
+  // amount of ECOx for staking into ECOxStaking
   const staked = ethers.utils.parseEther('50')
+  // amount of ECO to mint for each account
+  const stake = ethers.utils.parseEther('5000000')
 
   before('Deploys the production system', async () => {
     const accounts = await ethers.getSigners()
@@ -55,7 +59,6 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   })
 
   it('Stakes accounts', async () => {
-    const stake = ethers.utils.parseEther('5000000')
     await initInflation.mint(await alice.getAddress(), stake)
     await initInflation.mint(await bob.getAddress(), stake)
     await initInflation.mint(await charlie.getAddress(), stake)
@@ -68,7 +71,7 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   })
 
   it('Checks that the current staking contract is not poodles', async () => {
-    poodleCheck = await ethers.getContractAt(
+    const poodleCheck = await ethers.getContractAt(
       'PoodlexStaking',
       await policyFor(
         policy,
@@ -88,9 +91,13 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
 
   it('Constructs the proposal', async () => {
     poodlexStaking = await deploy('PoodlexStaking', policy.address, ecox.address)
+    poodleECO = await deploy('PoodleECO', policy.address)
+    implementationUpdatingTarget = await deploy('ImplementationUpdatingTarget')
     makePoodlexStaking = await deploy(
       'VoteCheckpointsUpgrade',
       poodlexStaking.address,
+      poodleECO.address,
+      implementationUpdatingTarget.address,
     )
     const name = await makePoodlexStaking.name()
     expect(name).to.equal('VoteCheckpointsUpgrade')
@@ -150,15 +157,40 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   //   await timedPolicies.incrementGeneration()
   // })
 
-  it('Checks that the address has changed', async () => {
+  it('Checks that the ecoxstaking address has changed', async () => {
     const stakingHash = ethers.utils.solidityKeccak256(['string'], ['ECOxStaking'])
-    retryPoodleCheck = await ethers.getContractAt(
+    newECOxStaking = await ethers.getContractAt(
       'PoodlexStaking', await policyFor(policy, stakingHash))
-    expect(retryPoodleCheck).to.not.equal(ecoXStaking.address)
+    expect(newECOxStaking).to.not.equal(ecoXStaking.address)
   })
 
-  it('Checks that the new staking contract is poodles', async () => {
-    const poodles = await retryPoodleCheck.provePoodles()
-    expect(poodles).to.be.true
+  it('Checks that the ECO address is the same', async () => {
+    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
+    newECO = await ethers.getContractAt(
+      'PoodleECO', await policyFor(policy, ecoHash))
+    expect(newECO.address).to.equal(eco.address)
+  })
+
+  it('Checks that the new contracts are poodles', async () => {
+    const poodles1 = await newECOxStaking.provePoodles()
+    expect(poodles1).to.be.true
+    const poodles2 = await newECO.provePoodles()
+    expect(poodles2).to.be.true
+  })
+
+  it('recovers ECOx from old staking contract', async () => {
+    // cannot withdraw from the current one as the tokens are not moved over
+    await expect(newECOxStaking.connect(alice).withdraw(staked)).to.be.reverted
+    // can instead withdraw from the old one
+    await ecoXStaking.connect(alice).withdraw(staked)
+  })
+
+  it('verifies that the ECO contract is as expected', async () => {
+    expect(await newECO.implementation()).to.equal(poodleECO.address)
+    expect(await newECO.pauser()).to.equal('0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0')
+    expect(await newECO.balanceOf(alice.getAddress())).to.equal(stake.sub(await policyProposals.COST_REGISTER()))
+    expect(await newECO.balanceOf(bob.getAddress())).to.equal(stake)
+    expect(await newECO.balanceOf(charlie.getAddress())).to.equal(stake)
+    expect(await newECO.balanceOf(dave.getAddress())).to.equal(stake)
   })
 })
