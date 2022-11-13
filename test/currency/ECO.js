@@ -1775,6 +1775,25 @@ describe('ECO [@group=1]', () => {
           'Must have an undelegated amount available to cover delegation'
         )
       })
+
+      it.only('no exploit on self transfer', async () => {
+        await eco.connect(accounts[2]).delegate(await accounts[3].getAddress())
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[2].getAddress(), voteAmount.div(4))
+        await eco.connect(accounts[2]).transfer(await accounts[2].getAddress(), amount.div(4))
+
+        await time.advanceBlock()
+
+        expect(await eco.getPastVotes(await accounts[1].getAddress(), await time.latestBlock() - 1)).to.equal(amount.mul(3).div(4))
+        expect(await eco.getPastVotes(await accounts[2].getAddress(), await time.latestBlock() - 1)).to.equal(amount.div(4))
+        expect(await eco.getPastVotes(await accounts[3].getAddress(), await time.latestBlock() - 1)).to.equal(amount.mul(2))
+
+        await eco
+          .connect(accounts[1])
+          .undelegateFromAddress(await accounts[2].getAddress())
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount)
+      })
     })
 
     context('undelegate', () => {
