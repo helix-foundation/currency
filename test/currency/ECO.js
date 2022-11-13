@@ -999,7 +999,7 @@ describe('ECO [@group=1]', () => {
           .connect(from)
           .getPastVotingGons(
             await from.getAddress(),
-            (await time.latestBlock()) + 1
+            (await time.latestBlock())
           )
       ).to.be.revertedWith(
         'VoteCheckpoints: block not yet mined',
@@ -1009,7 +1009,7 @@ describe('ECO [@group=1]', () => {
 
     it('cannot get the past supply until the block requestsed has been mined', async () => {
       await expect(
-        eco.connect(from).getPastTotalSupply((await time.latestBlock()) + 1)
+        eco.connect(from).getPastTotalSupply((await time.latestBlock()))
       ).to.be.revertedWith(
         'VoteCheckpoints: block not yet mined',
         eco.constructor
