@@ -36,7 +36,11 @@ contract VoteCheckpointsUpgrade is Policy, Proposal {
      *
      * @param _newStaking The address of the contract to mark as ECOxStaking.
      */
-    constructor(address _newStaking, address _newECOImpl, address _implementationUpdatingTarget) {
+    constructor(
+        address _newStaking,
+        address _newECOImpl,
+        address _implementationUpdatingTarget
+    ) {
         newStaking = _newStaking;
         newECOImpl = _newECOImpl;
         implementationUpdatingTarget = _implementationUpdatingTarget;
@@ -51,7 +55,8 @@ contract VoteCheckpointsUpgrade is Policy, Proposal {
     /** A short description of the proposal.
      */
     function description() public pure override returns (string memory) {
-        return "Updating ECOxStaking and ECO contracts to patch the voting snapshot and delegation during self-transfers";
+        return
+            "Updating ECOxStaking and ECO contracts to patch the voting snapshot and delegation during self-transfers";
     }
 
     /** A URL where further details can be found.
@@ -65,21 +70,14 @@ contract VoteCheckpointsUpgrade is Policy, Proposal {
      * This is run in the storage context of the root policy contract.
      */
     function enacted(address) public override {
-      // because ECOxStaking isn't proxied yet, we have to move over the identifier
-      setPolicy(
-          ECOxStakingIdentifier,
-          newStaking,
-          PolicyVotesIdentifier
-      );
+        // because ECOxStaking isn't proxied yet, we have to move over the identifier
+        setPolicy(ECOxStakingIdentifier, newStaking, PolicyVotesIdentifier);
 
-      address _ecoProxyAddr = policyFor(ECOIdentifier);
+        address _ecoProxyAddr = policyFor(ECOIdentifier);
 
-      Policed(_ecoProxyAddr).policyCommand(
-          implementationUpdatingTarget,
-          abi.encodeWithSignature(
-              "updateImplementation(address)",
-              newECOImpl
-          )
-      );
+        Policed(_ecoProxyAddr).policyCommand(
+            implementationUpdatingTarget,
+            abi.encodeWithSignature("updateImplementation(address)", newECOImpl)
+        );
     }
 }

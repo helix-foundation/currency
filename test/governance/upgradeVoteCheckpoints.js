@@ -25,6 +25,7 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
 
   let ecoXStaking
   let poodlexStaking
+  let poodleECO
   let proxyPoodlexStaking
   let makePoodlexStaking
   let newECOxStaking
@@ -92,9 +93,16 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   })
 
   it('Constructs the proposal', async () => {
-    poodlexStaking = await deploy('PoodlexStaking', policy.address, ecox.address)
-    forwardProxy = await deploy('ForwardProxy', poodlexStaking.address)
-    proxyPoodlexStaking = await ethers.getContractAt('PoodlexStaking', forwardProxy.address)
+    poodlexStaking = await deploy(
+      'PoodlexStaking',
+      policy.address,
+      ecox.address
+    )
+    const forwardProxy = await deploy('ForwardProxy', poodlexStaking.address)
+    proxyPoodlexStaking = await ethers.getContractAt(
+      'PoodlexStaking',
+      forwardProxy.address
+    )
     expect(proxyPoodlexStaking.address).to.equal(forwardProxy.address)
     poodleECO = await deploy('PoodleECO', policy.address)
     implementationUpdatingTarget = await deploy('ImplementationUpdatingTarget')
@@ -102,7 +110,7 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
       'VoteCheckpointsUpgrade',
       proxyPoodlexStaking.address,
       poodleECO.address,
-      implementationUpdatingTarget.address,
+      implementationUpdatingTarget.address
     )
     const name = await makePoodlexStaking.name()
     expect(name).to.equal('Update to VoteCheckpoints')
@@ -163,18 +171,27 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
   // })
 
   it('Checks that the ecoxstaking address has changed', async () => {
-    const stakingHash = ethers.utils.solidityKeccak256(['string'], ['ECOxStaking'])
+    const stakingHash = ethers.utils.solidityKeccak256(
+      ['string'],
+      ['ECOxStaking']
+    )
     newECOxStaking = await ethers.getContractAt(
-      'PoodlexStaking', await policyFor(policy, stakingHash))
+      'PoodlexStaking',
+      await policyFor(policy, stakingHash)
+    )
     expect(newECOxStaking.address).to.not.equal(ecoXStaking.address)
     expect(newECOxStaking.address).to.equal(proxyPoodlexStaking.address)
-    expect(await newECOxStaking.implementation()).to.equal(poodlexStaking.address)
+    expect(await newECOxStaking.implementation()).to.equal(
+      poodlexStaking.address
+    )
   })
 
   it('Checks that the ECO address is the same', async () => {
     const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
     newECO = await ethers.getContractAt(
-      'PoodleECO', await policyFor(policy, ecoHash))
+      'PoodleECO',
+      await policyFor(policy, ecoHash)
+    )
     expect(newECO.address).to.equal(eco.address)
   })
 
@@ -194,8 +211,12 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
 
   it('verifies that the ECO contract is as expected', async () => {
     expect(await newECO.implementation()).to.equal(poodleECO.address)
-    expect(await newECO.pauser()).to.equal('0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0')
-    expect(await newECO.balanceOf(alice.getAddress())).to.equal(stake.sub(await policyProposals.COST_REGISTER()))
+    expect(await newECO.pauser()).to.equal(
+      '0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0'
+    )
+    expect(await newECO.balanceOf(alice.getAddress())).to.equal(
+      stake.sub(await policyProposals.COST_REGISTER())
+    )
     expect(await newECO.balanceOf(bob.getAddress())).to.equal(stake)
     expect(await newECO.balanceOf(charlie.getAddress())).to.equal(stake)
     expect(await newECO.balanceOf(dave.getAddress())).to.equal(stake)

@@ -9,7 +9,6 @@ describe('PolicyVotes [@group=8]', () => {
   let eco
   let ecox
   let initInflation
-  let policyVotes
   let proposal
   let timedPolicies
   const one = ethers.utils.parseEther('1')
@@ -18,14 +17,13 @@ describe('PolicyVotes [@group=8]', () => {
   let bob
   let charlie
   let dave
-  let frank
 
   const multiplier = 20
   const multiAmount = one.mul(1500).add(1)
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
-    ;[alice, bob, charlie, dave, frank] = accounts
+    ;[alice, bob, charlie, dave] = accounts
     ;({
       policy,
       eco,
@@ -35,7 +33,10 @@ describe('PolicyVotes [@group=8]', () => {
     } = await ecoFixture([]))
 
     await ecox.exchange(await ecox.balanceOf(await alice.getAddress()))
-    await eco.burn(await alice.getAddress(), await eco.balanceOf(await alice.getAddress()))
+    await eco.burn(
+      await alice.getAddress(),
+      await eco.balanceOf(await alice.getAddress())
+    )
 
     await initInflation.mint(await alice.getAddress(), one.mul(50000))
     await initInflation.mint(await bob.getAddress(), one.mul(50000))
@@ -49,9 +50,17 @@ describe('PolicyVotes [@group=8]', () => {
   })
 
   it('cannot multivote', async () => {
-    const multivoter = await deploy('InfiniteVote', multiplier, eco.address, proposal.address)
-    await eco.connect(bob).transfer(multivoter.address, multiAmount.add(one.mul(10000)))
-    await expect(multivoter.infiniteVote(timedPolicies.address, policy.address)).to.be.reverted
+    const multivoter = await deploy(
+      'InfiniteVote',
+      multiplier,
+      eco.address,
+      proposal.address
+    )
+    await eco
+      .connect(bob)
+      .transfer(multivoter.address, multiAmount.add(one.mul(10000)))
+    await expect(multivoter.infiniteVote(timedPolicies.address, policy.address))
+      .to.be.reverted
 
     // policyVotes = await ethers.getContractAt(
     //   'PolicyVotes',await policy.policyFor(ethers.utils.solidityKeccak256(

@@ -6,15 +6,16 @@ import "../governance/community/PolicyProposals.sol";
 import "../governance/community/PolicyVotes.sol";
 import "../governance/community/Proposal.sol";
 
-contract Subvoter{
-
+contract Subvoter {
     ECO public immutable ecoaddress;
 
-    constructor(ECO _ecoaddress){
+    constructor(ECO _ecoaddress) {
         ecoaddress = _ecoaddress;
     }
 
-    function votePolicy(PolicyProposals _proposals, address _proposalToSupport) public {
+    function votePolicy(PolicyProposals _proposals, address _proposalToSupport)
+        public
+    {
         _proposals.support(Proposal(_proposalToSupport));
         ecoaddress.transfer(msg.sender, ecoaddress.balanceOf(address(this)));
     }
@@ -23,5 +24,4 @@ contract Subvoter{
         _votes.vote(true);
         ecoaddress.transfer(msg.sender, ecoaddress.balanceOf(address(this)));
     }
-
 }
