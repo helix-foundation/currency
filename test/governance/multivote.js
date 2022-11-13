@@ -48,38 +48,38 @@ describe('PolicyVotes [@group=8]', () => {
     // await timedPolicies.incrementGeneration()
   })
 
-  it('can multivote', async () => {
+  it('cannot multivote', async () => {
     const multivoter = await deploy('InfiniteVote', multiplier, eco.address, proposal.address)
     await eco.connect(bob).transfer(multivoter.address, multiAmount.add(one.mul(10000)))
-    await multivoter.infiniteVote(timedPolicies.address, policy.address)
+    await expect(multivoter.infiniteVote(timedPolicies.address, policy.address)).to.be.reverted
 
-    policyVotes = await ethers.getContractAt(
-      'PolicyVotes',await policy.policyFor(ethers.utils.solidityKeccak256(
-      ['string'],
-      ['PolicyVotes']
-    )))
+    // policyVotes = await ethers.getContractAt(
+    //   'PolicyVotes',await policy.policyFor(ethers.utils.solidityKeccak256(
+    //   ['string'],
+    //   ['PolicyVotes']
+    // )))
 
-    expect(await policyVotes.yesStake()).to.be.equal(multiAmount.mul(Math.floor(multiplier*11/3)))
+    // expect(await policyVotes.yesStake()).to.be.equal(multiAmount.mul(Math.floor(multiplier*11/3)))
   })
 
-  it('multivote gas', async () => {
-    const multivoter = await deploy('InfiniteVote', multiplier, eco.address, proposal.address)
-    await eco.connect(bob).transfer(multivoter.address, multiAmount.add(one.mul(10000)))
-    const gas = await multivoter.estimateGas.infiniteVote(timedPolicies.address, policy.address)
-    console.log(gas)
-  })
+  // it('multivote gas', async () => {
+  //   const multivoter = await deploy('InfiniteVote', multiplier, eco.address, proposal.address)
+  //   await eco.connect(bob).transfer(multivoter.address, multiAmount.add(one.mul(10000)))
+  //   const gas = await multivoter.estimateGas.infiniteVote(timedPolicies.address, policy.address)
+  //   console.log(gas)
+  // })
 
-  it('multivoting can pass a proposal', async () => {
-    const multivoter = await deploy('InfiniteVote', multiplier, eco.address, proposal.address)
-    await eco.connect(bob).transfer(multivoter.address, multiAmount.add(one.mul(10000)))
-    await multivoter.infiniteVote(timedPolicies.address, policy.address)
+  // it('multivoting can pass a proposal', async () => {
+  //   const multivoter = await deploy('InfiniteVote', multiplier, eco.address, proposal.address)
+  //   await eco.connect(bob).transfer(multivoter.address, multiAmount.add(one.mul(10000)))
+  //   await multivoter.infiniteVote(timedPolicies.address, policy.address)
 
-    policyVotes = await ethers.getContractAt(
-      'PolicyVotes',await policy.policyFor(ethers.utils.solidityKeccak256(
-      ['string'],
-      ['PolicyVotes']
-    )))
+  //   policyVotes = await ethers.getContractAt(
+  //     'PolicyVotes',await policy.policyFor(ethers.utils.solidityKeccak256(
+  //     ['string'],
+  //     ['PolicyVotes']
+  //   )))
 
-    await policyVotes.execute()
-  })
+  //   await policyVotes.execute()
+  // })
 })
