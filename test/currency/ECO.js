@@ -1776,7 +1776,7 @@ describe('ECO [@group=1]', () => {
         )
       })
 
-      it.only('no exploit on self transfer', async () => {
+      it('no exploit on self transfer', async () => {
         await eco.connect(accounts[2]).delegate(await accounts[3].getAddress())
         await eco
           .connect(accounts[1])

@@ -105,7 +105,7 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
       implementationUpdatingTarget.address,
     )
     const name = await makePoodlexStaking.name()
-    expect(name).to.equal('VoteCheckpointsUpgrade')
+    expect(name).to.equal('Update to VoteCheckpoints')
   })
 
   it('Find the policy proposals instance', async () => {
@@ -199,5 +199,6 @@ describe('E2E Proxied Contract Upgrade [@group=9]', () => {
     expect(await newECO.balanceOf(bob.getAddress())).to.equal(stake)
     expect(await newECO.balanceOf(charlie.getAddress())).to.equal(stake)
     expect(await newECO.balanceOf(dave.getAddress())).to.equal(stake)
+    expect(await newECO.totalSupply()).to.equal(stake.mul(4))
   })
 })
