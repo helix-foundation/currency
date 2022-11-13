@@ -999,7 +999,7 @@ describe('ECO [@group=1]', () => {
           .connect(from)
           .getPastVotingGons(
             await from.getAddress(),
-            (await time.latestBlock()) + 1
+            (await time.latestBlock())
           )
       ).to.be.revertedWith(
         'VoteCheckpoints: block not yet mined',
@@ -1009,7 +1009,7 @@ describe('ECO [@group=1]', () => {
 
     it('cannot get the past supply until the block requestsed has been mined', async () => {
       await expect(
-        eco.connect(from).getPastTotalSupply((await time.latestBlock()) + 1)
+        eco.connect(from).getPastTotalSupply((await time.latestBlock()))
       ).to.be.revertedWith(
         'VoteCheckpoints: block not yet mined',
         eco.constructor
@@ -1774,6 +1774,25 @@ describe('ECO [@group=1]', () => {
         ).to.be.revertedWith(
           'Must have an undelegated amount available to cover delegation'
         )
+      })
+
+      it.only('no exploit on self transfer', async () => {
+        await eco.connect(accounts[2]).delegate(await accounts[3].getAddress())
+        await eco
+          .connect(accounts[1])
+          .delegateAmount(await accounts[2].getAddress(), voteAmount.div(4))
+        await eco.connect(accounts[2]).transfer(await accounts[2].getAddress(), amount.div(4))
+
+        await time.advanceBlock()
+
+        expect(await eco.getPastVotes(await accounts[1].getAddress(), await time.latestBlock() - 1)).to.equal(amount.mul(3).div(4))
+        expect(await eco.getPastVotes(await accounts[2].getAddress(), await time.latestBlock() - 1)).to.equal(amount.div(4))
+        expect(await eco.getPastVotes(await accounts[3].getAddress(), await time.latestBlock() - 1)).to.equal(amount.mul(2))
+
+        await eco
+          .connect(accounts[1])
+          .undelegateFromAddress(await accounts[2].getAddress())
+        await eco.connect(accounts[1]).transfer(await accounts[2].getAddress(), amount)
       })
     })
 

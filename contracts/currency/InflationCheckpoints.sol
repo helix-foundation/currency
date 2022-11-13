@@ -84,7 +84,7 @@ abstract contract InflationCheckpoints is
         returns (uint256)
     {
         require(
-            blockNumber <= block.number,
+            blockNumber < block.number,
             "InflationCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(_linearInflationCheckpoints, blockNumber);
