@@ -45,19 +45,19 @@ contract VoteCheckpointsUpgrade is Policy, Proposal {
     /** The name of the proposal.
      */
     function name() public pure override returns (string memory) {
-        return "VoteCheckpointsUpgrade";
+        return "Update to VoteCheckpoints";
     }
 
     /** A short description of the proposal.
      */
     function description() public pure override returns (string memory) {
-        return "Change the ECO and ECOxStaking contract";
+        return "Updating ECOxStaking and ECO contracts to patch the voting snapshot and delegation during self-transfers";
     }
 
     /** A URL where further details can be found.
      */
     function url() public pure override returns (string memory) {
-        return "probably not using this";
+        return "none";
     }
 
     /** Enact the proposal.
