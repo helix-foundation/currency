@@ -127,7 +127,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
     wallet,
     'EcoBootstrap',
     await wallet.getAddress(),
-    6
+    7
   )
 
   // ### Stage 2
@@ -328,11 +328,18 @@ exports.deployPeripheralContracts = async (
     eco.address
   )
 
-  const ecoXStaking = await deployFrom(
+  const ecoXStakingImpl = await deployFrom(
     wallet,
     'ECOxStaking',
     policyProxy.address,
     ecox.address
+  )
+  await bindProxy(bootstrap, ecoXStakingImpl, 6)
+  const ecoXStaking = await ethers.getContractAt(
+    'ECOxStaking',
+    (
+      await getPlaceholder(bootstrap, 6)
+    ).address
   )
 
   const currencyTimerImpl = await deployFrom(
