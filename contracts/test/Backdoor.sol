@@ -8,7 +8,9 @@ import "../proxy/ForwardProxy.sol";
 import "../deploy/EcoInitializable.sol";
 import "../deploy/EcoBootstrap.sol";
 import "../governance/monetary/TrustedNodes.sol";
+import "../governance/Notifier.sol";
 import "./FakePolicy.sol";
+import "./SwitcherTimedPolicies.sol";
 
 /** @title Backdoor
  *
@@ -187,5 +189,23 @@ contract PolicyTest is FakePolicy {
      */
     function testDistrust(TrustedNodes _registry, address _address) external {
         _registry.distrust(_address);
+    }
+
+    function testAddTransaction(Notifier notifier, address destination, bytes calldata data) public {
+        notifier.addTransaction(destination, data);
+    }
+
+    function testRemoveTransaction(Notifier notifier, uint256 index) public {
+        notifier.removeTransaction(index);
+    }
+
+    function testAddNotificationHash(TimedPolicies _timedPolicies, SwitcherTimedPolicies _switcher, bytes32 _notificationHash) public {
+        Policed(_timedPolicies).policyCommand(
+            address(_switcher),
+            abi.encodeWithSignature(
+                "addNotificationHash(bytes32)",
+                _notificationHash
+            )
+        );
     }
 }
