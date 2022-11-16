@@ -20,3 +20,12 @@ contract DummyAMMPool {
     reserve0 = IERC20(token0).balanceOf(address(this));
     reserve1 = IERC20(token1).balanceOf(address(this));
   }
+
+  function syncRevert() external {
+    revert("omg");
+  }
+
+  function syncBadAssert() external {
+    assert(1 == 2);
+  }
+}
