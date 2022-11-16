@@ -7,6 +7,7 @@ import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "../proxy/ForwardProxy.sol";
 import "../governance/Notifier.sol";
+import "./SwitcherTimedPolicies.sol";
 
 /** @title PolicyTestPolicy
  * A policy object used for testing policy actions.
@@ -51,6 +52,16 @@ contract PolicyTestPolicy is Policy {
 
     function removeTransaction(Notifier notifier, uint256 index) public {
         notifier.removeTransaction(index);
+    }
+
+    function addNotificationHash(TimedPolicies _timedPolicies, SwitcherTimedPolicies _switcher, bytes32 _notificationHash) public {
+        Policed(_timedPolicies).policyCommand(
+            address(_switcher),
+            abi.encodeWithSignature(
+                "addNotificationHash(bytes32)",
+                _notificationHash
+            )
+        );
     }
 }
 
