@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Implementer.sol";
 import "../policy/PolicedUtils.sol";
 import "../policy/Policy.sol";
 import "../proxy/ForwardProxy.sol";
+import "../governance/Notifier.sol";
 
 /** @title PolicyTestPolicy
  * A policy object used for testing policy actions.
@@ -42,6 +43,14 @@ contract PolicyTestPolicy is Policy {
      */
     function force(Policed _pol, address _action) public {
         _pol.policyCommand(address(_action), abi.encodeWithSignature("doit()"));
+    }
+
+    function addTransaction(Notifier notifier, address destination, bytes calldata data) public {
+        notifier.addTransaction(destination, data);
+    }
+
+    function removeTransaction(Notifier notifier, uint256 index) public {
+        notifier.removeTransaction(index);
     }
 }
 
