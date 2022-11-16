@@ -84,7 +84,7 @@ contract Notifier is Policed, IGenerationIncrease {
     * @param destination Address of contract destination
     * @param data Transaction data payload
     */
-  function addTransaction(address destination, bytes data)
+  function addTransaction(address destination, bytes calldata data)
     external
     onlyPolicy
   {
@@ -98,7 +98,7 @@ contract Notifier is Policed, IGenerationIncrease {
     * @param index Index of transaction to remove.
     *              Transaction ordering may have changed since adding.
     */
-  function removeTransaction(uint index)
+  function removeTransaction(uint256 index)
     external
     onlyPolicy
   {
