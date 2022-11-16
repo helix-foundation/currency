@@ -10,9 +10,9 @@ contract DummyAMMPool {
   uint256 public reserve0;
   uint256 public reserve1;
 
-  constructor(address _token0, address _token1) public {
-    token0 = _token0
-    token1 = _token1
+  constructor(address _token0, address _token1) {
+    token0 = _token0;
+    token1 = _token1;
   }
 
 
@@ -21,11 +21,11 @@ contract DummyAMMPool {
     reserve1 = IERC20(token1).balanceOf(address(this));
   }
 
-  function syncRevert() external {
+  function syncRevert() pure external {
     revert("omg");
   }
 
-  function syncBadAssert() external {
+  function syncBadAssert() pure external {
     assert(1 == 2);
   }
 }
