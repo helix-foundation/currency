@@ -13,8 +13,10 @@ contract SwitcherTimedPolicies is TimedPolicies {
     address public constant TEST_FILL_ADDRESS =
         0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0;
 
-    bytes32 public TEST_FILL_BYTES =
+    bytes32 public constant TEST_FILL_BYTES =
         0x9f24c52e0fcd1ac696d00405c3bd5adc558c48936919ac5ab3718fcb7d70f93f;
+
+    bytes32[] private fill;
 
     // this is for setting up the storage context
     // the values are unused but must validate the super constructor
@@ -24,9 +26,8 @@ contract SwitcherTimedPolicies is TimedPolicies {
         getFill()
       ) {}
 
-    function getFill() private view returns(bytes32[] memory) {
-      bytes32[] memory fill;
-      fill[0] = TEST_FILL_BYTES;
+    function getFill() private returns(bytes32[] memory) {
+      fill.push(TEST_FILL_BYTES);
       return fill;
     }
 
@@ -37,7 +38,6 @@ contract SwitcherTimedPolicies is TimedPolicies {
      * @param _newNotificationHash The identifier of the new contract to notify on generation increase
      */
     function addNotificationHash(bytes32 _newNotificationHash) public {
-      uint256 length = getNotificationHashes().length;
-      notificationHashes[length] = _newNotificationHash;
+      notificationHashes.push(_newNotificationHash);
     }
 }
