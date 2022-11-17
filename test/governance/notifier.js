@@ -142,7 +142,7 @@ describe('Notifier [@group=2]', () => {
       await timedPolicies.incrementGeneration()
       await amm.sync()
   
-      // these values are unchanged by the event
+      // this value stays the same
       const ammEcoXBalance = await ecox.balanceOf(amm.address)
       const ammEcoXSupply = await amm.reserve1()
       expect(ammEcoXBalance).to.equal(aliceBalance)
@@ -177,10 +177,22 @@ describe('Notifier [@group=2]', () => {
           .withArgs(0, amm.address, syncBadAssertData)
       })
 
-      describe('notifying to sync', () => {
-        beforeEach(async () => {
-          await policy.testAddTransaction(notifier.address, amm.address, syncData)
-        })
+      it('notifying syncs the pool', async () => {
+        await policy.testAddTransaction(notifier.address, amm.address, syncData)
+        await timedPolicies.incrementGeneration()
+
+        // this value stays the same
+        const ammEcoXBalance = await ecox.balanceOf(amm.address)
+        const ammEcoXSupply = await amm.reserve1()
+        expect(ammEcoXBalance).to.equal(aliceBalance)
+        expect(ammEcoXBalance).to.equal(ammEcoXSupply)
+    
+        // this value is rescaled
+        const ammEcoBalance = await eco.balanceOf(amm.address)
+        const ammEcoSupply = await amm.reserve0()
+        expect(ammEcoBalance).to.equal(ammEcoSupply)
+        const convertedBalance = stake.mul(await eco.INITIAL_INFLATION_MULTIPLIER()).div(ethers.BigNumber.from(proposedInflationMult))
+        expect(ammEcoSupply).to.equal(convertedBalance)
       })
 
       it('can notify a bunch of things, even nonesense, and still succeed', async () => {
@@ -201,6 +213,12 @@ describe('Notifier [@group=2]', () => {
         expect(firstFailure.args.data).to.equal(syncRevertData)
         expect(secondFailure.args.data).to.equal(syncBadAssertData)
         expect(thirdFailure.args.data).to.equal(syncData)
+
+        const ammEcoBalance = await eco.balanceOf(amm.address)
+        const ammEcoSupply = await amm.reserve0()
+        expect(ammEcoBalance).to.equal(ammEcoSupply)
+        const convertedBalance = stake.mul(await eco.INITIAL_INFLATION_MULTIPLIER()).div(ethers.BigNumber.from(proposedInflationMult))
+        expect(ammEcoSupply).to.equal(convertedBalance)
       })
     })
   })
