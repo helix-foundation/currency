@@ -750,8 +750,8 @@ async function deployStage3(options) {
     options.bootstrap.placeholders[4])
   const trustedNodesProxyAddress = (options.trustedNodesAddress =
     options.bootstrap.placeholders[5])
-    const ecoXStakingProxyAddress = (options.ecoXStakingAddress =
-      options.bootstrap.placeholders[6])
+  const ecoXStakingProxyAddress = (options.ecoXStakingAddress =
+    options.bootstrap.placeholders[6])
 
   // identifier hashes
   const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
