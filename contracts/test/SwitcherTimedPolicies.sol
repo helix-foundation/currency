@@ -20,15 +20,17 @@ contract SwitcherTimedPolicies is TimedPolicies {
 
     // this is for setting up the storage context
     // the values are unused but must validate the super constructor
-    constructor() TimedPolicies(
-        Policy(TEST_FILL_ADDRESS),
-        PolicyProposals(TEST_FILL_ADDRESS),
-        getFill()
-      ) {}
+    constructor()
+        TimedPolicies(
+            Policy(TEST_FILL_ADDRESS),
+            PolicyProposals(TEST_FILL_ADDRESS),
+            getFill()
+        )
+    {}
 
-    function getFill() private returns(bytes32[] memory) {
-      fill.push(TEST_FILL_BYTES);
-      return fill;
+    function getFill() private returns (bytes32[] memory) {
+        fill.push(TEST_FILL_BYTES);
+        return fill;
     }
 
     /** Function for adding a notifier hash
@@ -38,6 +40,6 @@ contract SwitcherTimedPolicies is TimedPolicies {
      * @param _newNotificationHash The identifier of the new contract to notify on generation increase
      */
     function addNotificationHash(bytes32 _newNotificationHash) public {
-      notificationHashes.push(_newNotificationHash);
+        notificationHashes.push(_newNotificationHash);
     }
 }

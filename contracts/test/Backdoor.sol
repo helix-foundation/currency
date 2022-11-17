@@ -191,7 +191,11 @@ contract PolicyTest is FakePolicy {
         _registry.distrust(_address);
     }
 
-    function testAddTransaction(Notifier notifier, address destination, bytes calldata data) public {
+    function testAddTransaction(
+        Notifier notifier,
+        address destination,
+        bytes calldata data
+    ) public {
         notifier.addTransaction(destination, data);
     }
 
@@ -199,7 +203,11 @@ contract PolicyTest is FakePolicy {
         notifier.removeTransaction(index);
     }
 
-    function testAddNotificationHash(TimedPolicies _timedPolicies, SwitcherTimedPolicies _switcher, bytes32 _notificationHash) public {
+    function testAddNotificationHash(
+        TimedPolicies _timedPolicies,
+        SwitcherTimedPolicies _switcher,
+        bytes32 _notificationHash
+    ) public {
         Policed(_timedPolicies).policyCommand(
             address(_switcher),
             abi.encodeWithSignature(

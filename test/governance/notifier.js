@@ -24,13 +24,14 @@ describe('Notifier [@group=2]', () => {
   const stake = ethers.utils.parseEther('200000000')
   let aliceBalance
   let proposedInflationMult
-  const notifierHash = ethers.utils.solidityKeccak256(
-    ['string'],
-    ['Notifier']
-  )
-  
-  const minimalAMMABI = ['function sync()','function syncRevert()','function syncBadAssert()']
-  let ammInterface = new ethers.utils.Interface(minimalAMMABI);
+  const notifierHash = ethers.utils.solidityKeccak256(['string'], ['Notifier'])
+
+  const minimalAMMABI = [
+    'function sync()',
+    'function syncRevert()',
+    'function syncBadAssert()',
+  ]
+  const ammInterface = new ethers.utils.Interface(minimalAMMABI)
   const syncData = ammInterface.encodeFunctionData('sync')
   const syncRevertData = ammInterface.encodeFunctionData('syncRevert')
   const syncBadAssertData = ammInterface.encodeFunctionData('syncBadAssert')
@@ -44,9 +45,7 @@ describe('Notifier [@group=2]', () => {
       await charlie.getAddress(),
     ]
 
-    ;({ policy, eco, ecox, faucet, timedPolicies } = await ecoFixture(
-      trustees
-    ))
+    ;({ policy, eco, ecox, faucet, timedPolicies } = await ecoFixture(trustees))
 
     await faucet.mint(await alice.getAddress(), stake)
     await faucet.mint(await bob.getAddress(), stake)
@@ -73,8 +72,12 @@ describe('Notifier [@group=2]', () => {
   })
 
   it('test setting transactions', async () => {
-    const dummyData = "0xdeadbeef"
-    await policy.testAddTransaction(notifier.address, await alice.getAddress(), dummyData)
+    const dummyData = '0xdeadbeef'
+    await policy.testAddTransaction(
+      notifier.address,
+      await alice.getAddress(),
+      dummyData
+    )
     const transaction = await notifier.transactions(0)
     expect(transaction.destination).to.equal(await alice.getAddress())
     expect(transaction.data).to.equal(dummyData)
@@ -84,7 +87,11 @@ describe('Notifier [@group=2]', () => {
     const preHashes = await timedPolicies.getNotificationHashes()
     expect(preHashes.includes(notifierHash)).to.be.false
     const switcher = await deploy('SwitcherTimedPolicies')
-    await policy.testAddNotificationHash(timedPolicies.address, switcher.address, notifierHash)
+    await policy.testAddNotificationHash(
+      timedPolicies.address,
+      switcher.address,
+      notifierHash
+    )
     const postHashes = await timedPolicies.getNotificationHashes()
     expect(postHashes.includes(notifierHash)).to.be.true
   })
@@ -104,18 +111,16 @@ describe('Notifier [@group=2]', () => {
           ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
         )
       )
-  
+
       const digits1to9 = Math.floor(Math.random() * 900000000) + 100000000
       const digits10to19 = Math.floor(Math.random() * 10000000000)
       proposedInflationMult = `${digits10to19}${digits1to9}`
-  
+
       // propose a random inflation multiplier
-      await borda
-        .connect(bob)
-        .propose(0, 0, 0, 0, proposedInflationMult, '')
-  
+      await borda.connect(bob).propose(0, 0, 0, 0, proposedInflationMult, '')
+
       await time.increase(3600 * 24 * 10.1)
-  
+
       const alicevote = [
         ethers.utils.randomBytes(32),
         await alice.getAddress(),
@@ -132,7 +137,9 @@ describe('Notifier [@group=2]', () => {
       await borda
         .connect(alice)
         .reveal(alicevote[0], getFormattedBallot(alicevote[2]))
-      await borda.connect(bob).reveal(bobvote[0], getFormattedBallot(bobvote[2]))
+      await borda
+        .connect(bob)
+        .reveal(bobvote[0], getFormattedBallot(bobvote[2]))
       await time.increase(3600 * 24 * 1)
       await borda.updateStage()
       await borda.compute()
@@ -141,18 +148,20 @@ describe('Notifier [@group=2]', () => {
     it('test amm pool working correctly', async () => {
       await timedPolicies.incrementGeneration()
       await amm.sync()
-  
+
       // this value stays the same
       const ammEcoXBalance = await ecox.balanceOf(amm.address)
       const ammEcoXSupply = await amm.reserve1()
       expect(ammEcoXBalance).to.equal(aliceBalance)
       expect(ammEcoXBalance).to.equal(ammEcoXSupply)
-  
+
       // this value is rescaled
       const ammEcoBalance = await eco.balanceOf(amm.address)
       const ammEcoSupply = await amm.reserve0()
       expect(ammEcoBalance).to.equal(ammEcoSupply)
-      const convertedBalance = stake.mul(await eco.INITIAL_INFLATION_MULTIPLIER()).div(ethers.BigNumber.from(proposedInflationMult))
+      const convertedBalance = stake
+        .mul(await eco.INITIAL_INFLATION_MULTIPLIER())
+        .div(ethers.BigNumber.from(proposedInflationMult))
       expect(ammEcoSupply).to.equal(convertedBalance)
     })
 
@@ -160,18 +169,30 @@ describe('Notifier [@group=2]', () => {
       beforeEach(async () => {
         await policy.testDirectSet('Notifier', notifier.address)
         const switcher = await deploy('SwitcherTimedPolicies')
-        await policy.testAddNotificationHash(timedPolicies.address, switcher.address, notifierHash)
+        await policy.testAddNotificationHash(
+          timedPolicies.address,
+          switcher.address,
+          notifierHash
+        )
       })
 
       it('survives notifying revert', async () => {
-        await policy.testAddTransaction(notifier.address, amm.address, syncRevertData)
+        await policy.testAddTransaction(
+          notifier.address,
+          amm.address,
+          syncRevertData
+        )
         await expect(timedPolicies.incrementGeneration())
           .to.emit(notifier, 'TransactionFailed')
           .withArgs(0, amm.address, syncRevertData)
       })
 
       it('survives notifying failed assert', async () => {
-        await policy.testAddTransaction(notifier.address, amm.address, syncBadAssertData)
+        await policy.testAddTransaction(
+          notifier.address,
+          amm.address,
+          syncBadAssertData
+        )
         await expect(timedPolicies.incrementGeneration())
           .to.emit(notifier, 'TransactionFailed')
           .withArgs(0, amm.address, syncBadAssertData)
@@ -186,18 +207,28 @@ describe('Notifier [@group=2]', () => {
         const ammEcoXSupply = await amm.reserve1()
         expect(ammEcoXBalance).to.equal(aliceBalance)
         expect(ammEcoXBalance).to.equal(ammEcoXSupply)
-    
+
         // this value is rescaled
         const ammEcoBalance = await eco.balanceOf(amm.address)
         const ammEcoSupply = await amm.reserve0()
         expect(ammEcoBalance).to.equal(ammEcoSupply)
-        const convertedBalance = stake.mul(await eco.INITIAL_INFLATION_MULTIPLIER()).div(ethers.BigNumber.from(proposedInflationMult))
+        const convertedBalance = stake
+          .mul(await eco.INITIAL_INFLATION_MULTIPLIER())
+          .div(ethers.BigNumber.from(proposedInflationMult))
         expect(ammEcoSupply).to.equal(convertedBalance)
       })
 
       it('can notify a bunch of things, even nonesense, and still succeed', async () => {
-        await policy.testAddTransaction(notifier.address, amm.address, syncRevertData)
-        await policy.testAddTransaction(notifier.address, amm.address, syncBadAssertData)
+        await policy.testAddTransaction(
+          notifier.address,
+          amm.address,
+          syncRevertData
+        )
+        await policy.testAddTransaction(
+          notifier.address,
+          amm.address,
+          syncBadAssertData
+        )
         await policy.testAddTransaction(notifier.address, amm.address, syncData)
         await policy.testAddTransaction(notifier.address, eco.address, syncData)
         const tx = await timedPolicies.incrementGeneration()
@@ -217,7 +248,9 @@ describe('Notifier [@group=2]', () => {
         const ammEcoBalance = await eco.balanceOf(amm.address)
         const ammEcoSupply = await amm.reserve0()
         expect(ammEcoBalance).to.equal(ammEcoSupply)
-        const convertedBalance = stake.mul(await eco.INITIAL_INFLATION_MULTIPLIER()).div(ethers.BigNumber.from(proposedInflationMult))
+        const convertedBalance = stake
+          .mul(await eco.INITIAL_INFLATION_MULTIPLIER())
+          .div(ethers.BigNumber.from(proposedInflationMult))
         expect(ammEcoSupply).to.equal(convertedBalance)
       })
     })
