@@ -142,7 +142,7 @@ Arguments:
 This function looks up the value in the checkpoint for total supply that occurs soonest before `blockNumber`. This lookup is done via a binary search through the `_totalSupplyCheckpoints` array. 
 
 ##### Security Notes
- - Reverts if `_blockNumber` is greater than the current block number.
+ - Reverts if `_blockNumber` is greater than or equal to the current block number.
  - If no checkpoint is found before the requested block number, 0 is returned.
 
 #### getPastVotes
@@ -154,7 +154,7 @@ Passes through to `getPastVotingGons`. Exists as a virtual function to be overri
 
 ##### Security Notes
  - This is not the same as the user's balance at the time. This is used purely for looking at snapshotted voting power and accounts for the delegation decisions of the `_owner` address.
- - reverts if called on the current or future blocks
+ - Reverts if `_blockNumber` is greater than or equal to the current block number.
 
 #### getPastVotingGons
 Arguments:
@@ -165,7 +165,7 @@ This function looks up the value in the checkpoint for user checkpoint that occu
 
 ##### Security Notes
  - This is not the same as the user's balance at the time. This is used purely for looking at snapshotted voting power and accounts for the delegation decisions of the `account` address.
- - Reverts if `blockNumber` is greater than the current block number.
+ - Reverts if `_blockNumber` is greater than or equal to the current block number.
  - If no checkpoint is found before the requested block number, 0 is returned.
 
 #### getVotingGons
