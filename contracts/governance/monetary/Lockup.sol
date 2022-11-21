@@ -193,12 +193,25 @@ contract Lockup is PolicedUtils, TimeUtils {
             "Transfer Failed"
         );
 
-        DepositRecord storage _deposit = deposits[_who];
+        address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
         uint256 _inflationMult = ecoToken.getPastLinearInflation(block.number);
         uint256 _gonsAmount = _amount * _inflationMult;
-        address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
 
-        ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
+        DepositRecord storage _deposit = deposits[_who];
+        if (
+            _deposit.gonsDepositAmount > 0 &&
+            _primaryDelegate != _deposit.delegate
+        ) {
+            ecoToken.undelegateAmountFromAddress(
+                _deposit.delegate,
+                _deposit.gonsDepositAmount
+            );
+            uint256 _combinedGonsAmount = _gonsAmount +
+                _deposit.gonsDepositAmount;
+            ecoToken.delegateAmount(_primaryDelegate, _combinedGonsAmount);
+        } else {
+            ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
+        }
 
         _deposit.lockupEnd = getTime() + duration;
         _deposit.ecoDepositReward += (_amount * interest) / INTEREST_DIVISOR;
