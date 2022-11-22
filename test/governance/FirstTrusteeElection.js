@@ -113,7 +113,6 @@ describe('E2E Election of First Cohort and Funding of TrustedNodes [@group=9]', 
   })
 
   it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-    await policyProposals.connect(alice).support(trusteeReplacement.address)
     await policyProposals.connect(bob).support(trusteeReplacement.address)
     await policyProposals.connect(bob).deployProposalVoting()
   })

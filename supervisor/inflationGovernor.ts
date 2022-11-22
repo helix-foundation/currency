@@ -193,11 +193,7 @@ export class InflationGovernor {
     console.log('trying to commit vdf seed')
 
     let primalNumber: number = 0
-    primalNumber = await getPrimal(
-      (
-        await fetchLatestBlock(this.provider)
-      ).hash
-    )
+    primalNumber = await getPrimal((await fetchLatestBlock(this.provider)).hash)
     console.log('got primal')
     try {
       tx = await this.randomInflation.setPrimal(primalNumber)
