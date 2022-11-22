@@ -79,7 +79,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
       policy.address,
       ethers.constants.AddressZero
     )
-    poodleCurrencyTimer = await deploy('PoodleCurrencyTimer')
+    poodleCurrencyTimer = await deploy('SwitcherCurrencyTimer')
     makePoodle = await deploy(
       'MakePoodle',
       poodleCurrencyGovernance.address,
