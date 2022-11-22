@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../policy/Policy.sol";
-import "../../policy/Policed.sol";
+import "../../../policy/Policy.sol";
+import "../../../policy/Policed.sol";
 import "./Proposal.sol";
-import "../../currency/ECO.sol";
-import "../../currency/ECOx.sol";
-import "../../governance/monetary/CurrencyGovernance.sol";
-import "../../governance/CurrencyTimer.sol";
+import "../../../currency/ECO.sol";
+import "../../../currency/ECOx.sol";
+import "../../../governance/monetary/CurrencyGovernance.sol";
+import "../../../governance/CurrencyTimer.sol";
 
 /**
  * @title ElectCircuitBreaker

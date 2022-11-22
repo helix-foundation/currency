@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../policy/Policy.sol";
-import "../../policy/Policed.sol";
+import "../../../policy/Policy.sol";
+import "../../../policy/Policed.sol";
 import "./Proposal.sol";
 
 /** @title VoteCheckpointsUpgrade

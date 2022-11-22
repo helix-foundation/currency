@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../../policy/Policy.sol";
-import "./Proposal.sol";
+import "./proposals/Proposal.sol";
 import "../../policy/PolicedUtils.sol";
 import "../../utils/TimeUtils.sol";
 import "./VotingPower.sol";

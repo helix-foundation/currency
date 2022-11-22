@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../governance/community/Proposal.sol";
+import "../governance/community/proposals/Proposal.sol";
 import "../policy/Policy.sol";
 import "../policy/PolicyInit.sol";
 import "../proxy/ForwardProxy.sol";
