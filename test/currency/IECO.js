@@ -239,7 +239,7 @@ describe('IECO [@group=5]', () => {
     it('Cannot return future balances', async () => {
       await expect(
         eco.getPastVotes(await accounts[1].getAddress(), 999999999)
-      ).to.be.revertedWith('InflationCheckpoints: block not yet mined')
+      ).to.be.revertedWith('InflationCheckpoints: cannot check future block')
     })
 
     context('after a long time', () => {

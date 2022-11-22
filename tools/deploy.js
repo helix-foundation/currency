@@ -57,8 +57,8 @@ const ECOxArtifact = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
-  // The protocol currently requires 6 proxies for deployment
-  options.numPlaceholders = '6'
+  // The protocol currently requires 7 proxies for deployment
+  options.numPlaceholders = '7'
 
   if (!options.gasMultiplier) {
     options.gasMultiplier = 5
@@ -750,6 +750,8 @@ async function deployStage3(options) {
     options.bootstrap.placeholders[4])
   const trustedNodesProxyAddress = (options.trustedNodesAddress =
     options.bootstrap.placeholders[5])
+  const ecoXStakingProxyAddress = (options.ecoXStakingAddress =
+    options.bootstrap.placeholders[6])
 
   // identifier hashes
   const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
@@ -870,7 +872,7 @@ async function deployStage3(options) {
   if (options.verbose) {
     console.log('deploying the ECOx staking contract...')
   }
-  const ecoXStaking = await ecoXStakingFactory.deploy(
+  const ecoXStakingImpl = await ecoXStakingFactory.deploy(
     policyProxyAddress,
     ecoXAddress,
     { gasPrice }
@@ -977,7 +979,7 @@ async function deployStage3(options) {
     )
   }
   process.stdout.write('Progress: [             ]\r')
-  let receipt = await ecoXStaking.deployTransaction.wait()
+  let receipt = await ecoXStakingImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   process.stdout.write('Progress: [x            ]\r')
   receipt = await rootHashProposalImpl.deployTransaction.wait()
@@ -1093,6 +1095,25 @@ async function deployStage3(options) {
     }
   )
 
+  if (options.verbose) {
+    console.log(
+      'binding proxy 6 to ECOx staking contract...',
+      ecoXStakingProxyAddress,
+      ecoXStakingImpl.address
+    )
+  }
+  const ecoXStakingProxy = new ethers.Contract(
+    ecoXStakingProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
+  )
+  const ecoXStakingFuseTx = await ecoXStakingProxy.fuseImplementation(
+    ecoXStakingImpl.address,
+    {
+      gasPrice,
+    }
+  )
+
   // policy init inputs
   const identifiers = [
     ecoHash,
@@ -1105,7 +1126,7 @@ async function deployStage3(options) {
   const addresses = [
     ecoAddress,
     ecoXAddress,
-    ecoXStaking.address,
+    ecoXStakingProxyAddress,
     currencyTimerProxyAddress,
     timedPoliciesProxyAddress,
     trustedNodesProxyAddress,
@@ -1147,7 +1168,6 @@ async function deployStage3(options) {
   )
 
   // store relevant addresses in options for output
-  options.ecoXStakingAddress = ecoXStaking.address
   options.rootHashProposalAddress = rootHashProposalImpl.address
   options.vdfAddress = vdfImpl.address
   options.randomInflationAddress = randomInflationImpl.address
@@ -1166,6 +1186,8 @@ async function deployStage3(options) {
   receipt = await timedPoliciesFuseTx.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   receipt = await trustedNodesFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  receipt = await ecoXStakingFuseTx.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   receipt = await policyFuseTx.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)

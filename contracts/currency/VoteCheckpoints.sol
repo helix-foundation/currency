@@ -225,7 +225,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         returns (uint256)
     {
         require(
-            blockNumber <= block.number,
+            blockNumber < block.number,
             "VoteCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(checkpoints[account], blockNumber);
@@ -245,7 +245,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         returns (uint256)
     {
         require(
-            blockNumber <= block.number,
+            blockNumber < block.number,
             "VoteCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
@@ -494,6 +494,11 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         address to,
         uint256 amount
     ) internal virtual override {
+        if (from == to) {
+            // self transfers require no change in delegation and can be the source of exploits
+            return;
+        }
+
         // if the address has delegated, they might be transfering tokens allotted to someone else
         if (!isOwnDelegate(from)) {
             uint256 _undelegatedAmount = _balances[from] +
