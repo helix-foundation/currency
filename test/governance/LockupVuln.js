@@ -54,6 +54,7 @@ describe('Lockup [@group=3]', () => {
   async function showBalancesAndVP() {
     const policyProposals = await getProposals()
     const blockNumber = await time.latestBlock()
+    await time.advanceBlock()
 
     console.log(
       `alice vp: ${await policyProposals.votingPower(
@@ -143,6 +144,7 @@ describe('Lockup [@group=3]', () => {
   it('exploits', async () => {
     const policyProposals = await getProposals()
     let blockNumber = await time.latestBlock()
+    await time.advanceBlock()
 
     const aliceInitialVP = await policyProposals.votingPower(
       await alice.getAddress(),
@@ -163,6 +165,7 @@ describe('Lockup [@group=3]', () => {
     await eco.connect(alice).delegate(await bob.getAddress())
     await lockup.connect(alice).deposit(20)
     await eco.connect(alice).undelegate()
+    await time.advanceBlock()
 
     await showBalancesAndVP()
     await showLockupDetails()
@@ -196,6 +199,7 @@ describe('Lockup [@group=3]', () => {
     await showLockupDetails()
 
     blockNumber = await time.latestBlock()
+    await time.advanceBlock()
 
     const aliceFinalVP = await policyProposals.votingPower(
       await alice.getAddress(),

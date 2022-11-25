@@ -198,17 +198,18 @@ contract Lockup is PolicedUtils, TimeUtils {
         uint256 _gonsAmount = _amount * _inflationMult;
 
         DepositRecord storage _deposit = deposits[_who];
+        uint256 depositGons = _deposit.gonsDepositAmount;
+        address depositDelegate = _deposit.delegate;
+
         if (
-            _deposit.gonsDepositAmount > 0 &&
-            _primaryDelegate != _deposit.delegate
+            depositGons > 0 &&
+            _primaryDelegate != depositDelegate
         ) {
             ecoToken.undelegateAmountFromAddress(
-                _deposit.delegate,
-                _deposit.gonsDepositAmount
+                depositDelegate,
+                depositGons
             );
-            uint256 _combinedGonsAmount = _gonsAmount +
-                _deposit.gonsDepositAmount;
-            ecoToken.delegateAmount(_primaryDelegate, _combinedGonsAmount);
+            ecoToken.delegateAmount(_primaryDelegate, _gonsAmount + depositGons);
         } else {
             ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
         }
