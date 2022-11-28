@@ -25,6 +25,8 @@ describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
 
   let lockupUpgrade
   let switcherCurrencyTimer
+  let switcherTimedPolicies
+  let notifier
   let poodleLockup
 
   let alice
@@ -79,10 +81,15 @@ describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
       currencyTimer.address,
     )
     switcherCurrencyTimer = await deploy('SwitcherCurrencyTimer')
+    switcherTimedPolicies = await deploy('SwitcherTimedPolicies')
+
+    notifier = await deploy('Notifier', policy.address)
     lockupUpgrade = await deploy(
-      'LockupUpgrade',
+      'LockupUpgradeAndNotifier',
       poodleLockup.address,
-      switcherCurrencyTimer.address
+      notifier.address,
+      switcherCurrencyTimer.address,
+      switcherTimedPolicies.address
     )
     const name = await lockupUpgrade.name()
     expect(name).to.equal('')
@@ -140,12 +147,17 @@ describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
     await timedPolicies.incrementGeneration()
   })
 
-  it('Checks that the new governance contract is poodles', async () => {
+  it('Checks that the new lockup contract is poodles', async () => {
     const poodleLockupImpl = await ethers.getContractAt(
       'PoodleLockup',
       await currencyTimer.lockupImpl()
     )
     const poodles = await poodleLockupImpl.provePoodles()
     expect(poodles).to.be.true
+  })
+
+  it('Check that the notifier is added to TimedPolicies', async () => {
+    const notifierHash = await timedPolicies.notificationHashes(2)
+    expect(notifierHash).to.equal(await lockupUpgrade.NOTIFIER_ID())
   })
 })
