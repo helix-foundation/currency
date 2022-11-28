@@ -23,6 +23,7 @@ describe('Lockup [@group=3]', () => {
 
   // 21 days
   const lockupPeriod = 1814400
+  const withdrawalStart = lockupPeriod + 3600 * 24 * 2
   const percentInterest = 5
 
   async function getProposals() {
@@ -190,7 +191,7 @@ describe('Lockup [@group=3]', () => {
     await lockup.connect(alice).deposit(20)
     await eco.connect(alice).undelegate()
 
-    await time.increase(lockupPeriod)
+    await time.increase(withdrawalStart)
     await lockup.connect(alice).withdraw()
     await lockup.connect(bob).withdraw()
     // expect(await lockup.connect(bob).withdraw()).to.be.revertedWith('amount not available to undelegate')
