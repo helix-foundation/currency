@@ -7,7 +7,7 @@ import "./Proposal.sol";
 
 /** @title LockupUpgradeAndNotifier
  * A proposal to update the Lockup implementation
- * Also 
+ * Also
  */
 contract LockupUpgradeAndNotifier is Policy, Proposal {
     /** The address of the updated Lockup contract
@@ -48,7 +48,12 @@ contract LockupUpgradeAndNotifier is Policy, Proposal {
      * @param _switcherCurrencyTimer The address of the switcher contract for CurrencyTimer
      * @param _switcherTimedPolicies The address of the switcher contract for TimedPolicies
      */
-    constructor(address _newLockup, address _notifier, address _switcherCurrencyTimer, address _switcherTimedPolicies) {
+    constructor(
+        address _newLockup,
+        address _notifier,
+        address _switcherCurrencyTimer,
+        address _switcherTimedPolicies
+    ) {
         newLockup = _newLockup;
         notifier = _notifier;
         switcherCurrencyTimer = _switcherCurrencyTimer;
@@ -79,22 +84,19 @@ contract LockupUpgradeAndNotifier is Policy, Proposal {
      * This is executed in the storage context of the root policy contract.
      */
     function enacted(address) public override {
-      address _currencyTimer = policyFor(CURRENCY_TIMER_ID);
-      address _timedPolicies = policyFor(TIMED_POLICIES_ID);
+        address _currencyTimer = policyFor(CURRENCY_TIMER_ID);
+        address _timedPolicies = policyFor(TIMED_POLICIES_ID);
 
-      Policed(_currencyTimer).policyCommand(
-          switcherCurrencyTimer,
-          abi.encodeWithSignature("setLockupImpl(address)", newLockup)
-      );
+        Policed(_currencyTimer).policyCommand(
+            switcherCurrencyTimer,
+            abi.encodeWithSignature("setLockupImpl(address)", newLockup)
+        );
 
-      setPolicy(NOTIFIER_ID,notifier,POLICY_VOTES_ID);
+        setPolicy(NOTIFIER_ID, notifier, POLICY_VOTES_ID);
 
-      Policed(_timedPolicies).policyCommand(
-        address(switcherTimedPolicies),
-        abi.encodeWithSignature(
-          "addNotificationHash(bytes32)",
-          NOTIFIER_ID
-        )
-      );
+        Policed(_timedPolicies).policyCommand(
+            address(switcherTimedPolicies),
+            abi.encodeWithSignature("addNotificationHash(bytes32)", NOTIFIER_ID)
+        );
     }
 }

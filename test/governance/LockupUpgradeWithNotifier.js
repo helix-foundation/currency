@@ -68,7 +68,9 @@ describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
       'PoodleLockup',
       await currencyTimer.lockupImpl()
     )
-    expect(await notPoodleLockupImpl.currencyTimer()).to.equal(currencyTimer.address)
+    expect(await notPoodleLockupImpl.currencyTimer()).to.equal(
+      currencyTimer.address
+    )
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
     await expect(notPoodleLockupImpl.provePoodles()).to.be.reverted
   })
@@ -78,7 +80,7 @@ describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
       'PoodleLockup',
       policy.address,
       eco.address,
-      currencyTimer.address,
+      currencyTimer.address
     )
     switcherCurrencyTimer = await deploy('SwitcherCurrencyTimer')
     switcherTimedPolicies = await deploy('SwitcherTimedPolicies')
