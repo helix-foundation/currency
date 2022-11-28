@@ -12,9 +12,11 @@ import "../governance/monetary/Lockup.sol";
  */
 contract PoodleLockup is Lockup {
     // because the data is not preserved, some information must be copied
-    constructor(Policy _policy, ECO _ecoAddr, CurrencyTimer _timerAddr)
-        Lockup(_policy, _ecoAddr, _timerAddr)
-    {}
+    constructor(
+        Policy _policy,
+        ECO _ecoAddr,
+        CurrencyTimer _timerAddr
+    ) Lockup(_policy, _ecoAddr, _timerAddr) {}
 
     function provePoodles() public pure returns (bool) {
         return true;
