@@ -63,19 +63,19 @@ contract LockupUpgradeAndNotifier is Policy, Proposal {
     /** The name of the proposal.
      */
     function name() public pure override returns (string memory) {
-        return "";
+        return "Lockup Upgrade and Notifier";
     }
 
     /** A description of what the proposal does.
      */
     function description() public pure override returns (string memory) {
-        return "";
+        return "This proposal patches an issue with the Lockup contract and adds a new contract, the Notifier";
     }
 
     /** A URL where more details can be found.
      */
     function url() public pure override returns (string memory) {
-        return "";
+        return "https://forums.eco.org/t/egp-002-notifier-update-to-lockup/89";
     }
 
     /** Sets the value of the Lockup implementation on the
