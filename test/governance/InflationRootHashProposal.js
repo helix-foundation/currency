@@ -549,22 +549,49 @@ describe('InflationRootHashProposal', () => {
         )
       })
 
-      it('doesnt allow double proposal', async () => {})
+      it('doesnt allow double proposal', async () => {
+        const tree = getTree(map)
+        proposedRootHash = tree.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('250000000000000000000000000'),
+            3
+          )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[2])
+            .proposeRootHash(
+              proposedRootHash,
+              BigNumber.from('250000000000000000000000000'),
+              3
+            )
+        ).to.be.revertedWith('Root hash already proposed')
+      })
+
+      it('doesnt allow num accounts of zero', async () => {
+        const tree = getTree(map)
+        proposedRootHash = tree.hash
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[2])
+            .proposeRootHash(
+              proposedRootHash,
+              BigNumber.from('250000000000000000000000000'),
+              0
+            )
+        ).to.be.revertedWith('Hash must consist of at least 1 account')
+      })
 
       it('missing account', async () => {
         const cheat = new Map(map)
         cheat.delete(await accounts[1].getAddress())
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
-        await expect(
-          rootHashProposal
-            .connect(accounts[2])
-            .proposeRootHash(
-              proposedRootHash,
-              BigNumber.from('200000000000000000000000000'),
-              0
-            )
-        ).to.be.revertedWith('Hash must consist of at least 1 account')
 
         await rootHashProposal
           .connect(accounts[2])
@@ -574,24 +601,19 @@ describe('InflationRootHashProposal', () => {
             2
           )
 
+        await verifyOnChain(ct, 0, accounts[2])
+        await verifyOnChain(ct, 1, accounts[2])
         await expect(
           rootHashProposal
-            .connect(accounts[2])
-            .proposeRootHash(
-              proposedRootHash,
-              BigNumber.from('200000000000000000000000000'),
-              2
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[2].getAddress(),
+              1,
+              await accounts[1].getAddress()
             )
-        ).to.be.revertedWith('Root hash already proposed')
-        expect(await verifyOnChain(ct, 0, accounts[2]))
-        expect(await verifyOnChain(ct, 1, accounts[2]))
-        expect(
-          await claimMissingOnChain(
-            await accounts[1].getAddress(),
-            1,
-            await accounts[2].getAddress()
-          )
         )
+          .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
+          .to.emit(rootHashProposal, 'RootHashRejection')
         await expect(
           rootHashProposal
             .connect(accounts[1])
@@ -669,18 +691,86 @@ describe('InflationRootHashProposal', () => {
         ).to.be.revertedWith('There is no such hash proposal')
       })
 
-      it('does not accept challenge for index greater than number of accounts', async () => {
-        const requestedIndex = 2
+      it('does not accept challenge for index strictly greater than number of accounts', async () => {
+        const requestedIndex = amountOfAccounts
+        await rootHashProposal
+          .connect(accounts[1])
+          .challengeRootHashRequestAccount(
+            await accounts[0].getAddress(),
+            requestedIndex
+          )
         await expect(
           rootHashProposal
             .connect(accounts[1])
             .challengeRootHashRequestAccount(
               await accounts[0].getAddress(),
-              requestedIndex + 400
+              requestedIndex + 1
             )
         ).to.be.revertedWith(
           'The index have to be within the range of claimed amount of accounts'
         )
+      })
+
+      it('first account missing', async () => {
+        const cheat = new Map(map)
+        cheat.delete(await accounts[0].getAddress())
+        const ct = getTree(cheat)
+        proposedRootHash = ct.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('250000000000000000000000000'),
+            2
+          )
+
+        // expect(await verifyOnChain(ct, 0, accounts[2])).to.be.true
+        // expect(await verifyOnChain(ct, 1, accounts[2])).to.be.true
+        await verifyOnChain(ct, 0, accounts[2])
+        await verifyOnChain(ct, 1, accounts[2])
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[2].getAddress(),
+              0,
+              await accounts[0].getAddress()
+            )
+        )
+          .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
+          .to.emit(rootHashProposal, 'RootHashRejection')
+      })
+
+      it.only('last account missing', async () => {
+        const cheat = new Map(map)
+        cheat.delete(await accounts[amountOfAccounts - 1].getAddress())
+        const ct = getTree(cheat)
+        proposedRootHash = ct.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('150000000000000000000000000'),
+            2
+          )
+
+        // expect(await verifyOnChain(ct, 0, accounts[2])).to.be.true
+        // expect(await verifyOnChain(ct, 1, accounts[2])).to.be.true
+        await verifyOnChain(ct, 0, accounts[2])
+        await verifyOnChain(ct, 1, accounts[2])
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[2].getAddress(),
+              2,
+              await accounts[amountOfAccounts - 1].getAddress()
+            )
+        )
+          .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
+          .to.emit(rootHashProposal, 'RootHashRejection')
       })
     })
 
