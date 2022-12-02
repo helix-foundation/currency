@@ -550,20 +550,9 @@ describe('InflationRootHashProposal', () => {
       })
 
       it('doesnt allow double proposal', async () => {
-        const tree = getTree(map)
-        proposedRootHash = tree.hash
-
-        await rootHashProposal
-          .connect(accounts[2])
-          .proposeRootHash(
-            proposedRootHash,
-            BigNumber.from('250000000000000000000000000'),
-            3
-          )
-
         await expect(
           rootHashProposal
-            .connect(accounts[2])
+            .connect(accounts[0])
             .proposeRootHash(
               proposedRootHash,
               BigNumber.from('250000000000000000000000000'),
@@ -691,14 +680,29 @@ describe('InflationRootHashProposal', () => {
         ).to.be.revertedWith('There is no such hash proposal')
       })
 
-      it('does not accept challenge for index strictly greater than number of accounts', async () => {
+      it('does not accept challengeRootHashRequestAccount for index greater or equal to the number of accounts', async () => {
         const requestedIndex = amountOfAccounts
+
+        // suceeds
         await rootHashProposal
           .connect(accounts[1])
           .challengeRootHashRequestAccount(
             await accounts[0].getAddress(),
-            requestedIndex
+            requestedIndex - 1
           )
+
+        // all revert
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              requestedIndex
+            )
+        ).to.be.revertedWith(
+          'may only request an index within the tree'
+        )
+
         await expect(
           rootHashProposal
             .connect(accounts[1])
@@ -707,7 +711,60 @@ describe('InflationRootHashProposal', () => {
               requestedIndex + 1
             )
         ).to.be.revertedWith(
-          'The index have to be within the range of claimed amount of accounts'
+          'may only request an index within the tree'
+        )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              requestedIndex + 400
+            )
+        ).to.be.revertedWith(
+          'may only request an index within the tree'
+        )
+      })
+
+      it('does not accept claimMissingAccount for index greater or equal to the number of accounts', async () => {
+        const requestedIndex = amountOfAccounts
+
+        // this is in range, reverts on a following revert
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              requestedIndex,
+              await accounts[2].getAddress()
+            )
+        ).to.be.revertedWith(
+          'Submit Index Request first'
+        )
+
+        // these are out of range
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              requestedIndex + 1,
+              await accounts[2].getAddress()
+            )
+        ).to.be.revertedWith(
+          'missing account position must be to the left of the submitted index'
+        )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              requestedIndex + 400,
+              await accounts[2].getAddress()
+            )
+        ).to.be.revertedWith(
+          'missing account position must be to the left of the submitted index'
         )
       })
 
@@ -742,7 +799,7 @@ describe('InflationRootHashProposal', () => {
           .to.emit(rootHashProposal, 'RootHashRejection')
       })
 
-      it.only('last account missing', async () => {
+      it('last account missing', async () => {
         const cheat = new Map(map)
         cheat.delete(await accounts[amountOfAccounts - 1].getAddress())
         const ct = getTree(cheat)
