@@ -224,8 +224,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         external
         hashIsNotAcceptedYet
     {
-        requireValidChallengeConstraints(_proposer, msg.sender, _index);
+        requireValidChallengeConstraints(_proposer, msg.sender);
         RootHashProposal storage proposal = rootHashProposals[_proposer];
+        require(
+            proposal.amountOfAccounts > _index,
+            "may only request an index within the tree"
+        );
 
         InflationChallenge storage challenge = proposal.challenges[msg.sender];
 
@@ -257,8 +261,13 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _index,
         address _account
     ) external hashIsNotAcceptedYet {
-        requireValidChallengeConstraints(_proposer, msg.sender, _index);
+        requireValidChallengeConstraints(_proposer, msg.sender);
         RootHashProposal storage proposal = rootHashProposals[_proposer];
+        require(
+            proposal.amountOfAccounts >= _index,
+            "missing account position must be to the left of the submitted index"
+        );
+
         InflationChallenge storage challenge = proposal.challenges[msg.sender];
 
         require(
@@ -682,8 +691,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
     function requireValidChallengeConstraints(
         address _proposer,
-        address _challenger,
-        uint256 _index
+        address _challenger
     ) internal view {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
@@ -698,10 +706,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(
             proposal.status == RootHashStatus.Pending,
             "The proposal is resolved"
-        );
-        require(
-            proposal.amountOfAccounts > _index,
-            "The index have to be within the range of claimed amount of accounts"
         );
         uint256 requestsByChallenger = proposal
             .challenges[_challenger]
