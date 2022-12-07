@@ -19,6 +19,7 @@ describe('Notifier [@group=2]', () => {
   let borda
   let faucet
   let notifier
+  let setupNotifier
   let amm
 
   const stake = ethers.utils.parseEther('200000000')
@@ -45,13 +46,13 @@ describe('Notifier [@group=2]', () => {
       await charlie.getAddress(),
     ]
 
-    ;({ policy, eco, ecox, faucet, timedPolicies } = await ecoFixture(trustees))
+    ;({ policy, eco, ecox, faucet, timedPolicies, notifier } = await ecoFixture(trustees))
 
     await faucet.mint(await alice.getAddress(), stake)
     await faucet.mint(await bob.getAddress(), stake)
     await faucet.mint(await charlie.getAddress(), stake.mul(2))
 
-    notifier = await deploy('Notifier', policy.address)
+    setupNotifier = await deploy('Notifier', policy.address)
     // setup the dummy contract for the notifier
     amm = await deploy('DummyAMMPool', eco.address, ecox.address)
     await eco.connect(charlie).transfer(amm.address, stake)
@@ -74,18 +75,19 @@ describe('Notifier [@group=2]', () => {
   it('test setting transactions', async () => {
     const dummyData = '0xdeadbeef'
     await policy.testAddTransaction(
-      notifier.address,
+      setupNotifier.address,
       await alice.getAddress(),
       dummyData
     )
-    const transaction = await notifier.transactions(0)
+    const transaction = await setupNotifier.transactions(0)
     expect(transaction.destination).to.equal(await alice.getAddress())
     expect(transaction.data).to.equal(dummyData)
   })
 
   it('test adding to notificationHashes', async () => {
-    const preHashes = await timedPolicies.getNotificationHashes()
-    expect(preHashes.includes(notifierHash)).to.be.false
+    // as the deploy now deploys the notifier, this will say true
+    // const preHashes = await timedPolicies.getNotificationHashes()
+    // expect(preHashes.includes(notifierHash)).to.be.false
     const switcher = await deploy('SwitcherTimedPolicies')
     await policy.testAddNotificationHash(
       timedPolicies.address,
@@ -93,13 +95,14 @@ describe('Notifier [@group=2]', () => {
       notifierHash
     )
     const postHashes = await timedPolicies.getNotificationHashes()
-    expect(postHashes.includes(notifierHash)).to.be.true
+    expect(postHashes[2]).to.equal(notifierHash)
+    expect(postHashes[3]).to.equal(notifierHash)
   })
 
   it('test setting notifier in policy', async () => {
-    await policy.testDirectSet('Notifier', notifier.address)
+    await policy.testDirectSet('Notifier', setupNotifier.address)
     const notifierPolicyAddress = await policy.policyFor(notifierHash)
-    expect(notifierPolicyAddress).to.equal(notifier.address)
+    expect(notifierPolicyAddress).to.equal(setupNotifier.address)
   })
 
   describe('after a linear inflation', () => {
@@ -167,13 +170,14 @@ describe('Notifier [@group=2]', () => {
 
     describe('notifying', () => {
       beforeEach(async () => {
-        await policy.testDirectSet('Notifier', notifier.address)
-        const switcher = await deploy('SwitcherTimedPolicies')
-        await policy.testAddNotificationHash(
-          timedPolicies.address,
-          switcher.address,
-          notifierHash
-        )
+        // this is done in the deploy fixture
+        // await policy.testDirectSet('Notifier', notifier.address)
+        // const switcher = await deploy('SwitcherTimedPolicies')
+        // await policy.testAddNotificationHash(
+        //   timedPolicies.address,
+        //   switcher.address,
+        //   notifierHash
+        // )
       })
 
       it('survives notifying revert', async () => {
