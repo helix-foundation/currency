@@ -94,7 +94,7 @@ describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
       switcherTimedPolicies.address
     )
     const name = await lockupUpgrade.name()
-    expect(name).to.equal('')
+    expect(name).to.equal('Lockup Upgrade and Notifier')
   })
 
   it('Find the policy proposals instance', async () => {
