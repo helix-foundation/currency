@@ -190,7 +190,7 @@ describe('Lockup [@group=3]', () => {
 
     describe('after the lockup window', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 24 * 21.1)
+        await time.increase(3600 * 24 * (2 + 21.1))
       })
 
       it('rewards late withdrawal', async () => {
@@ -228,7 +228,7 @@ describe('Lockup [@group=3]', () => {
           .mint(await charlie.getAddress(), 1000000000)
         await eco.connect(charlie).approve(lockup.address, 1000000000)
         await lockup.connect(charlie).deposit(1000000000)
-        await time.increase(3600 * 24 * 21.1)
+        await time.increase(3600 * 24 * (2 + 21.1))
       })
 
       it('correctly rewards the aggrergate of deposits', async () => {
@@ -280,7 +280,7 @@ describe('Lockup [@group=3]', () => {
 
       describe('after the lockup window', () => {
         beforeEach(async () => {
-          await time.increase(3600 * 24 * 7.1)
+          await time.increase(3600 * 24 * (2 + 7.1))
         })
 
         it('rewards late withdrawal', async () => {
@@ -366,7 +366,7 @@ describe('Lockup [@group=3]', () => {
       })
 
       it('nonintuitive behavior fixes when bob withdraws', async () => {
-        await time.increase(3600 * 24 * 21.1)
+        await time.increase(3600 * 24 * (2 + 21.1))
         await lockup.connect(bob).withdraw()
         await time.advanceBlock()
 

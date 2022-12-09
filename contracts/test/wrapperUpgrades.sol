@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "../governance/community/Proposal.sol";
+import "../governance/community/proposals/Proposal.sol";
 
 contract Wrapper {
     event HereIAm(uint256 index);

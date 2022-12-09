@@ -1,13 +1,12 @@
 /*
  * This is an end-to-end demo of policy votes to add functionality to
- * a governance contract.
+ * the lockup contract.
  *
  * Note that this 'test' shares states between the it() functions, and
  * it() is used mostly to break up the logical steps.
  *
  * The purpose of this demo is to propose a policy change that alters
- * trustee voting to add an additional, functionless parameter
- * (the number of poodles at the current generation).
+ * lockup functionality to add a test function
  */
 
 const { expect } = require('chai')
@@ -15,18 +14,20 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
+describe('E2E Proposal Lockup Contract Template Upgrade [@group=9]', () => {
   let policy
   let eco
+  let currencyTimer
   let timedPolicies
   let policyProposals
   let policyVotes
   let initInflation
 
-  let makePoodle
-  let poodleCurrencyGovernance
-  let poodleCurrencyTimer
-  let poodleBorda
+  let lockupUpgrade
+  let switcherCurrencyTimer
+  let switcherTimedPolicies
+  let notifier
+  let poodleLockup
 
   let alice
   let bob
@@ -41,6 +42,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
       eco,
       faucet: initInflation,
       timedPolicies,
+      currencyTimer,
     } = await ecoFixture([
       await bob.getAddress(),
       await charlie.getAddress(),
@@ -62,31 +64,37 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
   })
 
   it('Checks that the current governance contract is not poodles', async () => {
-    poodleBorda = await ethers.getContractAt(
-      'PoodleCurrencyGovernance',
-      await policyFor(
-        policy,
-        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-      )
+    const notPoodleLockupImpl = await ethers.getContractAt(
+      'PoodleLockup',
+      await currencyTimer.lockupImpl()
+    )
+    expect(await notPoodleLockupImpl.currencyTimer()).to.equal(
+      currencyTimer.address
     )
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
-    await expect(poodleBorda.provePoodles()).to.be.reverted
+    await expect(notPoodleLockupImpl.provePoodles()).to.be.reverted
   })
 
   it('Constructs the proposal', async () => {
-    poodleCurrencyGovernance = await deploy(
-      'PoodleCurrencyGovernance',
+    poodleLockup = await deploy(
+      'PoodleLockup',
       policy.address,
-      ethers.constants.AddressZero
+      eco.address,
+      currencyTimer.address
     )
-    poodleCurrencyTimer = await deploy('SwitcherCurrencyTimer')
-    makePoodle = await deploy(
-      'MakePoodle',
-      poodleCurrencyGovernance.address,
-      poodleCurrencyTimer.address
+    switcherCurrencyTimer = await deploy('SwitcherCurrencyTimer')
+    switcherTimedPolicies = await deploy('SwitcherTimedPolicies')
+
+    notifier = await deploy('Notifier', policy.address)
+    lockupUpgrade = await deploy(
+      'LockupUpgradeAndNotifier',
+      poodleLockup.address,
+      notifier.address,
+      switcherCurrencyTimer.address,
+      switcherTimedPolicies.address
     )
-    const name = await makePoodle.name()
-    expect(name).to.equal('MakePoodle')
+    const name = await lockupUpgrade.name()
+    expect(name).to.equal('Lockup Upgrade and Notifier')
   })
 
   it('Find the policy proposals instance', async () => {
@@ -104,11 +112,11 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
     await eco
       .connect(alice)
       .approve(policyProposals.address, await policyProposals.COST_REGISTER())
-    await policyProposals.connect(alice).registerProposal(makePoodle.address)
+    await policyProposals.connect(alice).registerProposal(lockupUpgrade.address)
   })
 
   it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-    await policyProposals.connect(bob).support(makePoodle.address)
+    await policyProposals.connect(bob).support(lockupUpgrade.address)
     await policyProposals.connect(bob).deployProposalVoting()
   })
 
@@ -141,15 +149,17 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
     await timedPolicies.incrementGeneration()
   })
 
-  it('Checks that the new governance contract is poodles', async () => {
-    poodleBorda = await ethers.getContractAt(
-      'PoodleCurrencyGovernance',
-      await policyFor(
-        policy,
-        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-      )
+  it('Checks that the new lockup contract is poodles', async () => {
+    const poodleLockupImpl = await ethers.getContractAt(
+      'PoodleLockup',
+      await currencyTimer.lockupImpl()
     )
-    const poodles = await poodleBorda.provePoodles()
+    const poodles = await poodleLockupImpl.provePoodles()
     expect(poodles).to.be.true
+  })
+
+  it('Check that the notifier is added to TimedPolicies', async () => {
+    const notifierHash = await timedPolicies.notificationHashes(2)
+    expect(notifierHash).to.equal(await lockupUpgrade.NOTIFIER_ID())
   })
 })
