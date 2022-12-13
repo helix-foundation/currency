@@ -69,7 +69,8 @@ contract LockupUpgradeAndNotifier is Policy, Proposal {
     /** A description of what the proposal does.
      */
     function description() public pure override returns (string memory) {
-        return "This proposal patches an issue with the Lockup contract and adds a new contract, the Notifier";
+        return
+            "This proposal patches an issue with the Lockup contract and adds a new contract, the Notifier";
     }
 
     /** A URL where more details can be found.

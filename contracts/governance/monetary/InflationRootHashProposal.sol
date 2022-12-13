@@ -338,9 +338,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
+        uint256 challengeEnds = challenge.challengeEnds;
 
         require(
-            getTime() < challenge.challengeEnds,
+            getTime() < challengeEnds,
             "Timeframe to respond to a challenge is over"
         );
 
@@ -430,7 +431,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         challenge.challengeStatus[_index] = ChallengeStatus.Resolved;
         proposal.amountPendingChallenges -= 1;
-        challenge.challengeEnds += CONTESTING_TIME;
+        challengeEnds += CONTESTING_TIME;
+        challenge.challengeEnds = challengeEnds;
+
+        if (proposal.lastLiveChallenge < challengeEnds) {
+            proposal.lastLiveChallenge = challengeEnds;
+        }
     }
 
     /** @notice Checks root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
@@ -661,14 +667,13 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     function updateCounters(address _proposer, address _challenger) internal {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
-        uint256 challengeEnds = challenge.challengeEnds;
+        uint256 challengeEnds = challenge.challengeEnds + CONTESTING_TIME;
 
         proposal.totalChallenges += 1;
         proposal.amountPendingChallenges += 1;
         challenge.amountOfRequests += 1;
 
-        challenge.challengeEnds = challengeEnds + CONTESTING_TIME;
-        challengeEnds += CONTESTING_TIME;
+        challenge.challengeEnds = challengeEnds;
 
         if (proposal.lastLiveChallenge < challengeEnds) {
             proposal.lastLiveChallenge = challengeEnds;

@@ -31,10 +31,7 @@ const TRUSTED_NODES_HASH = ethers.utils.solidityKeccak256(
   ['string'],
   ['TrustedNodes']
 )
-const NOTIFIER_HASH = ethers.utils.solidityKeccak256(
-  ['string'],
-  ['Notifier']
-)
+const NOTIFIER_HASH = ethers.utils.solidityKeccak256(['string'], ['Notifier'])
 const ECO_HASH = ethers.utils.solidityKeccak256(['string'], ['ECO'])
 const ECOx_HASH = ethers.utils.solidityKeccak256(['string'], ['ECOx'])
 const FAUCET_HASH = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
@@ -341,11 +338,7 @@ exports.deployPeripheralContracts = async (
     ecox.address
   )
 
-  const notifier = await deployFrom(
-    wallet,
-    'Notifier',
-    policyProxy.address
-  )
+  const notifier = await deployFrom(wallet, 'Notifier', policyProxy.address)
 
   await bindProxy(bootstrap, ecoXStakingImpl, 6)
   const ecoXStaking = await ethers.getContractAt(

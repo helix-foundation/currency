@@ -781,10 +781,7 @@ async function deployStage3(options) {
     ['string'],
     ['TrustedNodes']
   )
-  const notifierHash = ethers.utils.solidityKeccak256(
-    ['string'],
-    ['Notifier']
-  )
+  const notifierHash = ethers.utils.solidityKeccak256(['string'], ['Notifier'])
   const faucetHash = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
 
   // contract factories used in this stage (in order of appearance)
@@ -892,10 +889,9 @@ async function deployStage3(options) {
   if (options.verbose) {
     console.log('deploying the Notifier...')
   }
-  const notifierImpl = await NotifierFactory.deploy(
-    policyProxyAddress,
-    { gasPrice }
-  )
+  const notifierImpl = await NotifierFactory.deploy(policyProxyAddress, {
+    gasPrice,
+  })
 
   // deploy the template contracts for cloning in the governance process
   if (options.verbose) {

@@ -699,9 +699,7 @@ describe('InflationRootHashProposal', () => {
               await accounts[0].getAddress(),
               requestedIndex
             )
-        ).to.be.revertedWith(
-          'may only request an index within the tree'
-        )
+        ).to.be.revertedWith('may only request an index within the tree')
 
         await expect(
           rootHashProposal
@@ -710,9 +708,7 @@ describe('InflationRootHashProposal', () => {
               await accounts[0].getAddress(),
               requestedIndex + 1
             )
-        ).to.be.revertedWith(
-          'may only request an index within the tree'
-        )
+        ).to.be.revertedWith('may only request an index within the tree')
 
         await expect(
           rootHashProposal
@@ -721,9 +717,7 @@ describe('InflationRootHashProposal', () => {
               await accounts[0].getAddress(),
               requestedIndex + 400
             )
-        ).to.be.revertedWith(
-          'may only request an index within the tree'
-        )
+        ).to.be.revertedWith('may only request an index within the tree')
       })
 
       it('does not accept claimMissingAccount for index greater or equal to the number of accounts', async () => {
@@ -738,9 +732,7 @@ describe('InflationRootHashProposal', () => {
               requestedIndex,
               await accounts[2].getAddress()
             )
-        ).to.be.revertedWith(
-          'Submit Index Request first'
-        )
+        ).to.be.revertedWith('Submit Index Request first')
 
         // these are out of range
         await expect(
@@ -1435,9 +1427,13 @@ describe('InflationRootHashProposal', () => {
             await accounts[0].getAddress()
           )
           expect(rhp.lastLiveChallenge).to.equal(0)
+          const firstIndex = 0
           let tx = await rootHashProposal
             .connect(accounts[1])
-            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 0)
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              firstIndex
+            )
           let t = await getTime(tx)
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
@@ -1446,10 +1442,14 @@ describe('InflationRootHashProposal', () => {
 
           /* another challenger comes in, last live challenge gets updated */
 
+          const secondIndex = 1
           await time.increase(3600 * 10)
           tx = await rootHashProposal
             .connect(accounts[2])
-            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 1)
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              secondIndex
+            )
           t = await getTime(tx)
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
@@ -1458,14 +1458,35 @@ describe('InflationRootHashProposal', () => {
 
           /* time passes, first challenger comes back, lastLiveChallenge remain the same. */
 
+          const thirdIndex = 2
           await time.increase(3600 * 10)
           await rootHashProposal
             .connect(accounts[1])
-            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 2)
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              thirdIndex
+            )
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
           expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
+
+          // second challenger gets responded to, lastLiveChallenge is increased
+          const a = answer(tree, secondIndex)
+          rootHashProposal
+            .connect(accounts[0])
+            .respondToChallenge(
+              await accounts[2].getAddress(),
+              a[1].reverse(),
+              a[0].account,
+              a[0].balance,
+              a[0].sum,
+              secondIndex
+            )
+          rhp = await rootHashProposal.rootHashProposals(
+            await accounts[0].getAddress()
+          )
+          expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 26)
         })
 
         it('doesnt allow a challenge past the time limit', async () => {
@@ -1659,43 +1680,56 @@ describe('InflationRootHashProposal', () => {
         })
 
         it('challengeEnds correct calculation', async () => {
-          await rootHashProposal
-            .connect(accounts[1])
-            .proposeRootHash(
-              BigNumber.from(proposedRootHash).add(1).toHexString(),
-              totalSum,
-              10
-            )
-          for (let i = 0; i < 3; i += 1) {
+          // 2 challenges in 2 different hours
+          for (let i = 0; i < 2; i += 1) {
             await rootHashProposal
               .connect(accounts[2])
               .challengeRootHashRequestAccount(
-                await accounts[1].getAddress(),
+                await accounts[0].getAddress(),
                 i
               )
             await time.increase(3600)
           }
-          await time.increase(3600 * 15)
-          for (let i = 0; i < 3; i += 1) {
+
+          // increase to hour 25
+          await time.increase(3600 * 23)
+
+          // respond to each initial challenges
+          // each is an additional hour time increase
+          for (let i = 0; i < 2; i += 1) {
+            const a = answer(tree, i)
             await rootHashProposal
-              .connect(accounts[2])
-              .challengeRootHashRequestAccount(
-                await accounts[1].getAddress(),
-                i + 3
+              .connect(accounts[0])
+              .respondToChallenge(
+                await accounts[2].getAddress(),
+                a[1].reverse(),
+                a[0].account,
+                a[0].balance,
+                a[0].sum,
+                i
               )
             await time.increase(3600)
           }
-          await time.increase(3600 * 7)
+
+          // increase to hour 28 - 1 min, 2 challenges and 2 responses (4 hours added), currently still in window
+          await time.increase(3540)
+
+          // successfully challenge again
           await rootHashProposal
             .connect(accounts[2])
-            .challengeRootHashRequestAccount(await accounts[1].getAddress(), 6)
-          await time.increase(3600 * 3)
-          expect(
+            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 2)
+
+          // 5 total actions, increase to hour 29, just out of window with 24 + 5
+          // removing the extra minute causes the next challenge
+          // to revert with 'Index already challenged' instead
+          await time.increase(3600 + 60)
+
+          await expect(
             rootHashProposal
               .connect(accounts[2])
               .challengeRootHashRequestAccount(
-                await accounts[1].getAddress(),
-                7
+                await accounts[0].getAddress(),
+                2
               )
           ).to.be.revertedWith('Time to submit additional challenges is over')
         })
