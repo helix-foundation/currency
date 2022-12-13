@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../currency/ECO.sol";
 import "../governance/community/PolicyProposals.sol";
 import "../governance/community/PolicyVotes.sol";
-import "../governance/community/Proposal.sol";
+import "../governance/community/proposals/Proposal.sol";
 
 contract Subvoter {
     ECO public immutable ecoaddress;

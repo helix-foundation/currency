@@ -5,7 +5,7 @@ import "./Subvoter.sol";
 import "../currency/ECO.sol";
 import "../governance/community/PolicyProposals.sol";
 import "../governance/community/PolicyVotes.sol";
-import "../governance/community/Proposal.sol";
+import "../governance/community/proposals/Proposal.sol";
 import "../governance/TimedPolicies.sol";
 import "../policy/Policy.sol";
 

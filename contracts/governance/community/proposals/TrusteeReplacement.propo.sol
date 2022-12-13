@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../policy/Policy.sol";
-import "../../policy/Policed.sol";
+import "../../../policy/Policy.sol";
+import "../../../policy/Policed.sol";
 import "./Proposal.sol";
-import "../monetary/TrustedNodes.sol";
+import "../../monetary/TrustedNodes.sol";
 
 /** @title TrusteeReplacement
  * A proposal to replace the current cohort of trustees

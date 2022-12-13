@@ -1,10 +1,10 @@
 pragma solidity ^0.8.0;
 
-import "../../policy/Policy.sol";
-import "../../policy/Policed.sol";
+import "../../../policy/Policy.sol";
+import "../../../policy/Policed.sol";
 import "./Proposal.sol";
-import "../../currency/ECO.sol";
-import "../../currency/ECOx.sol";
+import "../../../currency/ECO.sol";
+import "../../../currency/ECOx.sol";
 
 /** @title DeployRootPolicyFundw
  * A proposal to send some root policy funds to another

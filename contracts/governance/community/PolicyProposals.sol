@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../policy/Policy.sol";
 import "../../currency/IECO.sol";
 import "../../policy/PolicedUtils.sol";
-import "./Proposal.sol";
+import "./proposals/Proposal.sol";
 import "./PolicyVotes.sol";
 import "./VotingPower.sol";
 import "../../utils/TimeUtils.sol";

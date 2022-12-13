@@ -5,6 +5,7 @@ import "../policy/PolicedUtils.sol";
 import "../policy/Policed.sol";
 import "../governance/IGenerationIncrease.sol";
 import "../governance/monetary/Lockup.sol";
+import "../governance/monetary/RandomInflation.sol";
 import "../governance/monetary/CurrencyGovernance.sol";
 import "../governance/CurrencyTimer.sol";
 
@@ -12,7 +13,7 @@ import "../governance/CurrencyTimer.sol";
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract PoodleCurrencyTimer is CurrencyTimer {
+contract SwitcherCurrencyTimer is CurrencyTimer {
     address public constant TEST_FILL =
         0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0;
 
@@ -35,5 +36,25 @@ contract PoodleCurrencyTimer is CurrencyTimer {
      */
     function setBordaImpl(CurrencyGovernance _newBordaImpl) public {
         bordaImpl = _newBordaImpl;
+    }
+
+    /** Function for changing the address of the lockup contract for subsequent generations
+     *
+     * This is executed in the storage context of the CurrencyTimer contract by the proposal.
+     *
+     * @param _newLockupImpl The address of the new lockup template contract.
+     */
+    function setLockupImpl(Lockup _newLockupImpl) public {
+        lockupImpl = _newLockupImpl;
+    }
+
+    /** Function for changing the address of the inflation contract for subsequent generations
+     *
+     * This is executed in the storage context of the CurrencyTimer contract by the proposal.
+     *
+     * @param _newInflationImpl The address of the new inflation template contract.
+     */
+    function setInflationImpl(RandomInflation _newInflationImpl) public {
+        inflationImpl = _newInflationImpl;
     }
 }

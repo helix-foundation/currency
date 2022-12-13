@@ -31,6 +31,10 @@ const TRUSTED_NODES_HASH = ethers.utils.solidityKeccak256(
   ['string'],
   ['TrustedNodes']
 )
+const NOTIFIER_HASH = ethers.utils.solidityKeccak256(
+  ['string'],
+  ['Notifier']
+)
 const ECO_HASH = ethers.utils.solidityKeccak256(['string'], ['ECO'])
 const ECOx_HASH = ethers.utils.solidityKeccak256(['string'], ['ECOx'])
 const FAUCET_HASH = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
@@ -77,6 +81,7 @@ function getIdentifiers() {
     FAUCET_HASH,
     ECO_HASH,
     ECOx_HASH,
+    NOTIFIER_HASH,
   ]
 }
 
@@ -92,6 +97,7 @@ function getAddresses(contracts) {
     contracts.faucet.address,
     contracts.eco.address,
     contracts.ecox.address,
+    contracts.notifier.address,
   ]
 }
 
@@ -334,6 +340,13 @@ exports.deployPeripheralContracts = async (
     policyProxy.address,
     ecox.address
   )
+
+  const notifier = await deployFrom(
+    wallet,
+    'Notifier',
+    policyProxy.address
+  )
+
   await bindProxy(bootstrap, ecoXStakingImpl, 6)
   const ecoXStaking = await ethers.getContractAt(
     'ECOxStaking',
@@ -364,7 +377,7 @@ exports.deployPeripheralContracts = async (
     'TimedPolicies',
     policyProxy.address,
     policyProposals.address,
-    [ECO_HASH, CURRENCY_TIMER_HASH]
+    [ECO_HASH, CURRENCY_TIMER_HASH, NOTIFIER_HASH]
   )
   await bindProxy(bootstrap, timedPoliciesImpl, 4)
   const timedPolicies = await ethers.getContractAt(
@@ -406,6 +419,7 @@ exports.deployPeripheralContracts = async (
     policyVotes,
     policyProposals,
     ecoXStaking,
+    notifier,
     currencyTimer,
     timedPolicies,
     policy,

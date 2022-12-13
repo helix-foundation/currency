@@ -54,6 +54,7 @@ const FaucetArtifact = require(`../artifacts/contracts/deploy/EcoFaucet.sol/EcoF
 const TokenInitArtifact = require(`../artifacts/contracts/currency/TokenInit.sol/TokenInit.json`)
 const VDFVerifierArtifact = require(`../artifacts/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
 const ECOxArtifact = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json`)
+const NotifierArtifact = require(`../artifacts/contracts/governance/Notifier.sol/Notifier.json`)
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
@@ -780,12 +781,21 @@ async function deployStage3(options) {
     ['string'],
     ['TrustedNodes']
   )
+  const notifierHash = ethers.utils.solidityKeccak256(
+    ['string'],
+    ['Notifier']
+  )
   const faucetHash = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
 
   // contract factories used in this stage (in order of appearance)
   const ecoXStakingFactory = new ethers.ContractFactory(
     ECOxStakingArtifact.abi,
     ECOxStakingArtifact.bytecode,
+    options.signer
+  )
+  const NotifierFactory = new ethers.ContractFactory(
+    NotifierArtifact.abi,
+    NotifierArtifact.bytecode,
     options.signer
   )
   const rootHashFactory = new ethers.ContractFactory(
@@ -878,6 +888,15 @@ async function deployStage3(options) {
     { gasPrice }
   )
 
+  // Deploy the Notifier contract
+  if (options.verbose) {
+    console.log('deploying the Notifier...')
+  }
+  const notifierImpl = await NotifierFactory.deploy(
+    policyProxyAddress,
+    { gasPrice }
+  )
+
   // deploy the template contracts for cloning in the governance process
   if (options.verbose) {
     console.log('deploying governance template contracts...')
@@ -954,7 +973,7 @@ async function deployStage3(options) {
   const timedPoliciesImpl = await timedPoliciesFactory.deploy(
     policyProxyAddress,
     policyProposalsImpl.address,
-    [ecoHash, currencyTimerHash], // THE ORDER OF THESE IS VERY IMPORTANT
+    [ecoHash, currencyTimerHash, notifierHash], // THE ORDER OF THESE IS VERY IMPORTANT
     { gasPrice }
   )
 
@@ -981,43 +1000,46 @@ async function deployStage3(options) {
   process.stdout.write('Progress: [             ]\r')
   let receipt = await ecoXStakingImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [x            ]\r')
+  process.stdout.write('Progress: [x             ]\r')
+  receipt = await notifierImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  process.stdout.write('Progress: [xx            ]\r')
   receipt = await rootHashProposalImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xx           ]\r')
+  process.stdout.write('Progress: [xxx           ]\r')
   receipt = await vdfImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxx          ]\r')
+  process.stdout.write('Progress: [xxxx          ]\r')
   receipt = await randomInflationImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxx         ]\r')
+  process.stdout.write('Progress: [xxxxx         ]\r')
   receipt = await lockupImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxx        ]\r')
+  process.stdout.write('Progress: [xxxxxx        ]\r')
   receipt = await currencyGovernanceImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxx       ]\r')
+  process.stdout.write('Progress: [xxxxxxx       ]\r')
   receipt = await policyVotesImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxx      ]\r')
+  process.stdout.write('Progress: [xxxxxxxx      ]\r')
   receipt = await policyProposalsImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxx     ]\r')
+  process.stdout.write('Progress: [xxxxxxxxx     ]\r')
   receipt = await policyImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxx    ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxx    ]\r')
   receipt = await policyInit.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxx   ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxxx   ]\r')
   receipt = await currencyTimerImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxxx  ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxxxx  ]\r')
   receipt = await timedPoliciesImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxxxx ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxxxxx ]\r')
   receipt = await trustedNodesImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxxxxx]\n')
+  process.stdout.write('Progress: [xxxxxxxxxxxxxx]\n')
 
   // Update the proxy targets to the implementation contract addresses
   if (options.verbose) {
@@ -1122,6 +1144,7 @@ async function deployStage3(options) {
     currencyTimerHash,
     timedPoliciesHash,
     trustedNodesHash,
+    notifierHash,
   ]
   const addresses = [
     ecoAddress,
@@ -1130,6 +1153,7 @@ async function deployStage3(options) {
     currencyTimerProxyAddress,
     timedPoliciesProxyAddress,
     trustedNodesProxyAddress,
+    notifierImpl.address,
   ]
 
   const setters = [
