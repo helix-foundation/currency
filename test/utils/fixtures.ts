@@ -3,7 +3,23 @@ const {
   ERC1820_REGISTRY,
   REGISTRY_DEPLOY_TX,
 } = require('../../tools/constants')
-const { deployFrom } = require('./contracts')
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
+import { Bytes, BytesLike, Contract } from "ethers"
+import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue"
+import { ethers } from "hardhat"
+import { CurrencyTimer, ECO, EcoBootstrap, EcoFaucet, EcoInitializable, ECOx, ECOxStaking, Notifier, Policy, TimedPolicies, TrustedNodes } from "../../typechain-types"
+import { deployFrom } from './contracts'
+
+export type FixturesContracts = {
+  ecoXStaking: ECOxStaking,
+  currencyTimer: CurrencyTimer,
+  timedPolicies: TimedPolicies,
+  trustedNodes: TrustedNodes,
+  faucet: EcoFaucet,
+  eco: ECO,
+  ecox: ECOx,
+  notifier: Notifier
+}
 
 const initialECOxSupply = ethers.utils.parseEther('100')
 
@@ -42,7 +58,7 @@ const FAUCET_HASH = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
 /**
  * Gets the initializable proxy slot at index
  */
-async function getPlaceholder(bootstrap, index) {
+async function getPlaceholder(bootstrap: EcoBootstrap, index: number): Promise<EcoInitializable> {
   const placeholderAddress = await bootstrap.placeholders(index)
   return ethers.getContractAt('EcoInitializable', placeholderAddress)
 }
@@ -50,7 +66,7 @@ async function getPlaceholder(bootstrap, index) {
 /**
  * Binds a contract to the given proxy index
  */
-async function bindProxy(bootstrap, contract, index) {
+async function bindProxy(bootstrap: EcoBootstrap, contract: Contract, index: number) {
   const proxy = await getPlaceholder(bootstrap, index)
   const tx = await proxy.fuseImplementation(contract.address)
   await tx.wait()
@@ -88,7 +104,7 @@ function getIdentifiers() {
 /**
  * For ECO Init fusedInit
  */
-function getAddresses(contracts) {
+function getAddresses(contracts: FixturesContracts) {
   return [
     contracts.ecoXStaking.address,
     contracts.currencyTimer.address,
@@ -104,7 +120,7 @@ function getAddresses(contracts) {
 /**
  * Deploys required singletons to the chain if not already there
  */
-exports.deploySingletons = async (from) => {
+exports.deploySingletons = async (from: SignerWithAddress) => {
   if ((await ethers.provider.getCode(ERC1820_REGISTRY)).length > '0x0'.length) {
     return
   }
@@ -116,7 +132,7 @@ exports.deploySingletons = async (from) => {
   await ethers.provider.sendTransaction(REGISTRY_DEPLOY_TX)
 }
 
-exports.policyFor = async (policy, hash) => {
+exports.policyFor = async (policy: Policy, hash: PromiseOrValue<BytesLike>) => {
   const erc1820 = await ethers.getContractAt(
     'IERC1820Registry',
     '0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24'
@@ -124,7 +140,7 @@ exports.policyFor = async (policy, hash) => {
   return erc1820.getInterfaceImplementer(policy.address, hash)
 }
 
-exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
+exports.bootstrap = async (wallet: SignerWithAddress, trustedNodes: TrustedNodes[] = [], voteReward = '1000') => {
   await exports.deploySingletons(wallet)
 
   // ### Stage 1
@@ -134,7 +150,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
     'EcoBootstrap',
     await wallet.getAddress(),
     7
-  )
+  ) as EcoBootstrap
 
   // ### Stage 2
   // Deploy PolicyProxy, ECO, and ECOx contracts
@@ -219,7 +235,7 @@ exports.bootstrap = async (wallet, trustedNodes = [], voteReward = '1000') => {
  *  - ECO implementation
  *  - ECOx implementation
  */
-exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
+exports.deployCoreContracts = async (wallet: SignerWithAddress, bootstrap: EcoBootstrap, policyProxy: Contract) => {
   const ecoProxy = await getPlaceholder(bootstrap, 1)
 
   const _tokenInit = await deployFrom(wallet, 'TokenInit')
@@ -270,12 +286,12 @@ exports.deployCoreContracts = async (wallet, bootstrap, policyProxy) => {
  *  - TrustedNodes
  */
 exports.deployPeripheralContracts = async (
-  wallet,
-  bootstrap,
-  trustedNodesList,
-  voteReward,
-  policyProxy,
-  coreContracts
+  wallet: SignerWithAddress,
+  bootstrap: EcoBootstrap,
+  trustedNodesList: any[],
+  voteReward: number,
+  policyProxy: Contract,
+  coreContracts: FixturesContracts
 ) => {
   const { eco, ecox } = coreContracts
 
@@ -428,12 +444,12 @@ exports.deployPeripheralContracts = async (
   }
 }
 
-exports.ecoFixture = async (trustedNodes, voteReward) => {
+exports.ecoFixture = async (trustedNodes: TrustedNodes[], voteReward: number) => {
   const [wallet] = await ethers.getSigners()
   return exports.bootstrap(wallet, trustedNodes, voteReward)
 }
 
-exports.singletonsFixture = async (signer) => {
+exports.singletonsFixture = async (signer: SignerWithAddress) => {
   await exports.deploySingletons(signer)
   return ethers.getContractAt(
     'IERC1820Registry',
