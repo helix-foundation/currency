@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop, no-loop-func */
 import { expect } from 'chai'
 import { IsPrime } from '../../typechain-types'
+import { deploy } from '../utils/contracts'
 const bigintCryptoUtils = require('bigint-crypto-utils')
-const { deploy } = require('../utils/contracts')
 
 const MILLER_RABIN_ITERATIONS = 25
 

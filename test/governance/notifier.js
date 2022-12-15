@@ -46,7 +46,9 @@ describe('Notifier [@group=2]', () => {
       await charlie.getAddress(),
     ]
 
-    ;({ policy, eco, ecox, faucet, timedPolicies, notifier } = await ecoFixture(trustees))
+    ;({ policy, eco, ecox, faucet, timedPolicies, notifier } = await ecoFixture(
+      trustees
+    ))
 
     await faucet.mint(await alice.getAddress(), stake)
     await faucet.mint(await bob.getAddress(), stake)

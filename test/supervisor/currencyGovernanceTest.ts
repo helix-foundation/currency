@@ -7,9 +7,9 @@ import { CurrencyGovernor } from '../../supervisor/currencyGovernor'
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 
-const time = require('../utils/time.ts')
+import { ecoFixture } from '../utils/fixtures'
 
-const { ecoFixture } = require('../utils/fixtures')
+import time from '../utils/time'
 
 describe('currencyGovernance_supervisor [@group=13]', () => {
   let alice: Signer
