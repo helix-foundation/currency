@@ -21,7 +21,6 @@ const {
   getFormattedBallot,
 } = require('../../tools/test/currencyGovernanceVote')
 
-
 describe('RandomInflation [@group=13]', () => {
   let alice: Signer
   let bob: Signer
