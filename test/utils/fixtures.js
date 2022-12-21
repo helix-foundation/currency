@@ -408,6 +408,7 @@ exports.deployPeripheralContracts = async (
     vdfVerifier,
     lockup,
     inflation,
+    rootHashProposal,
     governance,
     policyVotes,
     policyProposals,

@@ -252,6 +252,12 @@ describe('InflationRootHashProposal', () => {
         await accounts[2].getAddress(),
         '150000000000000000000000000'
       )
+
+      await initInflation.mint(policy.address, '100000000000000000000000000')
+      await initInflation.mint(
+        await rootHashProposal.POOL_ADDRESS(),
+        '150000000000000000000000000'
+      )
       await time.advanceBlock()
 
       tree = getTree(map)
@@ -820,6 +826,113 @@ describe('InflationRootHashProposal', () => {
         )
           .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
           .to.emit(rootHashProposal, 'RootHashRejection')
+      })
+
+      it('cannot defend challenges on blacklisted addresses', async () => {
+        const POOL_ADDRESS = await rootHashProposal.POOL_ADDRESS()
+        map = new Map([
+          [
+            ethers.constants.AddressZero,
+            BigNumber.from('50000000000000000000000000'),
+          ],
+          [policy.address, BigNumber.from('100000000000000000000000000')],
+          [POOL_ADDRESS, BigNumber.from('150000000000000000000000000')],
+        ])
+        tree = getTree(map)
+        proposedRootHash = tree.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(proposedRootHash, totalSum, amountOfAccounts)
+
+        const revertMsgs = ['zero']
+        if (policy.address < POOL_ADDRESS) {
+          revertMsgs.push('policy')
+          revertMsgs.push('pool')
+        } else {
+          revertMsgs.push('pool')
+          revertMsgs.push('policy')
+        }
+
+        for (let i = 0; i < 3; i++) {
+          await rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(await accounts[2].getAddress(), i)
+          const a = answer(tree, i)
+
+          await expect(
+            rootHashProposal
+              .connect(accounts[2])
+              .respondToChallenge(
+                await accounts[1].getAddress(),
+                a[1].reverse(),
+                a[0].account,
+                a[0].balance,
+                a[0].sum,
+                i
+              )
+          ).to.be.revertedWith(
+            `The ${revertMsgs[i]} address not allowed in Merkle tree`
+          )
+        }
+      })
+
+      it('cannot claimMissingAccount for blacklisted addresses', async () => {
+        const POOL_ADDRESS = await rootHashProposal.POOL_ADDRESS()
+        const addresses = [
+          await accounts[0].getAddress(),
+          await accounts[1].getAddress(),
+          await accounts[2].getAddress(),
+        ]
+        const poolArray = addresses.slice()
+        poolArray.push(POOL_ADDRESS)
+        const poolPos = poolArray.sort().indexOf(POOL_ADDRESS)
+        const policyArray = addresses.slice()
+        policyArray.push(policy.address)
+        const policyPos = policyArray.sort().indexOf(policy.address)
+
+        for (let i = 0; i < 3; i++) {
+          await rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(await accounts[0].getAddress(), i)
+          const a = answer(tree, i)
+
+          await rootHashProposal
+            .connect(accounts[0])
+            .respondToChallenge(
+              await accounts[1].getAddress(),
+              a[1].reverse(),
+              a[0].account,
+              a[0].balance,
+              a[0].sum,
+              i
+            )
+        }
+
+        /*
+         * cannot actually test the same revert with the zero address as you
+         * cannot give voting power to the zero address currently
+         */
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              poolPos,
+              POOL_ADDRESS
+            )
+        ).to.be.revertedWith('The pool address not allowed in Merkle tree')
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              policyPos,
+              policy.address
+            )
+        ).to.be.revertedWith('The policy address not allowed in Merkle tree')
       })
     })
 

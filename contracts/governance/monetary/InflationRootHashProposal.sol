@@ -86,6 +86,10 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     uint256 public constant FEE_COLLECTION_TIME = 180 days;
 
+    /** The blacklisted address for the Uni v2 AMM pool */
+    address public constant POOL_ADDRESS =
+        0x0000000000000000000000000000000000042069;
+
     /** The timestamp at which the fee collection phase ends and contract might be destructed.
      */
     uint256 public feeCollectionEnds;
@@ -274,6 +278,18 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             ecoToken.getPastVotes(_account, blockNumber) > 0,
             "Missing account does not exist"
         );
+        require(
+            _account != address(0),
+            "The zero address not allowed in Merkle tree"
+        );
+        require(
+            _account != address(policy),
+            "The policy address not allowed in Merkle tree"
+        );
+        require(
+            _account != POOL_ADDRESS,
+            "The pool address not allowed in Merkle tree"
+        );
 
         require(challenge.initialized, "Submit Index Request first");
 
@@ -334,6 +350,14 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(
             _account != address(0),
             "The zero address not allowed in Merkle tree"
+        );
+        require(
+            _account != address(policy),
+            "The policy address not allowed in Merkle tree"
+        );
+        require(
+            _account != POOL_ADDRESS,
+            "The pool address not allowed in Merkle tree"
         );
 
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
