@@ -41,20 +41,20 @@ contract IRHPUpgradeAndNotifierData is Policy, Proposal {
      */
     constructor(
         address _newIRHP,
-        bytes memory _notifierData,
+        address _switcherRandomInflation,
         address _notifierTarget,
-        address _switcherRandomInflation
+        bytes memory _notifierData
     ) {
         newIRHP = _newIRHP;
-        notifierData = _notifierData;
-        notifierTarget = _notifierTarget;
         switcherRandomInflation = _switcherRandomInflation;
+        notifierTarget = _notifierTarget;
+        notifierData = _notifierData;
     }
 
     /** The name of the proposal.
      */
     function name() public pure override returns (string memory) {
-        return "Lockup Upgrade and Notifier";
+        return "InflationRootHashProposal Upgrade and AMM Syncing";
     }
 
     /** A description of what the proposal does.
@@ -75,7 +75,7 @@ contract IRHPUpgradeAndNotifierData is Policy, Proposal {
      *
      * This is executed in the storage context of the root policy contract.
      */
-    function enacted(address) public override {
+    function enacted(address self) public override {
         CurrencyTimer _currencyTimer = CurrencyTimer(policyFor(CURRENCY_TIMER_ID));
         Notifier _notifier = Notifier(policyFor(NOTIFIER_ID));
         address _randomInflation = address(_currencyTimer.inflationImpl());
@@ -85,6 +85,6 @@ contract IRHPUpgradeAndNotifierData is Policy, Proposal {
             abi.encodeWithSignature("setIRHPImpl(address)", newIRHP)
         );
 
-        _notifier.addTransaction(notifierTarget, notifierData);
+        _notifier.addTransaction(notifierTarget, IRHPUpgradeAndNotifierData(self).notifierData());
     }
 }
