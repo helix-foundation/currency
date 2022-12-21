@@ -19,6 +19,7 @@ describe('E2E Proposal IRHP Contract Template Upgrade [@group=9]', () => {
   let eco
   let ecox
   let currencyTimer
+  let timedPolicies
   let policyProposals
   let policyVotes
   let inflation
@@ -77,7 +78,9 @@ describe('E2E Proposal IRHP Contract Template Upgrade [@group=9]', () => {
 
   it('Checks that the current irhp contract is not poodles', async () => {
     expect(await currencyTimer.inflationImpl()).to.equal(inflation.address)
-    expect(await inflation.inflationRootHashProposal()).to.equal(rootHashProposal.address)
+    expect(await inflation.inflationRootHashProposal()).to.equal(
+      rootHashProposal.address
+    )
     // the IRHP is not poodles so it does not have this function
     const notPoodleIRHPImpl = await ethers.getContractAt(
       'PoodleLockup',
@@ -91,11 +94,7 @@ describe('E2E Proposal IRHP Contract Template Upgrade [@group=9]', () => {
   })
 
   it('Constructs the proposal', async () => {
-    poodleIRHP = await deploy(
-      'PoodleIRHP',
-      policy.address,
-      eco.address
-    )
+    poodleIRHP = await deploy('PoodleIRHP', policy.address, eco.address)
     switcherRandomInflation = await deploy('SwitcherRandomInflation')
 
     irhpUpgrade = await deploy(

@@ -13,10 +13,9 @@ import "../currency/IECO.sol";
  */
 contract PoodleIRHP is InflationRootHashProposal {
     // because the data is not preserved, some information must be copied
-    constructor(
-        Policy _policy,
-        IECO _ecoAddr
-    ) InflationRootHashProposal(_policy, _ecoAddr) {}
+    constructor(Policy _policy, IECO _ecoAddr)
+        InflationRootHashProposal(_policy, _ecoAddr)
+    {}
 
     function provePoodles() public pure returns (bool) {
         return true;
