@@ -1,6 +1,9 @@
 {
   "name": "@helix-foundation/currency",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=16.6.0"
+  },
   "description": "The ECO and ECOx cryptocurrency contracts, governance contracts, and associated tooling.",
   "main": "index.js",
   "scripts": {
