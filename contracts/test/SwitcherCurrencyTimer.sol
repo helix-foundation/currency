@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../policy/PolicedUtils.sol";
-import "../policy/Policed.sol";
-import "../governance/IGenerationIncrease.sol";
 import "../governance/monetary/Lockup.sol";
 import "../governance/monetary/RandomInflation.sol";
 import "../governance/monetary/CurrencyGovernance.sol";
 import "../governance/CurrencyTimer.sol";
 
-/** @title TimedPolicies
- * Oversees the time-based recurring processes that allow governance of the
- * Eco currency.
+/** @title SwitcherCurrencyTimer
+ * Delegate call function data contract for setter functions
  */
 contract SwitcherCurrencyTimer is CurrencyTimer {
     address public constant TEST_FILL =
