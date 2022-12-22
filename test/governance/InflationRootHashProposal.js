@@ -258,6 +258,18 @@ describe('InflationRootHashProposal', () => {
         await rootHashProposal.POOL_ADDRESS(),
         '150000000000000000000000000'
       )
+      await initInflation.mint(
+        await rootHashProposal.ECO_ASSOCIATION1(),
+        '10000000000000000000000000'
+      )
+      await initInflation.mint(
+        await rootHashProposal.ECO_ASSOCIATION2(),
+        '20000000000000000000000000'
+      )
+      await initInflation.mint(
+        await rootHashProposal.ECO_INC(),
+        '30000000000000000000000000'
+      )
       await time.advanceBlock()
 
       tree = getTree(map)
@@ -830,6 +842,29 @@ describe('InflationRootHashProposal', () => {
 
       it('cannot defend challenges on blacklisted addresses', async () => {
         const POOL_ADDRESS = await rootHashProposal.POOL_ADDRESS()
+        const ECO_ASSOCIATION1 = await rootHashProposal.ECO_ASSOCIATION1()
+        const ECO_ASSOCIATION2 = await rootHashProposal.ECO_ASSOCIATION2()
+        const ECO_INC = await rootHashProposal.ECO_INC()
+
+        const revertMsgs = [
+          'zero',
+          'pool',
+          'association',
+          'association',
+          'eco inc',
+        ]
+        const blacklist = [
+          ethers.constants.AddressZero,
+          POOL_ADDRESS,
+          ECO_ASSOCIATION1,
+          ECO_ASSOCIATION2,
+          ECO_INC,
+          policy.address,
+        ] // all but the policy is sorted
+        blacklist.sort()
+        const policyIndex = blacklist.findIndex((a) => a === policy.address)
+        revertMsgs.splice(policyIndex, 0, 'policy') // in place splicing
+
         map = new Map([
           [
             ethers.constants.AddressZero,
@@ -837,24 +872,22 @@ describe('InflationRootHashProposal', () => {
           ],
           [policy.address, BigNumber.from('100000000000000000000000000')],
           [POOL_ADDRESS, BigNumber.from('150000000000000000000000000')],
+          [ECO_ASSOCIATION1, BigNumber.from('10000000000000000000000000')],
+          [ECO_ASSOCIATION2, BigNumber.from('20000000000000000000000000')],
+          [ECO_INC, BigNumber.from('30000000000000000000000000')],
         ])
         tree = getTree(map)
         proposedRootHash = tree.hash
 
         await rootHashProposal
           .connect(accounts[2])
-          .proposeRootHash(proposedRootHash, totalSum, amountOfAccounts)
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('360000000000000000000000000'),
+            revertMsgs.length
+          )
 
-        const revertMsgs = ['zero']
-        if (policy.address < POOL_ADDRESS) {
-          revertMsgs.push('policy')
-          revertMsgs.push('pool')
-        } else {
-          revertMsgs.push('pool')
-          revertMsgs.push('policy')
-        }
-
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < revertMsgs.length; i++) {
           await rootHashProposal
             .connect(accounts[1])
             .challengeRootHashRequestAccount(await accounts[2].getAddress(), i)
@@ -879,6 +912,9 @@ describe('InflationRootHashProposal', () => {
 
       it('cannot claimMissingAccount for blacklisted addresses', async () => {
         const POOL_ADDRESS = await rootHashProposal.POOL_ADDRESS()
+        const ECO_ASSOCIATION1 = await rootHashProposal.ECO_ASSOCIATION1()
+        const ECO_ASSOCIATION2 = await rootHashProposal.ECO_ASSOCIATION2()
+        const ECO_INC = await rootHashProposal.ECO_INC()
         const addresses = [
           await accounts[0].getAddress(),
           await accounts[1].getAddress(),
@@ -887,6 +923,23 @@ describe('InflationRootHashProposal', () => {
         const poolArray = addresses.slice()
         poolArray.push(POOL_ADDRESS)
         const poolPos = poolArray.sort().indexOf(POOL_ADDRESS)
+
+        const association1Array = addresses.slice()
+        association1Array.push(ECO_ASSOCIATION1)
+        const association1Pos = association1Array
+          .sort()
+          .indexOf(ECO_ASSOCIATION1)
+
+        const association2Array = addresses.slice()
+        association2Array.push(ECO_ASSOCIATION2)
+        const association2Pos = association2Array
+          .sort()
+          .indexOf(ECO_ASSOCIATION2)
+
+        const ecoIncArray = addresses.slice()
+        ecoIncArray.push(ECO_INC)
+        const ecoIncPos = ecoIncArray.sort().indexOf(ECO_INC)
+
         const policyArray = addresses.slice()
         policyArray.push(policy.address)
         const policyPos = policyArray.sort().indexOf(policy.address)
@@ -923,6 +976,40 @@ describe('InflationRootHashProposal', () => {
               POOL_ADDRESS
             )
         ).to.be.revertedWith('The pool address not allowed in Merkle tree')
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              association1Pos,
+              ECO_ASSOCIATION1
+            )
+        ).to.be.revertedWith(
+          'The association address not allowed in Merkle tree'
+        )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              association2Pos,
+              ECO_ASSOCIATION2
+            )
+        ).to.be.revertedWith(
+          'The association address not allowed in Merkle tree'
+        )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              ecoIncPos,
+              ECO_INC
+            )
+        ).to.be.revertedWith('The eco inc address not allowed in Merkle tree')
 
         await expect(
           rootHashProposal
