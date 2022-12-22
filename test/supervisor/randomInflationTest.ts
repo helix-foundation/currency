@@ -29,7 +29,8 @@ describe('RandomInflation [@group=13]', () => {
   let inflationGovernor!: InflationGovernor
 
   const someBlockWhereBalancesExist: number = 8182392
-  const gqlUrl = 'https://api.thegraph.com/subgraphs/name/ecographs/staging-subgraphs'
+  const gqlUrl =
+    'https://api.thegraph.com/subgraphs/name/ecographs/staging-subgraphs'
 
   const inflationVote = 10
   const rewardVote = 20000
@@ -126,10 +127,7 @@ describe('RandomInflation [@group=13]', () => {
 
   it('fetches from subgraph', async () => {
     const balances: [string, BigNumber][] | undefined =
-      await inflationGovernor.fetchBalances(
-        someBlockWhereBalancesExist,
-        gqlUrl,
-      )
+      await inflationGovernor.fetchBalances(someBlockWhereBalancesExist, gqlUrl)
     if (balances) {
       expect(balances.length).to.be.greaterThan(0)
     } else {
@@ -139,10 +137,7 @@ describe('RandomInflation [@group=13]', () => {
 
   it('orders the balances by address', async () => {
     const balances: [string, BigNumber][] | undefined =
-      await inflationGovernor.fetchBalances(
-        someBlockWhereBalancesExist,
-        gqlUrl,
-      )
+      await inflationGovernor.fetchBalances(someBlockWhereBalancesExist, gqlUrl)
     if (balances) {
       const addresses: string[] = balances.map(
         (object: [string, BigNumber]) => {

@@ -465,12 +465,11 @@ export class InflationGovernor {
         variables: { blockNumber: block },
       })
 
-    const adjustedBalances = this.balanceInflationAdjustment(accountsSnapshotQuery) as [
-      string,
-      ethers.BigNumber
-    ][]
+    const adjustedBalances = this.balanceInflationAdjustment(
+      accountsSnapshotQuery
+    ) as [string, ethers.BigNumber][]
 
-    return adjustedBalances.filter(account => !BLACKLIST.includes(account[0]))
+    return adjustedBalances.filter((account) => !BLACKLIST.includes(account[0]))
   }
 
   balanceInflationAdjustment(accountsSnapshotQuery: EcoSnapshotQueryResult) {
