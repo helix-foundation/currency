@@ -25,7 +25,7 @@ module.exports = {
     "prefer-destructuring": 0,
     "mocha/no-exclusive-tests": "error",
     "chai-friendly/no-unused-expressions": 2,
-    "no-multiple-empty-lines": [ "error", {
+    "no-multiple-empty-lines": ["error", {
       max: 1,
       maxEOF: 0,
       maxBOF: 0
@@ -40,7 +40,12 @@ module.exports = {
         allowModules: [],
         tryExtensions: [".js", ".json", ".node", ".ts", ".d.ts"],
       },
-    ]
+    ],
+    "node/no-missing-require": [
+      "error", {
+        allowModules: [],
+        tryExtensions: [".js", ".json", ".node", ".ts", ".d.ts"]
+      }]
   },
   globals: {
     BigInt: "readonly",

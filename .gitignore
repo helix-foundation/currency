@@ -72,3 +72,9 @@ cache/
 out/
 yarn.lock
 typechain/
+.DS_Store
+
+
+#Publish artifacts
+package
+lib
