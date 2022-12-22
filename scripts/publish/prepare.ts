@@ -10,9 +10,11 @@ function main() {
   const libDir = path.join(rootDir, "/lib")
   const abiDir = path.join(libDir, "/abi")
   const utilsDir = path.join(libDir, "/utils")
+  const typechainDir = path.join(libDir, "/typechain-types")
   const rootContracts = path.join(rootDir, "/contracts")
   const rootUtils = path.join(rootDir, "/test/utils")
   const rootAbiDir = path.join(rootDir, "/artifacts/contracts")
+  const rootTypechainDir = path.join(rootDir, "/typechain-types")
   console.log(`Creating lib directory at ${libDir}`)
   if (!fs.existsSync(libDir)) {
     fs.mkdirSync(libDir)
@@ -66,6 +68,9 @@ function main() {
       console.log('An error occured while copying the folder.')
       return console.error(err)
     }
+    const testDir = path.join(contractsDir, "/test")
+    fs.rmSync(testDir, { recursive: true, force: true })
+
     console.log('Contract copy completed!')
   })
 
@@ -95,6 +100,23 @@ function main() {
       return console.error(err)
     }
     console.log('Utils copy completed!')
+  })
+
+  // Move the typechain types
+  fsExtra.copy(rootTypechainDir, typechainDir, function (err) {
+    if (err) {
+      console.log('An error occured while copying the folder.')
+      return console.error(err)
+    }
+    const openzeppelinDir0 = path.join(typechainDir, "/@openzeppelin")
+    const openzeppelinDir1 = path.join(typechainDir, "/factories/@openzeppelin")
+    const testDir0 = path.join(typechainDir, "/factories/contracts/test")
+    const testDir1 = path.join(typechainDir, "/contracts/test")
+    fs.rmSync(openzeppelinDir0, { recursive: true, force: true })
+    fs.rmSync(openzeppelinDir1, { recursive: true, force: true })
+    fs.rmSync(testDir0, { recursive: true, force: true })
+    fs.rmSync(testDir1, { recursive: true, force: true })
+    console.log('Typechain types copy completed!')
   })
 }
 
