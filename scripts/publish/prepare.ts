@@ -66,6 +66,9 @@ function main() {
       console.log('An error occured while copying the folder.')
       return console.error(err)
     }
+    const testDir = path.join(contractsDir, "/test")
+    fs.rmSync(testDir, { recursive: true, force: true })
+    
     console.log('Contract copy completed!')
   })
 
