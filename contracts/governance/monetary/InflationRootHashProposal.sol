@@ -88,7 +88,19 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
     /** The blacklisted address for the Uni v2 AMM pool */
     address public constant POOL_ADDRESS =
-        0x0000000000000000000000000000000000042069;
+        0x09bC52B9EB7387ede639Fc10Ce5Fa01CBCBf2b17;
+
+    /** The first blacklisted address for Eco Associaton */
+    address public constant ECO_ASSOCIATION1 =
+        0x98830c37Aa6aBDaE028Bea5c587852c569092d71;
+
+    /** The second blacklisted address for Eco Associaton */
+    address public constant ECO_ASSOCIATION2 =
+        0x99f98ea4A883DB4692Fa317070F4ad2dC94b05CE;
+
+    /** The blacklisted address for Eco Inc. */
+    address public constant ECO_INC =
+        0xA201d3C815AC9D4d8830fb3dE2b490B5b0069ACa;
 
     /** The timestamp at which the fee collection phase ends and contract might be destructed.
      */
@@ -290,6 +302,18 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             _account != POOL_ADDRESS,
             "The pool address not allowed in Merkle tree"
         );
+        require(
+            _account != ECO_ASSOCIATION1,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION2,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_INC,
+            "The eco inc address not allowed in Merkle tree"
+        );
 
         require(challenge.initialized, "Submit Index Request first");
 
@@ -358,6 +382,18 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(
             _account != POOL_ADDRESS,
             "The pool address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION1,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION2,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_INC,
+            "The eco inc address not allowed in Merkle tree"
         );
 
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
