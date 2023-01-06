@@ -5,9 +5,8 @@ import "../policy/Policy.sol";
 import "../governance/community/PolicyProposals.sol";
 import "../governance/TimedPolicies.sol";
 
-/** @title TimedPolicies
- * Oversees the time-based recurring processes that allow governance of the
- * Eco currency.
+/** @title SwitcherTimedPolicies
+ * Delegate call function data contract for setter functions
  */
 contract SwitcherTimedPolicies is TimedPolicies {
     address public constant TEST_FILL_ADDRESS =

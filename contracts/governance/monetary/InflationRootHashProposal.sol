@@ -86,6 +86,22 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     uint256 public constant FEE_COLLECTION_TIME = 180 days;
 
+    /** The blacklisted address for the Uni v2 AMM pool */
+    address public constant POOL_ADDRESS =
+        0x09bC52B9EB7387ede639Fc10Ce5Fa01CBCBf2b17;
+
+    /** The first blacklisted address for Eco Associaton */
+    address public constant ECO_ASSOCIATION1 =
+        0x98830c37Aa6aBDaE028Bea5c587852c569092d71;
+
+    /** The second blacklisted address for Eco Associaton */
+    address public constant ECO_ASSOCIATION2 =
+        0x99f98ea4A883DB4692Fa317070F4ad2dC94b05CE;
+
+    /** The blacklisted address for Eco Inc. */
+    address public constant ECO_INC =
+        0xA201d3C815AC9D4d8830fb3dE2b490B5b0069ACa;
+
     /** The timestamp at which the fee collection phase ends and contract might be destructed.
      */
     uint256 public feeCollectionEnds;
@@ -224,8 +240,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         external
         hashIsNotAcceptedYet
     {
-        requireValidChallengeConstraints(_proposer, msg.sender, _index);
+        requireValidChallengeConstraints(_proposer, msg.sender);
         RootHashProposal storage proposal = rootHashProposals[_proposer];
+        require(
+            proposal.amountOfAccounts > _index,
+            "may only request an index within the tree"
+        );
 
         InflationChallenge storage challenge = proposal.challenges[msg.sender];
 
@@ -257,13 +277,42 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         uint256 _index,
         address _account
     ) external hashIsNotAcceptedYet {
-        requireValidChallengeConstraints(_proposer, msg.sender, _index);
+        requireValidChallengeConstraints(_proposer, msg.sender);
         RootHashProposal storage proposal = rootHashProposals[_proposer];
+        require(
+            proposal.amountOfAccounts >= _index,
+            "missing account position must be to the left of the submitted index"
+        );
+
         InflationChallenge storage challenge = proposal.challenges[msg.sender];
 
         require(
             ecoToken.getPastVotes(_account, blockNumber) > 0,
             "Missing account does not exist"
+        );
+        require(
+            _account != address(0),
+            "The zero address not allowed in Merkle tree"
+        );
+        require(
+            _account != address(policy),
+            "The policy address not allowed in Merkle tree"
+        );
+        require(
+            _account != POOL_ADDRESS,
+            "The pool address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION1,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION2,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_INC,
+            "The eco inc address not allowed in Merkle tree"
         );
 
         require(challenge.initialized, "Submit Index Request first");
@@ -326,12 +375,33 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
             _account != address(0),
             "The zero address not allowed in Merkle tree"
         );
+        require(
+            _account != address(policy),
+            "The policy address not allowed in Merkle tree"
+        );
+        require(
+            _account != POOL_ADDRESS,
+            "The pool address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION1,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_ASSOCIATION2,
+            "The association address not allowed in Merkle tree"
+        );
+        require(
+            _account != ECO_INC,
+            "The eco inc address not allowed in Merkle tree"
+        );
 
         RootHashProposal storage proposal = rootHashProposals[msg.sender];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
+        uint256 challengeEnds = challenge.challengeEnds;
 
         require(
-            getTime() < challenge.challengeEnds,
+            getTime() < challengeEnds,
             "Timeframe to respond to a challenge is over"
         );
 
@@ -421,7 +491,12 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
         challenge.challengeStatus[_index] = ChallengeStatus.Resolved;
         proposal.amountPendingChallenges -= 1;
-        challenge.challengeEnds += CONTESTING_TIME;
+        challengeEnds += CONTESTING_TIME;
+        challenge.challengeEnds = challengeEnds;
+
+        if (proposal.lastLiveChallenge < challengeEnds) {
+            proposal.lastLiveChallenge = challengeEnds;
+        }
     }
 
     /** @notice Checks root hash proposal. If time is out and there is unanswered challenges proposal is rejected. If time to submit
@@ -652,14 +727,13 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     function updateCounters(address _proposer, address _challenger) internal {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
         InflationChallenge storage challenge = proposal.challenges[_challenger];
-        uint256 challengeEnds = challenge.challengeEnds;
+        uint256 challengeEnds = challenge.challengeEnds + CONTESTING_TIME;
 
         proposal.totalChallenges += 1;
         proposal.amountPendingChallenges += 1;
         challenge.amountOfRequests += 1;
 
-        challenge.challengeEnds = challengeEnds + CONTESTING_TIME;
-        challengeEnds += CONTESTING_TIME;
+        challenge.challengeEnds = challengeEnds;
 
         if (proposal.lastLiveChallenge < challengeEnds) {
             proposal.lastLiveChallenge = challengeEnds;
@@ -682,8 +756,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
 
     function requireValidChallengeConstraints(
         address _proposer,
-        address _challenger,
-        uint256 _index
+        address _challenger
     ) internal view {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
 
@@ -698,10 +771,6 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(
             proposal.status == RootHashStatus.Pending,
             "The proposal is resolved"
-        );
-        require(
-            proposal.amountOfAccounts > _index,
-            "The index have to be within the range of claimed amount of accounts"
         );
         uint256 requestsByChallenger = proposal
             .challenges[_challenger]

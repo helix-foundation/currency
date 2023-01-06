@@ -39,6 +39,17 @@ const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from(
   '1000000000000000000'
 )
 
+const BLACKLIST = [
+  ethers.constants.AddressZero,
+  '0x98830c37aa6abdae028bea5c587852c569092d71', // Eco Association
+  '0xa201d3c815ac9d4d8830fb3de2b490b5b0069aca', // Eco Inc.
+  '0x99f98ea4a883db4692fa317070f4ad2dc94b05ce', // Eco Association
+  '0xab86356eDbba19D35f63712dB5CDb5E1b05F1e08', // Testnet Pool
+  '0x09bc52b9eb7387ede639fc10ce5fa01cbcbf2b17', // Mainnet ECO~USDC Pool
+
+  // policy address pushed during construction
+]
+
 const newInflationEvent = 'NewInflation'
 const entropyVDFSeedCommitEvent = 'EntropyVDFSeedCommit'
 const successfulVerificationEvent = 'SuccessfulVerification'
@@ -95,6 +106,7 @@ export class InflationGovernor {
     this.policy = rootPolicy
     this.subgraphsUrl = subgraphsUrl
     this.production = production
+    BLACKLIST.push(this.policy.address)
   }
 
   async setup() {
@@ -452,10 +464,12 @@ export class InflationGovernor {
         query: ECO_SNAPSHOT,
         variables: { blockNumber: block },
       })
-    return this.balanceInflationAdjustment(accountsSnapshotQuery) as [
-      string,
-      ethers.BigNumber
-    ][]
+
+    const adjustedBalances = this.balanceInflationAdjustment(
+      accountsSnapshotQuery
+    ) as [string, ethers.BigNumber][]
+
+    return adjustedBalances.filter((account) => !BLACKLIST.includes(account[0]))
   }
 
   balanceInflationAdjustment(accountsSnapshotQuery: EcoSnapshotQueryResult) {
