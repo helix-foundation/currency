@@ -1021,6 +1021,16 @@ describe('InflationRootHashProposal', () => {
             )
         ).to.be.revertedWith('The policy address not allowed in Merkle tree')
       })
+
+      it.only('cannot checkRootHashStatus for uninitialized root hash', async () => {
+        const unproposedAccount = await accounts[4].getAddress()
+        // await expect(
+        //   rootHashProposal.checkRootHashStatus(unproposedAccount)
+        // ).to.be.reverted
+        await rootHashProposal.checkRootHashStatus(unproposedAccount)
+        const proposal = await rootHashProposal.rootHashProposals(unproposedAccount)
+        console.log(proposal)
+      })
     })
 
     context('verify challenge white box testing', async () => {
