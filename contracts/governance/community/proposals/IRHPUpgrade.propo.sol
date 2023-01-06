@@ -6,11 +6,10 @@ import "../../../policy/Policed.sol";
 import "./Proposal.sol";
 import "../../CurrencyTimer.sol";
 
-/** @title LockupUpgradeAndNotifier
- * A proposal to update the Lockup implementation
- * Also
+/** @title IRHPUpgrade
+ * A proposal to update the InflationRootHashProposal implementation
  */
-contract IRHPUpgradeAndNotifierData is Policy, Proposal {
+contract IRHPUpgrade is Policy, Proposal {
     /** The address of the updated InflationRootHashProposals contract
      */
     address public immutable newIRHP;
@@ -25,8 +24,8 @@ contract IRHPUpgradeAndNotifierData is Policy, Proposal {
 
     /** Instantiate a new proposal.
      *
-     * @param _newIRHP The address of the updated Lockup contract
-     * @param _switcherRandomInflation The address of the switcher contract for TimedPolicies
+     * @param _newIRHP The address of the updated InflationRootHashProposal contract
+     * @param _switcherRandomInflation The address of the switcher contract for RandomInflation
      */
     constructor(
         address _newIRHP,
