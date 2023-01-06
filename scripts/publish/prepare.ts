@@ -7,12 +7,17 @@ import glob from 'glob'
 // This file is used by build system to build a clean npm package with the solidity files and their abi.
 function main() {
   const rootDir = path.join(__dirname, "/../..")
+  const scriptsDir = path.join(rootDir, "/scripts/publish")
   const libDir = path.join(rootDir, "/lib")
+  const libSrcDir = path.join(libDir, "/src")
   const abiDir = path.join(libDir, "/abi")
-  const utilsDir = path.join(libDir, "/utils")
-  const typechainDir = path.join(libDir, "/typechain-types")
+  // const utilsDir = path.join(libSrcDir, "/utils")
+  const typechainDir = path.join(libSrcDir, "/typechain-types")
   const rootContracts = path.join(rootDir, "/contracts")
-  const rootUtils = path.join(rootDir, "/test/utils")
+  
+  // const rootUtils = path.join(rootDir, "/test/utils")
+  // const rootTools = path.join(rootDir, "/tools")
+
   const rootAbiDir = path.join(rootDir, "/artifacts/contracts")
   const rootTypechainDir = path.join(rootDir, "/typechain-types")
   console.log(`Creating lib directory at ${libDir}`)
@@ -20,12 +25,16 @@ function main() {
     fs.mkdirSync(libDir)
   }
 
+  if (!fs.existsSync(libSrcDir)) {
+    fs.mkdirSync(libSrcDir)
+  }
+  
   if (!fs.existsSync(abiDir)) {
     fs.mkdirSync(abiDir)
   }
 
-  if (!fs.existsSync(utilsDir)) {
-    fs.mkdirSync(utilsDir)
+  if (!fs.existsSync(typechainDir)) {
+    fs.mkdirSync(typechainDir)
   }
 
   const source = fs.readFileSync(rootDir + "/package.json").toString("utf-8")
@@ -38,6 +47,17 @@ function main() {
   fs.copyFile(
     path.join(rootDir, "/LICENSE"),
     path.join(libDir, "/LICENSE"),
+    function (err: any) {
+      if (err) {
+        return console.log(err)
+      }
+      console.log("Copy LICENSE")
+    }
+  )
+
+  fs.copyFile(
+    path.join(scriptsDir, "/tsup.config.ts"),
+    path.join(libDir, "/tsup.config.ts"),
     function (err: any) {
       if (err) {
         return console.log(err)
@@ -93,14 +113,37 @@ function main() {
     console.log('Abi copy completed!')
   })
 
-  // Move the tools to the lib
-  fsExtra.copy(rootUtils, utilsDir, function (err) {
-    if (err) {
-      console.log('An error occured while copying the folder.')
-      return console.error(err)
-    }
-    console.log('Utils copy completed!')
-  })
+  // Move the utils to the lib, todo fix utils to not use hardhat runtime 
+  // fsExtra.copy(rootUtils, utilsDir, function (err) {
+  //   if (err) {
+  //     console.log('An error occured while copying the folder.')
+  //     return console.error(err)
+  //   }
+  //   console.log('Utils copy completed!')
+
+  //   fs.copyFile(
+  //     path.join(rootTools, "/randomInflationUtils.js"),
+  //     path.join(utilsDir, "/randomInflationUtils.js"),
+  //     function (err: any) {
+  //       if (err) {
+  //         return console.log(err)
+  //       }
+  //       console.log("Copy randomInflationUtils")
+  //     }
+  //   )
+
+  //   fs.copyFile(
+  //     path.join(rootTools, "/vdf.js"),
+  //     path.join(utilsDir, "/vdf.js"),
+  //     function (err: any) {
+  //       if (err) {
+  //         return console.log(err)
+  //       }
+  //       console.log("Copy vdf")
+  //     }
+  //   )
+
+  // })
 
   // Move the typechain types
   fsExtra.copy(rootTypechainDir, typechainDir, function (err) {
@@ -108,16 +151,10 @@ function main() {
       console.log('An error occured while copying the folder.')
       return console.error(err)
     }
-    const openzeppelinDir0 = path.join(typechainDir, "/@openzeppelin")
-    const openzeppelinDir1 = path.join(typechainDir, "/factories/@openzeppelin")
-    const testDir0 = path.join(typechainDir, "/factories/contracts/test")
-    const testDir1 = path.join(typechainDir, "/contracts/test")
-    fs.rmSync(openzeppelinDir0, { recursive: true, force: true })
-    fs.rmSync(openzeppelinDir1, { recursive: true, force: true })
-    fs.rmSync(testDir0, { recursive: true, force: true })
-    fs.rmSync(testDir1, { recursive: true, force: true })
     console.log('Typechain types copy completed!')
   })
+
+  fs.writeFileSync(path.join(libSrcDir, '/index.ts'), `export * from './typechain-types'\n`);
 }
 
 main()

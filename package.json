@@ -31,7 +31,7 @@
     "startSupervisor": "npx ts-node supervisor/app.ts",
     "publishRepo": "cd lib && npm publish",
     "publishLocal": "cd lib && npm pack",
-    "prepare": "yarn build && npx ts-node scripts/publish/prepare.ts"
+    "prepareLib": "yarn build && npx ts-node scripts/publish/prepare.ts && cd lib && npx tsup src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -66,7 +66,6 @@
     "@typescript-eslint/eslint-plugin": "5.38.1",
     "@typescript-eslint/parser": "5.38.1",
     "@uniswap/snapshot-gas-cost": "1.0.0",
-    "bigint-crypto-utils": "3.1.6",
     "chai": "4.3.6",
     "concurrently": "7.4.0",
     "coveralls": "3.1.1",
@@ -93,14 +92,14 @@
     "solhint-plugin-eco": "0.1.0",
     "solidity-coverage": "0.8.2",
     "ts-node": "10.9.1",
-    "typechain": "8.1.0",
-    "typescript": "4.8.3"
+    "typechain": "8.1.0"
   },
   "dependencies": {
     "@apollo/client": "^3.6.9",
     "@aws-sdk/client-secrets-manager": "^3.193.0",
     "@ethersproject/experimental": "^5.7.0",
     "@openzeppelin/contracts": "^4.6.0",
+    "bigint-crypto-utils": "3.1.6",
     "bn.js": "^5.2.1",
     "command-line-args": "^5.1.1",
     "config": "^3.3.8",
@@ -108,6 +107,8 @@
     "dotenv": "^16.0.1",
     "ethers": "^5.6.9",
     "graphql": "^16.6.0",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "tsup": "^6.5.0",
+    "typescript": "4.8.3"
   }
 }
