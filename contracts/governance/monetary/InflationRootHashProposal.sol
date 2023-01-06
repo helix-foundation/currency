@@ -507,6 +507,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     function checkRootHashStatus(address _proposer) external {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
+        require(proposal.initialized, "No such proposal");
 
         if (
             acceptedRootHash == 0 &&

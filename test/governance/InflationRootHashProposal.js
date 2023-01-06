@@ -1024,12 +1024,12 @@ describe('InflationRootHashProposal', () => {
 
       it.only('cannot checkRootHashStatus for uninitialized root hash', async () => {
         const unproposedAccount = await accounts[4].getAddress()
-        // await expect(
-        //   rootHashProposal.checkRootHashStatus(unproposedAccount)
-        // ).to.be.reverted
-        await rootHashProposal.checkRootHashStatus(unproposedAccount)
+        await expect(
+          rootHashProposal.checkRootHashStatus(unproposedAccount)
+        ).to.be.revertedWith('No such proposal')
         const proposal = await rootHashProposal.rootHashProposals(unproposedAccount)
-        console.log(proposal)
+        expect(proposal.status == 0).to.be.true
+        expect(!proposal.initialized).to.be.true
       })
     })
 
