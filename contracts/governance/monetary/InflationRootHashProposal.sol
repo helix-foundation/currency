@@ -566,10 +566,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     function claimFeeFor(address _who, address _proposer) public {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
-        require(
-            proposal.initialized,
-            "No such proposal"
-        );
+        require(proposal.initialized, "No such proposal");
         require(
             proposal.status != RootHashStatus.Pending,
             "Cannot claimFee on pending proposal"

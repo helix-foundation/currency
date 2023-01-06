@@ -27,10 +27,7 @@ contract IRHPUpgrade is Policy, Proposal {
      * @param _newIRHP The address of the updated InflationRootHashProposal contract
      * @param _switcherRandomInflation The address of the switcher contract for RandomInflation
      */
-    constructor(
-        address _newIRHP,
-        address _switcherRandomInflation
-    ) {
+    constructor(address _newIRHP, address _switcherRandomInflation) {
         newIRHP = _newIRHP;
         switcherRandomInflation = _switcherRandomInflation;
     }
