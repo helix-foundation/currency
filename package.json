@@ -30,8 +30,10 @@
     "test:hardhat": "yarn typechain && hardhat test test/**/*.ts",
     "startSupervisor": "npx ts-node supervisor/app.ts",
     "publishRepo": "cd lib && npm publish",
+    "publishRepoTest": "cd libTest && npm publish",
     "publishLocal": "cd lib && npm pack",
-    "prepareLib": "yarn build && npx ts-node scripts/publish/prepare.ts && cd lib && npx tsup src/index.ts"
+    "prepareLib": "yarn build && npx ts-node scripts/publish/prepare.ts && cd lib && npx tsup src/index.ts",
+    "prepareLibTest": "yarn build && npx ts-node scripts/publish/prepare-test.ts"
   },
   "repository": {
     "type": "git",

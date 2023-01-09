@@ -21,9 +21,10 @@ function main() {
   const rootAbiDir = path.join(rootDir, "/artifacts/contracts")
   const rootTypechainDir = path.join(rootDir, "/typechain-types")
   console.log(`Creating lib directory at ${libDir}`)
-  if (!fs.existsSync(libDir)) {
-    fs.mkdirSync(libDir)
+  if (fs.existsSync(libDir)) {
+    fs.rmSync(libDir, {recursive: true})
   }
+  fs.mkdirSync(libDir)
 
   if (!fs.existsSync(libSrcDir)) {
     fs.mkdirSync(libSrcDir)
