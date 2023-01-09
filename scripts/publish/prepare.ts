@@ -11,12 +11,9 @@ function main() {
   const libDir = path.join(rootDir, "/lib")
   const libSrcDir = path.join(libDir, "/src")
   const abiDir = path.join(libDir, "/abi")
-  // const utilsDir = path.join(libSrcDir, "/utils")
+
   const typechainDir = path.join(libSrcDir, "/typechain-types")
   const rootContracts = path.join(rootDir, "/contracts")
-  
-  // const rootUtils = path.join(rootDir, "/test/utils")
-  // const rootTools = path.join(rootDir, "/tools")
 
   const rootAbiDir = path.join(rootDir, "/artifacts/contracts")
   const rootTypechainDir = path.join(rootDir, "/typechain-types")
@@ -113,38 +110,6 @@ function main() {
     })
     console.log('Abi copy completed!')
   })
-
-  // Move the utils to the lib, todo fix utils to not use hardhat runtime 
-  // fsExtra.copy(rootUtils, utilsDir, function (err) {
-  //   if (err) {
-  //     console.log('An error occured while copying the folder.')
-  //     return console.error(err)
-  //   }
-  //   console.log('Utils copy completed!')
-
-  //   fs.copyFile(
-  //     path.join(rootTools, "/randomInflationUtils.js"),
-  //     path.join(utilsDir, "/randomInflationUtils.js"),
-  //     function (err: any) {
-  //       if (err) {
-  //         return console.log(err)
-  //       }
-  //       console.log("Copy randomInflationUtils")
-  //     }
-  //   )
-
-  //   fs.copyFile(
-  //     path.join(rootTools, "/vdf.js"),
-  //     path.join(utilsDir, "/vdf.js"),
-  //     function (err: any) {
-  //       if (err) {
-  //         return console.log(err)
-  //       }
-  //       console.log("Copy vdf")
-  //     }
-  //   )
-
-  // })
 
   // Move the typechain types
   fsExtra.copy(rootTypechainDir, typechainDir, function (err) {
