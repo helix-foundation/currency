@@ -54,11 +54,12 @@ const FaucetArtifact = require(`../artifacts/contracts/deploy/EcoFaucet.sol/EcoF
 const TokenInitArtifact = require(`../artifacts/contracts/currency/TokenInit.sol/TokenInit.json`)
 const VDFVerifierArtifact = require(`../artifacts/contracts/VDF/VDFVerifier.sol/VDFVerifier.json`)
 const ECOxArtifact = require(`../artifacts/contracts/currency/ECOx.sol/ECOx.json`)
+const NotifierArtifact = require(`../artifacts/contracts/governance/Notifier.sol/Notifier.json`)
 /* eslint-enable import/no-unresolved */
 
 async function parseFlags(options) {
-  // we currently require 6 proxies for deployment
-  options.numPlaceholders = '6'
+  // The protocol currently requires 7 proxies for deployment
+  options.numPlaceholders = '7'
 
   if (!options.gasMultiplier) {
     options.gasMultiplier = 5
@@ -75,7 +76,7 @@ async function parseFlags(options) {
   options.gasUsed = ethers.BigNumber.from(0)
 
   if (!options.randomVDFDifficulty) {
-    options.randomVDFDifficulty = 3
+    options.randomVDFDifficulty = options.production ? 31 : 8
   }
 
   if (options.production) {
@@ -163,9 +164,9 @@ async function checkIsProxyBound(proxyAddress, provider, verbose) {
 // `options` object.
 
 // ### Stage 1
-// In order to keep deployment addresses constant we use a set of proxies set up
-// by a bootstrap contract which instantiates a list of slots we can use to create proxies
-// and to hold addresses as part of the deployment process.
+// In order to keep deployment addresses constant the protocol uses a set of proxies set up
+// by a bootstrap contract which instantiates a list of slots it can use to create static proxies
+// to reserve addresses as part of the deployment process.
 //
 // Each of the instatiated contracts creates a forwarding proxy (`ForwardProxy`)
 // pointing to a placeholder allowing the `owner` address that started the deployment
@@ -292,14 +293,14 @@ async function deployStage1(options) {
 }
 
 // ### Stage 2
-// Once the initial proxy addresses we deploy the token contracts. The first proxy is reserved
+// Once the initial proxy addresses are set up, the token contracts are  deployed. The first proxy is reserved
 // for the future root Policy address and is given to the token contracts for future governance.
 //
 // Each currency contract (`ECO`, `ECOx`) is also hosted on a proxy. This allows all external
 // integrations to have constant references that will always be able to host all the data, but
 // still allow upgrades to the currency to be performed.
 //
-// To distribute the initial currency we deploy TokenInit. The currency contracts mint the initial
+// TokenInit is used to distribute the initial currency. The currency contracts mint the initial
 // supply to the distribution contract. From there, this stage calls to the distribution contracts
 // using the processed initialECO and initialECOx data processed in parseFlags.
 //
@@ -750,6 +751,8 @@ async function deployStage3(options) {
     options.bootstrap.placeholders[4])
   const trustedNodesProxyAddress = (options.trustedNodesAddress =
     options.bootstrap.placeholders[5])
+  const ecoXStakingProxyAddress = (options.ecoXStakingAddress =
+    options.bootstrap.placeholders[6])
 
   // identifier hashes
   const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
@@ -778,12 +781,18 @@ async function deployStage3(options) {
     ['string'],
     ['TrustedNodes']
   )
+  const notifierHash = ethers.utils.solidityKeccak256(['string'], ['Notifier'])
   const faucetHash = ethers.utils.solidityKeccak256(['string'], ['Faucet'])
 
   // contract factories used in this stage (in order of appearance)
   const ecoXStakingFactory = new ethers.ContractFactory(
     ECOxStakingArtifact.abi,
     ECOxStakingArtifact.bytecode,
+    options.signer
+  )
+  const NotifierFactory = new ethers.ContractFactory(
+    NotifierArtifact.abi,
+    NotifierArtifact.bytecode,
     options.signer
   )
   const rootHashFactory = new ethers.ContractFactory(
@@ -870,11 +879,19 @@ async function deployStage3(options) {
   if (options.verbose) {
     console.log('deploying the ECOx staking contract...')
   }
-  const ecoXStaking = await ecoXStakingFactory.deploy(
+  const ecoXStakingImpl = await ecoXStakingFactory.deploy(
     policyProxyAddress,
     ecoXAddress,
     { gasPrice }
   )
+
+  // Deploy the Notifier contract
+  if (options.verbose) {
+    console.log('deploying the Notifier...')
+  }
+  const notifierImpl = await NotifierFactory.deploy(policyProxyAddress, {
+    gasPrice,
+  })
 
   // deploy the template contracts for cloning in the governance process
   if (options.verbose) {
@@ -952,7 +969,7 @@ async function deployStage3(options) {
   const timedPoliciesImpl = await timedPoliciesFactory.deploy(
     policyProxyAddress,
     policyProposalsImpl.address,
-    [ecoHash, currencyTimerHash], // THE ORDER OF THESE IS VERY IMPORTANT
+    [ecoHash, currencyTimerHash, notifierHash], // THE ORDER OF THESE IS VERY IMPORTANT
     { gasPrice }
   )
 
@@ -977,45 +994,48 @@ async function deployStage3(options) {
     )
   }
   process.stdout.write('Progress: [             ]\r')
-  let receipt = await ecoXStaking.deployTransaction.wait()
+  let receipt = await ecoXStakingImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [x            ]\r')
+  process.stdout.write('Progress: [x             ]\r')
+  receipt = await notifierImpl.deployTransaction.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  process.stdout.write('Progress: [xx            ]\r')
   receipt = await rootHashProposalImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xx           ]\r')
+  process.stdout.write('Progress: [xxx           ]\r')
   receipt = await vdfImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxx          ]\r')
+  process.stdout.write('Progress: [xxxx          ]\r')
   receipt = await randomInflationImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxx         ]\r')
+  process.stdout.write('Progress: [xxxxx         ]\r')
   receipt = await lockupImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxx        ]\r')
+  process.stdout.write('Progress: [xxxxxx        ]\r')
   receipt = await currencyGovernanceImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxx       ]\r')
+  process.stdout.write('Progress: [xxxxxxx       ]\r')
   receipt = await policyVotesImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxx      ]\r')
+  process.stdout.write('Progress: [xxxxxxxx      ]\r')
   receipt = await policyProposalsImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxx     ]\r')
+  process.stdout.write('Progress: [xxxxxxxxx     ]\r')
   receipt = await policyImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxx    ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxx    ]\r')
   receipt = await policyInit.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxx   ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxxx   ]\r')
   receipt = await currencyTimerImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxxx  ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxxxx  ]\r')
   receipt = await timedPoliciesImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxxxx ]\r')
+  process.stdout.write('Progress: [xxxxxxxxxxxxx ]\r')
   receipt = await trustedNodesImpl.deployTransaction.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
-  process.stdout.write('Progress: [xxxxxxxxxxxxx]\n')
+  process.stdout.write('Progress: [xxxxxxxxxxxxxx]\n')
 
   // Update the proxy targets to the implementation contract addresses
   if (options.verbose) {
@@ -1093,6 +1113,25 @@ async function deployStage3(options) {
     }
   )
 
+  if (options.verbose) {
+    console.log(
+      'binding proxy 6 to ECOx staking contract...',
+      ecoXStakingProxyAddress,
+      ecoXStakingImpl.address
+    )
+  }
+  const ecoXStakingProxy = new ethers.Contract(
+    ecoXStakingProxyAddress,
+    EcoInitializableArtifact.abi,
+    options.signer
+  )
+  const ecoXStakingFuseTx = await ecoXStakingProxy.fuseImplementation(
+    ecoXStakingImpl.address,
+    {
+      gasPrice,
+    }
+  )
+
   // policy init inputs
   const identifiers = [
     ecoHash,
@@ -1101,14 +1140,16 @@ async function deployStage3(options) {
     currencyTimerHash,
     timedPoliciesHash,
     trustedNodesHash,
+    notifierHash,
   ]
   const addresses = [
     ecoAddress,
     ecoXAddress,
-    ecoXStaking.address,
+    ecoXStakingProxyAddress,
     currencyTimerProxyAddress,
     timedPoliciesProxyAddress,
     trustedNodesProxyAddress,
+    notifierImpl.address,
   ]
 
   const setters = [
@@ -1147,7 +1188,6 @@ async function deployStage3(options) {
   )
 
   // store relevant addresses in options for output
-  options.ecoXStakingAddress = ecoXStaking.address
   options.rootHashProposalAddress = rootHashProposalImpl.address
   options.vdfAddress = vdfImpl.address
   options.randomInflationAddress = randomInflationImpl.address
@@ -1167,6 +1207,8 @@ async function deployStage3(options) {
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   receipt = await trustedNodesFuseTx.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
+  receipt = await ecoXStakingFuseTx.wait()
+  options.gasUsed = receipt.gasUsed.add(options.gasUsed)
   receipt = await policyFuseTx.wait()
   options.gasUsed = receipt.gasUsed.add(options.gasUsed)
 
@@ -1179,7 +1221,7 @@ async function deployStage3(options) {
 }
 
 // ### Stage 4
-// Now that everything is in place, we increment the first generation
+// Now that everything is in place, increment the first generation
 // which starts the governance cycle.
 //
 async function deployStage4(options) {

@@ -36,7 +36,7 @@ abstract contract PolicedUtils is Policed, CloneFactory {
 
     /** ERC1820 permissioning interface
      *
-     * @param _addr The address of the contract we might act on behalf of.
+     * @param _addr The address of the contract this might act on behalf of.
      */
     function canImplementInterfaceForAddress(bytes32, address _addr)
         external
@@ -64,9 +64,9 @@ abstract contract PolicedUtils is Policed, CloneFactory {
      * optionality.io's CloneFactory functionality.
      *
      * This is used to save gas cost during deployments. Rather than including
-     * the full contract code in every contract that might instantiate it we
-     * can deploy it once and reference the location it was deployed to. Then
-     * calls to clone() can be used to create instances as needed without
+     * the full contract code in every contract that might instantiate it, it
+     * can be deployed once and the location it was deployed can be referred to for
+     * cloning. The calls to clone() create instances as needed without
      * increasing the code size of the instantiating contract.
      */
     function clone() public virtual returns (address) {

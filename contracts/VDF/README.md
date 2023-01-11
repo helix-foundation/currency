@@ -17,10 +17,10 @@ VDF functionality is a tool for Random Inflation and implements the following co
  - [License](#license)
 
 ## Security
-The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. finding a valid prime x such that x^2 is also a false positive to the primality test is too hard of a constraint on the attacker. The value of x is controlled by a potential attacker, but is highly limited (must be within 1000 after the previous blockhash, caste as a uint256). This does not guarantee that any such malicious x is valid. See [Security Details Details](#security-details) for additional information.
+The recommended parameters for the VDF are a 2048-bit n, a 256-bit x, and t=40. t can be lower or higher, depending on the selected time window from the start of the commitment to x to the deadline to reveal y. finding a valid prime x such that x^2 is also a false positive to the primality test is too hard of a constraint on the attacker. The value of x is controlled by a potential attacker, but is highly limited (must be within 1000 after the previous blockhash, caste as a uint256). This does not guarantee that any such malicious x is valid. See [Security Details](#security-details) for additional information.
 
 ## Background
-The contract holds a constant `N` which is the RSA-style modulus. 2048-bit modulus is from the RSA-2048 challenge https://en.wikipedia.org/wiki/RSA_Factoring_Challenge. Our security assumptions rely on RSA challenge rules: no attacker knows or can obtain the factorization, and factorization wasn't recorded on generation of the number.
+The contract holds a constant `N` which is the RSA-style modulus. 2048-bit modulus is from the RSA-2048 challenge https://en.wikipedia.org/wiki/RSA_Factoring_Challenge. This feature's security assumptions rely on RSA challenge rules: no attacker knows or can obtain the factorization, and factorization wasn't recorded on generation of the number.
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
@@ -54,7 +54,7 @@ Initiates the store of state for the `msg.sender` and validates the inputs.
  - `x` must be at least 2
  - `y` must be at least 512 bit long
  - `y` must be less than `N`
- - `x` is not constrained to be probable prime as our system enforces that elsewhere, however proving a non-prime x will not be constrained to the expected time window as expected.
+ - `x` is not constrained to be probable prime as the protocol enforces that elsewhere, however proving a non-prime x will not be constrained to the expected time window as expected.
 
 ### update
 Arguments:
@@ -82,9 +82,9 @@ The value of t must be sufficiently large for the selected time period.
 Selection of the value t must take into consideration the available processing power and the length of time interval, as discussed next.
 
 ##### Processing power
- When determining the processing power, the major issue is the size of the internal integer, sometimes called the "limb size", used to implement operations modulo n. Clock speed is the secondary consideration of lower importance; in this section we assume the clock speed to be at 4Ghz, with the exception of the "Near future" column, which uses 5 Ghz.
+ When determining the processing power, the major issue is the size of the internal integer, sometimes called the "limb size", used to implement operations modulo n. Clock speed is the secondary consideration of lower importance; in this section the clock speed is assumed to be at 4Ghz, with the exception of the "Near future" column, which uses 5 Ghz.
  As of 2019 x86 AVX-512 instruction set provides the widest integer size available in x86 CPUs, which offers twice the width of previous instruction set AVX2, see [AVX2 and AVX-512](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions). AVX2 instruction set corresponds to the "Budget, today" column in the table below. "Today" column corresponds to estimates using AVX-512 instruction set, and the "Near future" column assumes doubles the throughput of the AVX-512 instruction set.
- We assume that doubling the integer size results in a factor of 5 improvement to the speed of the square operation modulo n.
+ It is presumed that doubling the integer size results in a factor of 5 improvement to the speed of the square operation modulo n.
  
  The following table estimates the time needed to perform T=2^t squaring modulo n on 4-5 Ghz computers with a state-of-the-art implementation.
  

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../policy/Policy.sol";
 import "../policy/Policed.sol";
 import "../proxy/ForwardTarget.sol";
-import "../governance/community/Proposal.sol";
+import "../governance/community/proposals/Proposal.sol";
 
 /** @title MakeTrustedPoodle
  * A proposal to add a new function to TrustedNodes.sol

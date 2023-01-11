@@ -5,9 +5,9 @@ import { expect } from 'chai'
 import { VDFVerifier } from '../../typechain-types'
 import { ContractTransaction } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { deploy } from '../utils/contracts'
+import { singletonsFixture } from '../utils/fixtures'
 const BN = require('bn.js')
-const { deploy } = require('../utils/contracts')
-const { singletonsFixture } = require('../utils/fixtures')
 const { prove, n, bnHex } = require('../../tools/vdf')
 
 // eslint-disable-next-line no-unused-vars
@@ -54,7 +54,7 @@ describe('VDFVerifier [@group=6]', () => {
     it('Computed solutions match expectations', async () => {
       const x = new BN(3)
 
-      // We expect this to be 3, squared 2^t + 1 times
+      // This is expected to be 3, squared 2^t + 1 times
       const [y] = prove(x, 2)
 
       let s = x

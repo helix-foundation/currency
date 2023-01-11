@@ -212,7 +212,7 @@ describe('BigNumber [@group=3]', () => {
 
             it(`${a} ** ${b} % ${c}`, async () => {
               const r = await bignum.modexp(a, b, c)
-              // BigNumber pow is too slow with high values so we keep BN here for now
+              // BigNumber pow is too slow with high values so BN is kept here for now
               const red = BN.red(new BN(c.slice(2), 16))
               const e = new BN(a.slice(2), 16)
                 .toRed(red)

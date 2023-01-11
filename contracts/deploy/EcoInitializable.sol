@@ -15,10 +15,9 @@ import "../proxy/ForwardTarget.sol";
 contract EcoInitializable is ForwardTarget {
     /* Record who owns the address this contract is reserving.
      *
-     * We use a custom ownable implementation because the addresses are not
-     * intended to be transferrable. Only the account specified during the
-     * deployment of EcoBootstrap is ever permitted to use one of these
-     * addresses.
+     * This contract implements a custom ownable implementation because the addresses
+     * are not intended to be transferrable. Only the account specified during the
+     * deployment of EcoBootstrap is ever permitted to use one of these addresses.
      */
     address payable public owner;
 
@@ -33,9 +32,9 @@ contract EcoInitializable is ForwardTarget {
         // Make sure this can't be called by just anyone on the internet...
         require(msg.sender == owner, "Only owner can change implementation");
 
-        /* Clear out the storage location &owner so we're not interfering with
-         * the initializer we're about to run - it shares our address space and
-         * we don't want the author to need to worry about that.
+        /* Clear out the storage location &owner so it's not interfering with
+         * the initializer that's about to be run - it shares the address space and
+         * the author doesn't want to need to worry about that.
          */
         owner = payable(address(0));
 

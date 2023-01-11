@@ -4,7 +4,7 @@ const { ecoFixture } = require('../utils/fixtures')
 const { BigNumber } = ethers
 
 const MAX_ACCOUNT_BALANCE = BigNumber.from(
-  '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as we use 18 digits to store inflation
+  '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as there are 18 digits used to store inflation
 )
 
 describe('IECO [@group=5]', () => {
@@ -239,7 +239,7 @@ describe('IECO [@group=5]', () => {
     it('Cannot return future balances', async () => {
       await expect(
         eco.getPastVotes(await accounts[1].getAddress(), 999999999)
-      ).to.be.revertedWith('InflationCheckpoints: block not yet mined')
+      ).to.be.revertedWith('InflationCheckpoints: cannot check future block')
     })
 
     context('after a long time', () => {

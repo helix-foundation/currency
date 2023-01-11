@@ -253,7 +253,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         uint256 leaderRankTracker = 0;
 
         /**
-         * by setting this to 1, we allow ourselves to skip checking _score != 0
+         * by setting this to 1, the code can skip checking _score != 0
          */
         uint256 scoreDuplicateCheck = 1;
 

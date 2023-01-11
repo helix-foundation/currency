@@ -6,9 +6,8 @@ import { expect } from 'chai'
 import { TimeGovernor } from '../../supervisor/timeGovernor'
 import { BigNumber, Signer } from 'ethers'
 
-const time = require('../utils/time.ts')
-
-const { ecoFixture } = require('../utils/fixtures')
+import { ecoFixture } from '../utils/fixtures'
+import time from '../utils/time'
 
 describe('TimedPolicies [@group=13]', () => {
   let alice: Signer

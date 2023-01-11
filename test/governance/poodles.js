@@ -50,9 +50,6 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
 
   it('Stakes accounts', async () => {
     const stake = ethers.utils.parseEther('5000000')
-    /* Until we have some idea how initial distribution is done, this *does* use
-     *a test-function
-     */
     await initInflation.mint(await alice.getAddress(), stake)
     await initInflation.mint(await bob.getAddress(), stake)
     await initInflation.mint(await charlie.getAddress(), stake)
@@ -82,7 +79,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
       policy.address,
       ethers.constants.AddressZero
     )
-    poodleCurrencyTimer = await deploy('PoodleCurrencyTimer')
+    poodleCurrencyTimer = await deploy('SwitcherCurrencyTimer')
     makePoodle = await deploy(
       'MakePoodle',
       poodleCurrencyGovernance.address,

@@ -1,7 +1,7 @@
 # Monetary Governance System
 > Monetary governance policies for the Eco currency.
 
-These contracts provide the monetary policy system for the eco currency. They specify how the currency is to be managed, and what economic processes are enacted.
+These contracts provide the monetary policy system for the Eco currency. They specify how the currency is to be managed, and what economic processes are enacted.
 
 ## Table of Contents
   - [Security](#security)
@@ -20,19 +20,19 @@ The trustee and monetary governance contracts provide an iterating economic syst
 
 The `CurrencyGovernance` contract implements the governmental decisionmaking process, and records the results of the vote for the [CurrencyTimer](../README.md#currencytimer) contract to enact. Only the trustees may participate in the `CurrencyGovernance` contract's proposal and voting process.
 
-The `TrustedNodes` contract manages the list of trustees as well as their rewards for participation in the monetary policy votes. The list of trusted nodes can be updated in a couple of different ways and there are example proposals in the [comminuty governance](../community/) folder to show some suggested paths.
+The `TrustedNodes` contract manages the list of trustees as well as their rewards for participation in the monetary policy votes. The list of trusted nodes can be updated in a couple of different ways and there are example proposals in the [community governance](../community/) folder to show some suggested paths.
 
 ### Monetary Policy Decisions
-The rest of the contracts are implementations of monetary Policy decisions. They're used to create and distribute new currency (to drive spending), to create and distribute deposit certificates (to discourage spending). Additionally, trustees may scale the currency across the board (to manage exchange value with other currencies), but this process is managed by the `ECO` contract. The different policy levers are designed to reward different behavior and provide incentives to achieve their desired results.
+The rest of the contracts are implementations of monetary Policy decisions. They're used to create and distribute new currency (to drive spending), to create and distribute lockup contracts (to discourage spending). Additionally, trustees may scale the currency across the board (to manage exchange value with other currencies), but this process is managed by the `ECO` contract. The different policy levers are designed to reward different behavior and provide incentives to achieve their desired results.
 
 #### Random Inflation
 A random inflation policy decision creates new currency and distributes it randomly to anyone who had votable ECO (not ECOx) at the end of the last generation. No registration is required, and probability of receiving a share of the newly minted currency is weighted by balance held.
 
 #### Lockups
-Deflation (or a similar slowing of the economy) is achieved by issuing deposit certificates that bear interest. These lockups are made available for a 48 hour window after the generation starts, and the certificate holders receive newly created currency as interest on their deposits when they retrieve their funds at the end of the lockup duration.
+Deflation (or a similar slowing of the economy) is achieved by issuing lockup contracts that produce more ECO. These lockups are made available for a 48 hour window after the generation starts, and the participants receive newly created currency as rewards for their deposits when they retrieve their funds at the end of the lockup duration.
 
 #### Linear Inflation/Deflation
-This policy lever scales the balance for every single address by the same percentage amount. It increases or decreases the total supply while leaving the relative purchasing power of each user, relative to each other, the same. This can be used to change the value of ECO when compared to other currencies as an example. See the [InflationCheckpoints](../../currency/README.md#inflationcheckpoints) contract for documentation.
+This policy lever scales the balance for every single address by the same percentage amount. It increases or decreases the total supply while leaving the relative purchasing power of each user, relative to each other, the same. This can be used to change the unit value of ECO when compared to other currencies as an example. See the [InflationCheckpoints](../../currency/README.md#inflationcheckpoints) contract for documentation.
 
 ## Install
 See the [main README](../../README.md) for installation instructions.
@@ -163,19 +163,31 @@ A commitment is the hash of the packed ABI encoding of the ballot ranking. In So
 ```
 function encodeBallot(
     bytes32 _seed,
-    address[] _votes
+    Vote[] _votes
     )
-    internal
+    public
     pure
     returns (bytes memory)
 {
-    return keccak256(abi.encodePacked(
+    return keccak256(abi.encode(
         _seed,
         msg.sender,
         _votes
         ));
 }
 ```
+
+The Vote struct is defined as so:
+```
+struct Vote {
+    // the proposal being voted for
+    address proposal;
+    // the score of this proposal within the ballot, min recorded score is one
+    // to get a score of zero, an item must be unscored
+    uint256 score;
+}
+```
+Values for score must be in the interval `[1, numVotes]` (inclusive on both sides) where `numVotes` is the elements in the vote array being submitted. scores cannot be duplicated, they must define an ordered ranking of the proposals that are submitted with the highest score being ranked the highest. All non-included votes are treated as being given a tied score of zero. They may not be explicitly given a score of zero, you must omit them to give that score. All the `Vote` structs submitted in the hash commit must be ordered alphabetically by the proposal addresses in strictly increasing order. As such, no addresses may be duplicated.
 
 The seed is used so that people cannot brute force crack the commitment by checking each possible vote. The trustee must keep the seed to be able to reveal their vote successfully. 
 
@@ -188,16 +200,14 @@ Arguments:
   - `_seed` (bytes32) - the seed used to create the hash commit
   - `_votes` (address[]) - the submitted ballot to match to the hash commit
 
-Reveals a ballot that was previously committed to. This is called during the reveal phase of the voting process and is used to record the votes of all the trustees as well as update the currently leading proposal. Each reveal adds votes to a running tally (see the overview for this contract for a full explanation of the voting system) and checks to see if there's a new `leader`. The revealed vote also removes the trustee's default vote for the default proposal. If a revealed vote causes a proposal to tie the `leader`, it does not become the new `leader`.
+Reveals a ballot that was previously committed to. This is called during the reveal phase of the voting process and is used to record the votes of all the trustees as well as update the currently leading proposal. Revealing adds the `score` of each `Vote` (see commit for details) to a running tally for each proposal (see the overview for this contract for a full explanation of the voting system). Afterwards it checks to see if there's a new `leader`. If a revealed vote causes a proposal to tie the `leader`, it does not become the new `leader`. The revealed vote removes the trustee's default vote for the default proposal. 
 
-> If a vote is found to be invalid after decryption the vote will be discarded with no opportunity for adjustment or correction.
+Emits the `VoteReveal` event to create a record of the vote in the log. These events can and should be used to display information about the historical voting decisions of each participant.
 
-Emits the `VoteReveal` event to create a record of the vote in the log. These events are used by the client to display information about the historical voting decisions of each participant.
-
-Reverts in the case of an invalid vote. Invalid votes are ones that vote for invalid proposals (see `propose`/`unpropose`) or ones that vote for the same proposal multiple times.
+This method reverts in the case of an invalid vote. Invalid votes are ones that vote for addresses that do not match a submitted proposal, ones that vote for the same proposal multiple times, ones that assign an invalid score to a proposal (including a duplicate score), ones that are not ordered correctly, ones that are empty, and ones that do not match the previously submitted hash commit (see `commit`). If a vote is found to be invalid after decryption the vote will be discarded with no opportunity for adjustment or correction. Unless the hash commit was incorrectly matched and the correct matching is resubmitted, there is no way for an invalid vote to be corrected.
 
 ###### Security Notes
-  - Can only be called by accounts that have previously committed to a ballot by
+  - Can only be successfully called by accounts that have previously committed to a ballot by
     calling `commit` (and therefore are a trusted node).
   - The parameters must, when hashed together, match the value provided to the
     `commit` method during the commit phase.
@@ -338,7 +348,7 @@ Calls `claimFor` with `msg.sender` as the input for `_who`.
 ### InflationRootHashProposal
   - Inherits: `PolicedUtils`, `TimeUtils`
 
-To distribute RandomInflation rewards we need to establish which users can claim them. RandomInflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' ECO voting power match to each of those numbers - those users can claim the reward. The difference between ECO voting power and balance is that the voting power accounts for delegation.
+To distribute RandomInflation rewards, the protocol needs to establish which users can claim them. RandomInflation contract is responsible for generating a set of random claim numbers according to some parameters. InflationRootHashProposal helps to establish which users' ECO voting power match to each of those numbers - those users can claim the reward. The difference between ECO voting power and balance is that the voting power accounts for delegation.
 
 We assume that all users would always want to participate. Then, when claiming a reward, the user simply posts a proof stating that “if all users had participated, then I would have had claim numbers from X to Y”; and if that range overlaps a winning claim number, they get paid.
 
@@ -357,7 +367,7 @@ The contract can then hash account number, ECO voting power, and the cumulative 
 
 If the user submits the wrong index or cumulative sum, the root hash will be wrong. To simplify verification of trees, the number of nodes is always a power of two, and the extra nodes must have account, ECO voting power, and sum set to 0. The time window (`CHALLENGING_TIME`) for challenging a root hash submission is one day.
 
-To achieve it we need to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
+To achieve it, the protocol needs to establish a correct root hash for every generation. Since the construction of an ordered list of all accounts would be expensive on the chain, the purpose of this contract is to allow the third party to propose a root hash correctly representing Merkle tree of all the accounts arranged as described above and let other parties verify submissions and challenge it in case the submission is wrong.
 
 #### Events
 

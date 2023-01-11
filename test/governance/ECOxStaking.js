@@ -76,7 +76,7 @@ describe('ecoXStaking [@group=12]', () => {
     let blockNumber
 
     beforeEach(async () => {
-      // we need to get the addresses some voting power
+      // get the addresses some voting power
       await ecox.connect(alice).approve(ecoXStaking.address, one.mul(10))
       await ecoXStaking.connect(alice).deposit(one.mul(10))
 
@@ -169,7 +169,7 @@ describe('ecoXStaking [@group=12]', () => {
 
   context('delegation and withdrawals', () => {
     beforeEach(async () => {
-      // we need to get the addresses some voting power
+      // get the addresses some voting power
       await ecox.connect(alice).approve(ecoXStaking.address, one.mul(10))
       await ecoXStaking.connect(alice).deposit(one.mul(10))
 

@@ -90,7 +90,7 @@ library BigNumber {
             /*
             Call precompiled contract to copy data
             gas cost is 15 + 3/word
-            there is no packing for structs in memory, so we just load the slot for _instance
+            there is no packing for structs in memory, so this just loads the slot for _instance
             shift 32 bytes to skip the length value of each reference type
             shift an additional 32 - offset bits on the result to naturally create the offset
             */
@@ -151,7 +151,7 @@ library BigNumber {
             /*
             Call precompiled contract to copy data
             gas cost is 15 + 3/word
-            there is no packing for structs in memory, so we just load the slot for _instance
+            there is no packing for structs in memory, so this just loads the slot for _instance
             shift 32 bytes to skip the length value of each reference type
             shift an additional zeroOffset bits on the result to naturally create the offset
             */
@@ -217,7 +217,7 @@ library BigNumber {
             /*
             Call precompiled contract to copy data
             gas cost is 15 + 3/word
-            there is no packing for structs in memory, so we just load the slot for _instance
+            there is no packing for structs in memory, so this just loads the slot for _instance
             shift 32 bytes to skip the length value of each reference type
             shift an additional 32 + zeroOffset bits on the result to naturally create the offset
             */
@@ -424,14 +424,14 @@ library BigNumber {
                 // get next word for 'min'
                 let min_val := mload(min_ptr)
 
-                // check if we need to carry over to a new word
-                // sum of both words that we're adding
+                // check if this needs to carry over to a new word
+                // sum of both words that this is adding
                 let min_max := add(min_val, max_val)
                 // plus the carry amount if there is one
                 let min_max_carry := add(min_max, carry)
                 // store result
                 mstore(result_ptr, min_max_carry)
-                // carry again if we've overflowed
+                // carry again if this has overflowed
                 carry := or(lt(min_max, min_val), lt(min_max_carry, carry))
                 // point to next 'min' word
                 min_ptr := sub(min_ptr, 0x20)
@@ -469,7 +469,7 @@ library BigNumber {
             // move result ptr up by a slot if no carry
             result := add(result_start, sub(0x20, shl(0x5, carry)))
 
-            // store length of result. we are finished with the byte array.
+            // store length of result. The function is finished with the byte array.
             mstore(result, add(shr(5, max_len), carry))
 
             // Update freemem pointer to point to new end of memory.
@@ -594,7 +594,7 @@ library BigNumber {
             // point 'result' bytes value to the correct address in memory
             result := result_start
 
-            // store length of result. we are finished with the byte array.
+            // store length of result. The function is finished with the byte array.
             mstore(result, shr(5, max_len))
 
             // Update freemem pointer.
@@ -623,7 +623,7 @@ library BigNumber {
 
             // res = add_and_square - diffSquared
             // diffSquared can never be greater than res
-            // so we are safe to use innerDiff directly instead of absdiff
+            // so it is safe to use innerDiff directly instead of absdiff
             res.value = innerDiff(res.value, diffSquared.value);
         }
         res = privateRightShift(res);
@@ -757,7 +757,7 @@ library BigNumber {
 
             if iszero(success) {
                 revert(0x0, 0x0)
-            } //fail where we haven't enough gas to make the call
+            } // fail where there isn't enough gas to make the call
 
             let length := ml
             let result_ptr := add(0x60, freemem)

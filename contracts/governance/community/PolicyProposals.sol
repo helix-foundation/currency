@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../policy/Policy.sol";
 import "../../currency/IECO.sol";
 import "../../policy/PolicedUtils.sol";
-import "./Proposal.sol";
+import "./proposals/Proposal.sol";
 import "./PolicyVotes.sol";
 import "./VotingPower.sol";
 import "../../utils/TimeUtils.sol";
@@ -223,7 +223,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         totalProposals++;
 
-        // if eco token is paused we can't take proposal fee
+        // if eco token is paused, the proposal fee can't be and isn't collected
         if (!ecoToken.paused()) {
             require(
                 ecoToken.transferFrom(msg.sender, address(this), COST_REGISTER),

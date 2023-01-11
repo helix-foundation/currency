@@ -12,7 +12,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
 
     /* 2048-bit modulus from RSA-2048 challenge
      * https://en.wikipedia.org/wiki/RSA_Factoring_Challenge
-     * Our security assumptions rely on RSA challenge rules:
+     * The security assumptions rely on RSA challenge rules:
      * No attacker knows or can obtain the factorization
      * Factorization wasn't recorded on generation of the number.
      */
@@ -94,7 +94,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
         currentState.x = _x;
         currentState.y = y;
 
-        currentState.xi = x2; // our time-lock-puzzle is for x2 = x^2; x2 is a QR mod n
+        currentState.xi = x2; // the time-lock-puzzle is for x2 = x^2; x2 is a QR mod n
         currentState.yi = y;
         currentState.concatHash = keccak256(
             abi.encodePacked(_x, y.asBytes(n.byteLength()))
@@ -106,7 +106,7 @@ contract VDFVerifier is PolicedUtils, IsPrime {
      * To be continuously called with progress = 1 ... t-1 and corresponding u, inclusively.
      * progress input parameter indicates the expected value of progress after the successful processing of this step.
      *
-     * So, we start with s.progress == 0 and call with progress=1, ... t-1. Once we set s.progress = t-1, we have
+     * So, it starts with s.progress == 0 and call with progress=1, ... t-1. Once you set s.progress = t-1, this has
      * completed the verification successfully.
      *
      * In other words, the input is effectively (i, U_sqrt[i]).

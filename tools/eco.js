@@ -88,8 +88,8 @@ async function parseOptions() {
     console.log('loaded config from file, CLI options not used')
   }
 
-  if (!options.ganache === !options.webrpc) {
-    throw new Error('Must specify exactly one of --ganache and --webrpc')
+  if (!options.ganache && !options.webrpc) {
+    throw new Error('Must specify one of --ganache and --webrpc')
   }
 }
 
@@ -98,13 +98,25 @@ async function initEthers() {
     const serverAddr = '0.0.0.0'
     let serverPort
     let ganacheServer
-    if (options.deployTokens) {
+    if (options.webrpc) {
+      console.log(`forking from ${options.webrpc}`)
+      console.log('deploying local chain to 0.0.0.0:8545')
+      serverPort = 8545
+      ganacheServer = ganache.server({
+        default_balance_ether: 1000000,
+        blockTime: 13, // use realistic block time
+        fork: `${options.webrpc}`,
+      })
+    } else if (options.deployTokens) {
+      console.log('deploying local chain to 0.0.0.0:8545')
       serverPort = 8545
       ganacheServer = ganache.server({
         default_balance_ether: 1000000,
         blockTime: 0.1,
       })
     } else if (options.deployGovernance) {
+      console.log('forking from 0.0.0.0:8545')
+      console.log('deploying local chain to 0.0.0.0:8546')
       serverPort = 8546
       ganacheServer = ganache.server({
         default_balance_ether: 1000000,
@@ -165,9 +177,9 @@ async function initUsers() {
 
   const balance = await options.ethersProvider.getBalance(account)
 
-  if (balance < 1) {
+  if (options.production && balance.lt(ethers.constants.WeiPerEther.mul(5))) {
     console.log(
-      `Deployment account ${account} should have at least 1 Ether, has only ${balance}`
+      `Deployment account ${account} should test with at least 5 Ether, has only ${balance}`
     )
     const chumpBalance = ethers.utils.formatEther(
       await options.ethersProvider.getBalance(chumpAccount)

@@ -1,7 +1,7 @@
 # Eco Policy Contract Framework
 > The Eco Policy Framework
 
-The contracts in this directory provide the basis for the Eco Policy Framework. The Policy Framework ("policies") allow the management of some abstract set of contracts by an arbitrary oversight process. The Policy Framework can execute arbitrary code in the context of any contract under its management through the [Community Governance](../governance/community/README.md) process. This allows recovery from nearly any situation so long , and when combined with the proxy framework facilitates contract upgrades (see below for an example). In general, any use of the policies system should also use the proxy framework.
+The contracts in this directory provide the basis for the Eco Policy Framework. The Policy Framework ("policies") allow the management of some abstract set of contracts by an arbitrary oversight process. The Policy Framework can execute arbitrary code in the context of any contract under its management through the [Community Governance](../governance/community/README.md) process. This allows recovery from nearly any situation so long as the system itself is not compromised, and when combined with the proxy framework facilitates contract upgrades (see below for an example). In general, any use of the policies system should also use the proxy framework.
 
 ## Table of Contents
  - [Security](#security)
@@ -121,7 +121,7 @@ Arguments:
  - (bytes32) - unused input by the ERC1820 registry
  - `_addr` (address) - the address of the ERC1820 registry manager (in this case, this is the policy contract)
 
-Is present to be compliant with the ERC1820 registry. Must return `ERC1820_ACCEPT_MAGIC` in the case where the `Policy` contract is `_addr` and revert otherwise. This is a check by the registry before setting a label for the contract. None of our contracts use the label (the unused input) to make their decision, they always defer to the `Policy` contract.
+Is present to be compliant with the ERC1820 registry. Must return `ERC1820_ACCEPT_MAGIC` in the case where the `Policy` contract is `_addr` and revert otherwise. This is a check by the registry before setting a label for the contract. No contracts use the label (the unused input) to make their decision, they always defer to the `Policy` contract.
 
 #### policyCommand
 Arguments:
@@ -137,7 +137,7 @@ Used by the policy hierarchy to implement governance decisions. For example, if 
 ### PolicedUtils
  - Inherits: `Policed`, `ERC1820Client`, `CloneFactory`
 
-A child contract of `Policed`, intended only to add additional utilities, including ECO-specific lookups for the hash identifiers we use in ERC1820.
+A child contract of `Policed`, intended only to add additional utilities, including ECO-specific lookups for the hash identifiers that are used with ERC1820.
 
 #### canImplementInterfaceForAddress
 Arguments:

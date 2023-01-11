@@ -168,7 +168,7 @@ This method fetches the timedPolicies, currency timer and ECO contracts.
 #### startListeners
 Arguments: None
 
-On every currencyTimer.NewInflation event this method makes a call to startRIprocess
+On every currencyTimer.NewInflation event this method makes a call to startRIprocess. It also starts a block listener that calls checkRootHashStatus
 
 #### startRIProcesses
 
@@ -215,10 +215,15 @@ Arguments:
 
 This method responds to any challenges to the root hash proposed by the InflationGovernor. Theoretically all challenges should be refutable, since the root hash will be honest, so if the respondToChallenge command fails it will be retried. 
 
+#### checkRootHashStatus
+Arguments: None
+
+This method makes a call to checkRootHashStatus if a variety of state conditions are met. checkRootHashStatus is what eventually will put a rootHashProposal into the Accepted state, which then enables random inflation recipients to start claiming their allocations. 
+
 #### fetchBalances
 Arguments:
     - block (number) - the block number of the desired snapshot
-    - subgraphURI (string) - the uri of the subgraphs endpoint we want to query for the snapshot
+    - subgraphURI (string) - the uri of the subgraphs endpoint to query for the snapshot
 
 This method fetches the voting power snapshot at a specific blockNumber `block` from the subgraph endpoint at `subgraphURI`
 

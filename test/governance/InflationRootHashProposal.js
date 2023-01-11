@@ -252,6 +252,24 @@ describe('InflationRootHashProposal', () => {
         await accounts[2].getAddress(),
         '150000000000000000000000000'
       )
+
+      await initInflation.mint(policy.address, '100000000000000000000000000')
+      await initInflation.mint(
+        await rootHashProposal.POOL_ADDRESS(),
+        '150000000000000000000000000'
+      )
+      await initInflation.mint(
+        await rootHashProposal.ECO_ASSOCIATION1(),
+        '10000000000000000000000000'
+      )
+      await initInflation.mint(
+        await rootHashProposal.ECO_ASSOCIATION2(),
+        '20000000000000000000000000'
+      )
+      await initInflation.mint(
+        await rootHashProposal.ECO_INC(),
+        '30000000000000000000000000'
+      )
       await time.advanceBlock()
 
       tree = getTree(map)
@@ -549,22 +567,38 @@ describe('InflationRootHashProposal', () => {
         )
       })
 
-      it('doesnt allow double proposal', async () => {})
+      it('doesnt allow double proposal', async () => {
+        await expect(
+          rootHashProposal
+            .connect(accounts[0])
+            .proposeRootHash(
+              proposedRootHash,
+              BigNumber.from('250000000000000000000000000'),
+              3
+            )
+        ).to.be.revertedWith('Root hash already proposed')
+      })
+
+      it('doesnt allow num accounts of zero', async () => {
+        const tree = getTree(map)
+        proposedRootHash = tree.hash
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[2])
+            .proposeRootHash(
+              proposedRootHash,
+              BigNumber.from('250000000000000000000000000'),
+              0
+            )
+        ).to.be.revertedWith('Hash must consist of at least 1 account')
+      })
 
       it('missing account', async () => {
         const cheat = new Map(map)
         cheat.delete(await accounts[1].getAddress())
         const ct = getTree(cheat)
         proposedRootHash = ct.hash
-        await expect(
-          rootHashProposal
-            .connect(accounts[2])
-            .proposeRootHash(
-              proposedRootHash,
-              BigNumber.from('200000000000000000000000000'),
-              0
-            )
-        ).to.be.revertedWith('Hash must consist of at least 1 account')
 
         await rootHashProposal
           .connect(accounts[2])
@@ -574,24 +608,19 @@ describe('InflationRootHashProposal', () => {
             2
           )
 
+        await verifyOnChain(ct, 0, accounts[2])
+        await verifyOnChain(ct, 1, accounts[2])
         await expect(
           rootHashProposal
-            .connect(accounts[2])
-            .proposeRootHash(
-              proposedRootHash,
-              BigNumber.from('200000000000000000000000000'),
-              2
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[2].getAddress(),
+              1,
+              await accounts[1].getAddress()
             )
-        ).to.be.revertedWith('Root hash already proposed')
-        expect(await verifyOnChain(ct, 0, accounts[2]))
-        expect(await verifyOnChain(ct, 1, accounts[2]))
-        expect(
-          await claimMissingOnChain(
-            await accounts[1].getAddress(),
-            1,
-            await accounts[2].getAddress()
-          )
         )
+          .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
+          .to.emit(rootHashProposal, 'RootHashRejection')
         await expect(
           rootHashProposal
             .connect(accounts[1])
@@ -669,8 +698,36 @@ describe('InflationRootHashProposal', () => {
         ).to.be.revertedWith('There is no such hash proposal')
       })
 
-      it('does not accept challenge for index greater than number of accounts', async () => {
-        const requestedIndex = 2
+      it('does not accept challengeRootHashRequestAccount for index greater or equal to the number of accounts', async () => {
+        const requestedIndex = amountOfAccounts
+
+        // suceeds
+        await rootHashProposal
+          .connect(accounts[1])
+          .challengeRootHashRequestAccount(
+            await accounts[0].getAddress(),
+            requestedIndex - 1
+          )
+
+        // all revert
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              requestedIndex
+            )
+        ).to.be.revertedWith('may only request an index within the tree')
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              requestedIndex + 1
+            )
+        ).to.be.revertedWith('may only request an index within the tree')
+
         await expect(
           rootHashProposal
             .connect(accounts[1])
@@ -678,9 +735,291 @@ describe('InflationRootHashProposal', () => {
               await accounts[0].getAddress(),
               requestedIndex + 400
             )
+        ).to.be.revertedWith('may only request an index within the tree')
+      })
+
+      it('does not accept claimMissingAccount for index greater or equal to the number of accounts', async () => {
+        const requestedIndex = amountOfAccounts
+
+        // this is in range, reverts on a following revert
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              requestedIndex,
+              await accounts[2].getAddress()
+            )
+        ).to.be.revertedWith('Submit Index Request first')
+
+        // these are out of range
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              requestedIndex + 1,
+              await accounts[2].getAddress()
+            )
         ).to.be.revertedWith(
-          'The index have to be within the range of claimed amount of accounts'
+          'missing account position must be to the left of the submitted index'
         )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              requestedIndex + 400,
+              await accounts[2].getAddress()
+            )
+        ).to.be.revertedWith(
+          'missing account position must be to the left of the submitted index'
+        )
+      })
+
+      it('first account missing', async () => {
+        const cheat = new Map(map)
+        cheat.delete(await accounts[0].getAddress())
+        const ct = getTree(cheat)
+        proposedRootHash = ct.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('250000000000000000000000000'),
+            2
+          )
+
+        // expect(await verifyOnChain(ct, 0, accounts[2])).to.be.true
+        // expect(await verifyOnChain(ct, 1, accounts[2])).to.be.true
+        await verifyOnChain(ct, 0, accounts[2])
+        await verifyOnChain(ct, 1, accounts[2])
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[2].getAddress(),
+              0,
+              await accounts[0].getAddress()
+            )
+        )
+          .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
+          .to.emit(rootHashProposal, 'RootHashRejection')
+      })
+
+      it('last account missing', async () => {
+        const cheat = new Map(map)
+        cheat.delete(await accounts[amountOfAccounts - 1].getAddress())
+        const ct = getTree(cheat)
+        proposedRootHash = ct.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('150000000000000000000000000'),
+            2
+          )
+
+        // expect(await verifyOnChain(ct, 0, accounts[2])).to.be.true
+        // expect(await verifyOnChain(ct, 1, accounts[2])).to.be.true
+        await verifyOnChain(ct, 0, accounts[2])
+        await verifyOnChain(ct, 1, accounts[2])
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[2].getAddress(),
+              2,
+              await accounts[amountOfAccounts - 1].getAddress()
+            )
+        )
+          .to.emit(rootHashProposal, 'ChallengeMissingAccountSuccess')
+          .to.emit(rootHashProposal, 'RootHashRejection')
+      })
+
+      it('cannot defend challenges on blacklisted addresses', async () => {
+        const POOL_ADDRESS = await rootHashProposal.POOL_ADDRESS()
+        const ECO_ASSOCIATION1 = await rootHashProposal.ECO_ASSOCIATION1()
+        const ECO_ASSOCIATION2 = await rootHashProposal.ECO_ASSOCIATION2()
+        const ECO_INC = await rootHashProposal.ECO_INC()
+
+        const revertMsgs = [
+          'zero',
+          'pool',
+          'association',
+          'association',
+          'eco inc',
+        ]
+        const blacklist = [
+          ethers.constants.AddressZero,
+          POOL_ADDRESS,
+          ECO_ASSOCIATION1,
+          ECO_ASSOCIATION2,
+          ECO_INC,
+          policy.address,
+        ] // all but the policy is sorted
+        blacklist.sort()
+        const policyIndex = blacklist.findIndex((a) => a === policy.address)
+        revertMsgs.splice(policyIndex, 0, 'policy') // in place splicing
+
+        map = new Map([
+          [
+            ethers.constants.AddressZero,
+            BigNumber.from('50000000000000000000000000'),
+          ],
+          [policy.address, BigNumber.from('100000000000000000000000000')],
+          [POOL_ADDRESS, BigNumber.from('150000000000000000000000000')],
+          [ECO_ASSOCIATION1, BigNumber.from('10000000000000000000000000')],
+          [ECO_ASSOCIATION2, BigNumber.from('20000000000000000000000000')],
+          [ECO_INC, BigNumber.from('30000000000000000000000000')],
+        ])
+        tree = getTree(map)
+        proposedRootHash = tree.hash
+
+        await rootHashProposal
+          .connect(accounts[2])
+          .proposeRootHash(
+            proposedRootHash,
+            BigNumber.from('360000000000000000000000000'),
+            revertMsgs.length
+          )
+
+        for (let i = 0; i < revertMsgs.length; i++) {
+          await rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(await accounts[2].getAddress(), i)
+          const a = answer(tree, i)
+
+          await expect(
+            rootHashProposal
+              .connect(accounts[2])
+              .respondToChallenge(
+                await accounts[1].getAddress(),
+                a[1].reverse(),
+                a[0].account,
+                a[0].balance,
+                a[0].sum,
+                i
+              )
+          ).to.be.revertedWith(
+            `The ${revertMsgs[i]} address not allowed in Merkle tree`
+          )
+        }
+      })
+
+      it('cannot claimMissingAccount for blacklisted addresses', async () => {
+        const POOL_ADDRESS = await rootHashProposal.POOL_ADDRESS()
+        const ECO_ASSOCIATION1 = await rootHashProposal.ECO_ASSOCIATION1()
+        const ECO_ASSOCIATION2 = await rootHashProposal.ECO_ASSOCIATION2()
+        const ECO_INC = await rootHashProposal.ECO_INC()
+        const addresses = [
+          await accounts[0].getAddress(),
+          await accounts[1].getAddress(),
+          await accounts[2].getAddress(),
+        ]
+        const poolArray = addresses.slice()
+        poolArray.push(POOL_ADDRESS)
+        const poolPos = poolArray.sort().indexOf(POOL_ADDRESS)
+
+        const association1Array = addresses.slice()
+        association1Array.push(ECO_ASSOCIATION1)
+        const association1Pos = association1Array
+          .sort()
+          .indexOf(ECO_ASSOCIATION1)
+
+        const association2Array = addresses.slice()
+        association2Array.push(ECO_ASSOCIATION2)
+        const association2Pos = association2Array
+          .sort()
+          .indexOf(ECO_ASSOCIATION2)
+
+        const ecoIncArray = addresses.slice()
+        ecoIncArray.push(ECO_INC)
+        const ecoIncPos = ecoIncArray.sort().indexOf(ECO_INC)
+
+        const policyArray = addresses.slice()
+        policyArray.push(policy.address)
+        const policyPos = policyArray.sort().indexOf(policy.address)
+
+        for (let i = 0; i < 3; i++) {
+          await rootHashProposal
+            .connect(accounts[1])
+            .challengeRootHashRequestAccount(await accounts[0].getAddress(), i)
+          const a = answer(tree, i)
+
+          await rootHashProposal
+            .connect(accounts[0])
+            .respondToChallenge(
+              await accounts[1].getAddress(),
+              a[1].reverse(),
+              a[0].account,
+              a[0].balance,
+              a[0].sum,
+              i
+            )
+        }
+
+        /*
+         * cannot actually test the same revert with the zero address as you
+         * cannot give voting power to the zero address currently
+         */
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              poolPos,
+              POOL_ADDRESS
+            )
+        ).to.be.revertedWith('The pool address not allowed in Merkle tree')
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              association1Pos,
+              ECO_ASSOCIATION1
+            )
+        ).to.be.revertedWith(
+          'The association address not allowed in Merkle tree'
+        )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              association2Pos,
+              ECO_ASSOCIATION2
+            )
+        ).to.be.revertedWith(
+          'The association address not allowed in Merkle tree'
+        )
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              ecoIncPos,
+              ECO_INC
+            )
+        ).to.be.revertedWith('The eco inc address not allowed in Merkle tree')
+
+        await expect(
+          rootHashProposal
+            .connect(accounts[1])
+            .claimMissingAccount(
+              await accounts[0].getAddress(),
+              policyPos,
+              policy.address
+            )
+        ).to.be.revertedWith('The policy address not allowed in Merkle tree')
       })
     })
 
@@ -1288,9 +1627,13 @@ describe('InflationRootHashProposal', () => {
             await accounts[0].getAddress()
           )
           expect(rhp.lastLiveChallenge).to.equal(0)
+          const firstIndex = 0
           let tx = await rootHashProposal
             .connect(accounts[1])
-            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 0)
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              firstIndex
+            )
           let t = await getTime(tx)
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
@@ -1299,10 +1642,14 @@ describe('InflationRootHashProposal', () => {
 
           /* another challenger comes in, last live challenge gets updated */
 
+          const secondIndex = 1
           await time.increase(3600 * 10)
           tx = await rootHashProposal
             .connect(accounts[2])
-            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 1)
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              secondIndex
+            )
           t = await getTime(tx)
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
@@ -1311,14 +1658,35 @@ describe('InflationRootHashProposal', () => {
 
           /* time passes, first challenger comes back, lastLiveChallenge remain the same. */
 
+          const thirdIndex = 2
           await time.increase(3600 * 10)
           await rootHashProposal
             .connect(accounts[1])
-            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 2)
+            .challengeRootHashRequestAccount(
+              await accounts[0].getAddress(),
+              thirdIndex
+            )
           rhp = await rootHashProposal.rootHashProposals(
             await accounts[0].getAddress()
           )
           expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 25)
+
+          // second challenger gets responded to, lastLiveChallenge is increased
+          const a = answer(tree, secondIndex)
+          rootHashProposal
+            .connect(accounts[0])
+            .respondToChallenge(
+              await accounts[2].getAddress(),
+              a[1].reverse(),
+              a[0].account,
+              a[0].balance,
+              a[0].sum,
+              secondIndex
+            )
+          rhp = await rootHashProposal.rootHashProposals(
+            await accounts[0].getAddress()
+          )
+          expect(rhp.lastLiveChallenge).to.equal(t + 3600 * 26)
         })
 
         it('doesnt allow a challenge past the time limit', async () => {
@@ -1512,43 +1880,56 @@ describe('InflationRootHashProposal', () => {
         })
 
         it('challengeEnds correct calculation', async () => {
-          await rootHashProposal
-            .connect(accounts[1])
-            .proposeRootHash(
-              BigNumber.from(proposedRootHash).add(1).toHexString(),
-              totalSum,
-              10
-            )
-          for (let i = 0; i < 3; i += 1) {
+          // 2 challenges in 2 different hours
+          for (let i = 0; i < 2; i += 1) {
             await rootHashProposal
               .connect(accounts[2])
               .challengeRootHashRequestAccount(
-                await accounts[1].getAddress(),
+                await accounts[0].getAddress(),
                 i
               )
             await time.increase(3600)
           }
-          await time.increase(3600 * 15)
-          for (let i = 0; i < 3; i += 1) {
+
+          // increase to hour 25
+          await time.increase(3600 * 23)
+
+          // respond to each initial challenges
+          // each is an additional hour time increase
+          for (let i = 0; i < 2; i += 1) {
+            const a = answer(tree, i)
             await rootHashProposal
-              .connect(accounts[2])
-              .challengeRootHashRequestAccount(
-                await accounts[1].getAddress(),
-                i + 3
+              .connect(accounts[0])
+              .respondToChallenge(
+                await accounts[2].getAddress(),
+                a[1].reverse(),
+                a[0].account,
+                a[0].balance,
+                a[0].sum,
+                i
               )
             await time.increase(3600)
           }
-          await time.increase(3600 * 7)
+
+          // increase to hour 28 - 1 min, 2 challenges and 2 responses (4 hours added), currently still in window
+          await time.increase(3540)
+
+          // successfully challenge again
           await rootHashProposal
             .connect(accounts[2])
-            .challengeRootHashRequestAccount(await accounts[1].getAddress(), 6)
-          await time.increase(3600 * 3)
-          expect(
+            .challengeRootHashRequestAccount(await accounts[0].getAddress(), 2)
+
+          // 5 total actions, increase to hour 29, just out of window with 24 + 5
+          // removing the extra minute causes the next challenge
+          // to revert with 'Index already challenged' instead
+          await time.increase(3600 + 60)
+
+          await expect(
             rootHashProposal
               .connect(accounts[2])
               .challengeRootHashRequestAccount(
-                await accounts[1].getAddress(),
-                7
+                await accounts[0].getAddress(),
+                2
               )
           ).to.be.revertedWith('Time to submit additional challenges is over')
         })

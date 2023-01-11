@@ -32,10 +32,6 @@ contract Lockup is PolicedUtils, TimeUtils {
          * Calculated upon deposit
          */
         uint256 ecoDepositReward;
-        /** Timestamp for withdrawing without penalty
-         * Calculated by taking the deposit time and adding duration
-         */
-        uint256 lockupEnd;
         /** Address the lockup has delegated the deposited funds to
          * Either the depositor or their primary delegate at time of deposit
          */
@@ -155,7 +151,7 @@ contract Lockup is PolicedUtils, TimeUtils {
             "Withdrawals can only be made for accounts with valid deposits"
         );
 
-        bool early = getTime() < _deposit.lockupEnd;
+        bool early = getTime() < depositWindowEnd + duration;
 
         require(_allowEarly || !early, "Only depositor may withdraw early");
 
@@ -193,14 +189,24 @@ contract Lockup is PolicedUtils, TimeUtils {
             "Transfer Failed"
         );
 
-        DepositRecord storage _deposit = deposits[_who];
+        address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
         uint256 _inflationMult = ecoToken.getPastLinearInflation(block.number);
         uint256 _gonsAmount = _amount * _inflationMult;
-        address _primaryDelegate = ecoToken.getPrimaryDelegate(_who);
 
-        ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
+        DepositRecord storage _deposit = deposits[_who];
+        uint256 depositGons = _deposit.gonsDepositAmount;
+        address depositDelegate = _deposit.delegate;
 
-        _deposit.lockupEnd = getTime() + duration;
+        if (depositGons > 0 && _primaryDelegate != depositDelegate) {
+            ecoToken.undelegateAmountFromAddress(depositDelegate, depositGons);
+            ecoToken.delegateAmount(
+                _primaryDelegate,
+                _gonsAmount + depositGons
+            );
+        } else {
+            ecoToken.delegateAmount(_primaryDelegate, _gonsAmount);
+        }
+
         _deposit.ecoDepositReward += (_amount * interest) / INTEREST_DIVISOR;
         _deposit.gonsDepositAmount += _gonsAmount;
         _deposit.delegate = _primaryDelegate;

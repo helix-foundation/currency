@@ -14,9 +14,9 @@ import { Supervisor } from '../../supervisor/supervisor'
 import { TimeGovernor } from '../../supervisor/timeGovernor'
 import { CommunityGovernor } from '../../supervisor/communityGovernor'
 
-const time = require('../utils/time.ts')
+import { ecoFixture } from '../utils/fixtures'
 
-const { ecoFixture } = require('../utils/fixtures')
+import time from '../utils/time'
 
 const ID_TRUSTED_NODES = ethers.utils.solidityKeccak256(
   ['string'],

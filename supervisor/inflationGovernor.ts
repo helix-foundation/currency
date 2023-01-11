@@ -19,6 +19,8 @@ import {
 } from '../typechain-types'
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
 import { EcoSnapshotQueryResult, ECO_SNAPSHOT } from './ECO_SNAPSHOT'
+import { logError, SupervisorError } from './logError'
+import { fetchLatestBlock } from './tools'
 
 const { getPrimal, getTree, answer } = require('../tools/randomInflationUtils')
 
@@ -36,6 +38,17 @@ const ID_ECO = ethers.utils.solidityKeccak256(['string'], ['ECO'])
 const DEFAULT_INFLATION_MULTIPLIER = ethers.BigNumber.from(
   '1000000000000000000'
 )
+
+const BLACKLIST = [
+  ethers.constants.AddressZero,
+  '0x98830c37aa6abdae028bea5c587852c569092d71', // Eco Association
+  '0xa201d3c815ac9d4d8830fb3de2b490b5b0069aca', // Eco Inc.
+  '0x99f98ea4a883db4692fa317070f4ad2dc94b05ce', // Eco Association
+  '0xab86356eDbba19D35f63712dB5CDb5E1b05F1e08', // Testnet Pool
+  '0x09bc52b9eb7387ede639fc10ce5fa01cbcbf2b17', // Mainnet ECO~USDC Pool
+
+  // policy address pushed during construction
+]
 
 const newInflationEvent = 'NewInflation'
 const entropyVDFSeedCommitEvent = 'EntropyVDFSeedCommit'
@@ -93,6 +106,7 @@ export class InflationGovernor {
     this.policy = rootPolicy
     this.subgraphsUrl = subgraphsUrl
     this.production = production
+    BLACKLIST.push(this.policy.address)
   }
 
   async setup() {
@@ -191,11 +205,7 @@ export class InflationGovernor {
     console.log('trying to commit vdf seed')
 
     let primalNumber: number = 0
-    primalNumber = await getPrimal(
-      (
-        await this.provider.getBlock('latest')
-      ).hash
-    )
+    primalNumber = await getPrimal((await fetchLatestBlock(this.provider)).hash)
     console.log('got primal')
     try {
       tx = await this.randomInflation.setPrimal(primalNumber)
@@ -208,45 +218,56 @@ export class InflationGovernor {
           // done
           this.vdfSeed = await this.randomInflation.entropyVDFSeed()
           console.log(`committed vdf seed: ${this.vdfSeed}`)
-        } else {
-          // shouldnt happen
-          console.log('failed to commit seed')
         }
       }
     } catch (e) {
       // error logging
-      // this gets hit a lot due to setPrimal being kind of finnicky
       console.log('failed setPrimal, trying again')
-      console.log((await this.provider.getBlock('latest')).number)
+      console.log((await fetchLatestBlock(this.provider)).number)
       return await this.commitVdfSeed()
     }
   }
 
   async proveVDF() {
     console.log('trying to prove vdf')
-    // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
-    const difficulty: number = (
-      await this.randomInflation.randomVDFDifficulty()
-    ).toNumber()
-    const [y, Usqrt] = await prove(this.vdfSeed, difficulty)
-    tx = await this.vdfVerifier.start(bnHex(this.vdfSeed), difficulty, bnHex(y))
-    rc = await tx.wait()
-    if (rc.status) {
-      // successfully started
-      try {
-        for (let i = 0; i < difficulty - 1; i++) {
-          const u = Usqrt[i]
-          tx = await this.vdfVerifier.update(bnHex(u))
-          rc = await tx.wait()
-          // emits SuccessfulVerification if successful
+    try {
+      // this.entropyVDFSeed = (await this.randomInflation.entropyVDFSeed()).toString()
+      const difficulty: number = (
+        await this.randomInflation.randomVDFDifficulty()
+      ).toNumber()
+      const [y, Usqrt] = prove(this.vdfSeed, difficulty)
+      tx = await this.vdfVerifier.start(
+        bnHex(this.vdfSeed),
+        difficulty,
+        bnHex(y)
+      )
+      rc = await tx.wait()
+      if (rc.status) {
+        // successfully started
+        try {
+          for (let i = 0; i < difficulty - 1; i++) {
+            const u = Usqrt[i]
+            tx = await this.vdfVerifier.update(bnHex(u))
+            rc = await tx.wait()
+            // emits SuccessfulVerification if successful
+          }
+          this.vdfOutput = bnHex(y)
+        } catch (e) {
+          // error logging
+          logError({
+            type: SupervisorError.VerifyVDF,
+            error: e,
+          })
+          console.log('failed vdfVerification')
+          // have to start again from setPrimal
         }
-        this.vdfOutput = bnHex(y)
-      } catch (e) {
-        console.log(e)
-        // error logging
-        console.log('failed vdfVerification')
-        // have to start again from setPrimal
       }
+    } catch (e) {
+      // error logging
+      logError({
+        type: SupervisorError.StartVDF,
+        error: e,
+      })
     }
   }
 
@@ -262,7 +283,10 @@ export class InflationGovernor {
       }
     } catch (e) {
       // error logging
-      console.log(e)
+      logError({
+        type: SupervisorError.SubmitVDF,
+        error: e,
+      })
     }
   }
 
@@ -284,9 +308,14 @@ export class InflationGovernor {
       rc = await tx.wait()
     } catch (e) {
       // error logging
-      // need to send more ECO to supervisor address
-      console.log(e)
+      logError({
+        type: SupervisorError.ApproveInflationFee,
+        error: e,
+      })
     }
+
+    // check the supervisor's eco balance
+    this.checkEcoBalance()
 
     try {
       tx = await this.inflationRootHashProposal.proposeRootHash(
@@ -304,14 +333,36 @@ export class InflationGovernor {
         this.newChallengerSubmissionEnds =
           rhp.newChallengerSubmissionEnds.toNumber()
         this.lastLiveChallenge = rhp.lastLiveChallenge.toNumber()
-      } else {
-        // shouldn't happen
-        console.log('failed to propose')
       }
     } catch (e) {
       // error logging
-      console.log(e)
+      logError({
+        type: SupervisorError.ProposeRootHash,
+        error: e,
+      })
+      // proposing the root hash failed
       setTimeout(this.proposeRootHash.bind(this), 1000)
+    }
+  }
+
+  async checkEcoBalance() {
+    try {
+      // check eco balance
+      // log error if balance is less than 2x the proposer fee
+      const balance = await this.eco.balanceOf(await this.wallet.getAddress())
+      const proposerFee = await this.inflationRootHashProposal.PROPOSER_FEE()
+      if (balance.lt(proposerFee.mul(2))) {
+        logError({
+          type: SupervisorError.LowEcoBalance,
+          context: `Supervisor Balance: ${ethers.utils.formatUnits(
+            balance
+          )} ECO, inflation proposer fee is ${ethers.utils.formatUnits(
+            proposerFee
+          )}`,
+        })
+      }
+    } catch (err) {
+      console.log(err)
     }
   }
 
@@ -344,20 +395,20 @@ export class InflationGovernor {
       rc = await tx.wait()
       if (rc.status) {
         console.log('responded!')
-      } else {
-        // shouldnt happen
-        console.log('failed to respond to challenge')
       }
     } catch (e) {
       // error logging
-      console.log(e)
+      logError({
+        type: SupervisorError.RespondToChallenge,
+        error: e,
+      })
       await this.respondToChallenge(challenger, index)
     }
   }
 
   async checkRootHashStatus() {
     if (this.newChallengerSubmissionEnds > 0) {
-      const block = await this.provider.getBlock('latest')
+      const block = await fetchLatestBlock(this.provider)
       if (
         block.timestamp > this.newChallengerSubmissionEnds &&
         block.timestamp > this.lastLiveChallenge
@@ -393,7 +444,10 @@ export class InflationGovernor {
           }
         } catch (e) {
           // error logging
-          console.log(e)
+          logError({
+            type: SupervisorError.CheckRootHashStatus,
+            error: e,
+          })
         }
       }
     }
@@ -410,10 +464,12 @@ export class InflationGovernor {
         query: ECO_SNAPSHOT,
         variables: { blockNumber: block },
       })
-    return this.balanceInflationAdjustment(accountsSnapshotQuery) as [
-      string,
-      ethers.BigNumber
-    ][]
+
+    const adjustedBalances = this.balanceInflationAdjustment(
+      accountsSnapshotQuery
+    ) as [string, ethers.BigNumber][]
+
+    return adjustedBalances.filter((account) => !BLACKLIST.includes(account[0]))
   }
 
   balanceInflationAdjustment(accountsSnapshotQuery: EcoSnapshotQueryResult) {

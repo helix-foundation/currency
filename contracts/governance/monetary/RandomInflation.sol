@@ -233,7 +233,7 @@ contract RandomInflation is PolicedUtils, TimeUtils {
         );
         require(numRecipients == 0, "The sale can only be started once");
 
-        /* This sets the amount of recipients we will iterate through later, it is important
+        /* This sets the amount of recipients to be iterated through later, it is important
         this number stay reasonable from gas consumption standpoint */
         numRecipients = _numRecipients;
         unclaimedRewards = _numRecipients;

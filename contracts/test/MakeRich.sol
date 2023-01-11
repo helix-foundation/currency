@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../policy/Policy.sol";
 import "../currency/IECO.sol";
-import "../governance/community/Proposal.sol";
+import "../governance/community/proposals/Proposal.sol";
 
 /** @title MakeRich
  * A proposal to mint new currency into a particular account, making the account
@@ -55,7 +55,7 @@ contract MakeRich is Policy, Proposal {
         bytes32 _ecoId = keccak256("ECO");
 
         // The token has security allowing only 'Inflation' to mint,
-        // but right now we're executing with absolute privileges
+        // but right now this function is executing with absolute privileges
         // so just impersonate *being* Inflation
 
         // Another alternative is to policyCommand inflation to

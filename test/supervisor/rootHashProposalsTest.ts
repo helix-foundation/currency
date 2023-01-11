@@ -13,13 +13,13 @@ import { CurrencyGovernor } from '../../supervisor/currencyGovernor'
 import { BigNumber, Signer } from 'ethers'
 import { TimeGovernor } from '../../supervisor/timeGovernor'
 
+import { ecoFixture } from '../utils/fixtures'
+import time from '../utils/time'
+
 const {
   getCommit,
   getFormattedBallot,
 } = require('../../tools/test/currencyGovernanceVote')
-const time = require('../utils/time.ts')
-
-const { ecoFixture } = require('../utils/fixtures')
 
 describe('RandomInflation [@group=13]', () => {
   let alice: Signer

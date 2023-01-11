@@ -2,6 +2,7 @@
   "production": false,
   "verbose": true,
   "ganache": true,
+  "webrpc": "https://goerli.infura.io/v3/da99ebc8c0964bb8bb757b6f8cc40f1f",
   "from": "0x8981f8cbe9a797b9adac0730da85582b2164114e934e2b6aed5de5c785c0b4a6",
   "deployTokens": false,
   "deployGovernance": true,

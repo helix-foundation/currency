@@ -73,3 +73,10 @@ out/
 yarn.lock
 typechain/
 a.out
+.DS_Store
+
+
+#Publish artifacts
+package
+lib
+libTest

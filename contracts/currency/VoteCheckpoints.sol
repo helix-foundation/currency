@@ -225,7 +225,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         returns (uint256)
     {
         require(
-            blockNumber <= block.number,
+            blockNumber < block.number,
             "VoteCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(checkpoints[account], blockNumber);
@@ -245,7 +245,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         returns (uint256)
     {
         require(
-            blockNumber <= block.number,
+            blockNumber < block.number,
             "VoteCheckpoints: block not yet mined"
         );
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
@@ -259,16 +259,16 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         view
         returns (uint256)
     {
-        // We run a binary search to look for the last checkpoint taken before `blockNumber`.
+        // This function runs a binary search to look for the last checkpoint taken before `blockNumber`.
         //
         // During the loop, the index of the wanted checkpoint remains in the range [low-1, high).
         // With each iteration, either `low` or `high` is moved towards the middle of the range to maintain the invariant.
-        // - If the middle checkpoint is after `blockNumber`, we look in [low, mid)
-        // - If the middle checkpoint is before or equal to `blockNumber`, we look in [mid+1, high)
-        // Once we reach a single value (when low == high), we've found the right checkpoint at the index high-1, if not
-        // out of bounds (in which case we're looking too far in the past and the result is 0).
-        // Note that if the latest checkpoint available is exactly for `blockNumber`, we end up with an index that is
-        // past the end of the array, so we technically don't find a checkpoint after `blockNumber`, but it works out
+        // - If the middle checkpoint is after `blockNumber`, the next iteration looks in [low, mid)
+        // - If the middle checkpoint is before or equal to `blockNumber`, the next iteration looks in [mid+1, high)
+        // Once it reaches a single value (when low == high), it has found the right checkpoint at the index high-1, if not
+        // out of bounds (in which case it's looking too far in the past and the result is 0).
+        // Note that if the latest checkpoint available is exactly for `blockNumber`, it will end up with an index that is
+        // past the end of the array, so this technically doesn't find a checkpoint after `blockNumber`, but the result is
         // the same.
 
         uint256 ckptsLength = ckpts.length;
@@ -494,6 +494,11 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         address to,
         uint256 amount
     ) internal virtual override {
+        if (from == to) {
+            // self transfers require no change in delegation and can be the source of exploits
+            return;
+        }
+
         // if the address has delegated, they might be transfering tokens allotted to someone else
         if (!isOwnDelegate(from)) {
             uint256 _undelegatedAmount = _balances[from] +
@@ -521,7 +526,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
         }
 
         address _destPrimaryDelegate = _primaryDelegates[to];
-        // saving gas by manually doing isOwnDelegate since we already need to read the data for this conditional
+        // saving gas by manually doing isOwnDelegate since this function already needs to read the data for this conditional
         if (_destPrimaryDelegate != address(0)) {
             _delegates[to][_destPrimaryDelegate] += amount;
             _delegatedTotals[to] += amount;
@@ -589,7 +594,7 @@ abstract contract VoteCheckpoints is ERC20Pausable, DelegatePermit {
             return delta;
         }
 
-        // else, we iterate on the existing checkpoints as per usual
+        // else, iterate on the existing checkpoints as per usual
         Checkpoint storage newestCkpt = ckpts[pos - 1];
 
         uint256 oldWeight = newestCkpt.value;

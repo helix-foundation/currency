@@ -190,7 +190,7 @@ describe('Lockup [@group=3]', () => {
 
     describe('after the lockup window', () => {
       beforeEach(async () => {
-        await time.increase(3600 * 24 * 21.1)
+        await time.increase(3600 * 24 * (2 + 21.1))
       })
 
       it('rewards late withdrawal', async () => {
@@ -228,7 +228,7 @@ describe('Lockup [@group=3]', () => {
           .mint(await charlie.getAddress(), 1000000000)
         await eco.connect(charlie).approve(lockup.address, 1000000000)
         await lockup.connect(charlie).deposit(1000000000)
-        await time.increase(3600 * 24 * 21.1)
+        await time.increase(3600 * 24 * (2 + 21.1))
       })
 
       it('correctly rewards the aggrergate of deposits', async () => {
@@ -280,7 +280,7 @@ describe('Lockup [@group=3]', () => {
 
       describe('after the lockup window', () => {
         beforeEach(async () => {
-          await time.increase(3600 * 24 * 7.1)
+          await time.increase(3600 * 24 * (2 + 7.1))
         })
 
         it('rewards late withdrawal', async () => {
@@ -311,25 +311,27 @@ describe('Lockup [@group=3]', () => {
     })
 
     it('lockup has no voting power', async () => {
+      await time.advanceBlock()
       const lockupPower = await eco.getPastVotes(
         lockup.address,
-        await time.latestBlock()
+        (await time.latestBlock()) - 1
       )
       expect(lockupPower).to.equal(0)
     })
 
     it('users have correct voting power', async () => {
+      await time.advanceBlock()
       const alicePower = await eco.getPastVotes(
         alice.address,
-        await time.latestBlock()
+        (await time.latestBlock()) - 1
       )
       const bobPower = await eco.getPastVotes(
         bob.address,
-        await time.latestBlock()
+        (await time.latestBlock()) - 1
       )
       const charliePower = await eco.getPastVotes(
         charlie.address,
-        await time.latestBlock()
+        (await time.latestBlock()) - 1
       )
 
       expect(alicePower).to.equal(5000000000)
@@ -344,17 +346,18 @@ describe('Lockup [@group=3]', () => {
       })
 
       it('lockup power stays, unlocked power moves', async () => {
+        await time.advanceBlock()
         const alicePower = await eco.getPastVotes(
           alice.address,
-          await time.latestBlock()
+          (await time.latestBlock()) - 1
         )
         const bobPower = await eco.getPastVotes(
           bob.address,
-          await time.latestBlock()
+          (await time.latestBlock()) - 1
         )
         const charliePower = await eco.getPastVotes(
           charlie.address,
-          await time.latestBlock()
+          (await time.latestBlock()) - 1
         )
 
         expect(alicePower).to.equal(3000000000)
@@ -363,20 +366,21 @@ describe('Lockup [@group=3]', () => {
       })
 
       it('nonintuitive behavior fixes when bob withdraws', async () => {
-        await time.increase(3600 * 24 * 21.1)
+        await time.increase(3600 * 24 * (2 + 21.1))
         await lockup.connect(bob).withdraw()
+        await time.advanceBlock()
 
         const alicePower = await eco.getPastVotes(
           alice.address,
-          await time.latestBlock()
+          (await time.latestBlock()) - 1
         )
         const bobPower = await eco.getPastVotes(
           bob.address,
-          await time.latestBlock()
+          (await time.latestBlock()) - 1
         )
         const charliePower = await eco.getPastVotes(
           charlie.address,
-          await time.latestBlock()
+          (await time.latestBlock()) - 1
         )
 
         expect(alicePower).to.equal(2000000000)

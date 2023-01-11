@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../../policy/Policy.sol";
-import "./Proposal.sol";
+import "./proposals/Proposal.sol";
 import "../../policy/PolicedUtils.sol";
 import "../../utils/TimeUtils.sol";
 import "./VotingPower.sol";
@@ -73,7 +73,7 @@ contract PolicyVotes is VotingPower, TimeUtils {
      */
     uint256 public blockNumber;
 
-    /** Here we only call inherited constructor, and pass parameters to it
+    /** This constructor just passes the call to the super constructor
      */
     // solhint-disable-next-line no-empty-blocks
     constructor(Policy _policy, ECO _ecoAddr) VotingPower(_policy, _ecoAddr) {}
