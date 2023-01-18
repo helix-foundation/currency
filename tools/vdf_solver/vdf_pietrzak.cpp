@@ -117,17 +117,17 @@ void fmpz_to_uint8(uint8_t* valbytes, fmpz_t val, size_t type_width) {
   cerr << "valsize = " << valsize << endl;
   char valchars [valsize];
   fmpz_get_str(valchars, HEX_BASE, val);
-  cerr << valchars << endl;
   // this cheats with the charmap
-  // if(valsizeodd) { valchars[valsize-1] = 0x00; };
+  if(valsizeodd) { valchars[valsize-1] = 0x00; };
+  cerr << valchars << endl;
 
   for(size_t i = 0; i < valsize; i+=2) {
     valbytes[type_width - i/2 - 1] = charmap[valchars[i]] | charmap[valchars[i + 1]]<<4;
-    cerr << (int)valbytes[type_width - i/2 - 1];
+    cerr << (int)valbytes[type_width - i/2 - 1] << " - ";
   }
   for(size_t i = valsize; i < 2*type_width; i+=2) {
     valbytes[type_width - i/2 - 1] = 0x00;
-    cerr << hex_dict[valbytes[type_width - i/2 - 1] & 0x0F];
+    cerr << hex_dict[valbytes[type_width - i/2 - 1] & 0x0F] << " - ";
   }
   cerr << endl;
 }
@@ -227,7 +227,8 @@ void evaluate(fmpz_t y, fmpz *usqrts, fmpz_t x, long t) {
 
     // rhash holdes the hashed value, rstring holds the string for passing to flint
     uint8_t rhash [HASH_SIZE];
-    char rstring [HASH_SIZE*2];
+    // each byte takes up two characters and then need a null terminator
+    char rstring [HASH_SIZE*2 + 1];
 
     // convert ui to bytes, padded to the size of the modulus bytewidth
     uint8_t uibytes [MODULUS_SIZE];
@@ -268,6 +269,25 @@ void evaluate(fmpz_t y, fmpz *usqrts, fmpz_t x, long t) {
 }
 
 int main(int argc, char* argv[]) {
+  // uint8_t rhash [HASH_SIZE];
+  // uint8_t inputBytes[] = {0x00,0x01,0x11,0x11};
+  // char outTest [8];
+  // uint8_t byteTest [4];
+  // fmpz_t test;
+  // char outString [65];
+  // fmpz_init(test);
+  // fmpz_set_str(test, "111111", 16);
+  // fmpz_to_uint8(byteTest, test, 4);
+  // cerr << byteTest << endl;
+  // convert_to_hex_str(outTest,byteTest,3);
+  // cerr << outTest << endl;
+  // Keccak256::getHash(byteTest,4,rhash);
+  // for(size_t i = 0; i < HASH_SIZE; i++) {
+  //   cerr << (int)rhash[i] << " - ";
+  // }
+  // cerr << endl;
+  // convert_to_hex_str(outString, rhash, HASH_SIZE);
+  // cerr << outString << endl;
   cerr << "start" << endl;
   // first arg is t, the number of iterations
   long t = stol(argv[1]);
@@ -288,6 +308,6 @@ int main(int argc, char* argv[]) {
   evaluate(y, usqrts, x, t);
 
   // pipe y and proof vals to the output
-	cout << fmpz_get_str(NULL, HEX_BASE, y) << endl << fmpz_get_str(NULL, HEX_BASE*(t-1), usqrts);
-	cout << flush;
+	cerr << fmpz_get_str(NULL, HEX_BASE, y) << endl << fmpz_get_str(NULL, HEX_BASE*(t-1), usqrts);
+	cerr << flush;
 }
