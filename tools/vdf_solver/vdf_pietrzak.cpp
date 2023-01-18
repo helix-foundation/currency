@@ -125,7 +125,7 @@ void fmpz_to_uint8(uint8_t* valbytes, fmpz_t val, size_t type_width) {
   bool valsizeodd;
   if((valsize & 1) == 1) { valsize++; valsizeodd = true; };
   cerr << "valsize = " << valsize << endl;
-  char valchars [valsize];
+  char valchars [valsize+1];
   fmpz_get_str(valchars, HEX_BASE, val);
   // this cheats with the charmap
   if(valsizeodd) { valchars[valsize-1] = 0x00; };
