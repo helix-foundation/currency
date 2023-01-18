@@ -44,6 +44,12 @@ function prove(x, tinput, n = defn) {
 
   const Usqrt = Array(t - 1) // set of t-1 proofs to return
 
+  // let xyhash = ethers.utils.solidityKeccak256(
+  //   ['uint256', 'bytes'],
+  //   [x.toString(), bnHex(y, bytelen)]
+  // )
+  // console.log(xyhash)
+
   for (let i = 0; i < t - 1; i += 1) {
     const uiprime = xi.redPow(two.pow(new BN((1 << (t - i - 1)) - 1))) // this is sqrt u_i
     const ui = uiprime.redSqr() // u_i = u_i' ^ 2
@@ -63,6 +69,7 @@ function prove(x, tinput, n = defn) {
         i + 1,
       ]
     )
+    // console.log(res)
     const rbn = new BN(res.slice(2), 16)
 
     // set up x_i+1 and y_i+1
