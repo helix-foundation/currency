@@ -77,6 +77,16 @@ void convert_to_hex_str(char* str, uint8_t* val, size_t val_count) {
 	}
 }
 
+void print_bytes(uint8_t* val, size_t val_len) {
+  cerr << "print_bytes" << endl;
+  char printString[2*val_len + 1];
+  printString[2*val_len] = '\0';
+
+  convert_to_hex_str(printString, val, val_len);
+
+  cerr << "value as string " << printString << endl;
+}
+
 void get_exponent(fmpz_t exponent, long t, long i1, long i2) {
   cerr << "get_exponent" << endl;
   // this will store the first exponent
@@ -122,12 +132,12 @@ void fmpz_to_uint8(uint8_t* valbytes, fmpz_t val, size_t type_width) {
   cerr << valchars << endl;
 
   for(size_t i = 0; i < valsize; i+=2) {
-    valbytes[type_width - i/2 - 1] = charmap[valchars[i]] | charmap[valchars[i + 1]]<<4;
-    cerr << (int)valbytes[type_width - i/2 - 1] << " - ";
+    valbytes[type_width - i/2 - 1] = charmap[valchars[valsize - i - 1]] | charmap[valchars[valsize - i - 2]]<<4;
+    cerr << (int)valbytes[type_width - i/2 - 1] << ",";
   }
   for(size_t i = valsize; i < 2*type_width; i+=2) {
     valbytes[type_width - i/2 - 1] = 0x00;
-    cerr << hex_dict[valbytes[type_width - i/2 - 1] & 0x0F] << " - ";
+    cerr << hex_dict[valbytes[type_width - i/2 - 1] & 0x0F] << ",";
   }
   cerr << endl;
 }
@@ -192,21 +202,24 @@ void evaluate(fmpz_t y, fmpz *usqrts, fmpz_t x, long t) {
   // convert y to bytes, padded to the size of the modulus bytewidth
   uint8_t ybytes [MODULUS_SIZE];
   fmpz_to_uint8(ybytes, y, MODULUS_SIZE);
-
-  cerr << "y as bytes" << hex << ybytes << endl;
+  print_bytes(ybytes, MODULUS_SIZE);
 
   // xyhash combines x and y
   size_t xysize = UINT256_SIZE + MODULUS_SIZE;
+  cerr << xysize << endl;
   uint8_t xypacked [xysize];
   // copy data into packed array
   copy(xbytes, xbytes + UINT256_SIZE, xypacked);
-  copy(ybytes, xbytes + MODULUS_SIZE, xypacked + UINT256_SIZE);
+  print_bytes(xypacked, xysize);
+
+  copy(ybytes, ybytes + MODULUS_SIZE, xypacked + UINT256_SIZE);
+  print_bytes(xypacked, xysize);
 
   // xyhash holdes the hashed value for reuse later in the calculation
   uint8_t xyhash [HASH_SIZE];
   cerr << "hashing xy" << endl;
   Keccak256::getHash(xypacked,xysize,xyhash);
-  cerr << xyhash << endl;
+  print_bytes(xyhash, HASH_SIZE);
 
   // loop from 1 to t - 1 to form the elements of the proof
   for(long i = 1; i < t; i++) {
@@ -229,6 +242,7 @@ void evaluate(fmpz_t y, fmpz *usqrts, fmpz_t x, long t) {
     uint8_t rhash [HASH_SIZE];
     // each byte takes up two characters and then need a null terminator
     char rstring [HASH_SIZE*2 + 1];
+    rstring[HASH_SIZE*2] = '\0';
 
     // convert ui to bytes, padded to the size of the modulus bytewidth
     uint8_t uibytes [MODULUS_SIZE];
@@ -238,20 +252,26 @@ void evaluate(fmpz_t y, fmpz *usqrts, fmpz_t x, long t) {
     uint8_t ibytes [UINT256_SIZE];
     // we can safely assume that i is less than 256
     ibytes[UINT256_SIZE-1] = (uint8_t)i;
-    for(size_t i = 0; i < UINT256_SIZE - 1; i++) {
-      ibytes[i] = 0x00;
+    for(size_t j = 0; j < UINT256_SIZE - 1; j++) {
+      ibytes[j] = 0x00;
     }
 
     // rhash combines the previously calculated xyhash with ui and i
     size_t r_input_size = HASH_SIZE + MODULUS_SIZE + UINT256_SIZE;
     uint8_t r_input_packed [r_input_size];
 
+    cerr << "calc r" << endl;
+
     // copy data into packed array
     copy(xyhash, xyhash + HASH_SIZE, r_input_packed);
+    print_bytes(r_input_packed, r_input_size);
     copy(uibytes, uibytes + MODULUS_SIZE, r_input_packed + HASH_SIZE);
+    print_bytes(r_input_packed, r_input_size);
     copy(ibytes, ibytes + UINT256_SIZE, r_input_packed + HASH_SIZE + MODULUS_SIZE);
+    print_bytes(r_input_packed, r_input_size);
 
-    Keccak256::getHash(r_input_packed,UINT256_SIZE + MODULUS_SIZE,rhash);
+    Keccak256::getHash(r_input_packed,r_input_size,rhash);
+    print_bytes(rhash, HASH_SIZE);
     convert_to_hex_str(rstring, rhash, HASH_SIZE);
 
     // set r to the hash value
@@ -288,6 +308,7 @@ int main(int argc, char* argv[]) {
   // cerr << endl;
   // convert_to_hex_str(outString, rhash, HASH_SIZE);
   // cerr << outString << endl;
+  cerr << "******************************************************************" << endl;
   cerr << "start" << endl;
   // first arg is t, the number of iterations
   long t = stol(argv[1]);
@@ -308,6 +329,6 @@ int main(int argc, char* argv[]) {
   evaluate(y, usqrts, x, t);
 
   // pipe y and proof vals to the output
-	cerr << fmpz_get_str(NULL, HEX_BASE, y) << endl << fmpz_get_str(NULL, HEX_BASE*(t-1), usqrts);
-	cerr << flush;
+	cerr << fmpz_get_str(NULL, HEX_BASE, y) << endl;
+  cerr << fmpz_get_str(NULL, HEX_BASE, usqrts);
 }
