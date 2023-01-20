@@ -1021,6 +1021,31 @@ describe('InflationRootHashProposal', () => {
             )
         ).to.be.revertedWith('The policy address not allowed in Merkle tree')
       })
+
+      it('cannot checkRootHashStatus for uninitialized root hash', async () => {
+        const unproposedAccount = await accounts[4].getAddress()
+        await expect(
+          rootHashProposal.checkRootHashStatus(unproposedAccount)
+        ).to.be.revertedWith('No such proposal')
+        const proposal = await rootHashProposal.rootHashProposals(
+          unproposedAccount
+        )
+        expect(proposal.status === 0).to.be.true
+        expect(!proposal.initialized).to.be.true
+      })
+
+      it('cannot claimFee for uninitialized proposals', async () => {
+        const unproposedAccount = await accounts[4].getAddress()
+        await expect(
+          rootHashProposal.claimFee(unproposedAccount)
+        ).to.be.revertedWith('No such proposal')
+      })
+
+      it('cannot claimFee for uninitialized proposals', async () => {
+        await expect(
+          rootHashProposal.claimFee(await accounts[0].getAddress())
+        ).to.be.revertedWith('Cannot claimFee on pending proposal')
+      })
     })
 
     context('verify challenge white box testing', async () => {
