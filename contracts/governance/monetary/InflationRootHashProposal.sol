@@ -21,6 +21,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
     }
 
     enum RootHashStatus {
+        Uninitialized,
         Pending,
         Rejected,
         Accepted
@@ -215,6 +216,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
         require(!proposal.initialized, "Root hash already proposed");
 
         proposal.initialized = true;
+        proposal.status = RootHashStatus.Pending;
         proposal.rootHash = _proposedRootHash;
         proposal.totalSum = _totalSum;
         proposal.amountOfAccounts = _amountOfAccounts;
@@ -507,6 +509,7 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     function checkRootHashStatus(address _proposer) external {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
+        require(proposal.initialized, "No such proposal");
 
         if (
             acceptedRootHash == 0 &&
@@ -563,13 +566,15 @@ contract InflationRootHashProposal is PolicedUtils, TimeUtils {
      */
     function claimFeeFor(address _who, address _proposer) public {
         RootHashProposal storage proposal = rootHashProposals[_proposer];
-        InflationChallenge storage challenge = proposal.challenges[_who];
+        require(proposal.initialized, "No such proposal");
         require(
             proposal.status != RootHashStatus.Pending,
-            "Can't claim _fee on pending root hash proposal"
+            "Cannot claimFee on pending proposal"
         );
 
         require(!proposal.claimed[_who], "fee already claimed");
+
+        InflationChallenge storage challenge = proposal.challenges[_who];
 
         if (_who == _proposer) {
             require(

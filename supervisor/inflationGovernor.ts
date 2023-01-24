@@ -440,7 +440,7 @@ export class InflationGovernor {
             const rhp = await this.inflationRootHashProposal.rootHashProposals(
               supervisorAddress
             )
-            console.log(`expected status = 2, got ${rhp.status}`)
+            console.log(`expected status = 3, got ${rhp.status}`)
           }
         } catch (e) {
           // error logging
