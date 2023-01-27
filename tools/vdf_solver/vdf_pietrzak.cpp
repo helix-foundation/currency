@@ -15,15 +15,11 @@ run:
 **/
 
 #include <iostream>
-// #include <cassert>
 
 #include <flint/fmpz.h>
 #include <flint/fmpz_mod.h>
 
 #include "keccak/Keccak256.cpp"
-
-#include <time.h>
-#include <vector>
 
 using namespace std;
 
@@ -359,8 +355,8 @@ int main(int argc, char* argv[]) {
   evaluate(y, usqrts, x, t);
 
   // pipe y and proof vals to the output
-	cerr << fmpz_get_str(NULL, HEX_BASE, y) << endl;
+	std::cout << fmpz_get_str(NULL, HEX_BASE, y) << endl;
   for (size_t i = 0; i<t-1; i++) {
-    cerr << fmpz_get_str(NULL, HEX_BASE, usqrts[i]) << endl;
+    std::cout << fmpz_get_str(NULL, HEX_BASE, usqrts[i]) << endl;
   }
 }
