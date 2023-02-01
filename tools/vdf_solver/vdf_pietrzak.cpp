@@ -2,7 +2,7 @@
 
 /**
 dependencies:
-flint 2.8.0 https://flintlib.org/doc/index.html
+flint 2.9.0 https://flintlib.org/doc/index.html
 used functions documented here:
 fmpz.h https://flintlib.org/doc/fmpz.html
 fmpz_mod.h https://flintlib.org/doc/fmpz_mod.html
@@ -111,19 +111,22 @@ void fmpz_to_uint8(uint8_t* valbytes, fmpz_t val, size_t type_width) {
   char valchars [valsize+1];
   fmpz_get_str(valchars, HEX_BASE, val);
 
-  // this would be necessary, but it seems like fmpz only counts whole bytes
-  // even though it outputs the number of chars
-  // bool valsizeodd;
-  // if((valsize & 1) == 1) { valsize++; valsizeodd = true; };
-  // if(valsizeodd) { valchars[valsize-1] = 0x00; };
+  // need to consider whole bytes (2 characters per byte)
+  // cerr << valsize << endl;
+  bool valsizeOdd = false;
+  if((valsize & 1) == 1) { valsizeOdd = true; };
  
   // cerr << valchars << endl;
 
   // now that we have the string representation of the number, we have to convert to bytes
   // i runs over the string array, but we grab two characters at a time
-  for(size_t i = 0; i < valsize; i+=2) {
+  for(size_t i = 0; i < valsize-1; i+=2) {
     valbytes[type_width - i/2 - 1] = charmap[valchars[valsize - i - 1]] | charmap[valchars[valsize - i - 2]]<<4;
     // cerr << (int)valbytes[type_width - i/2 - 1] << ",";
+  }
+  if(valsizeOdd) {
+    valsize++;
+    valbytes[type_width - valsize/2] = charmap[valchars[0]];
   }
   // since fmpz doesn't give leading zeros, we need to pad up to the type width
   for(size_t i = valsize; i < 2*type_width; i+=2) {
