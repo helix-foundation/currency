@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  unit-tests:
-    name: Unit Tests
+  tests:
+    name: tests
     runs-on: ubuntu-latest
 
     steps:
@@ -18,6 +18,9 @@ jobs:
       - name: install npm
         shell: bash -l {0}
         run: nvm install
+
+      - name: npm check ver
+        run: npm -v
 
       - name: install dependencies
         run: npm ci
