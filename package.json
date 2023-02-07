@@ -17,6 +17,7 @@
     "lint:prettier": "prettier --check 'contracts/**/*.sol'",
     "build": "hardhat compile",
     "test": "hardhat test",
+    "testParallel": "hardhat test --parallel",
     "clean": "hardhat clean",
     "snapshots": "UPDATE_SNAPSHOT=1 hardhat test",
     "debug": "hardhat test",

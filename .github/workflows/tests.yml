@@ -26,4 +26,4 @@ jobs:
         run: npm run build
 
       - name: run unit tests
-        run: npm run test
+        run: npm run testParallel
