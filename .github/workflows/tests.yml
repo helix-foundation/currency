@@ -19,9 +19,6 @@ jobs:
         shell: bash -l {0}
         run: nvm install
 
-      - name: npm check ver
-        run: npm -v
-
       - name: install dependencies
         run: npm ci
 
