@@ -15,10 +15,8 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v1
 
-      - name: install nvm
-        run: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
       - name: install npm
+        shell: bash -l {0}
         run: nvm install
 
       - name: install dependencies
