@@ -48,7 +48,8 @@ contract IRHPUpgrade is Policy, Proposal {
     /** A URL where more details can be found.
      */
     function url() public pure override returns (string memory) {
-        return "https://forums.eco.org/t/egp-005-inflationroothashproposal-upgrade-2/";
+        return
+            "https://forums.eco.org/t/egp-005-inflationroothashproposal-upgrade-2/";
     }
 
     /** This is executed in the storage context of the root policy contract.
