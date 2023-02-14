@@ -40,11 +40,6 @@ async function parseOptions() {
       defaultValue: false,
     },
     {
-      name: 'supervise',
-      type: Boolean,
-      defaultValue: false,
-    },
-    {
       name: 'deployTokens',
       type: Boolean,
       defaultValue: false,
@@ -82,9 +77,7 @@ async function parseOptions() {
   }
 
   if (options.config) {
-    const s = options.supervise
     options = loadConfig(options.config)
-    options.supervise = s || options.supervise
     console.log('loaded config from file, CLI options not used')
   }
 
@@ -230,27 +223,12 @@ async function deployEco() {
   console.log(`Policy at ${options.policyAddress}`)
 }
 
-async function supervise() {
-  if (options.supervise) {
-    console.log('storing supervisor inputs')
-    const content = `${options.webrpc ? options.webrpc : defaultRpc}\n${
-      options.policyAddress
-    }`
-    fs.writeFile('tools/supervisorInputs.txt', content, (e) => {
-      if (e) {
-        console.log(e)
-      }
-    })
-  }
-}
-
 ;(async () => {
   try {
     await parseOptions()
     await initEthers()
     await initUsers()
     await deployEco()
-    await supervise()
   } catch (e) {
     console.log(e.toString(), e)
   }

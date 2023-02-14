@@ -2,7 +2,6 @@
     "production": false,
     "verbose": true,
     "ganache": true,
-    "supervise": true,
     "deployTokens": true,
     "deployGovernance": true,
     "initialECO": [
