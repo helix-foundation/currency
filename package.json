@@ -84,7 +84,7 @@
     "fs-extra": "^11.1.0",
     "ganache-cli": "6.12.2",
     "glob": "^8.0.3",
-    "hardhat": "2.11.2",
+    "hardhat": "2.12.7",
     "hardhat-gas-reporter": "1.0.9",
     "mocha-chai-jest-snapshot": "1.1.4",
     "prettier": "2.7.1",
