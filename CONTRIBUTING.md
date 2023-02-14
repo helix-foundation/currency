@@ -47,13 +47,8 @@ Any new tests should be added in the `test/` directory following the existing
 directory structure as best as possible.
 
 #### Contract deployment tests
-The CI tool will boot a ganache instance and run `tools/eco.js` against it.
-You can simulate this locally by starting `ganache-cli` and running
-`node tools/deploy`, or using docker:
-```
-docker build -t currency .
-docker run currency
-```
+The deployment file `tools/eco.js` can be run with the flag `ganache: true` to
+test deployment on a local ganache chain.
 
 #### Coverage reporting
 Eco's coverage reporting toolchain works by inserting events into the solidity
