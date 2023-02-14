@@ -20,7 +20,7 @@ jobs:
         run: nvm install
 
       - name: install dependencies
-        run: npm ci
+        run: npm install
 
       - name: compile contracts
         run: npm run build
