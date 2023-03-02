@@ -21,9 +21,9 @@ jobs:
 
       - run: install node
         uses: actions/setup-node@v3
-          with:
-            node-version-file: '.nvmrc'
-            cache: 'npm'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
       - name: install dependencies
         run: npm ci
