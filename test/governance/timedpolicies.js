@@ -3,7 +3,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('TimedPolicies [@group=12]', () => {
+describe('TimedPolicies [@group=3]', () => {
   let policy
   let timedPolicies
 

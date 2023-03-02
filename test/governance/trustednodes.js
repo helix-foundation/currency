@@ -3,7 +3,7 @@ const { expect } = require('chai')
 const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 
-describe('TrustedNodes [@group=7]', () => {
+describe('TrustedNodes [@group=4]', () => {
   let policy
   let trustedNodes
   let faucet

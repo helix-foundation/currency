@@ -19,7 +19,7 @@ const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
 
-describe('Proposal Circuit Breaker Change [@group=9]', () => {
+describe('Proposal Circuit Breaker Change [@group=2]', () => {
   let policy
   let eco
   let ecox

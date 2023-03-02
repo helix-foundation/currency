@@ -3,7 +3,7 @@ const { expect } = require('chai')
 const { deploy } = require('../utils/contracts')
 const { singletonsFixture } = require('../utils/fixtures')
 
-describe('PolicyInit [@group=11]', () => {
+describe('PolicyInit [@group=2]', () => {
   const fixture = async () => {
     const accounts = await ethers.getSigners()
     const registry = await singletonsFixture(accounts[0])

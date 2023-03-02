@@ -3,7 +3,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('ecoXStaking [@group=12]', () => {
+describe('ecoXStaking [@group=3]', () => {
   let alice
   let bob
   let charlie
