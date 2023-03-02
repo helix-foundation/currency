@@ -7,7 +7,7 @@ const MAX_ACCOUNT_BALANCE = BigNumber.from(
   '115792089237316195423570985008687907853269984665640564039457' // 584007913129639935', removed as there are 18 digits used to store inflation
 )
 
-describe('IECO [@group=3]', () => {
+describe('IECO [@group=5]', () => {
   let eco
   let faucet
   let accounts

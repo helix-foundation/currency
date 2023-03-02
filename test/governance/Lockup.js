@@ -9,7 +9,7 @@ const {
 } = require('../../tools/test/currencyGovernanceVote')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 
-describe('Lockup [@group=3]', () => {
+describe('Lockup [@group=1]', () => {
   let alice
   let bob
   let charlie

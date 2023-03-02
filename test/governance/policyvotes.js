@@ -7,7 +7,7 @@ const { deploy } = require('../utils/contracts')
 const { PANIC_CODES } = require('@nomicfoundation/hardhat-chai-matchers/panic')
 const { BigNumber } = require('ethers')
 
-describe('PolicyVotes [@group=3]', () => {
+describe('PolicyVotes [@group=1]', () => {
   let policy
   let eco
   let initInflation

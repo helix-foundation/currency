@@ -2,7 +2,7 @@ const { expect } = require('chai')
 
 const { deploy, deployProxy } = require('../utils/contracts')
 
-describe('EcoInitializable [@group=3]', () => {
+describe('EcoInitializable [@group=2]', () => {
   let accounts = []
 
   before(async () => {
