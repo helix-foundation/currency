@@ -17,12 +17,12 @@ jobs:
 
     steps:
       - name: setup environment
-        uses: actions/checkout@v3
-        uses: actions/setup-node@v3
-          with:
-            node-version-file: '.nvmrc'
-            cache: 'npm'
-        run: npm ci
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
 
       - name: compile contracts
         run: npm run build
