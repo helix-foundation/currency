@@ -29,8 +29,5 @@ jobs:
       - name: compile contracts
         run: npm run build
 
-      - name: set test group for mocha grep
-        run: echo "MOCHA_GREP=<<# matrix.testGroup >>\[@group=<< matrix.testGroup >>\]<</ matrix.testGroup >>" >> $GITHUB_ENV
-
       - name: run unit tests
-        run: npm run testParallel
+        run: npm run testParallel -- --grep "group=${{ matrix.testGroup }}]"
