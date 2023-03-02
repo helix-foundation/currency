@@ -7,7 +7,7 @@ const { BigNumber } = ethers
 
 const { deploy } = require('../utils/contracts')
 
-describe('BigNumber [@group=3]', () => {
+describe('BigNumber [@group=2]', () => {
   let bignum
 
   before(async () => {
