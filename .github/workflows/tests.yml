@@ -1,8 +1,5 @@
 name: tests
 
-environment:
-  name: ci_test_approval
-
 on:
   push:
     branches:
@@ -13,6 +10,9 @@ jobs:
   tests:
     name: tests
     runs-on: ubuntu-latest
+
+    environment:
+      name: ci_test_approval
 
     strategy:
       matrix:
