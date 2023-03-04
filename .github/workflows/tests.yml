@@ -1,5 +1,8 @@
 name: tests
 
+environment:
+  name: ci_test_approval
+
 on:
   push:
     branches:
