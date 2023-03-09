@@ -1,0 +1,31 @@
+{
+  "chainId": "1",
+  "createdAt": 1678395808038,
+  "meta": {
+    "txBuilderVersion": "1.10.0"
+  },
+  "transactions": [
+    {
+      "to": "0x8dBF9A4c99580fC7Fd4024ee08f3994420035727",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [],
+        "name": "pause",
+        "payable": false
+      },
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xcccD1Ba9f7acD6117834E0D28F25645dECb1736a",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [],
+        "name": "pause",
+        "payable": false
+      },
+      "contractInputsValues": null
+    }
+  ]
+}
