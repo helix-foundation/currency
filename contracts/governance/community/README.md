@@ -19,7 +19,7 @@ The security of community governance is built off of the network effect of requi
 The process of the Community Governance vote is set to the global Generation Cycle of 14 days. During the first phase (up to 9 days and 16 hours), Proposals can be submitted and users may perform a signal vote for each one. If any proposal succeeds the signal vote threshold, the initial phase ends and a voting phase immediately starts (lasting 3 days). After the voting phase is finished, there is a delay period of 1 day before enaction (if the proposal passed). This all completes once within the course of a generation and is restarted when the generation increments.
 
 ## Install
-See the [main README](../../README.md) for installation instructions.
+See the [main README](../../../README.md) for installation instructions.
 
 ## Usage
 The `PolicyProposals` and `PolicyVotes` contracts handle the vote process. `PolicyProposals` is cloned each generation by the [TimedPolicies](../README.md#timedpolicies) contract and clones the `PolicyVotes` contract when the process moves to a vote. Voting ability calculation is implemented in the `VotingPower` contract. Ability to vote with ECOx is managed by the `ECOxStaking` contract. Sample proposals all follow the format of the `Proposal` contract and will not be discussed individually.
@@ -325,7 +325,7 @@ Fetches the total voting power at a given block. This is accomplished by binary 
   - can only be invoked by the policy proposals contract or the policy votes contract
 
 ## Contributing
-See the [main README](../../README.md).
+See the [main README](../../../README.md).
 
 ## License
-See the [main README](../../README.md).
+See the [main README](../../../README.md).
