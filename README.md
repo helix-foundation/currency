@@ -141,7 +141,7 @@ Common deploy issues and solutions (use verbose flag):
 ## Contributing
 Contributions are welcome. Please submit any issues as issues on GitHub, and open a pull request with any contributions.
 
-Please ensure that the test suite passes (run `npm test`) and that the linters run at least as cleanly as they did when you started (run `npm run lint`). Pull requests that do not pass the test suite, or that produce significant lint errors will likely not be accepted.
+Please ensure that the test suite passes (run `npm test`) and that the linters run at least as cleanly as they did when you started (run `npm run lint`). Pull requests that do not pass the test suite or that produce significant lint errors will likely not be accepted.
 
 See the [contributing guide](./CONTRIBUTING.md) for more details.
 
