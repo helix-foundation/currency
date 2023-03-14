@@ -35,7 +35,7 @@ Deflation (or a similar slowing of the economy) is achieved by issuing lockup co
 This policy lever scales the balance for every single address by the same percentage amount. It increases or decreases the total supply while leaving the relative purchasing power of each user, relative to each other, the same. This can be used to change the unit value of ECO when compared to other currencies as an example. See the [InflationCheckpoints](../../currency/README.md#inflationcheckpoints) contract for documentation.
 
 ## Install
-See the [main README](../../README.md) for installation instructions.
+See the [main README](../../../README.md) for installation instructions.
 
 ## Usage
 The governance contracts deploy as a policy hierarchy implemented in Eco's [policy framework](../policy/README.md). The [CurrencyTimer](../README.md#currencytimer) contract clones all the relevant contracts each generation to manage and enact the different policies.
@@ -719,7 +719,7 @@ Updates the trustee rewards that they have earned for the year and then sends th
   - Can only call this once the block timestamp is past the `yearEnd` term.
 
 ## Contributing
-See the [main README](../../README.md).
+See the [main README](../../../README.md).
 
 ## License
-See the [main README](../../README.md).
+See the [main README](../../../README.md).
