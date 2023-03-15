@@ -15,7 +15,7 @@ const params = ethers.utils.defaultAbiCoder.encode(
   [`0x${Buffer.from(ethers.utils.randomBytes(20)).toString('hex')}`]
 )
 
-describe('Nicks Method', () => {
+describe('Nicks Method [@group=1]', () => {
   describe('generateTx', () => {
     it('generates a usable transaction', async () => {
       const tx = generateTx(

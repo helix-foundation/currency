@@ -5,7 +5,7 @@ const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
 
-describe('PolicyProposals [@group=7]', () => {
+describe('PolicyProposals [@group=4]', () => {
   let alice
   let bob
   let charlie

@@ -13,7 +13,7 @@ const {
 const { BigNumber } = ethers
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 
-describe('RandomInflation [@group=6]', () => {
+describe('RandomInflation [@group=5]', () => {
   let policy
   let eco
   let ecox

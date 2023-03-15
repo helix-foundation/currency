@@ -4,7 +4,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('Multivote [@group=8]', () => {
+describe('Multivote [@group=4]', () => {
   let policy
   let eco
   let ecox

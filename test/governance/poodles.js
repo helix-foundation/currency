@@ -15,7 +15,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Proposal Contract Template Upgrade [@group=9]', () => {
+describe('E2E Proposal Contract Template Upgrade [@group=2]', () => {
   let policy
   let eco
   let timedPolicies

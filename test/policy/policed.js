@@ -4,7 +4,7 @@ const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const { deploy } = require('../utils/contracts')
 const { singletonsFixture } = require('../utils/fixtures')
 
-describe('Policed [@group=11]', () => {
+describe('Policed [@group=2]', () => {
   const fixture = async () => {
     const accounts = await ethers.getSigners()
     await singletonsFixture((await ethers.getSigners())[0])

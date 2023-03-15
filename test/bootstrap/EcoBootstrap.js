@@ -2,7 +2,7 @@ const { expect } = require('chai')
 
 const { deploy } = require('../utils/contracts')
 
-describe('EcoBootstrap [@group=2]', () => {
+describe('EcoBootstrap [@group=1]', () => {
   let bootstrap
   let owner
   const numPlaceholders = ethers.BigNumber.from(20)

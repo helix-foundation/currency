@@ -3,7 +3,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Policy External Transparent Upgradable Proxy Change [@group=9]', () => {
+describe('E2E Policy External Transparent Upgradable Proxy Change [@group=2]', () => {
   let policy
   let eco
   let timedPolicies

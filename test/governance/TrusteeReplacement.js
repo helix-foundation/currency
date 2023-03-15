@@ -14,7 +14,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Proposal Trustee Cohort Change [@group=9]', () => {
+describe('E2E Proposal Trustee Cohort Change [@group=2]', () => {
   describe('new cohort adds 2 trustees, keeps one, removes one', async () => {
     let policy
     let eco

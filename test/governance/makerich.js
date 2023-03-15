@@ -20,7 +20,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Funding an Account with a Proposal [@group=4]', () => {
+describe('E2E Funding an Account with a Proposal [@group=2]', () => {
   let policy
   let eco
   let timedPolicies

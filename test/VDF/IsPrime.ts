@@ -6,7 +6,7 @@ const bigintCryptoUtils = require('bigint-crypto-utils')
 
 const MILLER_RABIN_ITERATIONS = 25
 
-describe('IsPrime [@group=8]', () => {
+describe('IsPrime [@group=1]', () => {
   let instance: IsPrime
 
   before(async () => {

@@ -5,7 +5,7 @@ const { singletonsFixture } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 const { BigNumber } = ethers
 
-describe('TokenInit [@group=11]', () => {
+describe('TokenInit [@group=2]', () => {
   const fixture = async () => {
     await singletonsFixture((await ethers.getSigners())[0])
     const policy = await deploy('PolicyTestPolicy')
