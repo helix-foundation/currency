@@ -3,7 +3,7 @@ const time = require('../utils/time.ts')
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 const { deploy } = require('../utils/contracts')
 
-describe('E2E Election of First Cohort and Funding of TrustedNodes [@group=9]', async () => {
+describe('E2E Election of First Cohort and Funding of TrustedNodes [@group=2]', async () => {
   let policy
   let eco
   let ecox

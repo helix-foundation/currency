@@ -8,7 +8,7 @@ const { singletonsFixture } = require('../utils/fixtures')
  * Most cases are covered by functionality required by other suites. This
  * suite primarily ensures that rarely-used functionality works correctly.
  */
-describe('Policy [@group=11]', () => {
+describe('Policy [@group=2]', () => {
   const fixture = async () => {
     const accounts = await ethers.getSigners()
     const registry = await singletonsFixture(accounts[0])

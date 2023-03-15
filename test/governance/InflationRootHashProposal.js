@@ -21,7 +21,7 @@ const {
 
 const { ecoFixture, policyFor } = require('../utils/fixtures')
 
-describe('InflationRootHashProposal', () => {
+describe('InflationRootHashProposal [@group=3]', () => {
   let rootHashProposal
   let initInflation
   let timedPolicies

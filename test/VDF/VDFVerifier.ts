@@ -15,7 +15,7 @@ function vdfTrace(m: string) {
   // console.log(m);
 }
 
-describe('VDFVerifier [@group=6]', () => {
+describe('VDFVerifier [@group=5]', () => {
   const t = 10
   const xbn = new BN(
     '33489018563487178283330196417991470257782488426382532093764016677620128062547'

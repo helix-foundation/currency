@@ -1,0 +1,62 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    name: linter, depcheck and prettier
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: compile contracts
+        run: npm run build
+
+      - name: check lint
+        run: npm run lint
+
+
+  tests:
+    name: unit test suite
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ci_test_approval
+
+    strategy:
+      matrix:
+        testGroup: [1, 2, 3, 4, 5]
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: compile contracts
+        run: npm run build
+
+      - name: run unit tests
+        run: npm run testParallel -- --grep "group=${{ matrix.testGroup }}]"

@@ -5,7 +5,7 @@ const { deploy } = require('../utils/contracts')
 
 const stake = ethers.utils.parseEther('20000')
 
-describe('E2E Test to access funds in treasury [@group=9]', () => {
+describe('E2E Test to access funds in treasury [@group=2]', () => {
   describe('sends eco and ecox from the root policy to the charlie address', async () => {
     let policy
     let eco

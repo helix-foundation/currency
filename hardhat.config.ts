@@ -104,6 +104,7 @@ const config: HardhatUserConfig = {
     grep: process.env.MOCHA_GREP ? new RegExp(process.env.MOCHA_GREP) : new RegExp(),
     //@ts-ignore
     invert: process.env.MOCHA_INVERT,
+    timeout: 60000,
   },
   etherscan: {
     apiKey: "ETHERSCAN_API_KEY"

@@ -6,7 +6,7 @@ const { BigNumber } = require('ethers')
 const { ecoFixture } = require('../utils/fixtures')
 const { permit } = require('../../tools/test/permit')
 
-describe('ECOx', () => {
+describe('ECOx [@group=2]', () => {
   let policy
   let eco
   let ecox
