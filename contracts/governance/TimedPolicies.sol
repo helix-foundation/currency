@@ -92,7 +92,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
             "Cannot update the generation counter so soon"
         );
 
-        nextGenerationWindowOpen = time + MIN_GENERATION_DURATION;
+        nextGenerationWindowOpen += MIN_GENERATION_DURATION;
         generation++;
 
         CurrencyGovernance bg = CurrencyGovernance(
