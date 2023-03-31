@@ -71,6 +71,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
 
         generation = TimedPolicies(_self).generation();
         notificationHashes = TimedPolicies(_self).getNotificationHashes();
+        nextGenerationWindowOpen = getTime(); // generation is incremented immediately
     }
 
     function getNotificationHashes() public view returns (bytes32[] memory) {

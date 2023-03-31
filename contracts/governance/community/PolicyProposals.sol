@@ -6,6 +6,7 @@ import "../../currency/IECO.sol";
 import "../../policy/PolicedUtils.sol";
 import "./proposals/Proposal.sol";
 import "./PolicyVotes.sol";
+import "../TimedPolicies.sol";
 import "./VotingPower.sol";
 import "../../utils/TimeUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -185,8 +186,8 @@ contract PolicyProposals is VotingPower, TimeUtils {
 
         // implementation addresses are left as mutable for easier governance
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
-
-        proposalEnds = getTime() + PROPOSAL_TIME;
+        TimedPolicies timedPolicies = TimedPolicies(policyFor(ID_TIMED_POLICIES));
+        proposalEnds = timedPolicies.nextGenerationWindowOpen() - timedPolicies.MIN_GENERATION_DURATION() + PROPOSAL_TIME ;
         blockNumber = block.number;
     }
 

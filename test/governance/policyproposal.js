@@ -49,6 +49,22 @@ describe('PolicyProposals [@group=4]', () => {
     return proposals
   }
 
+  async function getTimes(timedPolicies, policyProposals) {
+    const currTime = Number(await time.latestBlockTimestamp())
+    const nextGenerationWindowOpen = Number(await timedPolicies.nextGenerationWindowOpen())
+    const proposalEnds = Number(await policyProposals.proposalEnds())
+
+    console.log(currTime)
+    console.log(nextGenerationWindowOpen)
+    console.log(proposalEnds)
+
+    const propDurationDays = (proposalEnds - currTime) / (3600*24)
+    const genDurationDays = (nextGenerationWindowOpen - currTime) / (3600*24)
+
+    console.log(`days to propose: ${propDurationDays}`)
+    console.log(`days of generation: ${genDurationDays}`)
+  }
+
   describe('registerProposal', () => {
     let policyProposals
     let testProposal
@@ -674,6 +690,26 @@ describe('PolicyProposals [@group=4]', () => {
         await expect(policyProposals.destruct()).to.be.revertedWith(
           'Must refund all missed proposals first'
         )
+      })
+    })
+  })
+
+  describe('initialization on generationIncrement', () => {
+    context('make sure proposalEnds is set properly', () => {
+      it('corresponds to nextGenerationWindowOpen', async () => {
+        policyProposals = await getProposals()
+        timedPolicies = await ethers.getContractAt('TimedPolicies', await policy.policyFor(ethers.utils.solidityKeccak256(['string'],['TimedPolicies'])))
+        let proposalTime = await policyProposals.PROPOSAL_TIME()
+
+        await time.increase(3600 * 24 * 14)
+        await timedPolicies.incrementGeneration()
+        policyProposals = await getProposals()
+
+        let nextWindowOpen = await timedPolicies.nextGenerationWindowOpen()        
+        let proposalEnds = await policyProposals.proposalEnds()
+
+        expect(proposalEnds).to.equal(ethers.BigNumber.from(nextWindowOpen).sub(3600*24*14).add(ethers.BigNumber.from(proposalTime)))
+        expect(proposalEnds).to.be.lessThan(nextWindowOpen)
       })
     })
   })
