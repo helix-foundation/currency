@@ -187,7 +187,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         // implementation addresses are left as mutable for easier governance
         policyVotesImpl = PolicyProposals(_self).policyVotesImpl();
         TimedPolicies timedPolicies = TimedPolicies(policyFor(ID_TIMED_POLICIES));
-        proposalEnds = timedPolicies.nextGenerationWindowOpen() - timedPolicies.MIN_GENERATION_DURATION() + PROPOSAL_TIME ;
+        proposalEnds = timedPolicies.nextGenerationWindowOpen() - timedPolicies.MIN_GENERATION_DURATION() + PROPOSAL_TIME;
         blockNumber = block.number;
     }
 
