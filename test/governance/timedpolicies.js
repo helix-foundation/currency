@@ -64,27 +64,42 @@ describe('TimedPolicies [@group=2]', () => {
   })
 
   describe('incrementGeneration', () => {
-    context("nextGenerationWindowOpen should be pegged to value from prev generation", () => {
-      it('sets time correctly when increment is called exactly at generation end', async () => {
-        const prevNextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
-        const duration = await timedPolicies.MIN_GENERATION_DURATION()
-        await time.increase(duration)
-        let tx = await timedPolicies.incrementGeneration()
-        tx = await tx.wait()
-        const newNextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
-        expect(newNextWindowOpen).to.eq(ethers.BigNumber.from(prevNextWindowOpen).add(ethers.BigNumber.from(duration)))
-      })
+    context(
+      'nextGenerationWindowOpen should be pegged to value from prev generation',
+      () => {
+        it('sets time correctly when increment is called exactly at generation end', async () => {
+          const prevNextWindowOpen =
+            await timedPolicies.nextGenerationWindowOpen()
+          const duration = await timedPolicies.MIN_GENERATION_DURATION()
+          await time.increase(duration)
+          const tx = await timedPolicies.incrementGeneration()
+          await tx.wait()
+          const newNextWindowOpen =
+            await timedPolicies.nextGenerationWindowOpen()
+          expect(newNextWindowOpen).to.eq(
+            ethers.BigNumber.from(prevNextWindowOpen).add(
+              ethers.BigNumber.from(duration)
+            )
+          )
+        })
 
-      it('sets time correctly when increment is called later than generation end', async () => {
-        const prevNextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
-        const duration = await timedPolicies.MIN_GENERATION_DURATION()
-        await time.increase(duration)
-        await time.increase(20000)
-        let tx = await timedPolicies.incrementGeneration()
-        tx = await tx.wait()
-        const newNextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
-        expect(newNextWindowOpen).to.eq(ethers.BigNumber.from(prevNextWindowOpen).add(ethers.BigNumber.from(duration)))
-      })
-    })
+        it('sets time correctly when increment is called later than generation end', async () => {
+          const prevNextWindowOpen =
+            await timedPolicies.nextGenerationWindowOpen()
+          const duration = await timedPolicies.MIN_GENERATION_DURATION()
+          await time.increase(duration)
+          await time.increase(20000)
+          const tx = await timedPolicies.incrementGeneration()
+          await tx.wait()
+          const newNextWindowOpen =
+            await timedPolicies.nextGenerationWindowOpen()
+          expect(newNextWindowOpen).to.eq(
+            ethers.BigNumber.from(prevNextWindowOpen).add(
+              ethers.BigNumber.from(duration)
+            )
+          )
+        })
+      }
+    )
   })
 })

@@ -29,22 +29,6 @@ describe('CurrencyGovernance [@group=4]', () => {
   const votingReward = BigNumber.from(1000000000000000)
   // 76000000000000000
 
-  async function getTimes(timedPolicies, currencyGovernance) {
-    const currTime = Number(await time.latestBlockTimestamp())
-    const nextGenerationWindowOpen = Number(await timedPolicies.nextGenerationWindowOpen())
-    const proposalEnds = Number(await currencyGovernance.proposalEnds())
-
-    console.log(currTime)
-    console.log(nextGenerationWindowOpen)
-    console.log(proposalEnds)
-
-    const propDurationDays = (proposalEnds - currTime) / (3600*24)
-    const genDurationDays = (nextGenerationWindowOpen - currTime) / (3600*24)
-
-    console.log(`days to propose: ${propDurationDays}`)
-    console.log(`days of generation: ${genDurationDays}`)
-  }
-
   before(async () => {
     const accounts = await ethers.getSigners()
     ;[alice, bob, charlie, dave, niko, mila] = accounts
@@ -805,7 +789,7 @@ describe('CurrencyGovernance [@group=4]', () => {
               ).to.equal(0)
             })
 
-            it.only('pays out trustee appropriately in complex case', async () => {
+            it('pays out trustee appropriately in complex case', async () => {
               const trustees = await trustedNodes.connect(alice).numTrustees()
               let daveCurrentVotes = await trustedNodes
                 .connect(dave)
@@ -819,12 +803,12 @@ describe('CurrencyGovernance [@group=4]', () => {
                 votingReward.mul(2 * trustees * 26)
               )
 
-              await time.increase(3600*24*1) //increase one day, roughly the right time for generation increment
+              await time.increase(3600 * 24 * 1) // increase one day, roughly the right time for generation increment
               await timedPolicies.incrementGeneration()
 
-              for(let i = 0; i < 26; i++) {
-                await time.increase(3600*24*14)
-                await timedPolicies.incrementGeneration()  
+              for (let i = 0; i < 26; i++) {
+                await time.increase(3600 * 24 * 14)
+                await timedPolicies.incrementGeneration()
               }
               // await time.increase(3600 * 24 * 14 * 26)
               const tx = await trustedNodes.connect(dave).annualUpdate()
@@ -1173,19 +1157,28 @@ describe('CurrencyGovernance [@group=4]', () => {
             'CurrencyGovernance',
             await policy.policyFor(governanceHash)
           )
-          timedPolicies = await ethers.getContractAt('TimedPolicies', await policy.policyFor(ethers.utils.solidityKeccak256(['string'],['TimedPolicies'])))
-          let proposalTime = await currencyGovernance.PROPOSAL_TIME()
-  
+          timedPolicies = await ethers.getContractAt(
+            'TimedPolicies',
+            await policy.policyFor(
+              ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
+            )
+          )
+          const proposalTime = await currencyGovernance.PROPOSAL_TIME()
+
           await time.increase(3600 * 24 * 14)
           await timedPolicies.incrementGeneration()
           currencyGovernance = await ethers.getContractAt(
             'CurrencyGovernance',
             await policy.policyFor(governanceHash)
           )
-          let nextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
-          let proposalEnds = await currencyGovernance.proposalEnds()
-  
-          expect(proposalEnds).to.equal(ethers.BigNumber.from(nextWindowOpen).sub(3600*24*14).add(ethers.BigNumber.from(proposalTime)))
+          const nextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
+          const proposalEnds = await currencyGovernance.proposalEnds()
+
+          expect(proposalEnds).to.equal(
+            ethers.BigNumber.from(nextWindowOpen)
+              .sub(3600 * 24 * 14)
+              .add(ethers.BigNumber.from(proposalTime))
+          )
           expect(proposalEnds).to.be.lessThan(nextWindowOpen)
         })
       })
