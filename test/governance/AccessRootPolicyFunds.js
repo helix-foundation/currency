@@ -59,7 +59,10 @@ describe('E2E Test to access funds in treasury [@group=2]', () => {
         'AccessRootPolicyFunds',
         await charlie.getAddress(),
         500,
-        200
+        200,
+        "Root Policy Funds Use Template",
+        "Sends ecoAmount and ecoXAmount of ECO and ECOx respectively to recipient",
+        "https://description.of.proposal make this link to a discussion what the funds are used for"
       )
       const name = await accessRootPolicyFunds.name()
       expect(name).to.equal('Root Policy Funds Use Template')
