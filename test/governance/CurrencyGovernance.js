@@ -818,6 +818,10 @@ describe('CurrencyGovernance [@group=4]', () => {
                 trustedNodes.address,
                 votingReward.mul(2 * trustees * 26)
               )
+
+              await time.increase(3600*24*1) //increase one day, roughly the right time for generation increment
+              await timedPolicies.incrementGeneration()
+
               for(let i = 0; i < 26; i++) {
                 await time.increase(3600*24*14)
                 await timedPolicies.incrementGeneration()  
