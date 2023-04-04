@@ -87,9 +87,8 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      * however the structure is extensible to other contracts if needed.
      */
     function incrementGeneration() external {
-        uint256 time = getTime();
         require(
-            time >= nextGenerationWindowOpen,
+            getTime() >= nextGenerationWindowOpen,
             "Cannot update the generation counter so soon"
         );
 

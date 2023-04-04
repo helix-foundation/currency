@@ -488,6 +488,10 @@ describe('Proposal Circuit Breaker Change [@group=2]', () => {
         await timedPolicies.incrementGeneration()
       })
 
+      it('fixes generation alignment', async () => {
+        await timedPolicies.incrementGeneration()
+      })
+
       it('Find the policy proposals instance', async () => {
         const proposalsHash = ethers.utils.solidityKeccak256(
           ['string'],
