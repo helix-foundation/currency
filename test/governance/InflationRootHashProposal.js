@@ -165,7 +165,7 @@ describe('InflationRootHashProposal [@group=3]', () => {
       .propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', '')
 
     await time.increase(3600 * 24 * 10.1)
-    
+
     const bobvote = [
       ethers.utils.randomBytes(32),
       await bob.getAddress(),
