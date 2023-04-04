@@ -165,7 +165,7 @@ describe('InflationRootHashProposal [@group=3]', () => {
       .propose(inflationVote, rewardVote, 0, 0, '1000000000000000000', '')
 
     await time.increase(3600 * 24 * 10.1)
-
+    
     const bobvote = [
       ethers.utils.randomBytes(32),
       await bob.getAddress(),
@@ -197,7 +197,6 @@ describe('InflationRootHashProposal [@group=3]', () => {
     await time.increase(3600 * 24 * 1)
     await governance.updateStage()
     await governance.compute()
-    await time.increase(3600 * 24 * 3)
     const generation = await currencyTimer.currentGeneration()
     await timedPolicies.incrementGeneration()
     const inflationAddr = await currencyTimer.randomInflations(generation)
