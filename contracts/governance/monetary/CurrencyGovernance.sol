@@ -332,7 +332,7 @@ contract CurrencyGovernance is PolicedUtils, TimeUtils, Pausable {
         );
         proposalEnds =
             timedPolicies.nextGenerationWindowOpen() -
-            timedPolicies.MIN_GENERATION_DURATION() +
+            MIN_GENERATION_DURATION +
             PROPOSAL_TIME;
         votingEnds = proposalEnds + VOTING_TIME;
         revealEnds = votingEnds + REVEAL_TIME;

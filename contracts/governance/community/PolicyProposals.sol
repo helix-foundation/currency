@@ -191,7 +191,7 @@ contract PolicyProposals is VotingPower, TimeUtils {
         );
         proposalEnds =
             timedPolicies.nextGenerationWindowOpen() -
-            timedPolicies.MIN_GENERATION_DURATION() +
+            MIN_GENERATION_DURATION +
             PROPOSAL_TIME;
         blockNumber = block.number;
     }
