@@ -56,7 +56,7 @@ contract FixGenerationDrift is Policy, Proposal {
         address _newCurrencyGovernance,
         address _newPolicyProposals
     ) {
-        implementationUpdatingTarget _implementationUpdatingTarget;
+        implementationUpdatingTarget = _implementationUpdatingTarget;
         switcherCurrencyTimer = _switcherCurrencyTimer;
         switcherTimedPolicies = _switcherTimedPolicies;
         newTimedPolicies = _newTimedPolicies;
@@ -89,8 +89,8 @@ contract FixGenerationDrift is Policy, Proposal {
      */
     function enacted(address) public override {
 
-        address _timedPolicies = Policed(policyFor(TIMED_POLICIES_ID));
-        address _currencyTimer = Policed(policyFor(CURRENCY_TIMER_ID));
+        Policed _timedPolicies = Policed(policyFor(TIMED_POLICIES_ID));
+        Policed _currencyTimer = Policed(policyFor(CURRENCY_TIMER_ID));
 
         _timedPolicies.policyCommand(
             implementationUpdatingTarget,

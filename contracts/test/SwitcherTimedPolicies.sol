@@ -46,10 +46,10 @@ contract SwitcherTimedPolicies is TimedPolicies {
         
         This is executed in the storage context of the TimedPolicies contract by the proposal. 
 
-        @param __newPolicyProposalsImpl The new PolicyProposals implementation
+        @param _newPolicyProposalsImpl The new PolicyProposals implementation
 
       */
-    function setPolicyProposalsImpl(address _newImpl) public {
-        policyProposalImpl = _newImpl;
+    function setPolicyProposalsImpl(address _newPolicyProposalsImpl) public {
+        policyProposalImpl = PolicyProposals(_newPolicyProposalsImpl);
     }
 }
