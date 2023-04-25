@@ -41,4 +41,15 @@ contract SwitcherTimedPolicies is TimedPolicies {
     function addNotificationHash(bytes32 _newNotificationHash) public {
         notificationHashes.push(_newNotificationHash);
     }
+
+    /** Function for switching out the PolicyProposals implementation that is cloned every generation
+        
+        This is executed in the storage context of the TimedPolicies contract by the proposal. 
+
+        @param __newPolicyProposalsImpl The new PolicyProposals implementation
+
+      */
+    function setPolicyProposalsImpl(address _newImpl) public {
+        policyProposalImpl = _newImpl;
+    }
 }
