@@ -486,9 +486,7 @@ describe('Proposal Circuit Breaker Change [@group=2]', () => {
       before(async () => {
         await time.increase(3600 * 24 * 14)
         await timedPolicies.incrementGeneration()
-      })
-
-      it('fixes generation alignment', async () => {
+        // fixes generation alignment
         await timedPolicies.incrementGeneration()
       })
 
