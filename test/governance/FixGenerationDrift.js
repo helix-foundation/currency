@@ -15,12 +15,15 @@ const { deploy } = require('../utils/contracts')
 describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let policy
   let eco
-  let ecox
   let timedPolicies
   let currencyGovernance
   let policyProposals
   let policyVotes
   let initInflation
+
+  let nextGenerationWindowOpen
+  let currencyGovernanceProposalEnds
+  let policyProposalsProposalEnds
 
   let newTimedPolicies
   let newPolicyProposals
@@ -30,7 +33,7 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let switcherCurrencyTimer
   let implementationUpdatingTarget
 
-  let proposal
+  let fixGenerationDrift
 
   let alice
   let bob
@@ -38,8 +41,6 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let dave
   let trustedNodes
 
-  // amount of ECOx for staking into ECOxStaking
-  const staked = ethers.utils.parseEther('50')
   // amount of ECO to mint for each account
   const stake = ethers.utils.parseEther('5000000')
 
@@ -54,7 +55,6 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     ;({
       policy,
       eco,
-      currencyTimer,
       faucet: initInflation,
       timedPolicies,
     } = await ecoFixture(trustedNodes))
@@ -97,19 +97,22 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
       )
     )
 
+    // fetch the window closure times to check proposal changes against
+    nextGenerationWindowOpen = await tp.nextGenerationWindowOpen()
+    currencyGovernanceProposalEnds = await cg.proposalEnds()
+    policyProposalsProposalEnds = await pp.proposalEnds()
+
     // these shouldnt be poodles rn, so poke should revert
     await expect(tp.poke()).to.be.reverted
-    await expect(pp.poke()).to.be.reverted
     await expect(cg.poke()).to.be.reverted
+    await expect(pp.poke()).to.be.reverted
   })
 
-  it.only('Constructs the proposal', async () => {
-
-    const oldPolicyProposals = 
+  it('Constructs the proposal', async () => {
     newPolicyProposals = await deploy(
       'PoodlePolicyProposals',
       policy.address,
-      await(
+      await (
         await ethers.getContractAt(
           'PolicyProposals',
           await policyFor(
@@ -121,9 +124,9 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
       eco.address
     )
 
-    console.log(1)
-
-    const randomBytes32 = ['0x9f24c52e0fcd1ac696d00405c3bd5adc558c48936919ac5ab3718fcb7d70f93f']
+    const randomBytes32 = [
+      '0x9f24c52e0fcd1ac696d00405c3bd5adc558c48936919ac5ab3718fcb7d70f93f',
+    ]
     newTimedPolicies = await deploy(
       'PoodleTimedPolicies',
       policy.address,
@@ -131,12 +134,10 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
       randomBytes32
     )
 
-    console.log(2)
-
     newCurrencyGovernance = await deploy(
       'PoodleCurrencyGovernance',
       policy.address,
-      await(
+      await (
         await ethers.getContractAt(
           'CurrencyGovernance',
           await policyFor(
@@ -147,24 +148,43 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
       ).pauser()
     )
 
-    console.log(3)
-
     implementationUpdatingTarget = await deploy('ImplementationUpdatingTarget')
     switcherCurrencyTimer = await deploy('SwitcherCurrencyTimer')
+    switcherTimedPolicies = await deploy('SwitcherTimedPolicies')
 
-    console.log(4)
-
-    proposal = await deploy(
+    fixGenerationDrift = await deploy(
       'FixGenerationDrift',
       implementationUpdatingTarget.address,
       switcherCurrencyTimer.address,
-      ethers.constants.AddressZero, //switcherTimedPolicies, not necessary idt
+      switcherTimedPolicies.address,
       newTimedPolicies.address,
       newCurrencyGovernance.address,
-      ethers.constants.AddressZero //new policyProposals, not necessary idt
+      newPolicyProposals.address
     )
 
-    expect (await proposal.name()).to.eq('Prevent Generation Drift')
+    expect(await fixGenerationDrift.name()).to.eq('Prevent Generation Drift')
+    expect(await fixGenerationDrift.description()).to.eq(
+      'Pegging the start and end times of generations to those of the previous generation. This change also affects the start and end times of the first phase of both monetary and community governance.'
+    )
+    expect(await fixGenerationDrift.url()).to.eq('TBD')
+    expect(await fixGenerationDrift.implementationUpdatingTarget()).to.eq(
+      implementationUpdatingTarget.address
+    )
+    expect(await fixGenerationDrift.switcherCurrencyTimer()).to.eq(
+      switcherCurrencyTimer.address
+    )
+    expect(await fixGenerationDrift.switcherTimedPolicies()).to.eq(
+      switcherTimedPolicies.address
+    )
+    expect(await fixGenerationDrift.newTimedPolicies()).to.eq(
+      newTimedPolicies.address
+    )
+    expect(await fixGenerationDrift.newCurrencyGovernance()).to.eq(
+      newCurrencyGovernance.address
+    )
+    expect(await fixGenerationDrift.newPolicyProposals()).to.eq(
+      newPolicyProposals.address
+    )
   })
 
   it('Find the policy proposals instance', async () => {
@@ -184,11 +204,11 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
       .approve(policyProposals.address, await policyProposals.COST_REGISTER())
     await policyProposals
       .connect(alice)
-      .registerProposal(makePoodlexStaking.address)
+      .registerProposal(fixGenerationDrift.address)
   })
 
   it('Adds stake to the proposal to ensure it goes to a vote', async () => {
-    await policyProposals.connect(bob).support(makePoodlexStaking.address)
+    await policyProposals.connect(bob).support(fixGenerationDrift.address)
     await policyProposals.connect(bob).deployProposalVoting()
   })
 
@@ -216,54 +236,61 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     await policyVotes.execute()
   })
 
-  // it('Moves to the next generation', async () => {
-  //   await time.increase(3600 * 24 * 10)
-  //   await timedPolicies.incrementGeneration()
-  // })
-
-  it('Checks that the ecoxstaking address has changed', async () => {
-    const stakingHash = ethers.utils.solidityKeccak256(
-      ['string'],
-      ['ECOxStaking']
-    )
-    newECOxStaking = await ethers.getContractAt(
-      'PoodlexStaking',
-      await policyFor(policy, stakingHash)
-    )
-    expect(newECOxStaking.address).to.not.equal(ecoXStaking.address)
-    expect(newECOxStaking.address).to.equal(proxyPoodlexStaking.address)
-    expect(await newECOxStaking.implementation()).to.equal(
-      poodlexStaking.address
-    )
+  it('Moves to the next generation, adding 1 extra day to test the fix', async () => {
+    await time.increase(3600 * 24 * 10)
+    // extra day
+    await time.increase(3600 * 24 * 1)
+    await timedPolicies.incrementGeneration()
   })
 
-  it('Checks that the ECO address is the same', async () => {
-    const ecoHash = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-    newECO = await ethers.getContractAt(
-      'PoodleECO',
-      await policyFor(policy, ecoHash)
+  it('poodled everything', async () => {
+    timedPolicies = await ethers.getContractAt(
+      'PoodleTimedPolicies',
+      await policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
+      )
     )
-    expect(newECO.address).to.equal(eco.address)
+
+    currencyGovernance = await ethers.getContractAt(
+      'PoodleCurrencyGovernance',
+      await policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
+    )
+
+    policyProposals = await ethers.getContractAt(
+      'PoodlePolicyProposals',
+      await policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
+      )
+    )
+
+    // these should be poodles now!
+    expect(await timedPolicies.poke()).to.be.string
+    expect(await currencyGovernance.poke()).to.be.string
+    expect(await policyProposals.poke()).to.be.string
   })
 
-  it('Checks that the new contracts are poodles', async () => {
-    const poodles1 = await newECOxStaking.provePoodles()
-    expect(poodles1).to.be.true
-    const poodles2 = await newECO.provePoodles()
-    expect(poodles2).to.be.true
-  })
+  it('Checks that the generation drift things were fixed', async () => {
+    const nextGenerationWindowOpen2 =
+      await timedPolicies.nextGenerationWindowOpen()
+    const currencyGovernanceProposalEnds2 =
+      await currencyGovernance.proposalEnds()
+    const policyProposalsProposalEnds2 = await policyProposals.proposalEnds()
 
-  it('verifies that the ECO contract is as expected', async () => {
-    expect(await newECO.implementation()).to.equal(poodleECO.address)
-    expect(await newECO.pauser()).to.equal(
-      '0xDEADBEeFbAdf00dC0fFee1Ceb00dAFACEB00cEc0'
+    const generationDuration = 3600 * 24 * 14
+
+    expect(nextGenerationWindowOpen2 - nextGenerationWindowOpen).to.eq(
+      generationDuration
     )
-    expect(await newECO.balanceOf(alice.getAddress())).to.equal(
-      stake.sub(await policyProposals.COST_REGISTER())
+    expect(
+      currencyGovernanceProposalEnds2 - currencyGovernanceProposalEnds
+    ).to.eq(generationDuration)
+    expect(policyProposalsProposalEnds2 - policyProposalsProposalEnds).to.eq(
+      generationDuration
     )
-    expect(await newECO.balanceOf(bob.getAddress())).to.equal(stake)
-    expect(await newECO.balanceOf(charlie.getAddress())).to.equal(stake)
-    expect(await newECO.balanceOf(dave.getAddress())).to.equal(stake)
-    expect(await newECO.totalSupply()).to.equal(stake.mul(4))
   })
 })

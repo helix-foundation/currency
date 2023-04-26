@@ -11,8 +11,9 @@ import "../../governance/monetary/CurrencyGovernance.sol";
  * is all that is needed.
  */
 contract PoodleCurrencyGovernance is CurrencyGovernance {
-
-    constructor(Policy _policy, address _initialPauser) CurrencyGovernance(_policy, _initialPauser) {}
+    constructor(Policy _policy, address _initialPauser)
+        CurrencyGovernance(_policy, _initialPauser)
+    {}
 
     function poke() public pure returns (string memory) {
         return "owie!! CurrencyGovernance";

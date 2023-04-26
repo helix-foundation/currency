@@ -3,10 +3,9 @@ pragma solidity ^0.8.0;
 
 import "../../../policy/Policy.sol";
 import "../../../policy/Policed.sol";
-import './Proposal.sol';
+import "./Proposal.sol";
 
 contract FixGenerationDrift is Policy, Proposal {
-    
     // The ID hash for TimedPolicies
     bytes32 public constant TIMED_POLICIES_ID = keccak256("TimedPolicies");
 
@@ -21,7 +20,7 @@ contract FixGenerationDrift is Policy, Proposal {
      * This contract has setter functions and the right storage layout
      */
     address public immutable switcherCurrencyTimer;
-    
+
     /** The address of the switcher contract for TimedPolicies
      * This contract has setter functions and the right storage layout
      */
@@ -73,8 +72,10 @@ contract FixGenerationDrift is Policy, Proposal {
     /** A description of what the proposal does
      */
     function description() public pure override returns (string memory) {
-        return "Pegging the start and end times of generations to those of the previous generation. This change also affects the start and end times of the first phase of both monetary and community governance.";
+        return
+            "Pegging the start and end times of generations to those of the previous generation. This change also affects the start and end times of the first phase of both monetary and community governance.";
     }
+
     /** The URL where more details can be found.
      */
     function url() public pure override returns (string memory) {
@@ -83,30 +84,36 @@ contract FixGenerationDrift is Policy, Proposal {
 
     /** Sets the value of the CurrencyGovernance implementation (bordaImpl) on the
      * CurrencyTimer contract and the values of the PolicyProposal implementation on the
-     * TimedPolicies contract to match those on this contract.  
+     * TimedPolicies contract to match those on this contract.
      *
      * This is executed in the storage context of the root policy contract.
      */
     function enacted(address) public override {
-
         Policed _timedPolicies = Policed(policyFor(TIMED_POLICIES_ID));
         Policed _currencyTimer = Policed(policyFor(CURRENCY_TIMER_ID));
 
         _timedPolicies.policyCommand(
             implementationUpdatingTarget,
-            abi.encodeWithSignature("setImplementation", newTimedPolicies)
+            abi.encodeWithSignature(
+                "updateImplementation(address)",
+                newTimedPolicies
+            )
         );
 
-        // _timedPolicies.policyCommand(
-        //     switcherTimedPolicies,
-        //     abi.encodeWithSignature("setPolicyProposalsImpl(address)", newPolicyProposals)
-        // );
+        _timedPolicies.policyCommand(
+            switcherTimedPolicies,
+            abi.encodeWithSignature(
+                "setPolicyProposalsImpl(address)",
+                newPolicyProposals
+            )
+        );
 
         _currencyTimer.policyCommand(
             switcherCurrencyTimer,
-            abi.encodeWithSignature("setBordaImpl(address)", newCurrencyGovernance)
+            abi.encodeWithSignature(
+                "setBordaImpl(address)",
+                newCurrencyGovernance
+            )
         );
-
     }
-
 }

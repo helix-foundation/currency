@@ -7,8 +7,11 @@ import "../../governance/community/PolicyProposals.sol";
  * Delegate call function data contract for setter functions
  */
 contract PoodlePolicyProposals is PolicyProposals {
-
-    constructor(Policy _policy, PolicyVotes _policyVotes, ECO _ecoAddr) PolicyProposals(_policy, _policyVotes, _ecoAddr) {}
+    constructor(
+        Policy _policy,
+        PolicyVotes _policyVotes,
+        ECO _ecoAddr
+    ) PolicyProposals(_policy, _policyVotes, _ecoAddr) {}
 
     function poke() public pure returns (string memory) {
         return "ow!! PolicyProposals";
