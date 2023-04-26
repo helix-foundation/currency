@@ -17,18 +17,20 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let eco
   let ecox
   let timedPolicies
+  let currencyGovernance
   let policyProposals
   let policyVotes
   let initInflation
 
-  let ecoXStaking
-  let poodlexStaking
-  let poodleECO
-  let proxyPoodlexStaking
-  let makePoodlexStaking
-  let newECOxStaking
-  let newECO
+  let newTimedPolicies
+  let newPolicyProposals
+  let newCurrencyGovernance
+
+  let switcherTimedPolicies
+  let switcherCurrencyTimer
   let implementationUpdatingTarget
+
+  let proposal
 
   let alice
   let bob
@@ -52,8 +54,7 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     ;({
       policy,
       eco,
-      ecox,
-      ecoXStaking,
+      currencyTimer,
       faucet: initInflation,
       timedPolicies,
     } = await ecoFixture(trustedNodes))
@@ -71,42 +72,99 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     await timedPolicies.incrementGeneration()
   })
 
-  it('Checks that the current staking contract is not poodles', async () => {
-    const poodleCheck = await ethers.getContractAt(
-      'PoodlexStaking',
+  it('Checks that the current contracts are not poodles', async () => {
+    const tp = await ethers.getContractAt(
+      'PoodleTimedPolicies',
       await policyFor(
         policy,
-        ethers.utils.solidityKeccak256(['string'], ['ECOxStaking'])
+        ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
       )
     )
 
-    // the contract at ID_ECOXSTAKING is not poodles so it does not have this function
-    expect(poodleCheck.address).to.equal(ecoXStaking.address)
-    await expect(poodleCheck.provePoodles()).to.be.reverted
+    const cg = await ethers.getContractAt(
+      'PoodleCurrencyGovernance',
+      await policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+      )
+    )
+
+    const pp = await ethers.getContractAt(
+      'PoodlePolicyProposals',
+      await policyFor(
+        policy,
+        ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
+      )
+    )
+
+    // these shouldnt be poodles rn, so poke should revert
+    await expect(tp.poke()).to.be.reverted
+    await expect(pp.poke()).to.be.reverted
+    await expect(cg.poke()).to.be.reverted
   })
 
-  it('Constructs the proposal', async () => {
-    poodlexStaking = await deploy(
-      'PoodlexStaking',
+  it.only('Constructs the proposal', async () => {
+
+    const oldPolicyProposals = 
+    newPolicyProposals = await deploy(
+      'PoodlePolicyProposals',
       policy.address,
-      ecox.address
+      await(
+        await ethers.getContractAt(
+          'PolicyProposals',
+          await policyFor(
+            policy,
+            ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
+          )
+        )
+      ).policyVotesImpl(),
+      eco.address
     )
-    const forwardProxy = await deploy('ForwardProxy', poodlexStaking.address)
-    proxyPoodlexStaking = await ethers.getContractAt(
-      'PoodlexStaking',
-      forwardProxy.address
+
+    console.log(1)
+
+    const randomBytes32 = ['0x9f24c52e0fcd1ac696d00405c3bd5adc558c48936919ac5ab3718fcb7d70f93f']
+    newTimedPolicies = await deploy(
+      'PoodleTimedPolicies',
+      policy.address,
+      newPolicyProposals.address,
+      randomBytes32
     )
-    expect(proxyPoodlexStaking.address).to.equal(forwardProxy.address)
-    poodleECO = await deploy('PoodleECO', policy.address)
+
+    console.log(2)
+
+    newCurrencyGovernance = await deploy(
+      'PoodleCurrencyGovernance',
+      policy.address,
+      await(
+        await ethers.getContractAt(
+          'CurrencyGovernance',
+          await policyFor(
+            policy,
+            ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
+          )
+        )
+      ).pauser()
+    )
+
+    console.log(3)
+
     implementationUpdatingTarget = await deploy('ImplementationUpdatingTarget')
-    makePoodlexStaking = await deploy(
-      'VoteCheckpointsUpgrade',
-      proxyPoodlexStaking.address,
-      poodleECO.address,
-      implementationUpdatingTarget.address
+    switcherCurrencyTimer = await deploy('SwitcherCurrencyTimer')
+
+    console.log(4)
+
+    proposal = await deploy(
+      'FixGenerationDrift',
+      implementationUpdatingTarget.address,
+      switcherCurrencyTimer.address,
+      ethers.constants.AddressZero, //switcherTimedPolicies, not necessary idt
+      newTimedPolicies.address,
+      newCurrencyGovernance.address,
+      ethers.constants.AddressZero //new policyProposals, not necessary idt
     )
-    const name = await makePoodlexStaking.name()
-    expect(name).to.equal('Update to VoteCheckpoints')
+
+    expect (await proposal.name()).to.eq('Prevent Generation Drift')
   })
 
   it('Find the policy proposals instance', async () => {

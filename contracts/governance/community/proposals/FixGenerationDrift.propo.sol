@@ -97,10 +97,10 @@ contract FixGenerationDrift is Policy, Proposal {
             abi.encodeWithSignature("setImplementation", newTimedPolicies)
         );
 
-        _timedPolicies.policyCommand(
-            switcherTimedPolicies,
-            abi.encodeWithSignature("setPolicyProposalsImpl(address)", newPolicyProposals)
-        );
+        // _timedPolicies.policyCommand(
+        //     switcherTimedPolicies,
+        //     abi.encodeWithSignature("setPolicyProposalsImpl(address)", newPolicyProposals)
+        // );
 
         _currencyTimer.policyCommand(
             switcherCurrencyTimer,
