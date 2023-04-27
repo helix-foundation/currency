@@ -21,7 +21,7 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let policyVotes
   let initInflation
 
-  let nextGenerationWindowOpen
+  let generationEnd
   let currencyGovernanceProposalEnds
   let policyProposalsProposalEnds
 
@@ -98,7 +98,7 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     )
 
     // fetch the window closure times to check proposal changes against
-    nextGenerationWindowOpen = await tp.nextGenerationWindowOpen()
+    generationEnd = await tp.generationEnd()
     currencyGovernanceProposalEnds = await cg.proposalEnds()
     policyProposalsProposalEnds = await pp.proposalEnds()
 
@@ -166,7 +166,9 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     expect(await fixGenerationDrift.description()).to.eq(
       'Pegging the start and end times of generations to those of the previous generation. This change also affects the start and end times of the first phase of both monetary and community governance.'
     )
-    expect(await fixGenerationDrift.url()).to.eq('TBD')
+    expect(await fixGenerationDrift.url()).to.eq(
+      'https://forums.eco.org/t/egp-009-eliminate-generation-drift/258'
+    )
     expect(await fixGenerationDrift.implementationUpdatingTarget()).to.eq(
       implementationUpdatingTarget.address
     )
@@ -275,17 +277,14 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   })
 
   it('Checks that the generation drift things were fixed', async () => {
-    const nextGenerationWindowOpen2 =
-      await timedPolicies.nextGenerationWindowOpen()
+    const generationEnd2 = await timedPolicies.generationEnd()
     const currencyGovernanceProposalEnds2 =
       await currencyGovernance.proposalEnds()
     const policyProposalsProposalEnds2 = await policyProposals.proposalEnds()
 
     const generationDuration = 3600 * 24 * 14
 
-    expect(nextGenerationWindowOpen2 - nextGenerationWindowOpen).to.eq(
-      generationDuration
-    )
+    expect(generationEnd2 - generationEnd).to.eq(generationDuration)
     expect(
       currencyGovernanceProposalEnds2 - currencyGovernanceProposalEnds
     ).to.eq(generationDuration)

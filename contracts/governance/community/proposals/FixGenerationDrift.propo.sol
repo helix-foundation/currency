@@ -79,7 +79,8 @@ contract FixGenerationDrift is Policy, Proposal {
     /** The URL where more details can be found.
      */
     function url() public pure override returns (string memory) {
-        return "TBD";
+        return
+            "https://forums.eco.org/t/egp-009-eliminate-generation-drift/258";
     }
 
     /** Sets the value of the CurrencyGovernance implementation (bordaImpl) on the

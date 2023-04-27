@@ -17,8 +17,8 @@ import "../currency/ECOx.sol";
 contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
     // Stores the current generation
     uint256 public override generation;
-    // Stores when the next generation is allowed to start
-    uint256 public nextGenerationWindowOpen;
+    // Stores when the generation ends
+    uint256 public generationEnd;
     // Stores all contracts that need a function called on generation increase
     // Order matters here if there are any cross contract dependencies on the
     // actions taking on generation increase.
@@ -71,7 +71,7 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
 
         generation = TimedPolicies(_self).generation();
         notificationHashes = TimedPolicies(_self).getNotificationHashes();
-        nextGenerationWindowOpen = getTime(); // generation is incremented immediately
+        generationEnd = getTime(); // generation is incremented immediately
     }
 
     function getNotificationHashes() public view returns (bytes32[] memory) {
@@ -88,12 +88,12 @@ contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
      */
     function incrementGeneration() external {
         require(
-            getTime() >= nextGenerationWindowOpen,
+            getTime() >= generationEnd,
             "Cannot update the generation counter so soon"
         );
         uint256 currTime = getTime();
-        while (nextGenerationWindowOpen <= currTime) {
-            nextGenerationWindowOpen += MIN_GENERATION_DURATION;
+        while (generationEnd <= currTime) {
+            generationEnd += MIN_GENERATION_DURATION;
         }
         generation++;
 

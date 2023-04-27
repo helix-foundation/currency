@@ -680,7 +680,7 @@ describe('PolicyProposals [@group=4]', () => {
 
   describe('initialization on generationIncrement', () => {
     context('make sure proposalEnds is set properly', () => {
-      it('corresponds to nextGenerationWindowOpen', async () => {
+      it('corresponds to generationEnd', async () => {
         let policyProposals = await getProposals()
         timedPolicies = await ethers.getContractAt(
           'TimedPolicies',
@@ -694,7 +694,7 @@ describe('PolicyProposals [@group=4]', () => {
         await timedPolicies.incrementGeneration()
         policyProposals = await getProposals()
 
-        const nextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
+        const nextWindowOpen = await timedPolicies.generationEnd()
         const proposalEnds = await policyProposals.proposalEnds()
 
         expect(proposalEnds).to.equal(

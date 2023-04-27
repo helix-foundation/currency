@@ -1148,7 +1148,7 @@ describe('CurrencyGovernance [@group=4]', () => {
 
     describe('initialization on generationIncrement', () => {
       context('make sure proposalEnds is set properly', () => {
-        it('corresponds to nextGenerationWindowOpen', async () => {
+        it('corresponds to generationEnd', async () => {
           const governanceHash = ethers.utils.solidityKeccak256(
             ['string'],
             ['CurrencyGovernance']
@@ -1171,7 +1171,7 @@ describe('CurrencyGovernance [@group=4]', () => {
             'CurrencyGovernance',
             await policy.policyFor(governanceHash)
           )
-          const nextWindowOpen = await timedPolicies.nextGenerationWindowOpen()
+          const nextWindowOpen = await timedPolicies.generationEnd()
           const proposalEnds = await currencyGovernance.proposalEnds()
 
           expect(proposalEnds).to.equal(
