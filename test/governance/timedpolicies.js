@@ -87,7 +87,8 @@ describe('TimedPolicies [@group=2]', () => {
           const prevNextWindowOpen =
             await timedPolicies.nextGenerationWindowOpen()
           const duration = await timedPolicies.MIN_GENERATION_DURATION()
-          await time.increase(duration)
+          // make sure that it can handle multi generation gaps gracefully
+          await time.increase(duration * 2)
           await time.increase(20000)
           const tx = await timedPolicies.incrementGeneration()
           await tx.wait()
@@ -95,7 +96,7 @@ describe('TimedPolicies [@group=2]', () => {
             await timedPolicies.nextGenerationWindowOpen()
           expect(newNextWindowOpen).to.eq(
             ethers.BigNumber.from(prevNextWindowOpen).add(
-              ethers.BigNumber.from(duration)
+              ethers.BigNumber.from(duration * 2)
             )
           )
         })
