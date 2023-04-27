@@ -269,9 +269,9 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     )
 
     // these should be poodles now!
-    expect(await timedPolicies.poke()).to.be.string
-    expect(await currencyGovernance.poke()).to.be.string
-    expect(await policyProposals.poke()).to.be.string
+    expect(await timedPolicies.poke()).to.eq('yowch!! TimedPolicies')
+    expect(await currencyGovernance.poke()).to.eq('owie!! CurrencyGovernance')
+    expect(await policyProposals.poke()).to.eq('ow!! PolicyProposals')
   })
 
   it('Checks that the generation drift things were fixed', async () => {
