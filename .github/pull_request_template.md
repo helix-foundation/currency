@@ -2,7 +2,7 @@
 <!-- 
   Don't edit or delete this section, instead tick the boxes after you have submitted your issue.
   Make sure you comply with the checklist (don't just tick boxes, actually confirm the statements) even if you're submitting a draft PR!
-  Make sure you fil out the Details section below the checklist, don't just submit code with no explanation.
+  Make sure you fill out the Details section below the checklist, don't just submit code with no explanation.
 -->
 
  * [ ] I am changing solidity code:
