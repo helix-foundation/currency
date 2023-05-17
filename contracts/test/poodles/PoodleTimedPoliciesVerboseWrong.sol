@@ -1,24 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../policy/PolicedUtils.sol";
-import "../policy/Policy.sol";
-import "../utils/TimeUtils.sol";
-import "./IGenerationIncrease.sol";
-import "./IGeneration.sol";
-import "./community/PolicyProposals.sol";
-import "../currency/ECO.sol";
-import "../currency/ECOx.sol";
+import "../../policy/PolicedUtils.sol";
+import "../../policy/Policy.sol";
+import "../../utils/TimeUtils.sol";
+import "../../governance/IGenerationIncrease.sol";
+import "../../governance/IGeneration.sol";
+import "../../governance/community/PolicyProposals.sol";
+import "../../currency/ECO.sol";
+import "../../currency/ECOx.sol";
 
 /** @title TimedPolicies
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract TimedPolicies is PolicedUtils, TimeUtils, IGeneration {
-    // Stores the current generation
-    uint256 public override generation;
+contract PoodleTimedPoliciesVerboseWrong is
+    PolicedUtils,
+    TimeUtils,
+    IGeneration
+{
     // Stores when the generation ends
     uint256 public generationEnd;
+    // Stores the current generation
+    uint256 public override generation;
     // Stores all contracts that need a function called on generation increase
     // Order matters here if there are any cross contract dependencies on the
     // actions taking on generation increase.

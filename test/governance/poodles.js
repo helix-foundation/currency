@@ -70,7 +70,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=2]', () => {
       )
     )
     // the contract at ID_CURRENCY_GOVERNANCE is not poodles so it does not have this function
-    await expect(poodleBorda.provePoodles()).to.be.reverted
+    await expect(poodleBorda.poke()).to.be.reverted
   })
 
   it('Constructs the proposal', async () => {
@@ -149,7 +149,7 @@ describe('E2E Proposal Contract Template Upgrade [@group=2]', () => {
         ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
       )
     )
-    const poodles = await poodleBorda.provePoodles()
-    expect(poodles).to.be.true
+    const poodles = await poodleBorda.poke()
+    expect(poodles).to.eq('owie!! CurrencyGovernance')
   })
 })

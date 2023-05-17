@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../governance/monetary/CurrencyGovernance.sol";
+import "../../governance/monetary/CurrencyGovernance.sol";
 
 /** @title Template Upgrading Process
  *
@@ -11,12 +11,11 @@ import "../governance/monetary/CurrencyGovernance.sol";
  * is all that is needed.
  */
 contract PoodleCurrencyGovernance is CurrencyGovernance {
-    // because the data is not preserved, some information must be copied
     constructor(Policy _policy, address _initialPauser)
         CurrencyGovernance(_policy, _initialPauser)
     {}
 
-    function provePoodles() public pure returns (bool) {
-        return true;
+    function poke() public pure returns (string memory) {
+        return "owie!! CurrencyGovernance";
     }
 }

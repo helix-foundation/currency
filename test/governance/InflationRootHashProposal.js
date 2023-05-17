@@ -197,7 +197,6 @@ describe('InflationRootHashProposal [@group=3]', () => {
     await time.increase(3600 * 24 * 1)
     await governance.updateStage()
     await governance.compute()
-    await time.increase(3600 * 24 * 3)
     const generation = await currencyTimer.currentGeneration()
     await timedPolicies.incrementGeneration()
     const inflationAddr = await currencyTimer.randomInflations(generation)
