@@ -16,14 +16,9 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let policy
   let eco
   let timedPolicies
-  let currencyGovernance
   let policyProposals
   let policyVotes
   let initInflation
-
-  let generationEnd
-  let currencyGovernanceProposalEnds
-  let policyProposalsProposalEnds
 
   let newTimedPolicies
   let newPolicyProposals
@@ -96,11 +91,6 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
         ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
       )
     )
-
-    // fetch the window closure times to check proposal changes against
-    generationEnd = await tp.generationEnd()
-    currencyGovernanceProposalEnds = await cg.proposalEnds()
-    policyProposalsProposalEnds = await pp.proposalEnds()
 
     // these shouldnt be poodles rn, so poke should revert
     await expect(tp.poke()).to.be.reverted
@@ -254,7 +244,7 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
       )
     )
     const poodles = await timedPolicies.poodles()
-    
+
     expect(generationEnd.eq(poodles)).to.be.true
   })
 })

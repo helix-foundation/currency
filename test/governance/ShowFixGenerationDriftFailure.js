@@ -6,6 +6,7 @@
  *
  * The purpose of this demo is to help confirm the correct function of the proposal
  */
+/** eslint-disable no-unused-vars */
 
 const { expect } = require('chai')
 const time = require('../utils/time.ts')
@@ -16,14 +17,9 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
   let policy
   let eco
   let timedPolicies
-  let currencyGovernance
   let policyProposals
   let policyVotes
   let initInflation
-
-  let generationEnd
-  let currencyGovernanceProposalEnds
-  let policyProposalsProposalEnds
 
   let newTimedPolicies
   let newPolicyProposals
@@ -96,11 +92,6 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
         ethers.utils.solidityKeccak256(['string'], ['PolicyProposals'])
       )
     )
-
-    // fetch the window closure times to check proposal changes against
-    generationEnd = await tp.generationEnd()
-    currencyGovernanceProposalEnds = await cg.proposalEnds()
-    policyProposalsProposalEnds = await pp.proposalEnds()
 
     // these shouldnt be poodles rn, so poke should revert
     await expect(tp.poke()).to.be.reverted
@@ -257,9 +248,9 @@ describe('E2E Proxied Contract Upgrade [@group=2]', () => {
     const generationEndNew = await oldtp.generationEnd()
     const generationNew = await oldtp.generation()
 
-    console.log(generationEndOld.toString(),generationEndNew.toString())
-    console.log(generationOld.toString(),generationNew.toString())
-    
+    console.log(generationEndOld.toString(), generationEndNew.toString())
+    console.log(generationOld.toString(), generationNew.toString())
+
     expect(generationEndOld.eq(generationNew)).to.be.true
     expect(generationOld.eq(generationEndNew)).to.be.true
   })

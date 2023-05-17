@@ -14,7 +14,11 @@ import "../../currency/ECOx.sol";
  * Oversees the time-based recurring processes that allow governance of the
  * Eco currency.
  */
-contract PoodleTimedPoliciesVerboseWrong is PolicedUtils, TimeUtils, IGeneration {
+contract PoodleTimedPoliciesVerboseWrong is
+    PolicedUtils,
+    TimeUtils,
+    IGeneration
+{
     // Stores when the generation ends
     uint256 public generationEnd;
     // Stores the current generation
