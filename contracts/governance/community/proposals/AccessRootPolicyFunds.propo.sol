@@ -18,28 +18,26 @@ contract AccessRootPolicyFunds is Policy, Proposal {
 
     uint256 public immutable ecoXAmount;
 
+    string public name;
+
+    string public description;
+
+    string public url;
+
     constructor(
         address _recipient,
         uint256 _ecoAmount,
-        uint256 _ecoXAmount
+        uint256 _ecoXAmount,
+        string memory _name,
+        string memory _description,
+        string memory _url
     ) {
         recipient = _recipient;
         ecoAmount = _ecoAmount;
         ecoXAmount = _ecoXAmount;
-    }
-
-    function name() public pure override returns (string memory) {
-        return "Root Policy Funds Use Template";
-    }
-
-    function description() public pure override returns (string memory) {
-        return
-            "Sends ecoAmount and ecoXAmount of ECO and ECOx respectively to recipient";
-    }
-
-    function url() public pure override returns (string memory) {
-        return
-            "https://description.of.proposal make this link to a discussion what the funds are used for";
+        name = _name;
+        description = _description;
+        url = _url;
     }
 
     function enacted(address) public override {
