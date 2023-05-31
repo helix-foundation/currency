@@ -22,11 +22,14 @@ contract Notifier is Policed, IGenerationIncrease {
         bytes data
     );
 
+    uint256 gasPerNotifyTx;
+
     // Stable ordering is not guaranteed.
     Transaction[] public transactions;
 
-    constructor(Policy _policy) Policed(_policy) {
-        // calling the super constructor
+    constructor(Policy _policy, uint256 _gasPerNotifyTx) Policed(_policy) {
+        // calling the super constructor\
+        gasPerNotifyTx = _gasPerNotifyTx;
     }
 
     // This function has to allow transactions to gracefully fail
@@ -62,11 +65,7 @@ contract Notifier is Policed, IGenerationIncrease {
             let dataAddress := add(data, 32)
 
             result := call(
-                // 34710 is the value that solidity is currently emitting
-                // It includes callGas (700) + callVeryLow (3, to pay for SUB)
-                // + callValueTransferGas (9000) + callNewAccountGas
-                // (25000, in case the destination address does not exist and needs creating)
-                sub(gas(), 34710),
+                sub(gas(), gasPerNotifyTx),
                 destination,
                 0, // transfer value in wei
                 dataAddress,
@@ -76,6 +75,14 @@ contract Notifier is Policed, IGenerationIncrease {
             )
         }
         return result;
+    }
+
+    /**
+     * @notice updates the gas allocation for downstream txes
+     * @param _newGasAmount the new amount of gas allocated per tx
+     */
+    function updateGasPerTx(uint256 _newGasAmount) external onlyPolicy {
+        gasPerNotifyTx = _newGasAmount;
     }
 
     /**
