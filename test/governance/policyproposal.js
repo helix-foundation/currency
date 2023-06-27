@@ -677,4 +677,33 @@ describe('PolicyProposals [@group=4]', () => {
       })
     })
   })
+
+  describe('initialization on generationIncrement', () => {
+    context('make sure proposalEnds is set properly', () => {
+      it('corresponds to generationEnd', async () => {
+        let policyProposals = await getProposals()
+        timedPolicies = await ethers.getContractAt(
+          'TimedPolicies',
+          await policy.policyFor(
+            ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
+          )
+        )
+        const proposalTime = await policyProposals.PROPOSAL_TIME()
+
+        await time.increase(3600 * 24 * 14)
+        await timedPolicies.incrementGeneration()
+        policyProposals = await getProposals()
+
+        const nextWindowOpen = await timedPolicies.generationEnd()
+        const proposalEnds = await policyProposals.proposalEnds()
+
+        expect(proposalEnds).to.equal(
+          ethers.BigNumber.from(nextWindowOpen)
+            .sub(3600 * 24 * 14)
+            .add(ethers.BigNumber.from(proposalTime))
+        )
+        expect(proposalEnds).to.be.lessThan(nextWindowOpen)
+      })
+    })
+  })
 })
