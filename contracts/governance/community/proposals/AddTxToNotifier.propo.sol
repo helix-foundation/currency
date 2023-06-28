@@ -35,7 +35,7 @@ contract AddTxToNotifier is Policy, Proposal {
     /** The name of the proposal.
      */
     function name() public pure override returns (string memory) {
-        return "Upgrade Notifier";
+        return "EGP #009 sync inflation multipliers on generation increment";
     }
 
     /** A description of what the proposal does.
@@ -48,7 +48,7 @@ contract AddTxToNotifier is Policy, Proposal {
     /** A URL where more details can be found.
      */
     function url() public pure override returns (string memory) {
-        return "blah";
+        return "https://forums.eco.org/t/egp-009-sync-inflation-multipliers-on-generation-increment/264/1";
     }
 
     /** Adds new tx to notifier */
