@@ -802,7 +802,15 @@ describe('CurrencyGovernance [@group=4]', () => {
                 trustedNodes.address,
                 votingReward.mul(2 * trustees * 26)
               )
-              await time.increase(3600 * 24 * 14 * 26)
+
+              await time.increase(3600 * 24 * 1) // increase one day, roughly the right time for generation increment
+              await timedPolicies.incrementGeneration()
+
+              for (let i = 0; i < 26; i++) {
+                await time.increase(3600 * 24 * 14)
+                await timedPolicies.incrementGeneration()
+              }
+              // await time.increase(3600 * 24 * 14 * 26)
               const tx = await trustedNodes.connect(dave).annualUpdate()
               const receipt = await tx.wait()
               console.log(`annualUpdate: ${receipt.gasUsed}`)
@@ -1136,6 +1144,44 @@ describe('CurrencyGovernance [@group=4]', () => {
           console.log(receipt.gasUsed)
         })
       }
+    })
+
+    describe('initialization on generationIncrement', () => {
+      context('make sure proposalEnds is set properly', () => {
+        it('corresponds to generationEnd', async () => {
+          const governanceHash = ethers.utils.solidityKeccak256(
+            ['string'],
+            ['CurrencyGovernance']
+          )
+          let currencyGovernance = await ethers.getContractAt(
+            'CurrencyGovernance',
+            await policy.policyFor(governanceHash)
+          )
+          timedPolicies = await ethers.getContractAt(
+            'TimedPolicies',
+            await policy.policyFor(
+              ethers.utils.solidityKeccak256(['string'], ['TimedPolicies'])
+            )
+          )
+          const proposalTime = await currencyGovernance.PROPOSAL_TIME()
+
+          await time.increase(3600 * 24 * 14)
+          await timedPolicies.incrementGeneration()
+          currencyGovernance = await ethers.getContractAt(
+            'CurrencyGovernance',
+            await policy.policyFor(governanceHash)
+          )
+          const nextWindowOpen = await timedPolicies.generationEnd()
+          const proposalEnds = await currencyGovernance.proposalEnds()
+
+          expect(proposalEnds).to.equal(
+            ethers.BigNumber.from(nextWindowOpen)
+              .sub(3600 * 24 * 14)
+              .add(ethers.BigNumber.from(proposalTime))
+          )
+          expect(proposalEnds).to.be.lessThan(nextWindowOpen)
+        })
+      })
     })
   })
 })
