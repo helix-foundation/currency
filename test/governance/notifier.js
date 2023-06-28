@@ -63,8 +63,11 @@ describe('Notifier [@group=2]', () => {
     await amm.sync()
   })
 
-  it.only('test', async() => {
-    const prop = await deploy('AddTxToNotifier', '0x9A4464D6bFE006715382D39D183AAf66c952a3e0')
+  it('test', async () => {
+    const prop = await deploy(
+      'AddTxToNotifier',
+      '0x9A4464D6bFE006715382D39D183AAf66c952a3e0'
+    )
     console.log(await prop.txData())
   })
   it('test amm dummy is initialized correctly', async () => {

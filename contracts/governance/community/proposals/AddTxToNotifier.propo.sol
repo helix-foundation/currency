@@ -11,13 +11,13 @@ import "../../Notifier.sol";
  * Also
  */
 contract AddTxToNotifier is Policy, Proposal {
-
     // The address of the L1ECOBridge
     address public immutable l1EcoBridge;
 
     // The data for performing a call to the rebase method on L1ECOBridge
     // 0x + first 4 bytes of signature + argument (l2gas)
-    bytes public constant txData = abi.encodeWithSignature('rebase(uint32)', 10000); 
+    bytes public constant txData =
+        abi.encodeWithSignature("rebase(uint32)", 10000);
 
     // The new ID hash for the Notifier
     bytes32 public constant NOTIFIER_ID = keccak256("Notifier");
@@ -26,9 +26,7 @@ contract AddTxToNotifier is Policy, Proposal {
      *
      * @param _l1ECOBridge The address of the l1EcoBridge contract
      */
-    constructor(
-        address _l1ECOBridge
-    ) {
+    constructor(address _l1ECOBridge) {
         l1EcoBridge = _l1ECOBridge;
     }
 
@@ -48,7 +46,8 @@ contract AddTxToNotifier is Policy, Proposal {
     /** A URL where more details can be found.
      */
     function url() public pure override returns (string memory) {
-        return "https://forums.eco.org/t/egp-009-sync-inflation-multipliers-on-generation-increment/264/1";
+        return
+            "https://forums.eco.org/t/egp-009-sync-inflation-multipliers-on-generation-increment/264/1";
     }
 
     /** Adds new tx to notifier */
