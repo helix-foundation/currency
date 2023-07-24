@@ -15,8 +15,7 @@ contract AddTxToNotifier is Policy, Proposal {
     address public immutable l1EcoBridge;
 
     // The data for performing a call to the rebase method on L1ECOBridge
-    bytes public constant txData =
-        abi.encodeWithSignature("rebase(uint32)", 0);
+    bytes public constant txData = abi.encodeWithSignature("rebase(uint32)", 0);
 
     // The new ID hash for the Notifier
     bytes32 public constant NOTIFIER_ID = keccak256("Notifier");
