@@ -92,8 +92,6 @@ function main() {
       console.log('An error occured while copying the folder.')
       return console.error(err)
     }
-    const testDir = path.join(contractsDir, "/test")
-    fs.rmSync(testDir, { recursive: true, force: true })
 
     console.log('Contract copy completed!')
   })
@@ -101,7 +99,7 @@ function main() {
 
   // Move the contact abis to the lib
   glob(rootAbiDir + '/**/*.json', {}, (err, files) => {
-    const abiFiles = files.filter((filePath) => filePath.indexOf('dbg') == -1 && filePath.indexOf('test') == -1)
+    const abiFiles = files.filter((filePath) => filePath.indexOf('dbg') == -1)
     abiFiles.forEach((json, i) => {
       path.basename(json)
       fs.copyFile(
