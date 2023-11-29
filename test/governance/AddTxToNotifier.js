@@ -36,7 +36,6 @@ describe('E2E Proposal addTxToNotifier upgrade [@group=2]', () => {
     ]))
 
     l1Bridge = await deploy('DummyL1Bridge')
-    console.log(l1Bridge)
   })
 
   it('Stakes accounts', async () => {

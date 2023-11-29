@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const hre = require('hardhat')
 const { ethers } = hre
 const blockDelay = 10000 // in miliseconds

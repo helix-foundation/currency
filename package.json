@@ -1,6 +1,6 @@
 {
   "name": "@helix-foundation/currency",
-  "version": "1.0.8",
+  "version": "1.0.11",
   "engines": {
     "node": ">=16.6.0"
   },
@@ -34,7 +34,7 @@
     "publishLocal": "cd lib && npm pack",
     "prepareLib": "yarn build && npx ts-node scripts/publish/prepare.ts && cd lib && npx tsup src/index.ts",
     "prepareLibTest": "yarn build && npx ts-node scripts/publish/prepare-test.ts",
-    "prepareLibDev": "yarn build && npx ts-node scripts/publish/prepare-dev.ts && cd libDev && npx tsup src/index.ts"
+    "prepareLibDev": "yarn build && npx ts-node scripts/publish/prepare-dev.ts && cd libDev && npx tsup --tsconfig ../tsconfig.json src/index.ts"
   },
   "repository": {
     "type": "git",

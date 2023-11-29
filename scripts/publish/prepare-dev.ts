@@ -142,7 +142,7 @@ function main() {
     console.log('Test util copy completed!')
   })
 
-  fs.writeFileSync(path.join(libSrcDir, '/index.ts'), `export * from './typechain-types'\n`);
+  fs.writeFileSync(path.join(libSrcDir, '/index.ts'), `export * from './typechain-types'\nexport * from './test/utils'\n`);
 }
 
 main()

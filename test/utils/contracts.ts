@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { Contract, Signer } from 'ethers'
-import { ethers } from 'hardhat'
+import hre from 'hardhat'
 
 /**
  * Deploy a contract with the given artifact name
@@ -9,7 +10,7 @@ export async function deploy(
   contractName: string,
   ...params: any[]
 ): Promise<Contract> {
-  const factory = await ethers.getContractFactory(contractName)
+  const factory = await hre.ethers.getContractFactory(contractName)
   if (params) {
     return factory.deploy(...params)
   }
@@ -25,7 +26,7 @@ export async function deployFrom(
   contractName: string,
   ...params: any[]
 ): Promise<Contract> {
-  const factory = await ethers.getContractFactory(contractName, from)
+  const factory = await hre.ethers.getContractFactory(contractName, from)
   if (params) {
     return factory.deploy(...params)
   }
@@ -38,5 +39,5 @@ export async function deployProxy(
 ): Promise<Contract> {
   const base = await exports.deploy(contractName, params)
   const proxy = await exports.deploy('ForwardProxy', base.address)
-  return ethers.getContractAt(contractName, proxy.address)
+  return hre.ethers.getContractAt(contractName, proxy.address)
 }

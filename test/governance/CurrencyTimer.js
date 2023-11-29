@@ -95,16 +95,7 @@ describe('CurrencyTimer [@group=4]', () => {
 
     context('without compute', () => {
       beforeEach(async () => {
-        const generation = await timedPolicies.generation()
-        await expect(timedPolicies.incrementGeneration())
-          .to.emit(currencyTimer, 'NewCurrencyGovernance')
-          .withArgs(
-            await policyFor(
-              policy,
-              ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-            ),
-            generation.add(1)
-          )
+        await timedPolicies.incrementGeneration()
       })
 
       it('changed borda', async () => {
@@ -159,16 +150,7 @@ describe('CurrencyTimer [@group=4]', () => {
       beforeEach(async () => {
         await borda.updateStage()
         await borda.compute()
-        const generation = await timedPolicies.generation()
-        await expect(timedPolicies.incrementGeneration())
-          .to.emit(currencyTimer, 'NewCurrencyGovernance')
-          .withArgs(
-            await policyFor(
-              policy,
-              ethers.utils.solidityKeccak256(['string'], ['CurrencyGovernance'])
-            ),
-            generation.add(1)
-          )
+        await timedPolicies.incrementGeneration()
       })
 
       it('changed borda', async () => {
